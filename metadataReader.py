@@ -26,7 +26,9 @@ def main():
         exit(1)
     # The JSON to return from the program
     jsonOut = createJSONIndexForDirectory(dirToIndex)
-    print(jsonOut)
+    # Write the json to a file
+    with open("index.json", "w") as text_file:
+        text_file.write(jsonOut)
 
 def createJSONIndexForDirectory(directory):
     # Start the exif tool (used for bulk optimization)
@@ -47,16 +49,14 @@ def recursivelyCreateIndexEntries(currentDirectory, indexedFiles = []):
         # Compute the full path of the subdirectory
         nextDirectoryPath = os.path.join(currentDirectory, nextDirectory)
         # Make sure we can read the directory
-        if os.access(nextDirectoryPath, os.R_OK):
-            # Recurse into the subdirectory
-            indexedFiles = recursivelyCreateIndexEntries(nextDirectoryPath, indexedFiles)
+        indexedFiles = recursivelyCreateIndexEntries(nextDirectoryPath, indexedFiles)
     return indexedFiles
 
 def createIndexEntriesForDir(directory):
     # Raw files names is a list of files in a directory that need to be indexed. They are without path
     rawFileNames = listFiles(directory, includeDirectories=False, includeFiles=True)
     # Convert this list of raw files to a list of files with path appended. Also ensure all files are readable
-    filesToIndex = list(filter(lambda fileToIndex: os.access(fileToIndex, os.R_OK), map(lambda rawFileName: os.path.join(directory, rawFileName), rawFileNames)))
+    filesToIndex = list(map(lambda rawFileName: os.path.join(directory, rawFileName), rawFileNames))
     # A list of indexed files in the form of a dictionary
     indexedFiles = createIndexEntryForFiles(filesToIndex)
 
@@ -95,10 +95,15 @@ def createIndexEntryForFiles(files):
 
 def listFiles(directory, includeDirectories=True, includeFiles=True):
     # Return all files in a directory including sub directories if specified and including files if specified
-    return [file for file in os.listdir(directory) if
-            (includeDirectories and os.path.isdir(os.path.join(directory, file))
-             or
-            (includeFiles       and os.path.isfile(os.path.join(directory, file))))]
+    try:
+        return [file for file in os.listdir(directory) if
+                os.access(os.path.join(directory, file), os.R_OK)
+                and
+                    ((includeDirectories and os.path.isdir(os.path.join(directory, file))
+                     or
+                    (includeFiles       and os.path.isfile(os.path.join(directory, file)))))]
+    except PermissionError:
+        return []
 
 
 main()
