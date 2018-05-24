@@ -46,15 +46,17 @@ def recursivelyCreateIndexEntries(currentDirectory, indexedFiles = []):
     for nextDirectory in listFiles(currentDirectory, includeDirectories=True, includeFiles=False):
         # Compute the full path of the subdirectory
         nextDirectoryPath = os.path.join(currentDirectory, nextDirectory)
-        # Recurse into the subdirectory
-        indexedFiles = recursivelyCreateIndexEntries(nextDirectoryPath, indexedFiles)
+        # Make sure we can read the directory
+        if os.access(nextDirectoryPath, os.R_OK):
+            # Recurse into the subdirectory
+            indexedFiles = recursivelyCreateIndexEntries(nextDirectoryPath, indexedFiles)
     return indexedFiles
 
 def createIndexEntriesForDir(directory):
     # Raw files names is a list of files in a directory that need to be indexed. They are without path
     rawFileNames = listFiles(directory, includeDirectories=False, includeFiles=True)
-    # Convert this list of raw files to a list of files with path appended
-    filesToIndex = list(map(lambda rawFileName: os.path.join(directory, rawFileName), rawFileNames))
+    # Convert this list of raw files to a list of files with path appended. Also ensure all files are readable
+    filesToIndex = list(filter(lambda fileToIndex: os.access(fileToIndex, os.R_OK), map(lambda rawFileName: os.path.join(directory, rawFileName), rawFileNames)))
     # A list of indexed files in the form of a dictionary
     indexedFiles = createIndexEntryForFiles(filesToIndex)
 
