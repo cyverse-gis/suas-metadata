@@ -44,7 +44,7 @@ def createJSONIndexForDirectory(directory):
     validIndexedFiles = list(filter(lambda indexedFile: fileValid(indexedFile), indexedFiles))
 
     # Return the results
-    return json.dumps(indexedFiles)
+    return json.dumps(validIndexedFiles)
 
 def getIndexableFiles(currentDirectory, filesToIndex = []):
     # Raw files names is a list of files in a directory that need to be indexed. They are without path
