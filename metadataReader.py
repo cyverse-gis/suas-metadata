@@ -18,6 +18,12 @@ indexedFieldNames = \
 def main():
     # Read the directory to index from the command line, won't be used later
     dirToIndex = input("Enter the path to the directory to read image metadata from:\n")
+    if not os.path.exists(dirToIndex):
+        print("Path doesnt exist!")
+        exit(1)
+    if not os.path.isdir(dirToIndex):
+        print("Path is not a valid directory!")
+        exit(1)
     # The JSON to return from the program
     jsonOut = createJSONIndexForDirectory(dirToIndex)
     print(jsonOut)
