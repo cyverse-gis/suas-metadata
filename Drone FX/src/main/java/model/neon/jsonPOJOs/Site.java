@@ -129,6 +129,6 @@ public class Site
 	@Override
 	public String toString()
 	{
-		return this.siteName.getValue();
+		return this.siteName.getValue() + " at " + this.siteLatitude.getValue().toString() + ", " + this.siteLongitude.getValue().toString();
 	}
 }

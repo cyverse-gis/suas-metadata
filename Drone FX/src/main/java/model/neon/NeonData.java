@@ -11,6 +11,7 @@ import model.neon.jsonPOJOs.ProductAvailability;
 import model.neon.jsonPOJOs.Site;
 import model.neon.jsonPOJOs.Sites;
 import model.threading.ErrorTask;
+import model.util.SanimalAnalysisUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.fxmisc.easybind.EasyBind;
 
@@ -43,6 +44,22 @@ public class NeonData
 
 	public NeonData()
 	{
+	}
+
+	public Site closestSiteTo(Double latitude, Double longitude)
+	{
+		Double shortestDistance = Double.MAX_VALUE;
+		Site closestSite = null;
+		for (Site site : this.sites)
+		{
+			Double distanceToSite = SanimalAnalysisUtils.distanceBetween(latitude, site.getSiteLatitude(), longitude, site.getSiteLongitude(), 0, 0);
+			if (distanceToSite < shortestDistance)
+			{
+				shortestDistance = distanceToSite;
+				closestSite = site;
+			}
+		}
+		return closestSite;
 	}
 
 	public Sites pullSites() throws IOException

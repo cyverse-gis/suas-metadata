@@ -1,9 +1,12 @@
 package model.util;
 
+import javafx.embed.swing.SwingFXUtils;
 import model.location.UTMCoord;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
@@ -52,10 +55,7 @@ public class SanimalAnalysisUtils
 	 */
 	public static boolean fileIsImage(File file)
 	{
-		return StringUtils.endsWithAny(file.getAbsolutePath(), "jpg", "jpeg", "JPEG", "JPG");
-
-		// This checks to see if the file is purely an image, we want JPGs only!
-		/*
+		// This checks to see if the file is purely an image
 		String result = null;
 		try
 		{
@@ -65,7 +65,6 @@ public class SanimalAnalysisUtils
 		{
 		}
 		return !(result == null || !result.startsWith("image"));
-		*/
 	}
 
 	/**
@@ -86,27 +85,33 @@ public class SanimalAnalysisUtils
 	}
 
 	/**
-	 * Returns the distance between two lat longs in kilometers
-	 * 
-	 * @param lat1
-	 *            The latitude of the first coordinate
-	 * @param lng1
-	 *            The longitude of the last coordinate
-	 * @param lat2
-	 *            The latitude of the second coordinate
-	 * @param lng2
-	 *            The longitude of the second coordinate
-	 * @return The distance between the two lat/lngs in kilometers
+	 * Calculate distance between two points in latitude1 and longitude taking
+	 * into account height difference. If you are not interested in height
+	 * difference pass 0.0. Uses Haversine method as its base.
+	 *
+	 * See: https://stackoverflow.com/questions/3694380/calculating-distance-between-two-points-using-latitude-longitude-what-am-i-doi
+	 *
+	 * latitude1, longitude1 Start point latitude2, longitude2 End point elevation1 Start altitude in meters
+	 * elevation2 End altitude in meters
+	 * @returns Distance in Meters
 	 */
-	public static double distanceBetween(double lat1, double lng1, double lat2, double lng2)
-	{
-		//		var lat1Rad = lat1.toRadians(), lat2Rad = lat2.toRadians(), delta = (lon2-lon1).toRadians(), R = 6371e3; // gives d in metres
-		//	    var d = Math.acos( Math.sin(lat1Rad)*Math.sin(lat2Rad) + Math.cos(lat1Rad)*Math.cos(lat2Rad) * Math.cos(delta) ) * R;
-		double lat1Rad = Math.toRadians(lat1);
-		double lat2Rad = Math.toRadians(lat2);
-		double delta = Math.toRadians(lng2 - lng1);
-		double R = 6371.000;
-		return Math.acos(Math.sin(lat1Rad) * Math.sin(lat2Rad) + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.cos(delta)) * R;
+	public static double distanceBetween(double latitude1, double latitude2, double longitude1, double longitude2, double elevation1, double elevation2) {
+
+		final int R = 6371; // Radius of the earth
+
+		double latDistance = Math.toRadians(latitude2 - latitude1);
+		double lonDistance = Math.toRadians(longitude2 - longitude1);
+		double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+				+ Math.cos(Math.toRadians(latitude1)) * Math.cos(Math.toRadians(latitude2))
+				* Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		double distance = R * c * 1000; // convert to meters
+
+		double height = elevation1 - elevation2;
+
+		distance = Math.pow(distance, 2) + Math.pow(height, 2);
+
+		return Math.sqrt(distance);
 	}
 
 	/**

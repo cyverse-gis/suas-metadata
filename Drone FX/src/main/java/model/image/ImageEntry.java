@@ -194,6 +194,14 @@ public class ImageEntry extends ImageContainer
 		return imageMetadata;
 	}
 
+	public <T> T getSpecificMetadataField(Tag tag)
+	{
+		for (MetadataEntry entry : this.getImageMetadata())
+			if (entry.getTag().equals(tag))
+				return tag.parse(entry.getValue());
+		return null;
+	}
+
 	public void markDiskDirty(Boolean dirty)
 	{
 		this.isDiskDirty.set(dirty);

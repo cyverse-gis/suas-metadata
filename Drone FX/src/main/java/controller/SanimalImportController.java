@@ -1,6 +1,6 @@
 package controller;
 
-import com.thebuzzmedia.exiftool.Tag;
+import com.thebuzzmedia.exiftool.core.StandardTag;
 import javafx.animation.FadeTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -16,7 +17,6 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -41,8 +41,10 @@ import org.controlsfx.control.StatusBar;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javax.imageio.ImageIO;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
@@ -190,7 +192,20 @@ public class SanimalImportController implements Initializable
 		// Finally bind the date taken's disable property if an adjustable image is selected
 		//this.txtDateTaken.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty).map(localDateTime -> SanimalData.getInstance().getSettings().formatDateTime(localDateTime, " at ")).orElse(""));
 		// Bind the image preview to the selected image from the right side tree view
-		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file -> new Image(file.toURI().toString(), SanimalData.getInstance().getSettings().getBackgroundImageLoading())));
+		// Can't use 'new Image(file.toURI().toString(), SanimalData.getInstance().getSettings().getBackgroundImageLoading())));'
+		// because it doesn't support tiffs. Sad day.
+		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file ->
+		{
+			try
+			{
+				return SwingFXUtils.toFXImage(ImageIO.read(file), null);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			return null;
+		}));
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Hide the progress bar when no tasks remain
 		this.sbrTaskProgress.visibleProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().taskRunningProperty());
@@ -251,6 +266,13 @@ public class SanimalImportController implements Initializable
 					return filteredObservableList;
 				})
 		);
+
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> {
+			if (newValue != null)
+			{
+				System.out.println(SanimalData.getInstance().getNeonData().closestSiteTo(newValue.getSpecificMetadataField(StandardTag.GPS_LATITUDE), newValue.getSpecificMetadataField(StandardTag.GPS_LONGITUDE)));
+			}
+		});
 
 		this.lvwSites.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/SiteListEntry.fxml").getController());
 		ObservableList<Site> sites = SanimalData.getInstance().getNeonData().getSites();
