@@ -5,7 +5,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 import model.SanimalData;
-import model.analysis.SanimalAnalysisUtils;
+import model.util.SanimalAnalysisUtils;
 import model.location.Location;
 import model.location.UTMCoord;
 import model.util.SettingsData;

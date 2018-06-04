@@ -24,6 +24,7 @@ import model.SanimalData;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.location.Location;
+import model.neon.jsonPOJOs.Sites;
 import model.species.Species;
 import model.threading.ErrorTask;
 import model.util.SettingsData;
@@ -204,7 +205,7 @@ public class SanimalViewController implements Initializable
 				{
 					// First login
 					this.updateMessage("Logging in...");
-					this.updateProgress(1, 7);
+					this.updateProgress(1, 8);
 					Boolean loginSuccessful = connectionManager.login(username, password);
 
 					if (loginSuccessful)
@@ -217,12 +218,12 @@ public class SanimalViewController implements Initializable
 
 						// Then initialize the remove sanimal directory
 						this.updateMessage("Initializing Sanimal remote directory...");
-						this.updateProgress(2, 7);
+						this.updateProgress(2, 8);
 						connectionManager.initSanimalRemoteDirectory();
 
 						// Pull Sanimal settings from the remote directory
 						this.updateMessage("Pulling settings from remote directory...");
-						this.updateProgress(3, 7);
+						this.updateProgress(3, 8);
 						SettingsData settingsData = connectionManager.pullRemoteSettings();
 
 						// Set the settings data
@@ -230,7 +231,7 @@ public class SanimalViewController implements Initializable
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling species from remote directory...");
-						this.updateProgress(4, 7);
+						this.updateProgress(4, 8);
 						List<Species> species = connectionManager.pullRemoteSpecies();
 
 						// Set the species list to be these species
@@ -238,7 +239,7 @@ public class SanimalViewController implements Initializable
 
 						// Pull any locations from the remote directory
 						this.updateMessage("Pulling locations from remote directory...");
-						this.updateProgress(5, 7);
+						this.updateProgress(5, 8);
 						List<Location> locations = connectionManager.pullRemoteLocations();
 
 						// Set the location list to be these locations
@@ -246,13 +247,19 @@ public class SanimalViewController implements Initializable
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling collections from remote directory...");
-						this.updateProgress(6, 7);
-						List<ImageCollection> imageCollections = connectionManager.pullRemoteCollections();
+						this.updateProgress(6, 8);
+						//List<ImageCollection> imageCollections = connectionManager.pullRemoteCollections();
 
 						// Set the image collection list to be these collections
-						Platform.runLater(() -> SanimalData.getInstance().getCollectionList().addAll(imageCollections));
+						//Platform.runLater(() -> SanimalData.getInstance().getCollectionList().addAll(imageCollections));
 
-						this.updateProgress(7, 7);
+						this.updateMessage("Pulling NEON sites...");
+						this.updateProgress(7, 8);
+
+						Sites sites = SanimalData.getInstance().getNeonData().pullSites();
+						Platform.runLater(() -> SanimalData.getInstance().getNeonData().setSites(sites));
+
+						this.updateProgress(8, 8);
 					}
 
 					return loginSuccessful;

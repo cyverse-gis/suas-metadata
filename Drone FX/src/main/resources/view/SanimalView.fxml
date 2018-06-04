@@ -33,6 +33,7 @@
                     </graphic>
                     <fx:include source="SanimalImport.fxml"/>
                 </DetachableTab>
+                <!--
                 <DetachableTab detachable="false" text="Collections" closable="false">
                     <graphic>
                         <ImageView fitWidth="25" fitHeight="25">
@@ -57,6 +58,7 @@
                     </graphic>
                     <fx:include source="SanimalMap.fxml"/>
                 </DetachableTab>
+                -->
                 <DetachableTab detachable="false" text="Settings" closable="false">
                     <graphic>
                         <ImageView fitWidth="25" fitHeight="25">

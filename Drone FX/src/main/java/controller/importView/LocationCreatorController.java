@@ -11,7 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import library.ToggleButtonSelector;
-import model.analysis.SanimalAnalysisUtils;
+import model.util.SanimalAnalysisUtils;
 import model.location.Location;
 import model.location.UTMCoord;
 import model.util.RoundingUtils;

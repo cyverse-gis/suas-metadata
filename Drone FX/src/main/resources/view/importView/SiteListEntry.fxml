@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import java.net.URL?>
+<VBox styleClass="siteBackground" fx:id="mainPane" onMouseEntered="#mouseEntered" onMouseExited="#mouseExited" spacing="5" prefHeight="110" prefWidth="180" alignment="CENTER" fx:controller="controller.importView.SiteListEntryController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <stylesheets>
+        <URL value="@SiteListEntry.css"/>
+    </stylesheets>
+    <children>
+        <Label fx:id="lblName" textAlignment="CENTER" wrapText="true" text="Site Name"/>
+        <Label fx:id="lblLatitude" textAlignment="CENTER" text="Site Latitude"/>
+        <Label fx:id="lblLongitude" textAlignment="CENTER" text="Site Longitude"/>
+    </children>
+</VBox>

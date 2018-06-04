@@ -3,8 +3,6 @@ package controller;
 import com.panemu.tiwulfx.control.DetachableTab;
 import com.panemu.tiwulfx.control.DetachableTabPane;
 import controller.analysisView.VisCSVController;
-import controller.analysisView.VisDrSandersonController;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -16,11 +14,9 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import model.SanimalData;
-import model.analysis.DataAnalyzer;
 import model.image.ImageEntry;
 import model.query.CyVerseQuery;
 import model.query.IQueryCondition;
@@ -43,9 +39,6 @@ public class SanimalAnalysisController implements Initializable
 	/// FXML bound fields start
 	///
 
-	// References to all controllers in the tabs of the analysis page
-	@FXML
-	public VisDrSandersonController visDrSandersonController;
 	@FXML
 	public VisCSVController visCSVController;
 
@@ -203,12 +196,7 @@ public class SanimalAnalysisController implements Initializable
 
 				queryImageTask.setOnSucceeded(event1 ->
 				{
-					// Analyze the result of the query
-					DataAnalyzer dataAnalyzer = new DataAnalyzer(queryImageTask.getValue(), finalEventInterval);
-
-					// Hand the analysis over to the visualizations to graph
-					visDrSandersonController.visualize(dataAnalyzer);
-					visCSVController.visualize(dataAnalyzer);
+					visCSVController.visualize();
 					this.mpnQuerying.setVisible(false);
 				});
 

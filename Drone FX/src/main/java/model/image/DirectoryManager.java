@@ -1,16 +1,12 @@
 package model.image;
 
-import javafx.scene.control.Alert;
 import model.SanimalData;
-import model.analysis.SanimalAnalysisUtils;
+import model.util.SanimalAnalysisUtils;
 import model.location.Location;
 import model.species.Species;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.irods.jargon.core.pub.domain.AvuData;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -90,7 +86,7 @@ public class DirectoryManager
 			// If it's not a directory, then just add the image
 			toReturn = new ImageDirectory(imageOrLocation.getParentFile());
 			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
-			imageEntry.readFileMetadataIntoImage(knownLocations, knownSpecies);
+			imageEntry.readFileMetadataIntoImage();
 			imageEntry.initIconBindings();
 			toReturn.addImage(imageEntry);
 		}
@@ -122,7 +118,7 @@ public class DirectoryManager
 				if (SanimalAnalysisUtils.fileIsImage(file))
 				{
 					ImageEntry imageEntry = new ImageEntry(file);
-					imageEntry.readFileMetadataIntoImage(knownLocations, knownSpecies);
+					imageEntry.readFileMetadataIntoImage();
 					imageEntry.initIconBindings();
 					current.addImage(imageEntry);
 				}
@@ -230,81 +226,5 @@ public class DirectoryManager
 		}
 		// If something goes wrong, return a blank array
 		return new File[0];
-	}
-
-	/**
-	 * Parses a directory assuming its in Dr. Sanderson's format
-	 *
-	 * @param directory The directory in dr. sanderson's format
-	 * @param knownLocations The current list of locations
-	 * @param knownSpecies The current list of species
-	 */
-	public static void parseLegacyDirectory(ImageDirectory directory, List<Location> knownLocations, List<Species> knownSpecies)
-	{
-		// Iterate over all location directories
-		directory.getChildren().stream().filter(imageContainer -> imageContainer instanceof ImageDirectory).map(imageContainer -> (ImageDirectory) imageContainer).forEach(locationDirectory ->
-		{
-			// Get the location name
-			String locationName = locationDirectory.getFile().getName();
-			Optional<Location> locationOpt = knownLocations.stream().filter(location -> location.getName().equalsIgnoreCase(locationName)).findFirst();
-			Location currentLocation;
-			// Get the location if it exists
-			if (locationOpt.isPresent())
-			{
-				currentLocation = locationOpt.get();
-			}
-			// Create the location if it does not
-			else
-			{
-				currentLocation = new Location();
-				currentLocation.setName(locationName);
-				currentLocation.setId("None");
-				currentLocation.setElevation(0.0);
-				currentLocation.setLat(0.0);
-				currentLocation.setLng(0.0);
-				knownLocations.add(currentLocation);
-			}
-
-			// Iterate over all species directories
-			locationDirectory.getChildren().stream().filter(imageContainer -> imageContainer instanceof ImageDirectory).map(imageContainer -> (ImageDirectory) imageContainer).forEach(speciesDirectory ->
-			{
-				// Get the species name
-				String speciesName = speciesDirectory.getFile().getName();
-				Optional<Species> speciesOpt = knownSpecies.stream().filter(species -> species.getName().equalsIgnoreCase(speciesName)).findFirst();
-				Species currentSpecies;
-				// Get the species if it exists
-				if (speciesOpt.isPresent())
-				{
-					currentSpecies = speciesOpt.get();
-				}
-				// Create the species if it does not
-				else
-				{
-					currentSpecies = new Species();
-					currentSpecies.setName(speciesName);
-					currentSpecies.setSpeciesIcon(Species.DEFAULT_ICON);
-					knownSpecies.add(currentSpecies);
-				}
-
-				// Iterate over all species count directories
-				speciesDirectory.getChildren().stream().filter(imageContainer -> imageContainer instanceof ImageDirectory).map(imageContainer -> (ImageDirectory) imageContainer).forEach(countDirectory ->
-				{
-					try
-					{
-						// Try to parse the count
-						Integer speciesCount = Integer.parseInt(countDirectory.getFile().getName());
-						// If the parse succeeds, overwrite the location if a location is on the image, and overwrite the species if species are on the image
-						countDirectory.getChildren().stream().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).forEach(imageEntry ->
-						{
-							if (imageEntry.getLocationTaken() == null)
-								imageEntry.setLocationTaken(currentLocation);
-							if (imageEntry.getSpeciesPresent().isEmpty())
-								imageEntry.addSpecies(currentSpecies, speciesCount);
-						});
-					}
-					catch (NumberFormatException ignored) {}
-				});
-			});
-		});
 	}
 }

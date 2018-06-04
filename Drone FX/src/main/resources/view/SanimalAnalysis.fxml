@@ -70,9 +70,6 @@
                 <ListView styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" fx:id="lvwQueryConditions" orientation="HORIZONTAL"/>
             </HBox>
             <DetachableTabPane fx:id="tpnVisualizations">
-                <DetachableTab fx:id="dtbDrSanderson" detachable="false" text="Dr. Sanderson's Output" closable="false">
-                    <fx:include fx:id="visDrSanderson" source="analysisView/VisDrSanderson.fxml"/>
-                </DetachableTab>
                 <DetachableTab detachable="false" text="CSV Output" closable="false">
                     <fx:include fx:id="visCSV" source="analysisView/VisCSV.fxml"/>
                 </DetachableTab>

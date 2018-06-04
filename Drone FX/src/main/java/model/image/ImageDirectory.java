@@ -30,10 +30,8 @@ public class ImageDirectory extends ImageContainer
 		{
 			ImageEntry image = (ImageEntry) imageContainer;
 			return new Observable[] {
-					image.dateTakenProperty(),
 					image.getFileProperty(),
-					image.locationTakenProperty(),
-					image.getSpeciesPresent(),
+					image.getImageMetadata(),
 					image.getTreeIconProperty()
 			};
 		}
@@ -212,16 +210,6 @@ public class ImageDirectory extends ImageContainer
 	public DoubleProperty uploadProgressProperty()
 	{
 		return this.uploadProgress;
-	}
-
-	/**
-	 * Setting the location taken on a directory sets the location on all children recursively
-	 * @param location The location to set to
-	 */
-	@Override
-	public void setLocationTaken(Location location)
-	{
-		this.getChildren().forEach(child -> child.setLocationTaken(location));
 	}
 
 	/**

@@ -222,15 +222,6 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 			{
 				// Make sure we've got a valid directory
 				boolean validDirectory = true;
-				// Each image must have a location and species tagged
-				for (ImageEntry imageEntry : imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList()))
-				{
-					if (imageEntry.getLocationTaken() == null)
-					{
-						validDirectory = false;
-						break;
-					}
-				}
 
 				// If we have a valid directory, perform the upload
 				if (validDirectory)

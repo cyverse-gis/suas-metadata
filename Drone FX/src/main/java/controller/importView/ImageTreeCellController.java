@@ -183,37 +183,6 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 		Boolean success = false;
 		// Grab the dragboard
 		Dragboard dragboard = dragEvent.getDragboard();
-		// If our dragboard has a string we have data which we need
-		if (dragboard.hasContent(SPECIES_NAME_FORMAT) && dragboard.hasContent(SPECIES_SCIENTIFIC_NAME_FORMAT) && this.getItem() instanceof ImageEntry)
-		{
-			String commonName = (String) dragboard.getContent(SPECIES_NAME_FORMAT);
-			String scientificName = (String) dragboard.getContent(SPECIES_SCIENTIFIC_NAME_FORMAT);
-			// Grab the species with the given ID
-			Optional<Species> toAdd = SanimalData.getInstance().getSpeciesList().stream().filter(species -> species.getScientificName().equals(scientificName) && species.getName().equals(commonName)).findFirst();
-			// Add the species to the image
-			ImageContainer item = this.getItem();
-			if (toAdd.isPresent())
-			{
-				((ImageEntry) item).addSpecies(toAdd.get(), 1);
-				// Automatically select the next image in the image list view if the option is selected
-				if (SanimalData.getInstance().getSettings().getAutomaticNextImage())
-					this.getTreeView().getSelectionModel().selectNext();
-				success = true;
-			}
-		}
-		else if (dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT))
-		{
-			String locationName = (String) dragboard.getContent(LOCATION_NAME_FORMAT);
-			String locationId = (String) dragboard.getContent(LOCATION_ID_FORMAT);
-			// Grab the species with the given ID
-			Optional<Location> toAdd = SanimalData.getInstance().getLocationList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
-			// Add the species to the image
-			if (toAdd.isPresent())
-			{
-				this.getItem().setLocationTaken(toAdd.get());
-				success = true;
-			}
-		}
 		// Set the success equal to the flag, and consume the event
 		dragEvent.setDropCompleted(success);
 		dragEvent.consume();

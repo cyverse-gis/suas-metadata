@@ -1,4 +1,4 @@
-package model.analysis;
+package model.util;
 
 import model.location.UTMCoord;
 import org.apache.commons.lang3.StringUtils;

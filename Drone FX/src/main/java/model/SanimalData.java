@@ -16,6 +16,7 @@ import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.location.Location;
+import model.neon.NeonData;
 import model.query.QueryEngine;
 import model.species.Species;
 import model.threading.ErrorService;
@@ -92,6 +93,9 @@ public class SanimalData
 
 	// Query engine used in storing the current query setup
 	private QueryEngine queryEngine = new QueryEngine();
+
+	// The neon data API access point
+	private NeonData neonData = new NeonData();
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
@@ -483,4 +487,6 @@ public class SanimalData
 	}
 
 	public QueryEngine getQueryEngine() { return this.queryEngine; }
+
+	public NeonData getNeonData() { return neonData; }
 }

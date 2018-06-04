@@ -53,7 +53,7 @@ public class CyVerseConnectionManager
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
 	// The directory that collections are stored in
-	private static final String COLLECTIONS_DIRECTORY = "/iplant/home/dslovikosky/Sanimal/Collections";
+	private static final String COLLECTIONS_DIRECTORY = "/iplant/home/dslovikosky/Drone/Collections";
 	// Each user is part of the iPlant zone
 	private static final String ZONE = "iplant";
 	// The type used to serialize a list of locations through Gson
@@ -144,17 +144,17 @@ public class CyVerseConnectionManager
 				IRODSFileFactory fileFactory = sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 
 				// If the main Sanimal directory does not exist yet, create it
-				IRODSFile sanimalDirectory = fileFactory.instanceIRODSFile("./Sanimal");
+				IRODSFile sanimalDirectory = fileFactory.instanceIRODSFile("./Drone");
 				if (!sanimalDirectory.exists())
 					sanimalDirectory.mkdir();
 
 				// Create a subfolder containing all settings that the sanimal program stores
-				IRODSFile sanimalSettings = fileFactory.instanceIRODSFile("./Sanimal/Settings");
+				IRODSFile sanimalSettings = fileFactory.instanceIRODSFile("./Drone/Settings");
 				if (!sanimalSettings.exists())
 					sanimalSettings.mkdir();
 
 				// If we don't have a default species.json file, put a default one onto the storage location
-				IRODSFile sanimalSpeciesFile = fileFactory.instanceIRODSFile("./Sanimal/Settings/species.json");
+				IRODSFile sanimalSpeciesFile = fileFactory.instanceIRODSFile("./Drone/Settings/species.json");
 				if (!sanimalSpeciesFile.exists())
 				{
 					// Pull the default species.json file
@@ -164,7 +164,7 @@ public class CyVerseConnectionManager
 						// Read the Json file
 						String json = fileReader.lines().collect(Collectors.joining("\n"));
 						// Write it to the directory
-						this.writeRemoteFile("./Sanimal/Settings/species.json", json);
+						this.writeRemoteFile("./Drone/Settings/species.json", json);
 					}
 					catch (IOException e)
 					{
@@ -179,7 +179,7 @@ public class CyVerseConnectionManager
 				}
 
 				// If we don't have a default locations.json file, put a default one onto the storage location
-				IRODSFile sanimalLocationsFile = fileFactory.instanceIRODSFile("./Sanimal/Settings/locations.json");
+				IRODSFile sanimalLocationsFile = fileFactory.instanceIRODSFile("./Drone/Settings/locations.json");
 				if (!sanimalLocationsFile.exists())
 				{
 					// Pull the default locations.json file
@@ -189,7 +189,7 @@ public class CyVerseConnectionManager
 						// Read the Json file
 						String json = fileReader.lines().collect(Collectors.joining("\n"));
 						// Write it to the directory
-						this.writeRemoteFile("./Sanimal/Settings/locations.json", json);
+						this.writeRemoteFile("./Drone/Settings/locations.json", json);
 					}
 					catch (IOException e)
 					{
@@ -204,7 +204,7 @@ public class CyVerseConnectionManager
 				}
 
 				// If we don't have a default settings.json file, put a default one onto the storage location
-				IRODSFile sanimalSettingsFile = fileFactory.instanceIRODSFile("./Sanimal/Settings/settings.json");
+				IRODSFile sanimalSettingsFile = fileFactory.instanceIRODSFile("./Drone/Settings/settings.json");
 				if (!sanimalSettingsFile.exists())
 				{
 					// Pull the default settings.json file
@@ -214,7 +214,7 @@ public class CyVerseConnectionManager
 						// Read the Json file
 						String json = fileReader.lines().collect(Collectors.joining("\n"));
 						// Write it to the directory
-						this.writeRemoteFile("./Sanimal/Settings/settings.json", json);
+						this.writeRemoteFile("./Drone/Settings/settings.json", json);
 					}
 					catch (IOException e)
 					{
@@ -254,7 +254,7 @@ public class CyVerseConnectionManager
 			// Convert the settings to JSON format
 			String json = SanimalData.getInstance().getGson().toJson(settingsData);
 			// Write the settings.json file to the server
-			this.writeRemoteFile("./Sanimal/Settings/settings.json", json);
+			this.writeRemoteFile("./Drone/Settings/settings.json", json);
 			this.sessionManager.closeSession();
 		}
 	}
@@ -269,7 +269,7 @@ public class CyVerseConnectionManager
 		if (this.sessionManager.openSession())
 		{
 			// Path to the file on the CyVerse server should be named settings.json
-			String fileName = "./Sanimal/Settings/settings.json";
+			String fileName = "./Drone/Settings/settings.json";
 			// Read the contents of the file into a string
 			String fileContents = this.readRemoteFile(fileName);
 			// Ensure that we in fact got data back
@@ -310,7 +310,7 @@ public class CyVerseConnectionManager
 		if (this.sessionManager.openSession())
 		{
 			// Path to the file on the CyVerse server should be named locations.json
-			String fileName = "./Sanimal/Settings/locations.json";
+			String fileName = "./Drone/Settings/locations.json";
 			// Read the contents of the file into a string
 			String fileContents = this.readRemoteFile(fileName);
 			// Ensure that we in fact got data back
@@ -353,7 +353,7 @@ public class CyVerseConnectionManager
 			// Convert the location list to JSON format
 			String json = SanimalData.getInstance().getGson().toJson(newLocations);
 			// Write the locations.json file to the server
-			this.writeRemoteFile("./Sanimal/Settings/locations.json", json);
+			this.writeRemoteFile("./Drone/Settings/locations.json", json);
 			this.sessionManager.closeSession();
 		}
 	}
@@ -368,7 +368,7 @@ public class CyVerseConnectionManager
 		if (this.sessionManager.openSession())
 		{
 			// Path to the file on the CyVerse server should be named species.json
-			String fileName = "./Sanimal/Settings/species.json";
+			String fileName = "./Drone/Settings/species.json";
 			// Read the contents of the file into a string
 			String fileContents = this.readRemoteFile(fileName);
 			// Ensure that we in fact got data back
@@ -411,7 +411,7 @@ public class CyVerseConnectionManager
 			// Convert the species list to JSON format
 			String json = SanimalData.getInstance().getGson().toJson(newSpecies);
 			// Write the species.json file to the server
-			this.writeRemoteFile("./Sanimal/Settings/species.json", json);
+			this.writeRemoteFile("./Drone/Settings/species.json", json);
 			this.sessionManager.closeSession();
 		}
 	}
@@ -796,6 +796,7 @@ public class CyVerseConnectionManager
 	{
 		if (this.sessionManager.openSession())
 		{
+			/*
 			try
 			{
 				// Grab the uploads folder for a given collection
@@ -881,6 +882,7 @@ public class CyVerseConnectionManager
 						"Could not upload the images to CyVerse!\n" + ExceptionUtils.getStackTrace(e),
 						false);
 			}
+			*/
 			this.sessionManager.closeSession();
 		}
 	}
@@ -896,6 +898,7 @@ public class CyVerseConnectionManager
 	{
 		if (this.sessionManager.openSession())
 		{
+			/*
 			try
 			{
 				// Grab the save folder for a given collection
@@ -990,6 +993,7 @@ public class CyVerseConnectionManager
 						"Could not save the image list to the collection on CyVerse!\n" + ExceptionUtils.getStackTrace(e),
 						false);
 			}
+			*/
 			this.sessionManager.closeSession();
 		}
 	}
@@ -1282,6 +1286,8 @@ public class CyVerseConnectionManager
 						}
 					}
 
+					/*
+
 					// Grab the collection that this image is a part of
 					UUID finalCollectionID = collectionID;
 					Optional<ImageCollection> correctCollection = SanimalData.getInstance().getCollectionList().stream().filter(imageCollection -> imageCollection.getID().equals(finalCollectionID)).findFirst();
@@ -1339,6 +1345,7 @@ public class CyVerseConnectionManager
 						entry.addSpecies(correctSpecies, speciesCount);
 					}
 					toReturn.add(entry);
+					*/
 				}
 			}
 			catch (JargonException | NumberFormatException e)

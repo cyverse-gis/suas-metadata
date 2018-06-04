@@ -358,15 +358,6 @@ public class SanimalUploadController implements Initializable
 			// Make sure we've got a valid directory
 			boolean validDirectory = true;
 
-			// Each image must have a location and species tagged
-			for (CloudImageEntry imageEntry : imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CloudImageEntry).map(imageContainer -> (CloudImageEntry) imageContainer).filter(cloudImageEntry -> cloudImageEntry.hasBeenPulledFromCloud() && cloudImageEntry.isCloudDirty()).collect(Collectors.toList()))
-			{
-				if (imageEntry.getLocationTaken() == null)
-				{
-					validDirectory = false;
-					break;
-				}
-			}
 
 			// If we have a valid directory, perform the upload
 			if (validDirectory)

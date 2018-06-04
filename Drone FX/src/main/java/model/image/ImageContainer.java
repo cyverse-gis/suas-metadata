@@ -15,9 +15,6 @@ public abstract class ImageContainer implements HierarchyData<ImageContainer>
 	// The file that this container represents. May be a directory or file
 	public abstract File getFile();
 
-	// Sets the location taken of the given image container
-	public abstract void setLocationTaken(Location location);
-
 	/**
 	 * To string just prints out the file name by default
 	 * @return The file name

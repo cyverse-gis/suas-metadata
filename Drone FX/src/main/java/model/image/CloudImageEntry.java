@@ -92,17 +92,8 @@ public class CloudImageEntry extends ImageEntry
 		// The image is checked if the location is valid and the species present list is not empty
 		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
 		{
-			if (!this.hasBeenPulledFromCloud.getValue())
-				return NO_DOWNLOAD_CLOUD_IMAGE_ICON;
-			else if (this.getLocationTaken() != null && this.getLocationTaken().locationValid() && !this.getSpeciesPresent().isEmpty())
-				return CHECKED_CLOUD_IMAGE_ICON;
-			else if (!this.getSpeciesPresent().isEmpty())
-				return SPECIES_ONLY_CLOUD_IMAGE_ICON;
-			else if (this.getLocationTaken() != null && this.getLocationTaken().locationValid())
-				return LOCATION_ONLY_CLOUD_IMAGE_ICON;
-			else
 				return DEFAULT_CLOUD_IMAGE_ICON;
-		}, this.locationTakenProperty(), this.getSpeciesPresent(), this.hasBeenPulledFromCloud);
+		});
 		this.selectedImageProperty.bind(imageBinding);
 
 		this.getFileProperty().setValue(PLACEHOLDER_FILE);
@@ -119,79 +110,6 @@ public class CloudImageEntry extends ImageEntry
 	{
 		this.pullFromCloudIfNotPulled();
 		return super.getFile();
-	}
-
-	/**
-	 * We can set the date taken without the image but don't write to disk
-	 *
-	 * @param date The new date taken
-	 */
-	@Override
-	public void setDateTaken(LocalDateTime date)
-	{
-		this.pullFromCloudIfNotPulled();
-		super.setDateTaken(date);
-	}
-
-	/**
-	 * If we haven't pulled yet we just return null
-	 *
-	 * @return Null or a real date if we have pulled from the cloud
-	 */
-	@Override
-	public LocalDateTime getDateTaken()
-	{
-		this.pullFromCloudIfNotPulled();
-		return super.getDateTaken();
-	}
-
-	/**
-	 * We can set the location taken without the image but don't write to disk
-	 *
-	 * @param location The new location the image was taken at
-	 */
-	@Override
-	public void setLocationTaken(Location location)
-	{
-		this.pullFromCloudIfNotPulled();
-		super.setLocationTaken(location);
-	}
-
-	/**
-	 * If we haven't pulled yet we just return null
-	 *
-	 * @return The location taken or null if it has not yet been determined
-	 */
-	@Override
-	public Location getLocationTaken()
-	{
-		this.pullFromCloudIfNotPulled();
-		return super.getLocationTaken();
-	}
-
-	/**
-	 * Add a species and a count to the image
-	 *
-	 * @param species The species of the animal
-	 * @param amount The amount of that species to add
-	 */
-	@Override
-	public void addSpecies(Species species, Integer amount)
-	{
-		this.pullFromCloudIfNotPulled();
-		super.addSpecies(species, amount);
-	}
-
-	/**
-	 * Remove a species from the image
-	 *
-	 * @param species The species to remove
-	 */
-	@Override
-	public void removeSpecies(Species species)
-	{
-		this.pullFromCloudIfNotPulled();
-		super.removeSpecies(species);
 	}
 
 	/**
@@ -276,10 +194,8 @@ public class CloudImageEntry extends ImageEntry
 			File localFile = pullTask.getValue();
 			this.getFileProperty().setValue(localFile);
 			// Read the metadata into the image file
-			super.readFileMetadataIntoImage(SanimalData.getInstance().getLocationList(), SanimalData.getInstance().getSpeciesList());
+			super.readFileMetadataIntoImage();
 			// Update flags
-			if (!this.getSpeciesPresent().isEmpty())
-				wasTaggedWithSpecies.set(true);
 			this.hasBeenPulledFromCloud.setValue(true);
 			this.isBeingPulledFromCloud.setValue(false);
 			this.markCloudDirty(false);
