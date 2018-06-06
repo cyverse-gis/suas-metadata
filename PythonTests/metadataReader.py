@@ -1,16 +1,17 @@
 import exiftool
 import json
 import os
+import datetime
 
 # Map of actual EXIF metadata tags to our index metadata tags
 indexedFieldNames = \
-{
-    "EXIF:CreateDate": "createDate",
-    "EXIF:DateTimeOriginal": "originalDate",
-    "EXIF:GPSAltitude": "altitude",
-    "EXIF:GPSLatitude": "latitude",
-    "EXIF:GPSLongitude": "longitude"
-}
+[
+    "EXIF:CreateDate",
+    "EXIF:DateTimeOriginal",
+    "EXIF:GPSAltitude",
+    "EXIF:GPSLatitude",
+    "EXIF:GPSLongitude"
+]
 
 def main():
     # Read the directory to index from the command line, won't be used later
@@ -21,13 +22,13 @@ def main():
     if not os.path.isdir(dirToIndex):
         print("Path is not a valid directory!")
         exit(1)
-    # The JSON to return from the program
-    jsonOut = createJSONIndexForDirectory(dirToIndex)
-    # Write the json to a file
-    with open("index.json", "w") as text_file:
-        text_file.write(jsonOut)
+    # The bulk insert to return from the program
+    bulkInsert = createBulkInsertForDirectory(dirToIndex)
+    # Write the jsons to a file
+    with open("insert.txt", "w") as text_file:
+        text_file.write(bulkInsert)
 
-def createJSONIndexForDirectory(directory):
+def createBulkInsertForDirectory(directory):
     # Create the index
     filesToIndex = getIndexableFiles(directory)
     # A list of indexed files in the form of a dictionary
@@ -43,8 +44,23 @@ def createJSONIndexForDirectory(directory):
     # Only keep files that actually have non-null fields. Indexing documents with all null fields is useless
     validIndexedFiles = list(filter(lambda indexedFile: fileValid(indexedFile), indexedFiles))
 
+
+    bulkInsertBody = ""
+    for indexedFile in validIndexedFiles:
+        header = \
+        {
+            "index":
+            {
+                "_index": "drone",
+                "_type": "_doc"
+            }
+        }
+        jsonForHeader = json.dumps(header)
+        jsonForIndexedFile = json.dumps(indexedFile)
+        bulkInsertBody = bulkInsertBody + jsonForHeader + "\n" + jsonForIndexedFile + "\n"
+
     # Return the results
-    return json.dumps(validIndexedFiles)
+    return bulkInsertBody
 
 def getIndexableFiles(currentDirectory, filesToIndex = []):
     # Raw files names is a list of files in a directory that need to be indexed. They are without path
@@ -77,7 +93,7 @@ def createIndexEntriesForFiles(files):
         return []
 
     # Exif tool instance used to read image metadata
-    exiftoolInstance = exiftool.ExifTool()
+    exiftoolInstance = exiftool.ExifTool("./exiftool.exe")
     # Start the exif tool (used for bulk optimization)
     exiftoolInstance.start()
     # Pull a list of tags off of a list of files
@@ -91,10 +107,25 @@ def createIndexEntriesForFiles(files):
     for exifInfo in exifInfoList:
         # Create a new map of exif -> value with only key/value pairs we want
         indexedInfo = {}
-        # Iterate over all keys we want to store
-        for metadataFieldName, indexFieldName in indexedFieldNames.items():
-            # Grab the keys from the exif info or store none if it's not present
-            indexedInfo[indexFieldName] = exifInfo.get(metadataFieldName, None)
+        # Assume date is in Year:Month:Day Hour:Minute:Second
+        indexedInfo["createDate"] = exifInfo.get("EXIF:CreateDate", None)
+        # Assume date is in Year:Month:Day Hour:Minute:Second
+        indexedInfo["originalDate"] = exifInfo.get("EXIF:DateTimeOriginal", None)
+        # Assume altitude in meters?
+        indexedInfo["altitude"] = exifInfo.get("EXIF:GPSAltitude", None)
+        # The date uploaded is the current date
+        indexedInfo["dateUploaded"] = datetime.datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+        lat = exifInfo.get("EXIF:GPSLatitude", None)
+        lon = exifInfo.get("EXIF:GPSLongitude", None)
+        if lat is not None and lon is not None:
+            # Append location as an object
+            indexedInfo["location"] = \
+            {
+                "lat": lat,
+                "lon": lon
+            }
+        else:
+            indexedInfo["location"] = None
         indexedInfoList.append(indexedInfo)
 
     return indexedInfoList
