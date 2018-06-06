@@ -93,7 +93,11 @@ def createIndexEntriesForFiles(files):
         return []
 
     # Exif tool instance used to read image metadata
-    exiftoolInstance = exiftool.ExifTool("./exiftool.exe")
+    exiftoolInstance = None
+    if os.name == "nt":
+        exiftoolInstance = exiftool.ExifTool("./exiftool.exe")
+    else:
+        exiftoolInstance = exiftool.ExifTool()
     # Start the exif tool (used for bulk optimization)
     exiftoolInstance.start()
     # Pull a list of tags off of a list of files
