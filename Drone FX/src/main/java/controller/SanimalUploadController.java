@@ -42,16 +42,6 @@ public class SanimalUploadController implements Initializable
 	/// FXML Bound Fields Start
 	///
 
-	// The list view of collections
-	@FXML
-	public ListView<ImageCollection> collectionListView;
-
-	// The new and delete collection buttons
-	@FXML
-	public Button btnNewCollection;
-	@FXML
-	public Button btnDeleteCollection;
-
 	// The primary split pane
 	@FXML
 	public SplitPane spnMain;
@@ -89,6 +79,9 @@ public class SanimalUploadController implements Initializable
 	@FXML
 	public Button btnResetSearch;
 
+	@FXML
+	public Button btnUpload;
+
 	///
 	/// FXML Bound Fields End
 	///
@@ -97,45 +90,10 @@ public class SanimalUploadController implements Initializable
 	private static final String STATUS_LOADING = "Loading collection uploads...";
 	private static final String STATUS_DOWNLOADING = "Downloading collection uploads to edit...";
 
-
-	// The currently selected image collection
-	private ObjectProperty<ImageCollection> selectedCollection = new SimpleObjectProperty<>();
-
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
 		// First setup the collection list
-
-		// Grab the global collection list
-		SortedList<ImageCollection> collections = new SortedList<>(SanimalData.getInstance().getCollectionList());
-		// Set the comparator to be the name of the image collection
-		collections.setComparator(Comparator.comparing(ImageCollection::getName));
-		// Set the list of items to be the collections
-		this.collectionListView.setItems(SanimalData.getInstance().getCollectionList());
-		// Set the cell factory to be our custom cell factory
-		this.collectionListView.setCellFactory(x -> {
-			ImageCollectionListEntryController controller = FXMLLoaderUtils.loadFXML("uploadView/ImageCollectionListEntry.fxml").getController();
-			// When we double click the collection list view items, we want to edit the collection settings
-			controller.setOnMouseClicked(event -> {
-				if (event.getClickCount() >= 2 && controller.getItem() != null && !controller.btnSettings.isDisabled())
-					controller.settingsClicked(null);
-			});
-			return controller;
-		});
-		// When we select a new element, set the property
-		this.collectionListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> this.selectedCollection.setValue(newValue));
-
-		// If no collection is selected, disable the text fields and buttons
-		BooleanBinding nothingSelected = selectedCollection.isNull();
-
-		// Disable this button when we are not the owner of the collection
-		this.btnDeleteCollection.disableProperty().bind(EasyBind.monadic(this.selectedCollection).map(collection ->
-		{
-			String ownerUsername = collection.getOwner();
-			return ownerUsername == null || !ownerUsername.equals(SanimalData.getInstance().getUsername());
-		}).orElse(nothingSelected));
-
-		this.btnRefreshUploads.disableProperty().bind(nothingSelected);
 
 		// Initialize root of the right side directory/image tree and make the root invisible
 		// This is because a treeview must have ONE root.
@@ -151,6 +109,7 @@ public class SanimalUploadController implements Initializable
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("uploadView/UploadTreeCell.fxml").getController());
 
+		/*
 		// Custom cell factory used to show upload downloads
 		this.uploadListDownloadListView.setCellFactory(list ->
 		{
@@ -172,9 +131,11 @@ public class SanimalUploadController implements Initializable
 					StringUtils.containsIgnoreCase(cloudUploadEntry.getImageCount().toString(), this.txtUploadSearch.getCharacters())), this.txtUploadSearch.textProperty()));
 			return filteredSortedUploads;
 		}));
+		*/
 
 		// Hide the maskerpane since we're not retrieving downloads
 		this.mpnDownloadUploads.setVisible(false);
+		/*
 		// When we select a new collection download the list of uploads to display
 		this.selectedCollection.addListener((observable, oldValue, newValue) ->
 		{
@@ -188,6 +149,9 @@ public class SanimalUploadController implements Initializable
 				}
 			}
 		});
+		*/
+
+		this.btnUpload.disableProperty().bind();
 
 		// Bind the tasks
 		EasyBind.listBind(this.tpvUploads.getTasks(), SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().getActiveTasks());
@@ -234,113 +198,45 @@ public class SanimalUploadController implements Initializable
 	}
 
 	/**
-	 * When we click the new collection button
-	 *
-	 * @param actionEvent ignored
-	 */
-	public void newCollectionPressed(ActionEvent actionEvent)
-	{
-		// Create the collection
-		ImageCollection collection = new ImageCollection();
-		// Create permissions for the owner
-		Permission owner = new Permission();
-		// Ensure that the owner has own permissions and then add it to the collection
-		owner.setUsername(SanimalData.getInstance().usernameProperty().getValue());
-		owner.setRead(true);
-		owner.setUpload(true);
-		owner.setOwner(true);
-		collection.getPermissions().add(owner);
-		// Add the collection to the global collection list
-		SanimalData.getInstance().getCollectionList().add(collection);
-	}
-
-	/**
-	 * When we click the delete collection button
-	 *
-	 * @param actionEvent consumed
-	 */
-	public void deleteCollectionPressed(ActionEvent actionEvent)
-	{
-		// Grab the selected collection
-		ImageCollection selected = this.collectionListView.getSelectionModel().getSelectedItem();
-		if (selected != null)
-		{
-			// If a collection is selected, show an alert that data may be deleted!
-			Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-			alert.initOwner(this.collectionListView.getScene().getWindow());
-			alert.setTitle("Confirmation");
-			alert.setHeaderText("Are you sure you want to delete this collection?");
-			alert.setContentText("Deleting this collection will result in the permanent removal of all images uploaded to CyVerse to this collection. Are you sure you want to continue?");
-			Optional<ButtonType> buttonType = alert.showAndWait();
-			if (buttonType.isPresent())
-			{
-				if (buttonType.get() == ButtonType.OK)
-				{
-					// Remove the collection on the CyVerse system
-					SanimalData.getInstance().getConnectionManager().removeCollection(selected);
-
-					// Remove the selected collection
-					SanimalData.getInstance().getCollectionList().remove(selected);
-				}
-			}
-		}
-		else
-		{
-			// If no collection is selected, show an alert
-			Alert alert = new Alert(Alert.AlertType.WARNING);
-			alert.initOwner(this.collectionListView.getScene().getWindow());
-			alert.setTitle("No Selection");
-			alert.setHeaderText("No Collection Selected");
-			alert.setContentText("Please select a collection from the collection list to remove.");
-			alert.showAndWait();
-		}
-		actionEvent.consume();
-	}
-
-	/**
 	 * Called to download images from a specific upload for editing
 	 *
 	 * @param uploadEntry The upload entry which we want to pull images from
 	 */
 	private void downloadImages(CloudUploadEntry uploadEntry)
 	{
-		// Make sure we have a collection selected
-		if (this.selectedCollection.getValue() != null)
+		// Show the loading box again and disable the download entries
+		this.mpnDownloadUploads.setVisible(true);
+		this.mpnDownloadUploads.setText(STATUS_DOWNLOADING);
+		this.mpnDownloadUploads.setProgress(-1);
+		this.vbxDownloadList.setDisable(true);
+
+		// Create a task to execute
+		ErrorTask<Void> downloadTask = new ErrorTask<Void>()
 		{
-			// Show the loading box again and disable the download entries
-			this.mpnDownloadUploads.setVisible(true);
-			this.mpnDownloadUploads.setText(STATUS_DOWNLOADING);
-			this.mpnDownloadUploads.setProgress(-1);
-			this.vbxDownloadList.setDisable(true);
-
-			// Create a task to execute
-			ErrorTask<Void> downloadTask = new ErrorTask<Void>()
+			@Override
+			protected Void call()
 			{
-				@Override
-				protected Void call()
+				this.updateMessage("Downloading directory for editing...");
+				// Download the directory and add it to our tree structure
+				CloudImageDirectory cloudDirectory = SanimalData.getInstance().getConnectionManager().downloadUploadDirectory(uploadEntry);
+				Platform.runLater(() ->
 				{
-					this.updateMessage("Downloading directory for editing...");
-					// Download the directory and add it to our tree structure
-					CloudImageDirectory cloudDirectory = SanimalData.getInstance().getConnectionManager().downloadUploadDirectory(uploadEntry);
-					Platform.runLater(() ->
-					{
-						uploadEntry.setCloudImageDirectory(cloudDirectory);
-						SanimalData.getInstance().getImageTree().addChild(cloudDirectory);
-					});
-					return null;
-				}
-			};
+					uploadEntry.setCloudImageDirectory(cloudDirectory);
+					SanimalData.getInstance().getImageTree().addChild(cloudDirectory);
+				});
+				return null;
+			}
+		};
 
-			// Once the download is done hide the download box and enable the download list again
-			downloadTask.setOnSucceeded(event ->
-			{
-				this.mpnDownloadUploads.setVisible(false);
-				this.vbxDownloadList.setDisable(false);
-				uploadEntry.setDownloaded(true);
-			});
+		// Once the download is done hide the download box and enable the download list again
+		downloadTask.setOnSucceeded(event ->
+		{
+			this.mpnDownloadUploads.setVisible(false);
+			this.vbxDownloadList.setDisable(false);
+			uploadEntry.setDownloaded(true);
+		});
 
-			SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(downloadTask);
-		}
+		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(downloadTask);
 	}
 
 	/**
@@ -355,53 +251,36 @@ public class SanimalUploadController implements Initializable
 		// Make sure the upload has been downloaded
 		if (uploadEntry.hasBeenDownloaded() && imageDirectory != null)
 		{
-			// Make sure we've got a valid directory
-			boolean validDirectory = true;
-
-
 			// If we have a valid directory, perform the upload
-			if (validDirectory)
+			// Create an upload task
+			Task<Void> saveTask = new ErrorTask<Void>()
 			{
-				// Create an upload task
-				Task<Void> saveTask = new ErrorTask<Void>()
+				@Override
+				protected Void call()
 				{
-					@Override
-					protected Void call()
-					{
-						// Create a string property used as a callback
-						StringProperty messageCallback = new SimpleStringProperty("");
-						this.updateMessage("Saving image directory " + imageDirectory.getCyverseDirectory().getName() + " to CyVerse.");
-						messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
+					// Create a string property used as a callback
+					StringProperty messageCallback = new SimpleStringProperty("");
+					this.updateMessage("Saving image directory " + imageDirectory.getCyverseDirectory().getName() + " to CyVerse.");
+					messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
 
-						// Save images to CyVerse, we give it a transfer status callback so that we can show the progress
-						SanimalData.getInstance().getConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
-						return null;
-					}
-				};
-				// When the upload finishes, we enable the upload button
-				saveTask.setOnSucceeded(event ->
-				{
-					imageDirectory.setUploadProgress(-1);
-					SanimalData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
-					uploadEntry.clearLocalCopy();
-				});
-				SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(saveTask);
-			}
-			else
+					// Save images to CyVerse, we give it a transfer status callback so that we can show the progress
+					//SanimalData.getInstance().getConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
+					return null;
+				}
+			};
+			// When the upload finishes, we enable the upload button
+			saveTask.setOnSucceeded(event ->
 			{
-				// If an invalid directory is selected, show an alert
-				SanimalData.getInstance().getErrorDisplay().showPopup(Alert.AlertType.WARNING,
-						this.collectionListView.getScene().getWindow(),
-						"Invalid Directory",
-						"Invalid Directory (" + imageDirectory.getFile().getName() + ") Selected",
-						"An image in the directory (" + imageDirectory.getFile().getName() + ") you selected to save does not have a location. Please ensure all images are tagged with a location!",
-						true);
-			}
+				imageDirectory.setUploadProgress(-1);
+				SanimalData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
+				uploadEntry.clearLocalCopy();
+			});
+			SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(saveTask);
 		}
 		else
 		{
 			SanimalData.getInstance().getErrorDisplay().showPopup(Alert.AlertType.ERROR,
-					this.collectionListView.getScene().getWindow(),
+					this.imageTree.getScene().getWindow(),
 					"Error",
 					"Directory not downloaded",
 					"The Cloud directory has not been downloaded yet, how are you going to save it?",
@@ -416,6 +295,7 @@ public class SanimalUploadController implements Initializable
 	 */
 	public void refreshUploads(ActionEvent actionEvent)
 	{
+		/*
 		// Make sure we have a selected collection
 		if (this.selectedCollection.getValue() != null)
 		{
@@ -451,6 +331,7 @@ public class SanimalUploadController implements Initializable
 				this.syncUploadsForCollection(this.selectedCollection.getValue());
 			}
 		}
+		*/
 		actionEvent.consume();
 	}
 
@@ -463,5 +344,10 @@ public class SanimalUploadController implements Initializable
 	{
 		this.txtUploadSearch.clear();
 		actionEvent.consume();
+	}
+
+	public void uploadImages(ActionEvent actionEvent)
+	{
+
 	}
 }
