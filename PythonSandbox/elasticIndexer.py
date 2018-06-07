@@ -41,8 +41,8 @@ def indexDirectory(directory):
         IndexableMetadataField("EXIF:CreateDate", "createDate", False, None),
         IndexableMetadataField("EXIF:DateTimeOriginal", "originalDate", False, None),
         IndexableMetadataField("EXIF:GPSAltitude", "altitude", False, None),
-        IndexableMetadataField("EXIF:GPSLatitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude", 0), exifInfo.get("EXIF:GPSLatitude", 0)] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None),
-        IndexableMetadataField("EXIF:GPSLongitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude", 0), exifInfo.get("EXIF:GPSLatitude", 0)] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None)
+        IndexableMetadataField("EXIF:GPSLatitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude"), exifInfo.get("EXIF:GPSLatitude")] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None),
+        IndexableMetadataField("EXIF:GPSLongitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude"), exifInfo.get("EXIF:GPSLatitude")] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None)
     ]
 
     # Create metadata from the directory ready for indexing
