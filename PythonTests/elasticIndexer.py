@@ -1,7 +1,9 @@
 import metadataReader
+from metadataReader import IndexableMetadataField
 import os
 from elasticsearch import Elasticsearch, helpers
 import sys
+import datetime
 
 # The address of the host of ElasticSearch
 ELASTIC_HOST = "128.196.38.73"
@@ -34,8 +36,21 @@ def main():
 
 
 def indexDirectory(directory):
+    indexedFields = \
+    [
+        IndexableMetadataField("EXIF:CreateDate", "createDate", False, None),
+        IndexableMetadataField("EXIF:DateTimeOriginal", "originalDate", False, None),
+        IndexableMetadataField("EXIF:GPSAltitude", "altitude", False, None),
+        IndexableMetadataField("EXIF:GPSLatitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude", 0), exifInfo.get("EXIF:GPSLatitude", 0)] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None),
+        IndexableMetadataField("EXIF:GPSLongitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude", 0), exifInfo.get("EXIF:GPSLatitude", 0)] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None)
+    ]
+
     # Create metadata from the directory ready for indexing
-    metadataToIndexList = metadataReader.createMetaDictionaryForDirectory(directory)
+    metadataToIndexList = metadataReader.createMetaDictForDirectory(directory, indexedFields)
+    # Add an additional unrelated metadata field specifying when the metadata was added to the index
+    uploadDateTime = datetime.datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+    for metadata in metadataToIndexList:
+        metadata["uploadDate"] = uploadDateTime
 
     # Open a connection to elasticsearch
     es = Elasticsearch(hosts=[ELASTIC_HOST])
