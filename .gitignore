@@ -4,6 +4,6 @@
 /Drone FX/demoApplication.log
 /Drone FX/debug.log
 /Drone FX/target/
-/PythonTests/.idea/*
-/PythonTests/venv/*
-/PythonTests/__pycache__
+/PythonSandbox/.idea/*
+/PythonSandbox/venv/*
+/PythonSandbox/__pycache__
