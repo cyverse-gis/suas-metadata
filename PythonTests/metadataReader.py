@@ -9,7 +9,7 @@ indexedFieldNames = \
     "EXIF:CreateDate": lambda exifInfo: ("createDate", exifInfo.get("EXIF:CreateDate", None)),
     "EXIF:DateTimeOriginal": lambda exifInfo: ("originalDate", exifInfo.get("EXIF:DateTimeOriginal", None)),
     "EXIF:GPSAltitude": lambda exifInfo: ("altitude", exifInfo.get("EXIF:GPSAltitude", None)),
-    "EXIF:GPSLatitude": lambda exifInfo: ("dateUploaded", datetime.datetime.now().strftime("%Y:%m:%d %H:%M:%S")),
+    "EXIF:GPSLatitude": lambda exifInfo: ("uploadDate", datetime.datetime.now().strftime("%Y:%m:%d %H:%M:%S")),
     "EXIF:GPSLongitude": lambda exifInfo: ("location", { "lat": exifInfo.get("EXIF:GPSLatitude"), "lon": exifInfo.get("EXIF:GPSLongitude") }
                                            if exifInfo.get("EXIF:GPSLatitude",  None) is not None and
                                               exifInfo.get("EXIF:GPSLongitude", None) is not None
