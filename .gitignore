@@ -6,3 +6,4 @@
 /Drone FX/target/
 /PythonTests/.idea/*
 /PythonTests/venv/*
+/PythonTests/__pycache__

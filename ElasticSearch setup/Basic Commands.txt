@@ -1,38 +1,37 @@
 # Add the drone index
 PUT drone
 {
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0"
+    }
+  },
   "mappings": {
     "_doc": {
       "properties": {
-        "cameraType": {
-          "type": "keyword",
-          "store": true
-        },
-        "droneType": {
-          "type": "keyword",
-          "store": true
-        },
-        "iso": {
-          "type": "integer",
-          "store": true
-        },
-        "fStop": {
+        "altitude": {
           "type": "float",
           "store": true
+        },
+        "createDate": {
+          "type": "date",
+          "store": true,
+          "format": "yyyy:MM:dd HH:mm:ss"
+        },
+        "dateUploaded": {
+          "type": "date",
+          "store": true,
+          "format": "yyyy:MM:dd HH:mm:ss"
         },
         "location": {
           "type": "geo_point",
           "store": true
         },
-        "dateCreated": {
+        "originalDate": {
           "type": "date",
-          "format": "yyyy-MM-dd HH:mm:ss",
-          "store": true
-        },
-        "dateUploaded": {
-          "type": "date",
-          "format": "yyyy-MM-dd HH:mm:ss",
-          "store": true
+          "store": true,
+          "format": "yyyy:MM:dd HH:mm:ss"
         }
       }
     }
@@ -47,46 +46,6 @@ GET /_cat/indices?v
 
 # Get information about a specific index
 GET /drone
-
-# Add a first test data point
-POST drone/_doc/
-{
-  "cameraType": "RedEdge",
-  "droneType": "MicaSense",
-  "iso": 200,
-  "fStop": 2.8,
-  "location": {
-    "lat": 33.632808,
-    "lon": 109.32755
-  },
-  "dateCreated": "2016-09-13 14:41:25",
-  "dateUploaded": "2018-06-06 10:10:17"
-}
-
-# Add a second test data point
-POST drone/_doc/
-{
-  "cameraType": "FC330",
-  "droneType": "DJI",
-  "iso": 100,
-  "fStop": 2.8,
-  "location": {
-    "lat": 31.742889,
-    "lon": 110.054717
-  },
-  "dateCreated": "2017-07-24 11:14:46",
-  "dateUploaded": "2018-06-06 10:10:17"
-}
-
-# Query for a document 
-GET /_search
-{
-  "query": {
-    "match": {
-      "droneType": "MicaSense"
-    }
-  }
-}
 
 # Query for all documents
 GET /drone/_search
