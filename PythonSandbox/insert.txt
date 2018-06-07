@@ -1,0 +1,16 @@
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:20 16:57:57", "originalDate": "2015:07:20 16:57:57", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}
+{"index": {"_index": "drone", "_type": "_doc"}}
+{"createDate": "2015:07:17 22:37:47", "originalDate": "2015:07:17 22:37:47", "altitude": null, "dateUploaded": "2018:06:07 08:55:23", "location": {"lat": 32, "lon": 34}}

@@ -1,0 +1,57 @@
+# Add the drone index
+PUT drone
+{
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0"
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "altitude": {
+          "type": "float",
+          "store": true
+        },
+        "createDate": {
+          "type": "date",
+          "store": true,
+          "format": "yyyy:MM:dd HH:mm:ss"
+        },
+        "dateUploaded": {
+          "type": "date",
+          "store": true,
+          "format": "yyyy:MM:dd HH:mm:ss"
+        },
+        "location": {
+          "type": "geo_point",
+          "store": true
+        },
+        "originalDate": {
+          "type": "date",
+          "store": true,
+          "format": "yyyy:MM:dd HH:mm:ss"
+        }
+      }
+    }
+  }
+}
+
+# Remove the drone index
+DELETE /drone
+
+# List indices
+GET /_cat/indices?v
+
+# Get information about a specific index
+GET /drone
+
+# Query for all documents
+GET /drone/_search
+{
+  "query": {
+    "match_all": {
+    }
+  }
+}
