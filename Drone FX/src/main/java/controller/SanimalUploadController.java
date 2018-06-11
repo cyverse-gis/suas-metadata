@@ -151,7 +151,6 @@ public class SanimalUploadController implements Initializable
 		});
 		*/
 
-		this.btnUpload.disableProperty().bind();
 
 		// Bind the tasks
 		EasyBind.listBind(this.tpvUploads.getTasks(), SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().getActiveTasks());

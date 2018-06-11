@@ -4,6 +4,13 @@
 /Drone FX/demoApplication.log
 /Drone FX/debug.log
 /Drone FX/target/
+/Drone FX/.gradle/*
+/Drone FX/build/*
+/Drone FX/logs/*
+/Drone FX/tmp/*
+/Drone FX/gradlew
+/Drone FX/gradle/*
+/Drone FX/gradlew.bat
 /PythonSandbox/.idea/*
 /PythonSandbox/venv/*
 /PythonSandbox/__pycache__
