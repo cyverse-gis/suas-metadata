@@ -1,0 +1,20 @@
+Metadata-Version: 2.1
+Name: ocrd-pyexiftool
+Version: 0.2.0
+Summary: Python wrapper for exiftool
+Home-page: http://github.com/smarnach/pyexiftool
+Author: Sven Marnach
+Author-email: sven@marnach.net
+License: GPLv3+
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Multimedia
+
+UNKNOWN
+
+

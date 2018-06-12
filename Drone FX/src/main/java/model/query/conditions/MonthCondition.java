@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Data model used by the "Month filter" query condition
@@ -27,7 +28,7 @@ public class MonthCondition implements IQueryCondition
 	/**
 	 * Constructor ensures that each month maps to a boolean property
 	 */
-	public MonthCondition()
+	public MonthCondition(UUID sessionID)
 	{
 		for (Month month : monthList)
 			if (!this.monthToSelected.containsKey(month))

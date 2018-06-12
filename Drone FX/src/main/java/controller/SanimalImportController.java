@@ -125,6 +125,8 @@ public class SanimalImportController implements Initializable
 	// A property used to process the image scrolling
 	private ObjectProperty<Point2D> mouseDown = new SimpleObjectProperty<>();
 
+	private UUID sessionID;
+
 	/**
 	 * Initialize the sanimal import view and data bindings
 	 *
@@ -134,17 +136,23 @@ public class SanimalImportController implements Initializable
 	@Override
 	public void initialize(URL ignored, ResourceBundle resources)
 	{
+
+	}
+
+	public void init(UUID sessionID)
+	{
+		this.sessionID = sessionID;
 		// Initialize root of the right side directory/image tree and make the root invisible
 		// This is because a treeview must have ONE root.
 
 		// Create a fake invisible root node whos children
-		final TreeItem<ImageContainer> ROOT = new TreeItem<>(SanimalData.getInstance().getImageTree());
+		final TreeItem<ImageContainer> ROOT = new TreeItem<>(SanimalData.getInstance(sessionID).getImageTree());
 		// Hide the fake invisible root
 		this.imageTree.setShowRoot(false);
 		// Set the fake invisible root
 		this.imageTree.setRoot(ROOT);
 		// Set the items of the tree to be the children of the fake invisible root
-		this.imageTree.setItems(SanimalData.getInstance().getImageTree().getChildren());
+		this.imageTree.setItems(SanimalData.getInstance(sessionID).getImageTree().getChildren());
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImageTreeCell.fxml").getController());
 		// If we select a node that's being uploaded clear the selection
@@ -185,14 +193,14 @@ public class SanimalImportController implements Initializable
 		// When we select a cloud image or directory, don't allow clicking delete
 		this.btnDelete.disableProperty().bind(
 				Bindings.or(Bindings.createBooleanBinding(() -> this.currentlySelectedImage.getValue() instanceof CloudImageEntry, this.currentlySelectedImage),
-				Bindings.or(Bindings.createBooleanBinding(() -> this.currentlySelectedDirectory.getValue() instanceof CloudImageDirectory, this.currentlySelectedDirectory),
-							this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1))));
+						Bindings.or(Bindings.createBooleanBinding(() -> this.currentlySelectedDirectory.getValue() instanceof CloudImageDirectory, this.currentlySelectedDirectory),
+								this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1))));
 
 		// Create bindings in the GUI
 		// Finally bind the date taken's disable property if an adjustable image is selected
-		//this.txtDateTaken.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty).map(localDateTime -> SanimalData.getInstance().getSettings().formatDateTime(localDateTime, " at ")).orElse(""));
+		//this.txtDateTaken.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty).map(localDateTime -> SanimalData.getInstance(sessionID).getSettings().formatDateTime(localDateTime, " at ")).orElse(""));
 		// Bind the image preview to the selected image from the right side tree view
-		// Can't use 'new Image(file.toURI().toString(), SanimalData.getInstance().getSettings().getBackgroundImageLoading())));'
+		// Can't use 'new Image(file.toURI().toString(), SanimalData.getInstance(sessionID).getSettings().getBackgroundImageLoading())));'
 		// because it doesn't support tiffs. Sad day.
 		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file ->
 		{
@@ -208,11 +216,11 @@ public class SanimalImportController implements Initializable
 		}));
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Hide the progress bar when no tasks remain
-		this.sbrTaskProgress.visibleProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().taskRunningProperty());
+		this.sbrTaskProgress.visibleProperty().bind(SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().taskRunningProperty());
 		// Bind the progress bar's text property to tasks remaining
-		this.sbrTaskProgress.textProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().messageProperty());
+		this.sbrTaskProgress.textProperty().bind(SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().messageProperty());
 		// Bind the progress bar's progress property to the current task's progress
-		this.sbrTaskProgress.progressProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().progressProperty());
+		this.sbrTaskProgress.progressProperty().bind(SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().progressProperty());
 		// Bind the left arrow's visibility property to if there is a previous item available
 		this.btnLeftArrow.visibleProperty().bind(
 				this.imageTree.getSelectionModel().selectedIndexProperty()
@@ -270,12 +278,12 @@ public class SanimalImportController implements Initializable
 		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> {
 			if (newValue != null)
 			{
-				System.out.println(SanimalData.getInstance().getNeonData().closestSiteTo(newValue.getSpecificMetadataField(StandardTag.GPS_LATITUDE), newValue.getSpecificMetadataField(StandardTag.GPS_LONGITUDE)));
+				System.out.println(SanimalData.getInstance(sessionID).getNeonData().closestSiteTo(newValue.getSpecificMetadataField(StandardTag.GPS_LATITUDE), newValue.getSpecificMetadataField(StandardTag.GPS_LONGITUDE)));
 			}
 		});
 
 		this.lvwSites.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/SiteListEntry.fxml").getController());
-		ObservableList<Site> sites = SanimalData.getInstance().getNeonData().getSites();
+		ObservableList<Site> sites = SanimalData.getInstance(sessionID).getNeonData().getSites();
 		SortedList<Site> sortedSites = new SortedList<>(sites);
 		sortedSites.setComparator(Comparator.comparing(Site::getSiteName));
 		this.lvwSites.setItems(sortedSites);
@@ -338,7 +346,7 @@ public class SanimalImportController implements Initializable
 		if (file != null && file.isDirectory())
 		{
 			this.btnImportImages.setDisable(true);
-			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
+			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>(this.sessionID)
 			{
 				@Override
 				protected ImageDirectory call()
@@ -349,11 +357,11 @@ public class SanimalImportController implements Initializable
 					this.updateMessage("Loading directory...");
 
 					// Grab the current list of species and locations and duplicate it
-					List<Species> currentSpecies = new ArrayList<>(SanimalData.getInstance().getSpeciesList());
-					List<Location> currentLocations = new ArrayList<>(SanimalData.getInstance().getLocationList());
+					List<Species> currentSpecies = new ArrayList<>(SanimalData.getInstance(sessionID).getSpeciesList());
+					List<Location> currentLocations = new ArrayList<>(SanimalData.getInstance(sessionID).getLocationList());
 
 					// Convert the file to a recursive image directory data structure
-					ImageDirectory directory = DirectoryManager.loadDirectory(file, currentLocations, currentSpecies);
+					ImageDirectory directory = DirectoryManager.loadDirectory(file, currentLocations, currentSpecies, SanimalImportController.this.sessionID);
 
 					this.updateProgress(2, MAX_WORK);
 					this.updateMessage("Removing empty directories...");
@@ -374,11 +382,11 @@ public class SanimalImportController implements Initializable
 			importTask.setOnSucceeded(event ->
 			{
 				// Add the directory to the image tree
-				SanimalData.getInstance().getImageTree().addChild(importTask.getValue());
+				SanimalData.getInstance(sessionID).getImageTree().addChild(importTask.getValue());
 				this.btnImportImages.setDisable(false);
 			});
 
-			SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(importTask);
+			SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().addTask(importTask);
 		}
 		// Consume the event
 		actionEvent.consume();
@@ -394,7 +402,7 @@ public class SanimalImportController implements Initializable
 		// Grab the selected item
 		TreeItem<ImageContainer> item = this.imageTree.getSelectionModel().getSelectedItem();
 		// Remove that item from the image tree
-		SanimalData.getInstance().getImageTree().removeChildRecursive(item.getValue());
+		SanimalData.getInstance(sessionID).getImageTree().removeChildRecursive(item.getValue());
 		// Make sure to clear the selection in the tree. This ensures that our left & right arrows will properly hide themselves if no more directories are present
 		this.imageTree.getSelectionModel().clearSelection();
 		// Consume the event

@@ -11,6 +11,7 @@ import java.time.DayOfWeek;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Data model used by the "Day of Week filter" query condition
@@ -25,7 +26,7 @@ public class DayOfWeekCondition implements IQueryCondition
 	/**
 	 * Constructor ensures that each day of the week maps to a boolean property
 	 */
-	public DayOfWeekCondition()
+	public DayOfWeekCondition(UUID sessionID)
 	{
 		// Make sure each day of the week maps to a boolean property, this is important for later, since our view will use this to populate checkboxes
 		for (DayOfWeek dayOfWeek : dayOfWeekList)

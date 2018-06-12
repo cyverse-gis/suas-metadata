@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -55,15 +56,19 @@ public class CloudImageEntry extends ImageEntry
 	// If the current version of the image is dirty compared to the one on CyVerse
 	private transient final AtomicBoolean isCloudDirty = new AtomicBoolean(false);
 
+	private UUID sessionID;
+
 	/**
 	 * Create a new image entry with an image file
 	 *
 	 * @param cloudFile The file which can be a temporary local file
 	 */
-	public CloudImageEntry(IRODSFile cloudFile)
+	public CloudImageEntry(IRODSFile cloudFile, UUID sessionID)
 	{
 		// No local file
-		super(null);
+		super(null, sessionID);
+
+		this.sessionID = sessionID;
 
 		// Make sure that the placeholder image has been initialized. If not initialize it
 		if (PLACEHOLDER_FILE == null)
@@ -71,14 +76,14 @@ public class CloudImageEntry extends ImageEntry
 			// For some reason we can't just do new File(getResource("/files/placeholderImage.jpg")) because we're working with resources inside JAR files
 			// This is a work around
 			InputStream inputStream = ImageEntry.class.getResourceAsStream("/files/placeholderImage.jpg");
-			PLACEHOLDER_FILE = SanimalData.getInstance().getTempDirectoryManager().createTempFile("placeholderImage.jpg");
+			PLACEHOLDER_FILE = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile("placeholderImage.jpg");
 			try
 			{
 				FileUtils.copyInputStreamToFile(inputStream, PLACEHOLDER_FILE);
 			}
 			catch (IOException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -178,13 +183,13 @@ public class CloudImageEntry extends ImageEntry
 		// Set a flag that we're pulling from the cloud
 		this.isBeingPulledFromCloud.setValue(true);
 		// Download the file
-		ErrorTask<File> pullTask = new ErrorTask<File>()
+		ErrorTask<File> pullTask = new ErrorTask<File>(this.sessionID)
 		{
 			@Override
 			protected File call()
 			{
 				this.updateMessage("Downloading the image " + getCyverseFile().getName() + " for editing...");
-				return SanimalData.getInstance().getConnectionManager().remoteToLocalImageFile(getCyverseFile());
+				return SanimalData.getInstance(sessionID).getConnectionManager().remoteToLocalImageFile(getCyverseFile());
 			}
 		};
 
@@ -201,7 +206,7 @@ public class CloudImageEntry extends ImageEntry
 			this.markCloudDirty(false);
 		});
 
-		SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(pullTask);
+		SanimalData.getInstance(sessionID).getSanimalExecutor().getImmediateExecutor().addTask(pullTask);
 	}
 
 	/**

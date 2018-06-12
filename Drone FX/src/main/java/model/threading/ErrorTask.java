@@ -7,6 +7,8 @@ import javafx.event.EventHandler;
 import model.SanimalData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
+import java.util.UUID;
+
 /**
  * Wrapper task that is aware of errors
  *
@@ -17,20 +19,20 @@ public abstract class ErrorTask<V> extends Task<V>
 	/**
 	 * Constructor adds a failed listener
 	 */
-	public ErrorTask()
+	public ErrorTask(UUID sessionID)
 	{
 		super();
 		// If the task fails, print an error
 		EventHandler<WorkerStateEvent> handler = event ->
 		{
-			SanimalData.getInstance().getErrorDisplay().printError("Task failed! Error was: ");
+			SanimalData.getInstance(sessionID).getErrorDisplay().printError("Task failed! Error was: ");
 			Worker source = event.getSource();
 			if (source != null)
 			{
-				SanimalData.getInstance().getErrorDisplay().printError("Error Message: " + source.getMessage());
+				SanimalData.getInstance(sessionID).getErrorDisplay().printError("Error Message: " + source.getMessage());
 				Throwable exception = source.getException();
 				if (exception != null)
-					SanimalData.getInstance().getErrorDisplay().printError("Stack trace: " + ExceptionUtils.getStackTrace(exception));
+					SanimalData.getInstance(sessionID).getErrorDisplay().printError("Stack trace: " + ExceptionUtils.getStackTrace(exception));
 			}
 		};
 		// When the task fails print out the failure

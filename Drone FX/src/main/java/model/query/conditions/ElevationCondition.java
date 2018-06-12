@@ -8,6 +8,8 @@ import model.query.IQueryCondition;
 import model.util.SettingsData;
 import org.irods.jargon.core.query.QueryConditionOperators;
 
+import java.util.UUID;
+
 /**
  * Data model used by the "Elevation filter" query condition
  */
@@ -24,6 +26,11 @@ public class ElevationCondition implements IQueryCondition
 	private ObservableList<ElevationComparisonOperators> operatorList = FXCollections.observableArrayList(ElevationComparisonOperators.values());
 	// A list of possible units to filter
 	private ObservableList<SettingsData.DistanceUnits> unitList = FXCollections.observableArrayList(SettingsData.DistanceUnits.values());
+
+	public ElevationCondition(UUID sessionID)
+	{
+
+	}
 
 	/**
 	 * This query condition ensures only selected years are queried for

@@ -6,6 +6,7 @@ import model.SanimalData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Utility class for loading FXML files
@@ -30,7 +31,7 @@ public class FXMLLoaderUtils
 		}
 		catch (IOException exception)
 		{
-			SanimalData.getInstance().getErrorDisplay().printError("Could not load the FXML file for the file " + FXMLFileName + "!\n" + ExceptionUtils.getStackTrace(exception));
+			System.err.println("Could not load the FXML file for the file " + FXMLFileName + "!\n" + ExceptionUtils.getStackTrace(exception));
 			System.exit(-1);
 		}
 

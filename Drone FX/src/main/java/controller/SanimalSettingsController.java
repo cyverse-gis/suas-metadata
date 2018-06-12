@@ -29,6 +29,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +49,8 @@ public class SanimalSettingsController implements Initializable
 	/// FXML bound fields end
 	///
 
+	private UUID sessionID;
+
 	/**
 	 * Initialize sets up the analysis window and bindings
 	 *
@@ -58,14 +61,20 @@ public class SanimalSettingsController implements Initializable
 	@SuppressWarnings("unchecked")
 	public void initialize(URL location, ResourceBundle resources)
 	{
+	}
+
+	public void init(UUID sessionID)
+	{
+		this.sessionID = sessionID;
+
 		// Bind the sanimal settings list to the property sheet settings because we cant bind the list property...
-		EasyBind.listBind(this.pstSettings.getItems(), SanimalData.getInstance().getSettings().getSettingList());
+		EasyBind.listBind(this.pstSettings.getItems(), SanimalData.getInstance(sessionID).getSettings().getSettingList());
 
 		/*
 
 		@FXML
 		public TaskProgressView<Task<?>> tpvTaskProgress;
-		FilteredList<Worker<?>> tasks = SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().getActiveTasks().filtered(worker -> worker instanceof Task<?>);
+		FilteredList<Worker<?>> tasks = SanimalData.getInstance(sessionID).getSanimalExecutor().getImmediateExecutor().getActiveTasks().filtered(worker -> worker instanceof Task<?>);
 		EasyBind.listBind(this.tpvTaskProgress.getTasks(), EasyBind.map(tasks, worker -> (Task<?>) worker));
 
 		 */

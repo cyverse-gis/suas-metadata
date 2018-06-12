@@ -58,16 +58,18 @@ public class ImageEntry extends ImageContainer
 	// If this image is dirty, we set a flag to write it to disk at some later point
 	private transient final AtomicBoolean isDiskDirty = new AtomicBoolean(false);
 
+	private UUID sessionID;
+
 	/**
 	 * Create a new image entry with an image file
 	 * 
 	 * @param file
 	 *            The file (must be an image file)
 	 */
-	public ImageEntry(File file)
+	public ImageEntry(File file, UUID sessionID)
 	{
 		this.imageFileProperty.setValue(file);
-
+		this.sessionID = sessionID;
 	}
 
 	/**
@@ -86,7 +88,7 @@ public class ImageEntry extends ImageContainer
 		}
 		catch (Exception e)
 		{
-			SanimalData.getInstance().getErrorDisplay().showPopup(
+			SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 					Alert.AlertType.ERROR,
 					null,
 					"Error",

@@ -26,7 +26,10 @@ import model.util.*;
 import org.hildan.fxgson.FxGson;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
@@ -36,13 +39,18 @@ import java.util.stream.Collectors;
  */
 public class SanimalData
 {
-	// The one instance of the data
-	private static final SanimalData INSTANCE = new SanimalData();
+	// The instances of the data
+	private static final Map<UUID, SanimalData> INSTANCES = new HashMap<>();
 
-	// Get the one instance
-	public static SanimalData getInstance()
+	// Get the instances
+	public static SanimalData getInstance(UUID sessionID)
 	{
-		return SanimalData.INSTANCE;
+		if (!SanimalData.INSTANCES.containsKey(sessionID))
+		{
+			SanimalData newData = new SanimalData(sessionID);
+			SanimalData.INSTANCES.put(sessionID, newData);
+		}
+		return SanimalData.INSTANCES.get(sessionID);
 	}
 
 	// A global list of species
@@ -75,13 +83,13 @@ public class SanimalData
 	private final Gson gson = FxGson.fullBuilder().setPrettyPrinting().serializeNulls().create();
 
 	// The connection manager used to authenticate the CyVerse user
-	private CyVerseConnectionManager connectionManager = new CyVerseConnectionManager();
+	private CyVerseConnectionManager connectionManager;
 
 	// Preferences used to save the user's username
 	private final Preferences sanimalPreferences = Preferences.userNodeForPackage(SanimalData.class);
 
 	// Manager of all temporary files used by the SANIMAL software
-	private final TempDirectoryManager tempDirectoryManager = new TempDirectoryManager();
+	private final TempDirectoryManager tempDirectoryManager;
 
 	// Class used to display errors as popups
 	private final ErrorDisplay errorDisplay = new ErrorDisplay();
@@ -95,24 +103,28 @@ public class SanimalData
 	private QueryEngine queryEngine = new QueryEngine();
 
 	// The neon data API access point
-	private NeonData neonData = new NeonData();
+	private NeonData neonData;
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
 	 */
-	private SanimalData()
+	private SanimalData(UUID sessionID)
 	{
+		this.connectionManager = new CyVerseConnectionManager(sessionID);
+		this.tempDirectoryManager = new TempDirectoryManager(sessionID);
+		this.neonData = new NeonData(sessionID);
+
 		// Create the species list, and add some default species
 		this.speciesList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(species -> new Observable[]{species.nameProperty(), species.scientificNameProperty(), species.speciesIconURLProperty(), species.keyBindingProperty()}));
 
 		// When the species list changes we push the changes to the CyVerse servers
-		this.setupAutoSpeciesSync();
+		this.setupAutoSpeciesSync(sessionID);
 
 		// Create the location list and add some default locations
 		this.locationList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(location -> new Observable[]{location.nameProperty(), location.idProperty(), location.getLatProperty(), location.getLngProperty(), location.getElevationProperty() }));
 
 		// When the location list changes we push the changes to the CyVerse servers
-		this.setupAutoLocationSync();
+		this.setupAutoLocationSync(sessionID);
 
 		// Create the image collection list
 		this.collectionList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(collection -> new Observable[]{collection.nameProperty(), collection.getPermissions(), collection.organizationProperty(), collection.contactInfoProperty(), collection.descriptionProperty(), collection.idProperty() }));
@@ -121,30 +133,30 @@ public class SanimalData
 		this.imageTree = new ImageDirectory(new File("./"));
 
 		// When the metadata changes, we push the changes to disk
-		this.setupAutoWriteMetadata();
+		this.setupAutoWriteMetadata(sessionID);
 
 		// When the settings change, we sync them
-		this.setupAutoSettingsSync();
+		this.setupAutoSettingsSync(sessionID);
 	}
 
 	/**
 	 * Ensures that when the species list has any changes, they get pushed to the CyVerse servers
 	 */
-	private void setupAutoSpeciesSync()
+	private void setupAutoSpeciesSync(UUID sessionID)
 	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
+		ErrorService<Void> syncService = new ErrorService<Void>(sessionID)
 		{
 			@Override
 			protected Task<Void> createTask()
 			{
-				return new ErrorTask<Void>()
+				return new ErrorTask<Void>(sessionID)
 				{
 					@Override
 					protected Void call()
 					{
 						// Perform the push of the location data
 						this.updateMessage("Syncing new species list to CyVerse...");
-						SanimalData.getInstance().getConnectionManager().pushLocalSpecies(SanimalData.getInstance().getSpeciesList());
+						SanimalData.this.getConnectionManager().pushLocalSpecies(SanimalData.this.getSpeciesList());
 						return null;
 					}
 				};
@@ -186,21 +198,21 @@ public class SanimalData
 	/**
 	 * Ensures that when the location list has any changes, they get pushed to the CyVerse servers
 	 */
-	private void setupAutoLocationSync()
+	private void setupAutoLocationSync(UUID sessionID)
 	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
+		ErrorService<Void> syncService = new ErrorService<Void>(sessionID)
 		{
 			@Override
 			protected Task<Void> createTask()
 			{
-				return new ErrorTask<Void>()
+				return new ErrorTask<Void>(sessionID)
 				{
 					@Override
 					protected Void call()
 					{
 						// Perform the push of the location data
 						this.updateMessage("Syncing new location list to CyVerse...");
-						SanimalData.getInstance().getConnectionManager().pushLocalLocations(SanimalData.getInstance().getLocationList());
+						SanimalData.this.getConnectionManager().pushLocalLocations(SanimalData.this.getLocationList());
 						return null;
 					}
 				};
@@ -242,14 +254,14 @@ public class SanimalData
 	/**
 	 * Ensures that when the image metadata tree has any changes, they get pushed to disk
 	 */
-	private void setupAutoWriteMetadata()
+	private void setupAutoWriteMetadata(UUID sessionID)
 	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
+		ErrorService<Void> syncService = new ErrorService<Void>(sessionID)
 		{
 			@Override
 			protected Task<Void> createTask()
 			{
-				return new ErrorTask<Void>()
+				return new ErrorTask<Void>(sessionID)
 				{
 					@Override
 					protected Void call()
@@ -310,21 +322,21 @@ public class SanimalData
 	/**
 	 * Ensures that when settings change they get uploaded to CyVerse
 	 */
-	private void setupAutoSettingsSync()
+	private void setupAutoSettingsSync(UUID sessionID)
 	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
+		ErrorService<Void> syncService = new ErrorService<Void>(sessionID)
 		{
 			@Override
 			protected Task<Void> createTask()
 			{
-				return new ErrorTask<Void>()
+				return new ErrorTask<Void>(sessionID)
 				{
 					@Override
 					protected Void call()
 					{
 						// Perform the push of the settings data
 						this.updateMessage("Syncing new settings to CyVerse...");
-						SanimalData.getInstance().getConnectionManager().pushLocalSettings(SanimalData.getInstance().getSettings());
+						SanimalData.this.getConnectionManager().pushLocalSettings(SanimalData.this.getSettings());
 						return null;
 					}
 				};

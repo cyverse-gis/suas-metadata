@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 /**
  * Controller class for the main program
@@ -60,6 +61,8 @@ public class SanimalHomeController implements Initializable
 	/// FXML bound fields end
 	///
 
+	private UUID sessionID;
+
 	/**
 	 * Initialize sets up the analysis window and bindings
 	 *
@@ -69,11 +72,18 @@ public class SanimalHomeController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
+
+	}
+
+	public void init(UUID sessionID)
+	{
+		this.sessionID = sessionID;
+
 		// If we're logged in show the logged in person's username
-		this.lblUsername.textProperty().bind(EasyBind.monadic(SanimalData.getInstance().usernameProperty()).map(username -> "Welcome " + username + "!").orElse(""));
+		this.lblUsername.textProperty().bind(EasyBind.monadic(SanimalData.getInstance(sessionID).usernameProperty()).map(username -> "Welcome " + username + "!").orElse(""));
 
 		// Grab the logged in property
-		ReadOnlyBooleanProperty loggedIn = SanimalData.getInstance().loggedInProperty();
+		ReadOnlyBooleanProperty loggedIn = SanimalData.getInstance(sessionID).loggedInProperty();
 
 		// Hide the logout button and text when not logged in
 		this.lblUsername.visibleProperty().bind(loggedIn);

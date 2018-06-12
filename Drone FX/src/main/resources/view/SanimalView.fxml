@@ -31,7 +31,7 @@
                             <Image url="@../images/mainMenu/import.png"/>
                         </ImageView>
                     </graphic>
-                    <fx:include source="SanimalImport.fxml"/>
+                    <fx:include fx:id="importPane" source="SanimalImport.fxml"/>
                 </DetachableTab>
                 <DetachableTab detachable="false" text="Collections" closable="false">
                     <graphic>
@@ -39,16 +39,15 @@
                             <Image url="@../images/mainMenu/upload.png"/>
                         </ImageView>
                     </graphic>
-                    <fx:include source="SanimalUpload.fxml"/>
+                    <fx:include fx:id="uploadPane" source="SanimalUpload.fxml"/>
                 </DetachableTab>
-                <!--
                 <DetachableTab detachable="false" text="Analyze/Query" closable="false">
                     <graphic>
                         <ImageView fitWidth="25" fitHeight="25">
                             <Image url="@../images/mainMenu/analyze.png"/>
                         </ImageView>
                     </graphic>
-                    <fx:include source="SanimalAnalysis.fxml"/>
+                    <fx:include fx:id="analysisPane" source="SanimalAnalysis.fxml"/>
                 </DetachableTab>
                 <DetachableTab detachable="false" text="Map" closable="false">
                     <graphic>
@@ -56,16 +55,15 @@
                             <Image url="@../images/mainMenu/map.png"/>
                         </ImageView>
                     </graphic>
-                    <fx:include source="SanimalMap.fxml"/>
+                    <fx:include fx:id="mapPane" source="SanimalMap.fxml"/>
                 </DetachableTab>
-                -->
                 <DetachableTab detachable="false" text="Settings" closable="false">
                     <graphic>
                         <ImageView fitWidth="25" fitHeight="25">
                             <Image url="@../images/mainMenu/settings.png"/>
                         </ImageView>
                     </graphic>
-                    <fx:include source="SanimalSettings.fxml"/>
+                    <fx:include fx:id="settingsPane" source="SanimalSettings.fxml"/>
                 </DetachableTab>
             </tabs>
         </DetachableTabPane>

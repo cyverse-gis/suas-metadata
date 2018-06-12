@@ -15,6 +15,7 @@ import model.species.Species;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Data model used by the "Species filter" query condition
@@ -24,11 +25,14 @@ public class SpeciesFilterCondition implements IQueryCondition
 	// A map of species -> if the species is selected to be filtered
 	private Map<Species, BooleanProperty> speciesToSelected = new HashMap<>();
 
+	private UUID sessionID;
+
 	/**
 	 * Constructor ensures that each species maps to a boolean property
 	 */
-	public SpeciesFilterCondition()
+	public SpeciesFilterCondition(UUID sessionID)
 	{
+		this.sessionID = sessionID;
 		// Make sure each species maps to a boolean property, this is important for later, since our view will use this to populate checkboxes
 		for (Species species : this.getSpeciesList())
 			if (!this.speciesToSelected.containsKey(species))
@@ -75,7 +79,7 @@ public class SpeciesFilterCondition implements IQueryCondition
 	 */
 	public ObservableList<Species> getSpeciesList()
 	{
-		return SanimalData.getInstance().getSpeciesList();
+		return SanimalData.getInstance(sessionID).getSpeciesList();
 	}
 
 	/**

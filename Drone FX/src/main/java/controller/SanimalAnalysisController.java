@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 /**
  * Controller class for the analysis page
@@ -82,6 +83,8 @@ public class SanimalAnalysisController implements Initializable
 	private Image standardArrow = new Image("/images/analysisWindow/arrowDivider.png");
 	private Image highlightedArrow = new Image("/images/analysisWindow/arrowDividerSelected.png");
 
+	private UUID sessionID;
+
 	/**
 	 * Initialize sets up the analysis window and bindings
 	 *
@@ -90,14 +93,19 @@ public class SanimalAnalysisController implements Initializable
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
+	{}
+
+	public void init(UUID sessionID)
 	{
+		this.sessionID = sessionID;
+
 		// Set the query conditions to be specified by the data model
-		this.lvwQueryConditions.setItems(SanimalData.getInstance().getQueryEngine().getQueryConditions());
+		this.lvwQueryConditions.setItems(SanimalData.getInstance(sessionID).getQueryEngine().getQueryConditions());
 		// Set the cell factory to be our custom query condition cell which adapts itself to the specific condition
 		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("analysisView/QueryConditionsListCell.fxml").getController());
 
 		// Hide the Dr. Sanderson tab and the event interval if we don't have Dr. Sanderson's compatibility
-		if (!SanimalData.getInstance().getSettings().getDrSandersonOutput())
+		if (!SanimalData.getInstance(sessionID).getSettings().getDrSandersonOutput())
 		{
 			this.tpnVisualizations.getTabs().remove(this.dtbDrSanderson);
 			this.eventIntervalIndex = this.vbxQuery.getChildren().indexOf(this.txtEventInterval);
@@ -105,7 +113,7 @@ public class SanimalAnalysisController implements Initializable
 		}
 
 		// Hide the Dr. Sanderson tab if compatibility is not enabled
-		SanimalData.getInstance().getSettings().drSandersonOutputProperty().addListener((observable, oldValue, newValue) ->
+		SanimalData.getInstance(sessionID).getSettings().drSandersonOutputProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (newValue)
 			{
@@ -123,7 +131,7 @@ public class SanimalAnalysisController implements Initializable
 		});
 
 		// Set the items in the list to be the list of possible query filters
-		this.lvwFilters.setItems(SanimalData.getInstance().getQueryEngine().getQueryFilters());
+		this.lvwFilters.setItems(SanimalData.getInstance(sessionID).getQueryEngine().getQueryFilters());
 
 		this.mpnQuerying.setVisible(false);
 	}
@@ -149,17 +157,17 @@ public class SanimalAnalysisController implements Initializable
 		// Create a query
 		CyVerseQuery query = new CyVerseQuery();
 		// For each condition listed in the listview, apply that to the overall query
-		for (IQueryCondition queryCondition : SanimalData.getInstance().getQueryEngine().getQueryConditions())
+		for (IQueryCondition queryCondition : SanimalData.getInstance(sessionID).getQueryEngine().getQueryConditions())
 			queryCondition.appendConditionToQuery(query);
 
-		Task<List<String>> queryTask = new ErrorTask<List<String>>()
+		Task<List<String>> queryTask = new ErrorTask<List<String>>(this.sessionID)
 		{
 			@Override
 			protected List<String> call()
 			{
 				this.updateMessage("Performing query...");
 				// Grab the result of the query
-				return SanimalData.getInstance().getConnectionManager().performQuery(query);
+				return SanimalData.getInstance(sessionID).getConnectionManager().performQuery(query);
 			}
 		};
 		Integer finalEventInterval = eventInterval;
@@ -171,7 +179,7 @@ public class SanimalAnalysisController implements Initializable
 			List<String> irodsAbsolutePaths = queryTask.getValue();
 
 			// Ask the user if they would like to continue to part 2 of the query where we retrieve metadata. This takes a while
-			Optional<ButtonType> buttonTypeOpt = SanimalData.getInstance().getErrorDisplay().showPopup(
+			Optional<ButtonType> buttonTypeOpt = SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 					Alert.AlertType.CONFIRMATION,
 					this.lvwFilters.getScene().getWindow(),
 					"Query Count",
@@ -183,14 +191,14 @@ public class SanimalAnalysisController implements Initializable
 			if (buttonTypeOpt.isPresent() && buttonTypeOpt.get() == ButtonType.OK)
 			{
 				// Create a second task to perform the next query
-				Task<List<ImageEntry>> queryImageTask = new ErrorTask<List<ImageEntry>>()
+				Task<List<ImageEntry>> queryImageTask = new ErrorTask<List<ImageEntry>>(this.sessionID)
 				{
 					@Override
 					protected List<ImageEntry> call()
 					{
 						this.updateMessage("Performing image query...");
 						// Grab the result of the image query
-						return SanimalData.getInstance().getConnectionManager().fetchMetadataFor(irodsAbsolutePaths);
+						return SanimalData.getInstance(sessionID).getConnectionManager().fetchMetadataFor(irodsAbsolutePaths);
 					}
 				};
 
@@ -201,7 +209,7 @@ public class SanimalAnalysisController implements Initializable
 				});
 
 				// Execute the second query
-				SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(queryImageTask);
+				SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().addTask(queryImageTask);
 			}
 			else
 			{
@@ -209,7 +217,7 @@ public class SanimalAnalysisController implements Initializable
 			}
 
 		});
-		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(queryTask);
+		SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().addTask(queryTask);
 
 		actionEvent.consume();
 	}
@@ -222,9 +230,9 @@ public class SanimalAnalysisController implements Initializable
 	public void clickedAdd(MouseEvent mouseEvent)
 	{
 		// If a filter was clicked, we instantiate it and append it to the end of the list (-1 so that the + is at the end)
-		ObservableList<IQueryCondition> queryConditions = SanimalData.getInstance().getQueryEngine().getQueryConditions();
+		ObservableList<IQueryCondition> queryConditions = SanimalData.getInstance(sessionID).getQueryEngine().getQueryConditions();
 		if (this.lvwFilters.getSelectionModel().selectedItemProperty().getValue() != null)
-			queryConditions.add(this.lvwFilters.getSelectionModel().selectedItemProperty().getValue().createInstance());
+			queryConditions.add(this.lvwFilters.getSelectionModel().selectedItemProperty().getValue().createInstance(sessionID));
 		mouseEvent.consume();
 	}
 
