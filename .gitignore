@@ -11,6 +11,6 @@
 /Drone FX/gradlew
 /Drone FX/gradle/*
 /Drone FX/gradlew.bat
-/PythonTests/.idea/*
-/PythonTests/venv/*
-/PythonTests/__pycache__
+/PythonSandbox/.idea/*
+/PythonSandbox/venv/*
+/PythonSandbox/__pycache__
