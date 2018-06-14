@@ -1,13 +1,10 @@
-import javafx.util.Pair;
 import org.elasticsearch.common.collect.Tuple;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MetadataConverter
