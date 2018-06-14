@@ -2,6 +2,7 @@ import com.adobe.xmp.XMPException;
 import com.adobe.xmp.XMPIterator;
 import com.adobe.xmp.XMPMeta;
 import com.adobe.xmp.properties.XMPPropertyInfo;
+import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.metadata.Directory;
@@ -32,7 +33,7 @@ public class MetadataParser
 		try
 		{
 			// Read the file's metadata
-			Metadata metadata = JpegMetadataReader.readMetadata(fileToParse);
+			Metadata metadata = ImageMetadataReader.readMetadata(fileToParse);
 
 			// Iterate over metadata directories
 			for (Directory directory : metadata.getDirectories())
