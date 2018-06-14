@@ -11,6 +11,17 @@
 /Drone FX/gradlew
 /Drone FX/gradle/*
 /Drone FX/gradlew.bat
+
+/Java Metadata Processor/.idea/*
+/Java Metadata Processor/Java Metadata Processor.iml
+/Java Metadata Processor/out/*
+/Java Metadata Processor/demoApplication.log
+/Java Metadata Processor/debug.log
+/Java Metadata Processor/target/
+/Java Metadata Processor/build/*
+/Java Metadata Processor/logs/*
+/Java Metadata Processor/tmp/*
+
 /PythonSandbox/.idea/*
 /PythonSandbox/venv/*
 /PythonSandbox/__pycache__
