@@ -9,10 +9,7 @@ import javafx.collections.ObservableList;
 import model.query.CyVerseQuery;
 import model.query.IQueryCondition;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -29,7 +26,7 @@ public class HourCondition implements IQueryCondition
 	/**
 	 * Constructor ensures that each hour maps to a boolean property
 	 */
-	public HourCondition()
+	public HourCondition(UUID sessionID)
 	{
 		// Make sure each hour maps to a boolean property, this is important for later, since our view will use this to populate checkboxes
 		for (Integer hour : hourList)

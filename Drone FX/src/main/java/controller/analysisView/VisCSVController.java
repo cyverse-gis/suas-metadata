@@ -76,7 +76,7 @@ public class VisCSVController implements VisControllerBase
 					location.getId() + ",";
 
 			// If we're using Lat/Lng
-			if (SanimalData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
+			if (SanimalData.getInstance(sessionID).getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
 			{
 				// Add lat/lng
 				locationString = locationString +
@@ -84,7 +84,7 @@ public class VisCSVController implements VisControllerBase
 					location.getLng() + ",";
 			}
 			// If we're using UTM
-			else if (SanimalData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.UTM)
+			else if (SanimalData.getInstance(sessionID).getSettings().getLocationFormat() == SettingsData.LocationFormat.UTM)
 			{
 				// Convert to UTM, and print it
 				UTMCoord utmCoord = SanimalAnalysisUtils.Deg2UTM(location.getLat(), location.getLng());
@@ -94,10 +94,10 @@ public class VisCSVController implements VisControllerBase
 					utmCoord.getNorthing() + "N,";
 			}
 			// Add elevation
-			SettingsData.DistanceUnits distanceUnits = SanimalData.getInstance().getSettings().getDistanceUnits();
+			SettingsData.DistanceUnits distanceUnits = SanimalData.getInstance(sessionID).getSettings().getDistanceUnits();
 			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
 			return imageEntry.getFile().getName() + "," +
-				SanimalData.getInstance().getSettings().formatDateTime(imageEntry.getDateTaken(), " ") + "," +
+				SanimalData.getInstance(sessionID).getSettings().formatDateTime(imageEntry.getDateTaken(), " ") + "," +
 				imageEntry.getSpeciesPresent().stream().map(speciesEntry ->
 					speciesEntry.getSpecies().getName() + ";" +
 					speciesEntry.getSpecies().getScientificName() + ";" +
@@ -119,7 +119,7 @@ public class VisCSVController implements VisControllerBase
 					location.getId() + ",";
 
 			// If we're using lat long
-			if (SanimalData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
+			if (SanimalData.getInstance(sessionID).getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
 			{
 				// Use lat,lng
 				locationString = locationString +
@@ -136,7 +136,7 @@ public class VisCSVController implements VisControllerBase
 					utmCoord.getNorthing() + "N,";
 			}
 			// Distance units depend on feet or meters
-			SettingsData.DistanceUnits distanceUnits = SanimalData.getInstance().getSettings().getDistanceUnits();
+			SettingsData.DistanceUnits distanceUnits = SanimalData.getInstance(sessionID).getSettings().getDistanceUnits();
 			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
 			return locationString;
 		})

@@ -13,6 +13,7 @@ import model.species.Species;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Data model used by the "Location filter" query condition
@@ -22,11 +23,14 @@ public class LocationFilterCondition implements IQueryCondition
 	// A map of location -> if the location is selected to be filtered
 	private Map<Location, BooleanProperty> locationToSelected = new HashMap<>();
 
+	private UUID sessionID;
+
 	/**
 	 * Constructor ensures that each location maps to a boolean property
 	 */
-	public LocationFilterCondition()
+	public LocationFilterCondition(UUID sessionID)
 	{
+		this.sessionID = sessionID;
 		// Make sure each hour location to a boolean property, this is important for later, since our view will use this to populate checkboxes
 		for (Location location : this.getLocationList())
 			if (!this.locationToSelected.containsKey(location))
@@ -73,7 +77,7 @@ public class LocationFilterCondition implements IQueryCondition
 	 */
 	public ObservableList<Location> getLocationList()
 	{
-		return SanimalData.getInstance().getLocationList();
+		return SanimalData.getInstance(sessionID).getLocationList();
 	}
 
 	/**

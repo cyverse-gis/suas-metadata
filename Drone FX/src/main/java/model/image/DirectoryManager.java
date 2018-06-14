@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -78,14 +79,14 @@ public class DirectoryManager
 	 * @param imageOrLocation
 	 *            The file to make into a directory
 	 */
-	public static ImageDirectory loadDirectory(File imageOrLocation, List<Location> knownLocations, List<Species> knownSpecies)
+	public static ImageDirectory loadDirectory(File imageOrLocation, List<Location> knownLocations, List<Species> knownSpecies, UUID sessionID)
 	{
 		ImageDirectory toReturn;
 		if (!imageOrLocation.isDirectory())
 		{
 			// If it's not a directory, then just add the image
 			toReturn = new ImageDirectory(imageOrLocation.getParentFile());
-			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
+			ImageEntry imageEntry = new ImageEntry(imageOrLocation, sessionID);
 			imageEntry.readFileMetadataIntoImage();
 			imageEntry.initIconBindings();
 			toReturn.addImage(imageEntry);
@@ -94,7 +95,7 @@ public class DirectoryManager
 		{
 			// If it is a directory, recursively create it
 			toReturn = new ImageDirectory(imageOrLocation);
-			DirectoryManager.createDirectoryAndImageTree(toReturn, knownLocations, knownSpecies);
+			DirectoryManager.createDirectoryAndImageTree(toReturn, knownLocations, knownSpecies, sessionID);
 		}
 		return toReturn;
 	}
@@ -105,7 +106,7 @@ public class DirectoryManager
 	 * @param current
 	 *            The current directory to work on
 	 */
-	private static void createDirectoryAndImageTree(ImageDirectory current, List<Location> knownLocations, List<Species> knownSpecies)
+	private static void createDirectoryAndImageTree(ImageDirectory current, List<Location> knownLocations, List<Species> knownSpecies, UUID sessionID)
 	{
 		File[] subFiles = current.getFile().listFiles();
 
@@ -117,7 +118,7 @@ public class DirectoryManager
 				// Add all image files to the directory
 				if (SanimalAnalysisUtils.fileIsImage(file))
 				{
-					ImageEntry imageEntry = new ImageEntry(file);
+					ImageEntry imageEntry = new ImageEntry(file, sessionID);
 					imageEntry.readFileMetadataIntoImage();
 					imageEntry.initIconBindings();
 					current.addImage(imageEntry);
@@ -127,7 +128,7 @@ public class DirectoryManager
 				{
 					ImageDirectory subDirectory = new ImageDirectory(file);
 					current.addChild(subDirectory);
-					DirectoryManager.createDirectoryAndImageTree(subDirectory, knownLocations, knownSpecies);
+					DirectoryManager.createDirectoryAndImageTree(subDirectory, knownLocations, knownSpecies, sessionID);
 				}
 			}
 		}
@@ -141,7 +142,7 @@ public class DirectoryManager
 	 * @param imageToMetadata The CSV file representing each image's metadata
 	 * @return The TAR file
 	 */
-	public static File[] directoryToTars(ImageDirectory directory, File directoryMetaJSON, Function<ImageEntry, String> imageToMetadata, Integer maxImagesPerTar)
+	public static File[] directoryToTars(ImageDirectory directory, File directoryMetaJSON, Function<ImageEntry, String> imageToMetadata, Integer maxImagesPerTar, UUID sessionID)
 	{
 		maxImagesPerTar = maxImagesPerTar - 1;
 		try
@@ -161,11 +162,11 @@ public class DirectoryManager
 			for (Integer tarIndex = 0; tarIndex < numberOfTars; tarIndex++)
 			{
 				// Create a temporarily TAR file to write to
-				File tempTar = SanimalData.getInstance().getTempDirectoryManager().createTempFile("tarToUpload.tar");
+				File tempTar = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile("tarToUpload.tar");
 				// Create a TAR output stream to write to
 				TarArchiveOutputStream tarOut = new TarArchiveOutputStream(new FileOutputStream(tempTar));
 
-				File tempMetaCSV = SanimalData.getInstance().getTempDirectoryManager().createTempFile("meta.csv");
+				File tempMetaCSV = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile("meta.csv");
 				tempMetaCSV.createNewFile();
 
 				PrintWriter metaOut = new PrintWriter(tempMetaCSV);

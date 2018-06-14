@@ -7,6 +7,8 @@ import model.query.conditions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class QueryEngine
@@ -42,17 +44,17 @@ public class QueryEngine
 		COLLECTION_FILTER("Collection Filter", CollectionCondition::new);
 
 		private String displayName;
-		private Supplier<IQueryCondition> instanceCreator;
+		private Function<UUID, IQueryCondition> instanceCreator;
 
-		QueryFilters(String displayName, Supplier<IQueryCondition> instanceCreator)
+		QueryFilters(String displayName, Function<UUID, IQueryCondition> instanceCreator)
 		{
 			this.displayName = displayName;
 			this.instanceCreator = instanceCreator;
 		}
 
-		public IQueryCondition createInstance()
+		public IQueryCondition createInstance(UUID sessionID)
 		{
-			return instanceCreator.get();
+			return instanceCreator.apply(sessionID);
 		}
 
 		@Override

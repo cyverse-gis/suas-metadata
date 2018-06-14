@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class NeonData
@@ -42,8 +43,11 @@ public class NeonData
 			site.dataProductsProperty()
 	});
 
-	public NeonData()
+	private UUID sessionID;
+
+	public NeonData(UUID sessionID)
 	{
+		this.sessionID = sessionID;
 	}
 
 	public Site closestSiteTo(Double latitude, Double longitude)
@@ -68,7 +72,7 @@ public class NeonData
 		URLConnection neonSiteConnection = neonSiteAPI.openConnection();
 		BufferedReader jsonReader = new BufferedReader(new InputStreamReader(neonSiteConnection.getInputStream()));
 		String json = jsonReader.lines().collect(Collectors.joining());
-		return SanimalData.getInstance().getGson().fromJson(json, Sites.class);
+		return SanimalData.getInstance(sessionID).getGson().fromJson(json, Sites.class);
 	}
 
 	public void setSites(Sites sites)

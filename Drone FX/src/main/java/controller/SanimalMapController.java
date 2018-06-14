@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 /**
  * Controller class for the map page
@@ -37,6 +38,8 @@ public class SanimalMapController implements Initializable
 	// A map of location to the marker representing that location
 	private Map<Location, Marker> locationMarkers = new HashMap<>();
 
+	private UUID sessionID;
+
 	/**
 	 * Initialize sets up the analysis window and bindings
 	 *
@@ -46,6 +49,12 @@ public class SanimalMapController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
+	}
+
+	public void init(UUID sessionID)
+	{
+		this.sessionID = sessionID;
+
 		// Setup the google map view with the map options class
 		this.googleMapView.addMapInializedListener(() ->
 		{
@@ -69,7 +78,7 @@ public class SanimalMapController implements Initializable
 			this.googleMap = this.googleMapView.createMap(mapOptions);
 
 			// When the location list changes, we put the locations onto the map display
-			SanimalData.getInstance().getLocationList().addListener((ListChangeListener<Location>) c -> {
+			SanimalData.getInstance(sessionID).getLocationList().addListener((ListChangeListener<Location>) c -> {
 				// Iterate over changes
 				while (c.next())
 				{

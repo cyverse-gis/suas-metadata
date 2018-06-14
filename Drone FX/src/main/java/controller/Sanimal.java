@@ -14,6 +14,7 @@ import model.SanimalData;
 import model.util.FXMLLoaderUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Main class entry point
@@ -33,9 +34,11 @@ public class Sanimal extends Application
     public void start(Stage primaryStage)
     {
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
+        UUID sessionID = UUID.randomUUID();
 
         // Load the FXML document
         FXMLLoader root = FXMLLoaderUtils.loadFXML("SanimalView.fxml");
+        root.<SanimalViewController> getController().init(sessionID);
         // Create the scene
         Scene scene = new Scene(root.getRoot());
         // We need this to ensure that the tiwulfx library correctly renders the detachable tabs
@@ -48,7 +51,7 @@ public class Sanimal extends Application
         primaryStage.setOnCloseRequest(event ->
         {
             // If a task is still running ask for confirmation to exit
-            if (SanimalData.getInstance().getSanimalExecutor().anyTaskRunning())
+            if (SanimalData.getInstance(sessionID).getSanimalExecutor().anyTaskRunning())
             {
                 // Code examples from here: https://stackoverflow.com/questions/31540500/alert-box-for-when-user-attempts-to-close-application-using-setoncloserequest-in
 

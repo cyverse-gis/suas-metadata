@@ -6,6 +6,7 @@ import model.query.CyVerseQuery;
 import model.query.IQueryCondition;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Data model used by the "Year filter" query condition
@@ -16,6 +17,11 @@ public class YearCondition implements IQueryCondition
 	private IntegerProperty startYear = new SimpleIntegerProperty(LocalDateTime.now().getYear());
 	// The end year to include
 	private IntegerProperty endYear = new SimpleIntegerProperty(LocalDateTime.now().getYear());
+
+	public YearCondition(UUID sessionID)
+	{
+
+	}
 
 	/**
 	 * This query condition ensures only selected years are queried for

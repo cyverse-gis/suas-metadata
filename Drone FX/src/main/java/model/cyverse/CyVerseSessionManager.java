@@ -12,10 +12,7 @@ import org.irods.jargon.core.exception.JargonException;
 import org.irods.jargon.core.pub.IRODSAccessObjectFactory;
 import org.irods.jargon.core.pub.IRODSAccessObjectFactoryImpl;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Class that maintains connections to cyverse
@@ -28,14 +25,17 @@ public class CyVerseSessionManager
 	// A reference to the authenticated irods account
 	private IRODSAccount authenticatedAccount;
 
+	private UUID sessionID;
+
 	/**
 	 * Constructor just needs the authenticated irods account
 	 *
 	 * @param authenticatedAccount The account that has been authenticated
 	 */
-	public CyVerseSessionManager(IRODSAccount authenticatedAccount)
+	public CyVerseSessionManager(IRODSAccount authenticatedAccount, UUID sessionID)
 	{
 		this.authenticatedAccount = authenticatedAccount;
+		this.sessionID = sessionID;
 	}
 
 	/**
@@ -64,7 +64,7 @@ public class CyVerseSessionManager
 			// Print an error and return false
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -95,7 +95,7 @@ public class CyVerseSessionManager
 			// An error occured, ignore it
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",

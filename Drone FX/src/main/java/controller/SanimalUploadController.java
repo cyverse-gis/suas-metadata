@@ -1,14 +1,7 @@
 package controller;
 
-import controller.uploadView.ImageCollectionListEntryController;
-import controller.uploadView.ImageUploadDownloadListEntryController;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,20 +11,16 @@ import javafx.scene.layout.VBox;
 import library.TreeViewAutomatic;
 import model.SanimalData;
 import model.cyverse.ImageCollection;
-import model.cyverse.Permission;
 import model.image.*;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.TaskProgressView;
 import org.fxmisc.easybind.EasyBind;
 
 import java.net.URL;
-import java.util.Comparator;
-import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * Controller class for the upload page
@@ -90,48 +79,32 @@ public class SanimalUploadController implements Initializable
 	private static final String STATUS_LOADING = "Loading collection uploads...";
 	private static final String STATUS_DOWNLOADING = "Downloading collection uploads to edit...";
 
+	private UUID sessionID;
+
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
+	}
+
+	public void init(UUID sessionID)
+	{
+		this.sessionID = sessionID;
+
 		// First setup the collection list
 
 		// Initialize root of the right side directory/image tree and make the root invisible
 		// This is because a treeview must have ONE root.
 
 		// Create a fake invisible root node whos children
-		final TreeItem<ImageContainer> ROOT = new TreeItem<>(SanimalData.getInstance().getImageTree());
+		final TreeItem<ImageContainer> ROOT = new TreeItem<>(SanimalData.getInstance(sessionID).getImageTree());
 		// Hide the fake invisible root
 		this.imageTree.setShowRoot(false);
 		// Set the fake invisible root
 		this.imageTree.setRoot(ROOT);
 		// Set the items of the tree to be the children of the fake invisible root
-		this.imageTree.setItems(SanimalData.getInstance().getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry) && !(imageContainer instanceof CloudImageDirectory)));
+		this.imageTree.setItems(SanimalData.getInstance(sessionID).getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry) && !(imageContainer instanceof CloudImageDirectory)));
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("uploadView/UploadTreeCell.fxml").getController());
-
-		/*
-		// Custom cell factory used to show upload downloads
-		this.uploadListDownloadListView.setCellFactory(list ->
-		{
-			ImageUploadDownloadListEntryController controller = FXMLLoaderUtils.loadFXML("uploadView/ImageUploadDownloadListEntry.fxml").getController();
-			controller.setOnDownload(() -> this.downloadImages(controller.getItem()));
-			controller.setOnUpload(() -> this.saveImages(controller.getItem()));
-			return controller;
-		});
-		// Bind the upload download to the current selection's uploads, Sort the uploads by date taken and filter them by the query
-		this.uploadListDownloadListView.itemsProperty().bind(EasyBind.monadic(this.selectedCollection).map(imageCollection -> {
-			ObservableList<CloudUploadEntry> uploads = imageCollection.getUploads();
-			SortedList<CloudUploadEntry> sortedUploads = uploads.sorted((entry1, entry2) -> entry2.getUploadDate().compareTo(entry1.getUploadDate()));
-			FilteredList<CloudUploadEntry> filteredSortedUploads = sortedUploads.filtered(x -> true);
-			// Set the filter to update whenever the upload search text changes
-			filteredSortedUploads.predicateProperty().bind(Bindings.createObjectBinding(() -> (cloudUploadEntry ->
-					// Allow any cloud upload entry with a username cloud upload entry search text
-					StringUtils.containsIgnoreCase(cloudUploadEntry.getUploadUser(), this.txtUploadSearch.getCharacters()) ||
-					StringUtils.containsIgnoreCase(SanimalData.getInstance().getSettings().formatDateTime(cloudUploadEntry.getUploadDate(), " "), this.txtUploadSearch.getCharacters()) ||
-					StringUtils.containsIgnoreCase(cloudUploadEntry.getImageCount().toString(), this.txtUploadSearch.getCharacters())), this.txtUploadSearch.textProperty()));
-			return filteredSortedUploads;
-		}));
-		*/
 
 		// Hide the maskerpane since we're not retrieving downloads
 		this.mpnDownloadUploads.setVisible(false);
@@ -153,7 +126,7 @@ public class SanimalUploadController implements Initializable
 
 
 		// Bind the tasks
-		EasyBind.listBind(this.tpvUploads.getTasks(), SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().getActiveTasks());
+		EasyBind.listBind(this.tpvUploads.getTasks(), SanimalData.getInstance(sessionID).getSanimalExecutor().getImmediateExecutor().getActiveTasks());
 	}
 
 	/**
@@ -169,7 +142,7 @@ public class SanimalUploadController implements Initializable
 		this.vbxDownloadList.setDisable(true);
 
 		// Create a task to pull a collection's uploads
-		ErrorTask<Void> collectionUploadDownloader = new ErrorTask<Void>()
+		ErrorTask<Void> collectionUploadDownloader = new ErrorTask<Void>(sessionID)
 		{
 			@Override
 			protected Void call()
@@ -177,7 +150,7 @@ public class SanimalUploadController implements Initializable
 				this.updateMessage("Downloading list of uploads to collection: " + collection.getName());
 				DoubleProperty progress = new SimpleDoubleProperty(0.0);
 				progress.addListener((observable, oldValue, newValue) -> this.updateProgress(progress.getValue(), 1.0));
-				SanimalData.getInstance().getConnectionManager().retrieveAndInsertUploadList(collection, progress);
+				SanimalData.getInstance(sessionID).getConnectionManager().retrieveAndInsertUploadList(collection, progress);
 				return null;
 			}
 		};
@@ -193,7 +166,7 @@ public class SanimalUploadController implements Initializable
 		});
 
 		// Add the task
-		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(collectionUploadDownloader);
+		SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().addTask(collectionUploadDownloader);
 	}
 
 	/**
@@ -210,18 +183,18 @@ public class SanimalUploadController implements Initializable
 		this.vbxDownloadList.setDisable(true);
 
 		// Create a task to execute
-		ErrorTask<Void> downloadTask = new ErrorTask<Void>()
+		ErrorTask<Void> downloadTask = new ErrorTask<Void>(sessionID)
 		{
 			@Override
 			protected Void call()
 			{
 				this.updateMessage("Downloading directory for editing...");
 				// Download the directory and add it to our tree structure
-				CloudImageDirectory cloudDirectory = SanimalData.getInstance().getConnectionManager().downloadUploadDirectory(uploadEntry);
+				CloudImageDirectory cloudDirectory = SanimalData.getInstance(sessionID).getConnectionManager().downloadUploadDirectory(uploadEntry);
 				Platform.runLater(() ->
 				{
 					uploadEntry.setCloudImageDirectory(cloudDirectory);
-					SanimalData.getInstance().getImageTree().addChild(cloudDirectory);
+					SanimalData.getInstance(sessionID).getImageTree().addChild(cloudDirectory);
 				});
 				return null;
 			}
@@ -235,7 +208,7 @@ public class SanimalUploadController implements Initializable
 			uploadEntry.setDownloaded(true);
 		});
 
-		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(downloadTask);
+		SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().addTask(downloadTask);
 	}
 
 	/**
@@ -252,7 +225,7 @@ public class SanimalUploadController implements Initializable
 		{
 			// If we have a valid directory, perform the upload
 			// Create an upload task
-			Task<Void> saveTask = new ErrorTask<Void>()
+			Task<Void> saveTask = new ErrorTask<Void>(sessionID)
 			{
 				@Override
 				protected Void call()
@@ -263,7 +236,7 @@ public class SanimalUploadController implements Initializable
 					messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
 
 					// Save images to CyVerse, we give it a transfer status callback so that we can show the progress
-					//SanimalData.getInstance().getConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
+					//SanimalData.getInstance(sessionID).getConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
 					return null;
 				}
 			};
@@ -271,14 +244,14 @@ public class SanimalUploadController implements Initializable
 			saveTask.setOnSucceeded(event ->
 			{
 				imageDirectory.setUploadProgress(-1);
-				SanimalData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
+				SanimalData.getInstance(sessionID).getImageTree().removeChildRecursive(imageDirectory);
 				uploadEntry.clearLocalCopy();
 			});
-			SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(saveTask);
+			SanimalData.getInstance(sessionID).getSanimalExecutor().getImmediateExecutor().addTask(saveTask);
 		}
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().showPopup(Alert.AlertType.ERROR,
+			SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(Alert.AlertType.ERROR,
 					this.imageTree.getScene().getWindow(),
 					"Error",
 					"Directory not downloaded",
@@ -316,7 +289,7 @@ public class SanimalUploadController implements Initializable
 						// Clear any known uploads
 						for (CloudUploadEntry cloudUploadEntry : this.selectedCollection.getValue().getUploads())
 							if (cloudUploadEntry.hasBeenDownloaded())
-								SanimalData.getInstance().getImageTree().removeChildRecursive(cloudUploadEntry.getCloudImageDirectory());
+								SanimalData.getInstance(sessionID).getImageTree().removeChildRecursive(cloudUploadEntry.getCloudImageDirectory());
 
 						// Clear the uploads and resync
 						this.selectedCollection.getValue().getUploads().clear();

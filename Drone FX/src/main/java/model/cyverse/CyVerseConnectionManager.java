@@ -73,6 +73,13 @@ public class CyVerseConnectionManager
 	private IRODSAccount authenticatedAccount;
 	private CyVerseSessionManager sessionManager;
 
+	private UUID sessionID;
+
+	public CyVerseConnectionManager(UUID sessionID)
+	{
+		this.sessionID = sessionID;
+	}
+
 	/**
 	 * Given a username and password, this method logs a cyverse user in
 	 *
@@ -99,7 +106,7 @@ public class CyVerseConnectionManager
 				this.authenticatedAccount = authResponse.getAuthenticatedIRODSAccount();
 
 				// Store a session manager
-				this.sessionManager = new CyVerseSessionManager(this.authenticatedAccount);
+				this.sessionManager = new CyVerseSessionManager(this.authenticatedAccount, this.sessionID);
 
 				// We're good, return true
 				return true;
@@ -107,20 +114,20 @@ public class CyVerseConnectionManager
 			else
 			{
 				// If the authentication failed, print a message, and logout in case the login partially completed
-				SanimalData.getInstance().getErrorDisplay().printError("Authentication failed. Response was: " + authResponse.getAuthMessage());
+				SanimalData.getInstance(sessionID).getErrorDisplay().printError("Authentication failed. Response was: " + authResponse.getAuthMessage());
 			}
 			session.closeSession(account);
 		}
 		// If the authentication failed, print a message, and logout in case the login partially completed
 		catch (InvalidUserException | AuthenticationException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().printError("Authentication failed!");
+			SanimalData.getInstance(sessionID).getErrorDisplay().printError("Authentication failed!");
 		}
 		// If the authentication failed due to a jargon exception, print a message, and logout in case the login partially completed
 		// Not really sure how this happens, probably if the server incorrectly responds or is down
 		catch (JargonException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().showPopup(
+			SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 					Alert.AlertType.ERROR,
 					null,
 					"Error",
@@ -168,7 +175,7 @@ public class CyVerseConnectionManager
 					}
 					catch (IOException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().showPopup(
+						SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 								Alert.AlertType.ERROR,
 								null,
 								"Error",
@@ -193,7 +200,7 @@ public class CyVerseConnectionManager
 					}
 					catch (IOException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().showPopup(
+						SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 								Alert.AlertType.ERROR,
 								null,
 								"Error",
@@ -218,7 +225,7 @@ public class CyVerseConnectionManager
 					}
 					catch (IOException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().showPopup(
+						SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 								Alert.AlertType.ERROR,
 								null,
 								"Error",
@@ -230,7 +237,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -252,7 +259,7 @@ public class CyVerseConnectionManager
 		if (this.sessionManager.openSession())
 		{
 			// Convert the settings to JSON format
-			String json = SanimalData.getInstance().getGson().toJson(settingsData);
+			String json = SanimalData.getInstance(sessionID).getGson().toJson(settingsData);
 			// Write the settings.json file to the server
 			this.writeRemoteFile("./Drone/Settings/settings.json", json);
 			this.sessionManager.closeSession();
@@ -280,12 +287,12 @@ public class CyVerseConnectionManager
 				{
 					this.sessionManager.closeSession();
 					// Get the GSON object to parse the JSON. Return the list of new locations
-					return SanimalData.getInstance().getGson().fromJson(fileContents, SettingsData.class);
+					return SanimalData.getInstance(sessionID).getGson().fromJson(fileContents, SettingsData.class);
 				}
 				catch (JsonSyntaxException e)
 				{
 					// If the JSON file is incorrectly formatted, throw an error and return null
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -321,12 +328,12 @@ public class CyVerseConnectionManager
 				{
 					this.sessionManager.closeSession();
 					// Get the GSON object to parse the JSON. Return the list of new locations
-					return SanimalData.getInstance().getGson().fromJson(fileContents, LOCATION_LIST_TYPE);
+					return SanimalData.getInstance(sessionID).getGson().fromJson(fileContents, LOCATION_LIST_TYPE);
 				}
 				catch (JsonSyntaxException e)
 				{
 					// If the JSON file is incorrectly formatted, throw an error and return an empty list
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -351,7 +358,7 @@ public class CyVerseConnectionManager
 		if (this.sessionManager.openSession())
 		{
 			// Convert the location list to JSON format
-			String json = SanimalData.getInstance().getGson().toJson(newLocations);
+			String json = SanimalData.getInstance(sessionID).getGson().toJson(newLocations);
 			// Write the locations.json file to the server
 			this.writeRemoteFile("./Drone/Settings/locations.json", json);
 			this.sessionManager.closeSession();
@@ -379,12 +386,12 @@ public class CyVerseConnectionManager
 				{
 					this.sessionManager.closeSession();
 					// Get the GSON object to parse the JSON. Return the list of new locations
-					return SanimalData.getInstance().getGson().fromJson(fileContents, SPECIES_LIST_TYPE);
+					return SanimalData.getInstance(sessionID).getGson().fromJson(fileContents, SPECIES_LIST_TYPE);
 				}
 				catch (JsonSyntaxException e)
 				{
 					// If the JSON file is incorrectly formatted, throw an error and return an empty list
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -409,7 +416,7 @@ public class CyVerseConnectionManager
 		if (this.sessionManager.openSession())
 		{
 			// Convert the species list to JSON format
-			String json = SanimalData.getInstance().getGson().toJson(newSpecies);
+			String json = SanimalData.getInstance(sessionID).getGson().toJson(newSpecies);
 			// Write the species.json file to the server
 			this.writeRemoteFile("./Drone/Settings/species.json", json);
 			this.sessionManager.closeSession();
@@ -455,7 +462,7 @@ public class CyVerseConnectionManager
 									try
 									{
 										// Get the GSON object to parse the JSON.
-										ImageCollection imageCollection = SanimalData.getInstance().getGson().fromJson(collectionJSON, ImageCollection.class);
+										ImageCollection imageCollection = SanimalData.getInstance(sessionID).getGson().fromJson(collectionJSON, ImageCollection.class);
 										if (imageCollection != null)
 										{
 											imageCollections.add(imageCollection);
@@ -467,7 +474,7 @@ public class CyVerseConnectionManager
 											if (permissionsJSON != null)
 											{
 												// Get the GSON object to parse the JSON.
-												List<Permission> permissions = SanimalData.getInstance().getGson().fromJson(permissionsJSON, PERMISSION_LIST_TYPE);
+												List<Permission> permissions = SanimalData.getInstance(sessionID).getGson().fromJson(permissionsJSON, PERMISSION_LIST_TYPE);
 												if (permissions != null)
 												{
 													// We need to initialize the internal listeners because the deserialization process causes the fields to get wiped and reset
@@ -485,7 +492,7 @@ public class CyVerseConnectionManager
 													// Add a permission for my own permissions
 													Permission myPermission = new Permission();
 													myPermission.setOwner(false);
-													myPermission.setUsername(SanimalData.getInstance().getUsername());
+													myPermission.setUsername(SanimalData.getInstance(sessionID).getUsername());
 													myPermission.setUpload(collectionDirUploads.canWrite());
 													myPermission.setRead(collectionDirUploads.canRead());
 													imageCollection.getPermissions().add(myPermission);
@@ -496,7 +503,7 @@ public class CyVerseConnectionManager
 									catch (JsonSyntaxException e)
 									{
 										// If the JSON file is incorrectly formatted, throw an error and return an empty list
-										SanimalData.getInstance().getErrorDisplay().showPopup(
+										SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 												Alert.AlertType.ERROR,
 												null,
 												"Error",
@@ -511,7 +518,7 @@ public class CyVerseConnectionManager
 				}
 				else
 				{
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -522,7 +529,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -547,7 +554,7 @@ public class CyVerseConnectionManager
 		{
 			// Check if we are the owner of the collection
 			String ownerUsername = collection.getOwner();
-			if (ownerUsername != null && ownerUsername.equals(SanimalData.getInstance().getUsername()))
+			if (ownerUsername != null && ownerUsername.equals(SanimalData.getInstance(sessionID).getUsername()))
 			{
 				try
 				{
@@ -567,7 +574,7 @@ public class CyVerseConnectionManager
 
 					// Create a collections JSON file to hold the settings
 					String collectionJSONFile = collectionDirName + "/collection.json";
-					String json = SanimalData.getInstance().getGson().toJson(collection);
+					String json = SanimalData.getInstance(sessionID).getGson().toJson(collection);
 					this.writeRemoteFile(collectionJSONFile, json);
 					// Set the file's permissions. We force read only so that even users with write permissions cannot change this file
 					this.setFilePermissions(collectionJSONFile, collection.getPermissions(), true, false);
@@ -577,7 +584,7 @@ public class CyVerseConnectionManager
 
 					// Create a permissions JSON file to hold the permissions
 					String collectionPermissionFile = collectionDirName + "/permissions.json";
-					json = SanimalData.getInstance().getGson().toJson(collection.getPermissions());
+					json = SanimalData.getInstance(sessionID).getGson().toJson(collection.getPermissions());
 					this.writeRemoteFile(collectionPermissionFile, json);
 
 					if (messageCallback != null)
@@ -619,7 +626,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -662,7 +669,7 @@ public class CyVerseConnectionManager
 				}
 				catch (JargonException e)
 				{
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -689,7 +696,7 @@ public class CyVerseConnectionManager
 				}
 				catch (JargonException e)
 				{
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -724,7 +731,7 @@ public class CyVerseConnectionManager
 					}
 					catch (JargonException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().showPopup(
+						SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 								Alert.AlertType.ERROR,
 								null,
 								"Error",
@@ -747,7 +754,7 @@ public class CyVerseConnectionManager
 					}
 					catch (JargonException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().showPopup(
+						SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 								Alert.AlertType.ERROR,
 								null,
 								"Error",
@@ -810,7 +817,7 @@ public class CyVerseConnectionManager
 						messageCallback.setValue("Creating upload folder on CyVerse...");
 
 					// Create a new folder for the upload, we will use the current date as the name plus our username
-					String uploadFolderName = FOLDER_FORMAT.format(new Date(this.sessionManager.getCurrentAO().getEnvironmentalInfoAO(this.authenticatedAccount).getIRODSServerCurrentTime())) + " " + SanimalData.getInstance().getUsername();
+					String uploadFolderName = FOLDER_FORMAT.format(new Date(this.sessionManager.getCurrentAO().getEnvironmentalInfoAO(this.authenticatedAccount).getIRODSServerCurrentTime())) + " " + SanimalData.getInstance(sessionID).getUsername();
 					String uploadDirName = collectionUploadDirStr + "/" + uploadFolderName;
 
 					if (messageCallback != null)
@@ -819,11 +826,11 @@ public class CyVerseConnectionManager
 					// Create the JSON file representing the upload
 					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
 					Integer imagesWithSpecies = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry && !((ImageEntry) imageContainer).getSpeciesPresent().isEmpty()).count());
-					CloudUploadEntry uploadEntry = new CloudUploadEntry(SanimalData.getInstance().getUsername(), LocalDateTime.now(), imagesWithSpecies, imageCount, uploadDirName);
+					CloudUploadEntry uploadEntry = new CloudUploadEntry(SanimalData.getInstance(sessionID).getUsername(), LocalDateTime.now(), imagesWithSpecies, imageCount, uploadDirName);
 					// Convert the upload entry to JSON format
-					String json = SanimalData.getInstance().getGson().toJson(uploadEntry);
+					String json = SanimalData.getInstance(sessionID).getGson().toJson(uploadEntry);
 					// Create the UploadMeta.json
-					File directoryMetaJSON = SanimalData.getInstance().getTempDirectoryManager().createTempFile("UploadMeta.json");
+					File directoryMetaJSON = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile("UploadMeta.json");
 					directoryMetaJSON.createNewFile();
 					try (PrintWriter out = new PrintWriter(directoryMetaJSON))
 					{
@@ -849,7 +856,7 @@ public class CyVerseConnectionManager
 						}
 						catch (JargonException e)
 						{
-							SanimalData.getInstance().getErrorDisplay().printError("Could not add metadata to image: " + imageEntry.getFile().getAbsolutePath() + ", error was: ");
+							SanimalData.getInstance(sessionID).getErrorDisplay().printError("Could not add metadata to image: " + imageEntry.getFile().getAbsolutePath() + ", error was: ");
 							e.printStackTrace();
 						}
 						return "";
@@ -874,7 +881,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException | IOException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -959,7 +966,7 @@ public class CyVerseConnectionManager
 								}
 								catch (JargonException e)
 								{
-									SanimalData.getInstance().getErrorDisplay().printError("Could not add metadata to image: " + cloudImageEntry.getCyverseFile().getAbsolutePath() + ", error was: ");
+									SanimalData.getInstance(sessionID).getErrorDisplay().printError("Could not add metadata to image: " + cloudImageEntry.getCyverseFile().getAbsolutePath() + ", error was: ");
 									e.printStackTrace();
 								}
 							});
@@ -974,18 +981,18 @@ public class CyVerseConnectionManager
 					}
 
 					// Add an edit comment so users know the file was edited
-					uploadEntryToSave.getEditComments().add("Edited by " + SanimalData.getInstance().getUsername() + " on " + FOLDER_FORMAT.format(Calendar.getInstance().getTime()));
+					uploadEntryToSave.getEditComments().add("Edited by " + SanimalData.getInstance(sessionID).getUsername() + " on " + FOLDER_FORMAT.format(Calendar.getInstance().getTime()));
 					Integer imagesWithSpecies = uploadEntryToSave.getImagesWithSpecies() - numberOfDetaggedImages + numberOfRetaggedImages;
 					uploadEntryToSave.setImagesWithSpecies(imagesWithSpecies);
 					// Convert the upload entry to JSON format
-					String json = SanimalData.getInstance().getGson().toJson(uploadEntryToSave);
+					String json = SanimalData.getInstance(sessionID).getGson().toJson(uploadEntryToSave);
 					// Write the UploadMeta.json file to the server
 					this.writeRemoteFile(uploadEntryToSave.getUploadIRODSPath() + "/UploadMeta.json", json);
 				}
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1032,7 +1039,7 @@ public class CyVerseConnectionManager
 							try
 							{
 								// Download the cloud upload entry
-								CloudUploadEntry uploadEntry = SanimalData.getInstance().getGson().fromJson(contents, CloudUploadEntry.class);
+								CloudUploadEntry uploadEntry = SanimalData.getInstance(sessionID).getGson().fromJson(contents, CloudUploadEntry.class);
 								if (uploadEntry != null)
 								{
 									uploadEntry.initFromJSON();
@@ -1042,7 +1049,7 @@ public class CyVerseConnectionManager
 							catch (JsonSyntaxException e)
 							{
 								// If the JSON file is incorrectly formatted, throw an error
-								SanimalData.getInstance().getErrorDisplay().showPopup(
+								SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 										Alert.AlertType.ERROR,
 										null,
 										"Error",
@@ -1056,7 +1063,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1094,7 +1101,7 @@ public class CyVerseConnectionManager
 			catch (JargonException e)
 			{
 				e.printStackTrace();
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1126,7 +1133,7 @@ public class CyVerseConnectionManager
 				// Add all image files to the directory
 				if (!file.isDirectory())
 				{
-					current.addImage(new CloudImageEntry(file));
+					current.addImage(new CloudImageEntry(file, this.sessionID));
 				}
 				// Add all subdirectories to the directory
 				else
@@ -1188,7 +1195,7 @@ public class CyVerseConnectionManager
 			catch (JargonQueryException | JargonException | NumberFormatException | GenQueryBuilderException e)
 			{
 				e.printStackTrace();
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1290,13 +1297,13 @@ public class CyVerseConnectionManager
 
 					// Grab the collection that this image is a part of
 					UUID finalCollectionID = collectionID;
-					Optional<ImageCollection> correctCollection = SanimalData.getInstance().getCollectionList().stream().filter(imageCollection -> imageCollection.getID().equals(finalCollectionID)).findFirst();
+					Optional<ImageCollection> correctCollection = SanimalData.getInstance(sessionID).getCollectionList().stream().filter(imageCollection -> imageCollection.getID().equals(finalCollectionID)).findFirst();
 					if (correctCollection.isPresent())
 					{
 						// Grab the collection if it's present (it should never not be present)
 						ImageCollection imageCollection = correctCollection.get();
 						// Get the permission for my own account to this collection
-						Optional<Permission> myPermissions = imageCollection.getPermissions().stream().filter(permission -> permission.getUsername().equals(SanimalData.getInstance().getUsername())).findFirst();
+						Optional<Permission> myPermissions = imageCollection.getPermissions().stream().filter(permission -> permission.getUsername().equals(SanimalData.getInstance(sessionID).getUsername())).findFirst();
 						if (myPermissions.isPresent())
 						{
 							// If I can't upload I must only be able to read, so round the query results as asked for by Sue, may need to change this in the future
@@ -1351,7 +1358,7 @@ public class CyVerseConnectionManager
 			catch (JargonException | NumberFormatException e)
 			{
 				e.printStackTrace();
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1380,7 +1387,7 @@ public class CyVerseConnectionManager
 				// Grab the name of the CyVerse file
 				String fileName = cyverseFile.getName();
 				// Create a temporary file to write to with the same name
-				File localImageFile = SanimalData.getInstance().getTempDirectoryManager().createTempFile(fileName);
+				File localImageFile = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile(fileName);
 
 				// Download the file locally
 				this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount).getOperation(cyverseFile, localImageFile, new TransferStatusCallbackListener()
@@ -1398,7 +1405,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1424,7 +1431,7 @@ public class CyVerseConnectionManager
 		{
 			IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 			// Create a temporary file to write to
-			File localFile = SanimalData.getInstance().getTempDirectoryManager().createTempFile("sanimalTemp." + FilenameUtils.getExtension(file));
+			File localFile = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile("sanimalTemp." + FilenameUtils.getExtension(file));
 			// Delete the temporary file before copying so that we don't need to specify overwriting
 			localFile.delete();
 			// Create the remote file instance
@@ -1445,7 +1452,7 @@ public class CyVerseConnectionManager
 				}
 				else
 				{
-					SanimalData.getInstance().getErrorDisplay().showPopup(
+					SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 							Alert.AlertType.ERROR,
 							null,
 							"Error",
@@ -1457,7 +1464,7 @@ public class CyVerseConnectionManager
 		}
 		catch (IOException | JargonException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().showPopup(
+			SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 					Alert.AlertType.ERROR,
 					null,
 					"Error",
@@ -1483,7 +1490,7 @@ public class CyVerseConnectionManager
 		{
 			IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 			// Create a local file to write to
-			File localFile = SanimalData.getInstance().getTempDirectoryManager().createTempFile("sanimalTemp." + FilenameUtils.getExtension(file));
+			File localFile = SanimalData.getInstance(sessionID).getTempDirectoryManager().createTempFile("sanimalTemp." + FilenameUtils.getExtension(file));
 			localFile.createNewFile();
 			// Ensure the file we made exists
 			if (localFile.exists())
@@ -1509,7 +1516,7 @@ public class CyVerseConnectionManager
 			}
 			else
 			{
-				SanimalData.getInstance().getErrorDisplay().showPopup(
+				SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 						Alert.AlertType.ERROR,
 						null,
 						"Error",
@@ -1520,7 +1527,7 @@ public class CyVerseConnectionManager
 		}
 		catch (IOException | JargonException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().showPopup(
+			SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 					Alert.AlertType.ERROR,
 					null,
 					"Error",

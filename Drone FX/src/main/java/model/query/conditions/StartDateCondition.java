@@ -7,6 +7,7 @@ import model.query.IQueryCondition;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.UUID;
 
 /**
  * Data model used by the "Start date filter" query condition
@@ -15,6 +16,11 @@ public class StartDateCondition implements IQueryCondition
 {
 	// The current start date
 	private ObjectProperty<LocalDateTime> startDate = new SimpleObjectProperty<>(LocalDateTime.of(2000, Month.JANUARY, 1, 0, 0));
+
+	public StartDateCondition(UUID sessionID)
+	{
+
+	}
 
 	/**
 	 * This query condition ensures only images with date > startDate are selected

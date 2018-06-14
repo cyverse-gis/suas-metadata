@@ -39,6 +39,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.UUID;
 
 /**
  * Controller class for the program main view
@@ -86,9 +87,24 @@ public class SanimalViewController implements Initializable
 	@FXML
 	public StackPane primaryPane;
 
+	@FXML
+	public SanimalHomeController homePaneController;
+	@FXML
+	public SanimalImportController importPaneController;
+	@FXML
+	public SanimalUploadController uploadPaneController;
+	@FXML
+	public SanimalAnalysisController analysisPaneController;
+	@FXML
+	public SanimalMapController mapPaneController;
+	@FXML
+	public SanimalSettingsController settingsPaneController;
+
 	///
 	/// FXML Bound fields end
 	///
+
+	private UUID sessionID;
 
 	// The preference key which will just be "Username"
 	private static final String USERNAME_PREF = "username";
@@ -104,8 +120,20 @@ public class SanimalViewController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
+	}
+
+	public void init(UUID sessionID)
+	{
+		this.sessionID = sessionID;
+		this.analysisPaneController.init(sessionID);
+		this.homePaneController.init(sessionID);
+		this.importPaneController.init(sessionID);
+		this.settingsPaneController.init(sessionID);
+		this.mapPaneController.init(sessionID);
+		this.uploadPaneController.init(sessionID);
+
 		// Grab the logged in property
-		ReadOnlyBooleanProperty loggedIn = SanimalData.getInstance().loggedInProperty();
+		ReadOnlyBooleanProperty loggedIn = SanimalData.getInstance(sessionID).loggedInProperty();
 
 		// Disable the main pane when not logged in
 		this.tabPane.disableProperty().bind(loggedIn.not());
@@ -131,7 +159,7 @@ public class SanimalViewController implements Initializable
 		tabPane.tabMinWidthProperty().bind(tabPane.widthProperty().divide(tabPane.getTabs().size()).subtract(25));
 
 		// Grab the stored username if the user had 'remember username' selected
-		String storedUsername = SanimalData.getInstance().getSanimalPreferences().get(USERNAME_PREF, "");
+		String storedUsername = SanimalData.getInstance(sessionID).getSanimalPreferences().get(USERNAME_PREF, "");
 
 		// Load default username if it was stored
 		if (!storedUsername.isEmpty())
@@ -143,7 +171,7 @@ public class SanimalViewController implements Initializable
 		// If the user deselects the remember username box, remove the stored username
 		this.cbxRememberUsername.selectedProperty().addListener((observable, oldValue, newValue) -> {
 			if (!newValue)
-				SanimalData.getInstance().getSanimalPreferences().put(USERNAME_PREF, "");
+				SanimalData.getInstance(sessionID).getSanimalPreferences().put(USERNAME_PREF, "");
 		});
 	}
 
@@ -183,22 +211,22 @@ public class SanimalViewController implements Initializable
 	{
 		// Save username preference if the box is checked
 		if (this.cbxRememberUsername.isSelected())
-			SanimalData.getInstance().getSanimalPreferences().put(USERNAME_PREF, this.txtUsername.getText());
+			SanimalData.getInstance(sessionID).getSanimalPreferences().put(USERNAME_PREF, this.txtUsername.getText());
 
 		// Only login if we're not logged in
-		if (!SanimalData.getInstance().loggedInProperty().getValue())
+		if (!SanimalData.getInstance(sessionID).loggedInProperty().getValue())
 		{
 			this.loggingIn.setValue(true);
 
 			// Show the loading icon graphic
 			this.btnLogin.setGraphic(new ImageView(new Image("/images/mainMenu/loading.gif", 26, 26, true, true)));
 			// Grab our connection manager
-			CyVerseConnectionManager connectionManager = SanimalData.getInstance().getConnectionManager();
+			CyVerseConnectionManager connectionManager = SanimalData.getInstance(sessionID).getConnectionManager();
 			// Grab the username and password
 			String username = this.txtUsername.getText();
 			String password = this.txtPassword.getText();
 			// Thread off logging in...
-			ErrorTask<Boolean> loginAttempt = new ErrorTask<Boolean>()
+			ErrorTask<Boolean> loginAttempt = new ErrorTask<Boolean>(sessionID)
 			{
 				@Override
 				protected Boolean call() throws Exception
@@ -212,8 +240,8 @@ public class SanimalViewController implements Initializable
 					{
 						Platform.runLater(() ->
 						{
-							SanimalData.getInstance().setUsername(username);
-							SanimalData.getInstance().setLoggedIn(true);
+							SanimalData.getInstance(sessionID).setUsername(username);
+							SanimalData.getInstance(sessionID).setLoggedIn(true);
 						});
 
 						// Then initialize the remove sanimal directory
@@ -227,7 +255,7 @@ public class SanimalViewController implements Initializable
 						SettingsData settingsData = connectionManager.pullRemoteSettings();
 
 						// Set the settings data
-						Platform.runLater(() -> SanimalData.getInstance().getSettings().loadFromOther(settingsData));
+						Platform.runLater(() -> SanimalData.getInstance(sessionID).getSettings().loadFromOther(settingsData));
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling species from remote directory...");
@@ -235,7 +263,7 @@ public class SanimalViewController implements Initializable
 						List<Species> species = connectionManager.pullRemoteSpecies();
 
 						// Set the species list to be these species
-						Platform.runLater(() -> SanimalData.getInstance().getSpeciesList().addAll(species));
+						Platform.runLater(() -> SanimalData.getInstance(sessionID).getSpeciesList().addAll(species));
 
 						// Pull any locations from the remote directory
 						this.updateMessage("Pulling locations from remote directory...");
@@ -243,7 +271,7 @@ public class SanimalViewController implements Initializable
 						List<Location> locations = connectionManager.pullRemoteLocations();
 
 						// Set the location list to be these locations
-						Platform.runLater(() -> SanimalData.getInstance().getLocationList().addAll(locations));
+						Platform.runLater(() -> SanimalData.getInstance(sessionID).getLocationList().addAll(locations));
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling collections from remote directory...");
@@ -251,13 +279,13 @@ public class SanimalViewController implements Initializable
 						//List<ImageCollection> imageCollections = connectionManager.pullRemoteCollections();
 
 						// Set the image collection list to be these collections
-						//Platform.runLater(() -> SanimalData.getInstance().getCollectionList().addAll(imageCollections));
+						//Platform.runLater(() -> SanimalData.getInstance(sessionID).getCollectionList().addAll(imageCollections));
 
 						this.updateMessage("Pulling NEON sites...");
 						this.updateProgress(7, 8);
 
-						Sites sites = SanimalData.getInstance().getNeonData().pullSites();
-						Platform.runLater(() -> SanimalData.getInstance().getNeonData().setSites(sites));
+						Sites sites = SanimalData.getInstance(sessionID).getNeonData().pullSites();
+						Platform.runLater(() -> SanimalData.getInstance(sessionID).getNeonData().setSites(sites));
 
 						this.updateProgress(8, 8);
 					}
@@ -284,7 +312,7 @@ public class SanimalViewController implements Initializable
 				this.btnLogin.setGraphic(null);
 			});
 			// Perform the task
-			SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(loginAttempt);
+			SanimalData.getInstance(sessionID).getSanimalExecutor().getQueuedExecutor().addTask(loginAttempt);
 		}
 	}
 

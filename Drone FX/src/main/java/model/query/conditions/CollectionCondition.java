@@ -11,6 +11,7 @@ import model.query.IQueryCondition;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Data model used by the "Collection filter" query condition
@@ -20,11 +21,14 @@ public class CollectionCondition implements IQueryCondition
 	// A map of collection -> if the collection is selected to be filtered
 	private Map<ImageCollection, BooleanProperty> imageCollectionToSelected = new HashMap<>();
 
+	private UUID sessionID;
+
 	/**
 	 * Constructor ensures that each collection maps to a boolean property
 	 */
-	public CollectionCondition()
+	public CollectionCondition(UUID sessionID)
 	{
+		this.sessionID = sessionID;
 		// Make sure each hour maps to a boolean property, this is important for later, since our view will use this to populate checkboxes
 		for (ImageCollection imageCollection : this.getImageCollections())
 			if (!this.imageCollectionToSelected.containsKey(imageCollection))
@@ -71,7 +75,7 @@ public class CollectionCondition implements IQueryCondition
 	 */
 	public ObservableList<ImageCollection> getImageCollections()
 	{
-		return SanimalData.getInstance().getCollectionList();
+		return SanimalData.getInstance(sessionID).getCollectionList();
 	}
 
 	/**

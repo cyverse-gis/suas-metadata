@@ -10,6 +10,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.UUID;
 
 /**
  * Class used in managing temporary files created by SANIMAL
@@ -22,7 +23,7 @@ public class TempDirectoryManager
 	/**
 	 * Constructor initializes the temporary directory
 	 */
-	public TempDirectoryManager()
+	public TempDirectoryManager(UUID sessionID)
 	{
 		try
 		{
@@ -32,7 +33,7 @@ public class TempDirectoryManager
 		}
 		catch (IOException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().showPopup(
+			SanimalData.getInstance(sessionID).getErrorDisplay().showPopup(
 					Alert.AlertType.ERROR,
 					null,
 					"Error",

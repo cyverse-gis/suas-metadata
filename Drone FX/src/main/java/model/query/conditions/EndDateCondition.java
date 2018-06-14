@@ -6,6 +6,7 @@ import model.query.CyVerseQuery;
 import model.query.IQueryCondition;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Data model used by the "End Date filter" query condition
@@ -14,6 +15,11 @@ public class EndDateCondition implements IQueryCondition
 {
 	// Stores the local date time of the current end date
 	private ObjectProperty<LocalDateTime> endDate = new SimpleObjectProperty<>(LocalDateTime.now());
+
+	public EndDateCondition(UUID sessionID)
+	{
+
+	}
 
 	/**
 	 * This query condition ensures only images with a date < the end date are selected
