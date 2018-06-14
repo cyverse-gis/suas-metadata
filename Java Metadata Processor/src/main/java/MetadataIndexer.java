@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +46,12 @@ public class MetadataIndexer
 		// First convert our raw metadata into something indexable
 		Map<String, Object> cleanedMetadata = this.metadataConverter.convertRawToIndexable(rawMetadata);
 
+		if (cleanedMetadata == null)
+		{
+			System.out.println("Not enough metadata was present on the image to index it, ignore the file.");
+			System.exit(0);
+		}
+
 		// Open a DB connection
 		try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost(ELASTIC_SEARCH_HOST, ELASTIC_SEARCH_PORT, ELASTIC_SEARCH_SCHEME))))
 		{
@@ -76,7 +83,13 @@ public class MetadataIndexer
 	public void indexBulk(List<Map<String, String>> rawMetadataList)
 	{
 		// Map the raw metadata to the conversion function which will give us a list of cleaned up metadata
-		List<Map<String, Object>> cleanedMetadataList = rawMetadataList.stream().map(this.metadataConverter::convertRawToIndexable).collect(Collectors.toList());
+		List<Map<String, Object>> cleanedMetadataList = rawMetadataList.stream().map(this.metadataConverter::convertRawToIndexable).filter(Objects::nonNull).collect(Collectors.toList());
+
+		if (cleanedMetadataList.isEmpty())
+		{
+			System.out.println("No images contained sufficient metadata to be indexed, they were all ignored.");
+			System.exit(0);
+		}
 
 		// Open a DB connection
 		try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(new HttpHost(ELASTIC_SEARCH_HOST, ELASTIC_SEARCH_PORT, ELASTIC_SEARCH_SCHEME))))

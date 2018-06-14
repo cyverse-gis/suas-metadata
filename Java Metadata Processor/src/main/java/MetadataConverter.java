@@ -21,7 +21,7 @@ public class MetadataConverter
 	 * Given raw metadata this function converts each key and value into one ready to be indexed into elasticsearch
 	 *
 	 * @param rawMetadata The raw metadata to index
-	 * @return A map of key->value pairs ready to be indexed
+	 * @return A map of key->value pairs ready to be indexed or null if the raw metadata was not sufficient
 	 */
 	public Map<String, Object> convertRawToIndexable(Map<String, String> rawMetadata)
 	{
@@ -38,6 +38,13 @@ public class MetadataConverter
 				Tuple<String, Object> converted = this.convert(metadataEntry);
 				metadata.put(converted.v1(), converted.v2());
 			}
+		}
+
+		for (MetadataField metadataField : MetadataField.values())
+		{
+			if (metadataField.isRequired())
+				if (!metadata.containsKey(metadataField.getIndexKeyName()))
+					return null;
 		}
 
 		// Post processing
@@ -131,7 +138,7 @@ public class MetadataConverter
 	 */
 	private enum MetadataField
 	{
-		GPSAltitude("[GPS] GPS Altitude", "altitude", value -> {
+		GPSAltitude("[GPS] GPS Altitude", "altitude", false, value -> {
 			String[] numAndUnit = value.split(" ");
 			if (numAndUnit.length == 2)
 			{
@@ -143,14 +150,16 @@ public class MetadataConverter
 			}
 			return null;
 		}),
-		GPSLatitude("[GPS] GPS Latitude", "location", MetadataConverter::parseLatLong),
-		GPSLongitude("[GPS] GPS Longitude", "location", MetadataConverter::parseLatLong),
-		CreateDate("[Exif IFD0] Date/Time", "createDate", value -> LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")));
+		GPSLatitude("[GPS] GPS Latitude", "location", true, MetadataConverter::parseLatLong),
+		GPSLongitude("[GPS] GPS Longitude", "location", true, MetadataConverter::parseLatLong),
+		CreateDate("[Exif IFD0] Date/Time", "createDate", true, value -> LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")));
 
 		// The exif field name
 		private String exifKeyName;
 		// The index field name
 		private String indexKeyName;
+		// If the field is required for the metadata to be accepted into the index
+		private Boolean required;
 		// A converter used to convert from exif value to indexable value
 		private Function<String, Object> valueConverter;
 
@@ -159,12 +168,14 @@ public class MetadataConverter
 		 *
 		 * @param exifKeyName The exif field's name
 		 * @param indexKeyName The field's name once indexed
+		 * @param required If the field is required when indexing
 		 * @param valueConverter The converter to convert a string value into a usable format
 		 */
-		MetadataField(String exifKeyName, String indexKeyName, Function<String, Object> valueConverter)
+		MetadataField(String exifKeyName, String indexKeyName, Boolean required, Function<String, Object> valueConverter)
 		{
 			this.exifKeyName = exifKeyName;
 			this.indexKeyName = indexKeyName;
+			this.required = required;
 			this.valueConverter = valueConverter;
 		}
 
@@ -186,6 +197,16 @@ public class MetadataConverter
 		public String getIndexKeyName()
 		{
 			return this.indexKeyName;
+		}
+
+		/**
+		 * True if the given field is required for indexing, false otherwise
+		 *
+		 * @return True if the metadata field is required
+		 */
+		public Boolean isRequired()
+		{
+			return this.required;
 		}
 
 		/**
