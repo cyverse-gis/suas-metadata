@@ -39,19 +39,25 @@ public class MetadataConverter
 			}
 		}
 
+		// Go over each metadata field
 		for (MetadataField metadataField : MetadataField.values())
-		{
+			// Test if the metadata field is required
 			if (metadataField.isRequired())
+				// If it is, and the metadata doesn't contain the field, then return null
 				if (!metadata.containsKey(metadataField.getIndexKeyName()))
 					return null;
-		}
 
-		// Post processing
+		///
+		/// Post processing
+		///
+
+		final String UPLOAD_DATE_TAG = "uploadDate";
+		final String LOCATION_TAG = "location";
 
 		// Add an upload date field which isn't present in the default metadata
-		metadata.put("uploadDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")));
+		metadata.put(UPLOAD_DATE_TAG, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")));
 
-		// Fix the lat/long formatting
+		// Fix the lat/long formatting into something elasticsearch can understand
 
 		// If we have GPSLatitude and GPSLongitude we need to convert it to a single "location" field
 		if (metadata.containsKey(MetadataField.GPSLatitude.getIndexKeyName()) && metadata.containsKey(MetadataField.GPSLongitude.getIndexKeyName()))
@@ -59,12 +65,12 @@ public class MetadataConverter
 			// Grab the lat and long
 			Object latitude = metadata.get(MetadataField.GPSLatitude.getIndexKeyName());
 			Object longitude = metadata.get(MetadataField.GPSLongitude.getIndexKeyName());
-			// Remove the lat and long
+			// Remove the lat and long fields from the original metadata
 			metadata.remove(MetadataField.GPSLatitude.getIndexKeyName());
 			metadata.remove(MetadataField.GPSLongitude.getIndexKeyName());
 			// If both lat and long are non-null, put the entry 'location'->'lat,lon'
 			if (latitude != null && longitude != null)
-				metadata.put("location", latitude.toString() + "," + longitude.toString());
+				metadata.put(LOCATION_TAG, latitude.toString() + "," + longitude.toString());
 		}
 		else
 		{
@@ -97,8 +103,10 @@ public class MetadataConverter
 	{
 		// Grab the metadata field for that specific exif tag
 		MetadataField converter = converters.get(metadataEntryToConvert.getKey());
-		// Return a tuple with the new index key name and apply the value converter to get a new value
-		return Tuple.tuple(converter.getIndexKeyName(), converter.getValueConverter().apply(metadataEntryToConvert.getValue()));
+		// Apply the value converter to get a new value converted from the raw original value
+		Object newMetadataValue = converter.getValueConverter().apply(metadataEntryToConvert.getValue());
+		// Return a tuple with the new index key name and the new value
+		return Tuple.tuple(converter.getIndexKeyName(), newMetadataValue);
 	}
 
 	/**
