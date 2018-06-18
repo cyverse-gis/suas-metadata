@@ -5,7 +5,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -150,8 +149,8 @@ public class MetadataConverter
 			}
 			return null;
 		}),
-		GPSLatitude("[GPS] GPS Latitude", "location", true, MetadataConverter::parseLatLong),
-		GPSLongitude("[GPS] GPS Longitude", "location", true, MetadataConverter::parseLatLong),
+		GPSLatitude("[GPS] GPS Latitude", "latitude", true, MetadataConverter::parseLatLong),
+		GPSLongitude("[GPS] GPS Longitude", "longitude", true, MetadataConverter::parseLatLong),
 		CreateDate("[Exif IFD0] Date/Time", "createDate", true, value -> LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")));
 
 		// The exif field name
