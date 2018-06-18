@@ -1,0 +1,57 @@
+# Paste into /etc/irods/core.re
+acPostProcForPut 
+{
+    ON($objPath like "/tempZone/home/dslov/*")
+    {
+        writeLine("serverLog", "File Path is " ++ $filePath);
+        *filePathArg = execCmdArg($filePath);
+        *args = "*filePathArg";
+        *status = errorcode(msiExecCmd("processFile", *args, "null", "null", "null", *out));
+        msiGetStdoutInExecCmdOut(*out, *good);
+        msiGetStderrInExecCmdOut(*out, *bad);
+        writeLine("serverLog", "Output:");
+        foreach (*line in split(*good, '\n')) 
+		{
+            writeLine("serverLog", *line);
+        }
+        writeLine("serverLog", "Errors:");
+        foreach (*line in split(*bad, '\n')) 
+		{
+            writeLine("serverLog", *line);
+		}
+    } 
+}
+
+# Paste into core.re
+acPostProcForCollCreate 
+{
+	ON($collName like "/tempZone/home/dslov/*")
+	{
+		writeLine("serverLog", "Original = " ++ $collName);
+		*totalLen = strlen($collName);
+		writeLine("serverLog", "Length = *totalLen");
+		*cutStr = substr($collName, 10, *totalLen);
+		writeLine("serverLog", "Cut Str = " ++ *cutStr);
+		*newPath = "/var/lib/irods/Vault/" ++ *cutStr;
+		writeLine("serverLog", "New path is " ++ *newPath);
+		*filePathArg = execCmdArg(*newPath);
+		*args = "*filePathArg";
+		*status = errorcode(msiExecCmd("processFile", *args, "null", "null", "null", *out));
+		msiGetStdoutInExecCmdOut(*out, *good);
+		msiGetStderrInExecCmdOut(*out, *bad);
+		writeLine("serverLog", "Output:");
+		foreach (*line in split(*good, '\n')) 
+		{
+			writeLine("serverLog", *line);
+		}
+		writeLine("serverLog", "Error:");
+		foreach (*line in split(*bad, '\n')) 
+		{
+			writeLine("serverLog", *line);
+		}
+	}
+}
+
+# Paste into /var/lib/irods/msiExecCmd_bin/processFile (you may need to create the file):
+#!/bin/bash
+echo `java -jar /home/dslovikosky/metadataIndexer.jar $1`
