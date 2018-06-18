@@ -102,7 +102,7 @@ public class MetadataConverter
 	}
 
 	/**
-	 * Given a lat or long in the format XX° YY' ZZ.ZZ" this function converts it to decimal, eg XX.XXXXX\
+	 * Given a lat or long in the format XX° YY' ZZ.ZZ" this function converts it to decimal, eg XX.XXXXX
 	 *
 	 * @param latLong The lat long to parse
 	 * @return A double representing the same lat long

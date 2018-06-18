@@ -42,7 +42,7 @@ public class MetadataIndexer
 		// First convert our raw metadata into something indexable
 		Map<String, Object> cleanedMetadata = this.metadataConverter.convertRawToIndexable(rawMetadata);
 
-		if (cleanedMetadata == null)
+		if (cleanedMetadata == null || cleanedMetadata.isEmpty())
 		{
 			System.out.println("Not enough metadata was present on the image to index it, ignore the file.");
 			System.exit(0);
@@ -79,8 +79,17 @@ public class MetadataIndexer
 	public void indexBulk(List<Map<String, String>> rawMetadataList)
 	{
 		// Map the raw metadata to the conversion function which will give us a list of cleaned up metadata
-		List<Map<String, Object>> cleanedMetadataList = rawMetadataList.stream().map(this.metadataConverter::convertRawToIndexable).filter(Objects::nonNull).collect(Collectors.toList());
+		List<Map<String, Object>> cleanedMetadataList = rawMetadataList
+				.stream()
+				// Convert each metadata object to its indexable counterpart
+				.map(this.metadataConverter::convertRawToIndexable)
+				// Remove any null mappings which mean the metadata was invalid
+				.filter(Objects::nonNull)
+				// Remove any mappings that are empty (meaning no metadata was found)
+				.filter(stringObjectMap -> stringObjectMap.size() > 0)
+				.collect(Collectors.toList());
 
+		// Make sure we have at least one image that is ready to be indexed
 		if (cleanedMetadataList.isEmpty())
 		{
 			System.out.println("No images contained sufficient metadata to be indexed, they were all ignored.");

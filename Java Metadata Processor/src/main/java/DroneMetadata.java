@@ -1,6 +1,8 @@
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,8 @@ import java.util.stream.Collectors;
  */
 public class DroneMetadata
 {
+	private static final String[] ACCEPTED_EXTENSIONS = { "jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO" };
+
 	/**
 	 * Main expects one command line argument, a file or directory to index
 	 *
@@ -79,15 +83,26 @@ public class DroneMetadata
 	 */
 	private static void indexFile(File file)
 	{
-		// The metadata parser used to parse the image file
-		MetadataParser parser = new MetadataParser();
-		// The raw metadata as key->value pairs from the parser
-		Map<String, String> rawMetadata = parser.parse(file);
-		// Print out a status message
-		System.out.println("Metadata parsed, begin indexing...");
-		// Index the metadata into elasticsearch
-		MetadataIndexer indexer = new MetadataIndexer();
-		indexer.indexSingle(rawMetadata);
+		// Grab the file's extension, if it's valid we continue
+		String extension = FilenameUtils.getExtension(file.getAbsolutePath());
+		if (Arrays.stream(ACCEPTED_EXTENSIONS).anyMatch(extension::equals))
+		{
+			// The metadata parser used to parse the image file
+			MetadataParser parser = new MetadataParser();
+			// The raw metadata as key->value pairs from the parser
+			Map<String, String> rawMetadata = parser.parse(file);
+			// Print out a status message
+			System.out.println("Metadata parsed, begin indexing...");
+			// Index the metadata into elasticsearch
+			MetadataIndexer indexer = new MetadataIndexer();
+			indexer.indexSingle(rawMetadata);
+		}
+		// Invalid file extension so throw this file away
+		else
+		{
+			System.err.println("File extension '" + extension + "' is not supported at this time!");
+			System.exit(1);
+		}
 	}
 
 	/**
@@ -98,7 +113,7 @@ public class DroneMetadata
 	private static void indexDirectory(File directory)
 	{
 		// The files in a all subdirecties (recursive)
-		Collection<File> files = FileUtils.listFiles(directory, new String[] {"jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO"}, true);
+		Collection<File> files = FileUtils.listFiles(directory, ACCEPTED_EXTENSIONS, true);
 		// Map the list of files to their metadata using the parser
 		MetadataParser parser = new MetadataParser();
 		List<Map<String, String>> rawMetadata = files.stream().map(parser::parse).collect(Collectors.toList());
