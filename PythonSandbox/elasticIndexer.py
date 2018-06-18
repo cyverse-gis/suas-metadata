@@ -39,7 +39,7 @@ def indexDirectory(directory):
     indexedFields = \
     [
         IndexableMetadataField("EXIF:CreateDate", "createDate", False, None),
-        IndexableMetadataField("EXIF:DateTimeOriginal", "originalDate", False, None),
+        IndexableMetadataField("EXIF DateTimeOriginal", "originalDate", False, None),
         IndexableMetadataField("EXIF:GPSAltitude", "altitude", False, None),
         IndexableMetadataField("EXIF:GPSLatitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude"), exifInfo.get("EXIF:GPSLatitude")] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None),
         IndexableMetadataField("EXIF:GPSLongitude", "location", True, lambda exifInfo: [exifInfo.get("EXIF:GPSLongitude"), exifInfo.get("EXIF:GPSLatitude")] if ("EXIF:GPSLongitude" in exifInfo and "EXIF:GPSLatitude" in exifInfo) else None)
@@ -61,20 +61,22 @@ def indexDirectory(directory):
     else:
         print("ElasticSearch connection successful.")
 
+    print(metadataToIndexList)
+
     # Convert from our raw metadata to a list of bulk insert actions
-    actions = list(map(lambda metadataToIndex: createInsertFor(metadataToIndex), metadataToIndexList))
+    #actions = list(map(lambda metadataToIndex: createInsertFor(metadataToIndex), metadataToIndexList))
 
     # Perform the insert, store the result
-    (numSuccessful, errors) = helpers.bulk(es, actions, stats_only=False)
+    #(numSuccessful, errors) = helpers.bulk(es, actions, stats_only=False)
     # Compute number of errors
-    numErrors = len(actions) - numSuccessful
+    #numErrors = len(actions) - numSuccessful
 
     # Print the number of successful/failed insertions and total errors
-    print("Number of attempted insertions: " + str(len(actions)))
-    print("Number of successful insertions: " + str(numSuccessful))
-    print("Number of failed insertions: " + str(numErrors))
-    if numErrors is not 0:
-        print(*errors, sep=", ")
+    #print("Number of attempted insertions: " + str(len(actions)))
+    #print("Number of successful insertions: " + str(numSuccessful))
+    #print("Number of failed insertions: " + str(numErrors))
+    #if numErrors is not 0:
+    #    print(*errors, sep=", ")
 
 
 def createInsertFor(metadataToIndex):
