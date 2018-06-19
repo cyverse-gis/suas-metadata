@@ -1,3 +1,5 @@
+# Run each of these commands one by one into the command line:
+
 sudo yum update
 sudo yum install postgresql-server postgresql-contrib
 sudo postgresql-setup initdb
@@ -18,6 +20,9 @@ sudo sed -i '164,165d' /var/lib/irods/scripts/setup_irods.py
 sudo sed -i 's/ident/md5/g' /var/lib/pgsql/data/pg_hba.conf
 sudo systemctl restart postgresql
 sudo python /var/lib/irods/scripts/setup_irods.py
+# At this point you will be promted to enter a bunch of information about the iRODS install. Feel free to change any of it you want,
+# but the defautls are fine for the most part. When the script asks for the following fields below, you can use the suggested values
+# (because defaults are not given):
 # Database password: password
 # iRODS server's zone key: TEMPORARY_zone_key
 # iRODS server's negotiation key: TEMPORARY_32byte_negotiation_key
