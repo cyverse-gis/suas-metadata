@@ -44,7 +44,7 @@ public class MetadataIndexer
 
 		if (cleanedMetadata == null || cleanedMetadata.isEmpty())
 		{
-			System.out.println("Not enough metadata was present on the image to index it, ignore the file.");
+			DroneLogger.logDebug("Not enough metadata was present on the image to index it, ignore the file.");
 			System.exit(0);
 		}
 
@@ -61,12 +61,12 @@ public class MetadataIndexer
 			IndexResponse response = client.index(request);
 
 			// Print out the response code
-			System.out.println("Index response: " + response.status());
+			DroneLogger.logDebug("Index response: " + response.status());
 		}
 		// This means our connection to the elasticsearch index wasn't successful, so throw an error
 		catch (IOException e)
 		{
-			System.err.println("Error connecting to the elasticsearch client!");
+			DroneLogger.logError("Error connecting to the elasticsearch client!");
 			e.printStackTrace();
 		}
 	}
@@ -92,7 +92,7 @@ public class MetadataIndexer
 		// Make sure we have at least one image that is ready to be indexed
 		if (cleanedMetadataList.isEmpty())
 		{
-			System.out.println("No images contained sufficient metadata to be indexed, they were all ignored.");
+			DroneLogger.logDebug("No images contained sufficient metadata to be indexed, they were all ignored.");
 			System.exit(0);
 		}
 
@@ -116,14 +116,14 @@ public class MetadataIndexer
 			BulkResponse response = client.bulk(bulkRequest);
 
 			// Print the response and any failures if there were any
-			System.out.println("Index response: " + response.status());
+			DroneLogger.logDebug("Index response: " + response.status());
 			if (response.hasFailures())
-				System.out.println(response.buildFailureMessage());
+				DroneLogger.logDebug(response.buildFailureMessage());
 		}
 		// If the connection to the elasticsearch server fails catch it here
 		catch (IOException e)
 		{
-			System.err.println("Error connecting to the elasticsearch client!");
+			DroneLogger.logDebug("Error connecting to the elasticsearch client!");
 			e.printStackTrace();
 		}
 	}

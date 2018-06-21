@@ -70,7 +70,7 @@ public class MetadataParser
 					// There was an exception, print it but keep going
 					catch (XMPException e)
 					{
-						System.err.println("Could not read the XMP metadata!");
+						DroneLogger.logError("Could not read the XMP metadata!");
 						e.printStackTrace();
 					}
 				}
@@ -78,14 +78,14 @@ public class MetadataParser
 				// If our directory had any errors, print those
 				for (String error : directory.getErrors())
 				{
-					System.err.println("Directory Error: " + error);
+					DroneLogger.logError("Directory Error: " + error);
 				}
 			}
 		}
 		// If the image could not be processed skip it and print an error
 		catch (ImageProcessingException | IOException e)
 		{
-			System.err.println("Could not process the image metadata! File is " + fileToParse.getAbsolutePath());
+			DroneLogger.logError("Could not process the image metadata! File is " + fileToParse.getAbsolutePath());
 		}
 		return metadataMap;
 	}

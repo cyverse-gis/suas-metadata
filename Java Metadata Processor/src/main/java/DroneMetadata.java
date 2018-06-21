@@ -25,14 +25,14 @@ public class DroneMetadata
 		// Expect one command line argument with the name of the file to process
 		if (args.length == 0)
 		{
-			System.err.println("Too few command line arguments given, execute with one argument, the file to indexSingle!");
+			DroneLogger.logError("Too few command line arguments given, execute with one argument, the file to indexSingle!");
 			System.exit(1);
 		}
 
 		// We got too many arguments
 		if (args.length > 1)
 		{
-			System.err.println("Too many command line arguments given, execute with one argument, the file to indexSingle!");
+			DroneLogger.logError("Too many command line arguments given, execute with one argument, the file to indexSingle!");
 			System.exit(1);
 		}
 
@@ -44,19 +44,19 @@ public class DroneMetadata
 		// Make sure the file exists
 		if (!fileToIndex.exists())
 		{
-			System.err.println("Given file does not exist! (" + filePath + ")");
+			DroneLogger.logError("Given file does not exist! (" + filePath + ")");
 			System.exit(1);
 		}
 
 		// Make sure we can read the file
 		if (!fileToIndex.canRead())
 		{
-			System.err.println("Given file is unreadable! (" + filePath + ")");
+			DroneLogger.logError("Given file is unreadable! (" + filePath + ")");
 			System.exit(1);
 		}
 
 		// Process the file
-		System.out.println("Input file/directory validated, beginning processing...");
+		DroneLogger.logDebug("Input file/directory validated, beginning processing...");
 
 		// If it's a directory, use bulk insert
 		if (fileToIndex.isDirectory())
@@ -71,7 +71,7 @@ public class DroneMetadata
 		// Do nothing
 		else
 		{
-			System.err.println("File isn't a file or directory, what is it then?");
+			DroneLogger.logError("File isn't a file or directory, what is it then?");
 			System.exit(1);
 		}
 	}
@@ -92,7 +92,7 @@ public class DroneMetadata
 			// The raw metadata as key->value pairs from the parser
 			Map<String, String> rawMetadata = parser.parse(file);
 			// Print out a status message
-			System.out.println("Metadata parsed, begin indexing...");
+			DroneLogger.logDebug("Metadata parsed, begin indexing...");
 			// Index the metadata into elasticsearch
 			MetadataIndexer indexer = new MetadataIndexer();
 			indexer.indexSingle(rawMetadata);
@@ -100,7 +100,7 @@ public class DroneMetadata
 		// Invalid file extension so throw this file away
 		else
 		{
-			System.err.println("File extension '" + extension + "' is not supported at this time!");
+			DroneLogger.logError("File extension '" + extension + "' is not supported at this time!");
 			System.exit(1);
 		}
 	}
