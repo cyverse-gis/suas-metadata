@@ -85,5 +85,6 @@
     <orderEntry type="library" name="Maven: org.elasticsearch.plugin:rank-eval-client:6.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.11.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-configuration2:2.2" level="project" />
   </component>
 </module>

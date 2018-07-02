@@ -14,6 +14,7 @@ import model.location.Location;
 import model.query.ElasticSearchQuery;
 import model.species.Species;
 import model.species.SpeciesEntry;
+import model.util.SensitiveConfigurationManager;
 import model.util.SettingsData;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -55,10 +56,6 @@ import java.util.stream.Collectors;
 
 public class ElasticSearchConnectionManager
 {
-	// The IP of the elastic search index
-	private static final String ELASTIC_SEARCH_HOST = "128.196.142.26";
-	// The port of the elastic search index
-	private static final Integer ELASTIC_SEARCH_PORT = 9200;
 	// The scheme used to connect to the elastic search index
 	private static final String ELASTIC_SEARCH_SCHEME = "http";
 
@@ -115,10 +112,10 @@ public class ElasticSearchConnectionManager
 	/**
 	 * The constructor initializes the elastic search
 	 */
-	public ElasticSearchConnectionManager()
+	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager)
 	{
 		// Establish a connection to the elastic search server
-		this.elasticSearchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(ELASTIC_SEARCH_HOST, ELASTIC_SEARCH_PORT, ELASTIC_SEARCH_SCHEME)));
+		this.elasticSearchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME)));
 		this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
 	}
 

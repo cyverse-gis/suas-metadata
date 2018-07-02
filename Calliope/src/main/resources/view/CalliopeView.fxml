@@ -19,7 +19,7 @@
                         <Tab text="Home" closable="false">
                             <graphic>
                                 <ImageView fitWidth="25" fitHeight="25">
-                                    <Image url="@../images/mainMenu/paw.png"/>
+                                    <Image url="@../images/mainMenu/drone.png"/>
                                 </ImageView>
                             </graphic>
                             <fx:include fx:id="homePane" source="CalliopeHome.fxml"/>

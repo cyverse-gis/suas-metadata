@@ -35,8 +35,8 @@ public class Calliope extends Application
 
         // Put the scene on the stage
         primaryStage.setScene(scene);
-        primaryStage.getIcons().add(new Image("images/mainMenu/paw.png"));
-        primaryStage.setTitle("Scientific Animal Image Analysis (CALLIOPE)");
+        primaryStage.getIcons().add(new Image("images/mainMenu/drone.png"));
+        primaryStage.setTitle("Calliope");
         // When we click exit...
         primaryStage.setOnCloseRequest(event ->
         {

@@ -46,6 +46,9 @@ public class CalliopeData
 		return CalliopeData.INSTANCE;
 	}
 
+	// The sensitive data configuration file so we don't put up sensitive info on Github
+	private SensitiveConfigurationManager sensitiveConfigurationManager = new SensitiveConfigurationManager();
+
 	// A global list of species
 	private final ObservableList<Species> speciesList;
 	private AtomicBoolean needSpeciesSync = new AtomicBoolean(false);
@@ -79,7 +82,7 @@ public class CalliopeData
 	private CyVerseConnectionManager cyConnectionManager = new CyVerseConnectionManager();
 
 	// The connection manager used to manage the database
-	private ElasticSearchConnectionManager esConnectionManager = new ElasticSearchConnectionManager();
+	private ElasticSearchConnectionManager esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager);
 
 	// Preferences used to save the user's username
 	private final Preferences calliopePreferences = Preferences.userNodeForPackage(CalliopeData.class);
@@ -496,4 +499,9 @@ public class CalliopeData
 	}
 
 	public QueryEngine getQueryEngine() { return this.queryEngine; }
+
+	public SensitiveConfigurationManager getSensitiveConfigurationManager()
+	{
+		return sensitiveConfigurationManager;
+	}
 }

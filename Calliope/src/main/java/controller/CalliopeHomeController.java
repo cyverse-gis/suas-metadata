@@ -120,23 +120,6 @@ public class CalliopeHomeController implements Initializable
 	}
 
 	/**
-	 * When the user clicks the UA CS logo
-	 *
-	 * @param mouseEvent consumed
-	 */
-	public void showCSWebsite(MouseEvent mouseEvent)
-	{
-		try
-		{
-			Desktop.getDesktop().browse(new URI("https://www.cs.arizona.edu"));
-		}
-		catch (IOException | URISyntaxException ignored)
-		{
-		}
-		mouseEvent.consume();
-	}
-
-	/**
 	 * When the user clicks the UA SNRE logo
 	 *
 	 * @param mouseEvent consumed
@@ -146,23 +129,6 @@ public class CalliopeHomeController implements Initializable
 		try
 		{
 			Desktop.getDesktop().browse(new URI("https://snre.arizona.edu/"));
-		}
-		catch (IOException | URISyntaxException ignored)
-		{
-		}
-		mouseEvent.consume();
-	}
-
-	/**
-	 * When the user clicks the UA Wildcat Research logo
-	 *
-	 * @param mouseEvent consumed
-	 */
-	public void showWildcatResearchWebsite(MouseEvent mouseEvent)
-	{
-		try
-		{
-			Desktop.getDesktop().browse(new URI("https://wildcatresearch.arizona.edu/"));
 		}
 		catch (IOException | URISyntaxException ignored)
 		{
