@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 /**
  * Class that takes a task and IMMEDIATELY begins exeuction without queuing
  */
-public class ImmediateExecutor extends BaseSanimalExecutor
+public class ImmediateExecutor extends BaseCalliopeExecutor
 {
 	// A list of active tasks being processed
 	private final ObservableList<Task<?>> activeTasks = FXCollections.observableArrayList(task -> new Observable[] { task.progressProperty(), task.messageProperty() });

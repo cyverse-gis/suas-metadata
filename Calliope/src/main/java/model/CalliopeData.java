@@ -21,7 +21,7 @@ import model.query.QueryEngine;
 import model.species.Species;
 import model.threading.ErrorService;
 import model.threading.ErrorTask;
-import model.threading.SanimalExecutor;
+import model.threading.CalliopeExecutor;
 import model.util.*;
 import org.hildan.fxgson.FxGson;
 
@@ -33,17 +33,17 @@ import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 /**
- * A singleton class containing all data SANIMAL needs
+ * A singleton class containing all data Calliope needs
  */
-public class SanimalData
+public class CalliopeData
 {
 	// The one instance of the data
-	private static final SanimalData INSTANCE = new SanimalData();
+	private static final CalliopeData INSTANCE = new CalliopeData();
 
 	// Get the one instance
-	public static SanimalData getInstance()
+	public static CalliopeData getInstance()
 	{
-		return SanimalData.INSTANCE;
+		return CalliopeData.INSTANCE;
 	}
 
 	// A global list of species
@@ -70,7 +70,7 @@ public class SanimalData
 	private BooleanProperty loggedInProperty = new SimpleBooleanProperty(false);
 
 	// Executor used to thread off long tasks
-	private SanimalExecutor sanimalExecutor = new SanimalExecutor();
+	private CalliopeExecutor calliopeExecutor = new CalliopeExecutor();
 
 	// GSon object used to serialize data. We register a local date time adapter to ensure dates are serialized correctly
 	private final Gson gson = FxGson.fullBuilder().setPrettyPrinting().serializeNulls().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
@@ -82,12 +82,12 @@ public class SanimalData
 	private ElasticSearchConnectionManager esConnectionManager = new ElasticSearchConnectionManager();
 
 	// Preferences used to save the user's username
-	private final Preferences sanimalPreferences = Preferences.userNodeForPackage(SanimalData.class);
+	private final Preferences calliopePreferences = Preferences.userNodeForPackage(CalliopeData.class);
 
-	// Manager of all temporary files used by the SANIMAL software
+	// Manager of all temporary files used by the Calliope software
 	private final TempDirectoryManager tempDirectoryManager = new TempDirectoryManager();
 
-	// List of sanimal settings
+	// List of Calliope settings
 	private final SettingsData settings = new SettingsData();
 	private AtomicBoolean needSettingsSync = new AtomicBoolean(false);
 	private AtomicBoolean settingsSyncInProgress = new AtomicBoolean(false);
@@ -101,7 +101,7 @@ public class SanimalData
 	/**
 	 * Private constructor since we're using the singleton design pattern
 	 */
-	private SanimalData()
+	private CalliopeData()
 	{
 		// Create the species list, and add some default species
 		this.speciesList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(species -> new Observable[]{species.commonNameProperty(), species.scientificNameProperty(), species.speciesIconURLProperty(), species.keyBindingProperty()}));
@@ -145,7 +145,7 @@ public class SanimalData
 					{
 						// Perform the push of the location data
 						this.updateMessage("Syncing new species list to CyVerse...");
-						SanimalData.getInstance().getEsConnectionManager().pushLocalSpecies(SanimalData.getInstance().getSpeciesList());
+						CalliopeData.getInstance().getEsConnectionManager().pushLocalSpecies(CalliopeData.getInstance().getSpeciesList());
 						return null;
 					}
 				};
@@ -165,7 +165,7 @@ public class SanimalData
 				this.speciesSyncInProgress.set(false);
 			}
 		});
-		this.sanimalExecutor.getQueuedExecutor().registerService(syncService);
+		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
 
 		// When the species list changes...
 		this.speciesList.addListener((ListChangeListener<Species>) c -> {
@@ -201,7 +201,7 @@ public class SanimalData
 					{
 						// Perform the push of the location data
 						this.updateMessage("Syncing new location list to CyVerse...");
-						SanimalData.getInstance().getEsConnectionManager().pushLocalLocations(SanimalData.getInstance().getLocationList());
+						CalliopeData.getInstance().getEsConnectionManager().pushLocalLocations(CalliopeData.getInstance().getLocationList());
 						return null;
 					}
 				};
@@ -221,7 +221,7 @@ public class SanimalData
 				this.locationSyncInProgress.set(false);
 			}
 		});
-		this.sanimalExecutor.getQueuedExecutor().registerService(syncService);
+		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
 
 		// When the location list changes...
 		this.locationList.addListener((ListChangeListener<Location>) c -> {
@@ -257,12 +257,12 @@ public class SanimalData
 					{
 						// Notice we perform the stream twice. This is because we cannot re-use streams in Java.
 						long dirtyImageCount =
-								SanimalData.this.getAllImages()
+								CalliopeData.this.getAllImages()
 										.stream()
 										.filter(ImageEntry::isDiskDirty)
 										.count();
 						List<ImageEntry> top100Dirty =
-								SanimalData.this.getAllImages()
+								CalliopeData.this.getAllImages()
 										.stream()
 										.filter(ImageEntry::isDiskDirty)
 										.limit(NUM_IMAGES_AT_A_TIME).collect(Collectors.toList());
@@ -288,7 +288,7 @@ public class SanimalData
 			else
 				this.metadataSyncInProgress.set(false);
 		});
-		this.sanimalExecutor.getQueuedExecutor().registerService(syncService);
+		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
 
 		this.imageTree.getChildren().addListener((ListChangeListener<ImageContainer>) c ->
 		{
@@ -325,7 +325,7 @@ public class SanimalData
 					{
 						// Perform the push of the settings data
 						this.updateMessage("Syncing new settings to CyVerse...");
-						SanimalData.getInstance().getEsConnectionManager().pushLocalSettings(SanimalData.getInstance().getSettings());
+						CalliopeData.getInstance().getEsConnectionManager().pushLocalSettings(CalliopeData.getInstance().getSettings());
 						return null;
 					}
 				};
@@ -345,7 +345,7 @@ public class SanimalData
 				this.settingsSyncInProgress.set(false);
 			}
 		});
-		this.sanimalExecutor.getQueuedExecutor().registerService(syncService);
+		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
 
 		// When the settings change...
 		Runnable onSettingChange = () ->
@@ -427,11 +427,11 @@ public class SanimalData
 	}
 
 	/**
-	 * @return The CyVerse sanimal executor service
+	 * @return The CyVerse Calliope executor service
 	 */
-	public SanimalExecutor getSanimalExecutor()
+	public CalliopeExecutor getExecutor()
 	{
-		return sanimalExecutor;
+		return calliopeExecutor;
 	}
 
 	/**
@@ -445,9 +445,9 @@ public class SanimalData
 	/**
 	 * @return Preference file used to store usernames and passwords
 	 */
-	public Preferences getSanimalPreferences()
+	public Preferences getPreferences()
 	{
-		return sanimalPreferences;
+		return calliopePreferences;
 	}
 
 	public void setUsername(String username)

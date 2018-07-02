@@ -1,7 +1,7 @@
 package model.elasticsearch;
 
-import model.SanimalData;
-import model.constant.SanimalMetadataFields;
+import model.CalliopeData;
+import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.ImageEntry;
 import model.location.Location;
@@ -30,7 +30,7 @@ public class ElasticSearchSchemaManager
 	 *
 	 * @return An XContentBuilder which can be used to create JSON in Java
 	 */
-	XContentBuilder makeSanimalUsersIndexMapping(String indexType) throws IOException
+	XContentBuilder makeCalliopeUsersIndexMapping(String indexType) throws IOException
 	{
 		// Well, it's the builder design pattern. RIP me
 		return XContentFactory.jsonBuilder()
@@ -119,7 +119,7 @@ public class ElasticSearchSchemaManager
 	 *
 	 * @return An XContentBuilder which can be used to create JSON in Java
 	 */
-	XContentBuilder makeSanimalMetadataIndexMapping(String indexType) throws IOException
+	XContentBuilder makeCalliopeMetadataIndexMapping(String indexType) throws IOException
 	{
 		// Well, it's the builder design pattern. RIP me
 		return XContentFactory.jsonBuilder()
@@ -205,7 +205,7 @@ public class ElasticSearchSchemaManager
 	 *
 	 * @return An XContentBuilder which can be used to create JSON in Java
 	 */
-	XContentBuilder makeSanimalCollectionsIndexMapping(String indexType) throws IOException
+	XContentBuilder makeCalliopeCollectionsIndexMapping(String indexType) throws IOException
 	{
 		// Well, it's the builder design pattern. RIP me
 		return XContentFactory.jsonBuilder()
@@ -318,7 +318,7 @@ public class ElasticSearchSchemaManager
 		catch (IOException e)
 		{
 			// Print an error if something went wrong internally
-			SanimalData.getInstance().getErrorDisplay().notify("Could not insert a new user into the index!\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Could not insert a new user into the index!\n" + ExceptionUtils.getStackTrace(e));
 		}
 		return builder;
 	}
@@ -332,7 +332,7 @@ public class ElasticSearchSchemaManager
 	XContentBuilder makeSpeciesUpdate(List<Species> species) throws IOException
 	{
 		// Convert the species list to JSON in preperatation
-		String speciesJSON = SanimalData.getInstance().getGson().toJson(species);
+		String speciesJSON = CalliopeData.getInstance().getGson().toJson(species);
 		// Create a species field with the value as the JSON blob we just created above
 		return XContentFactory.jsonBuilder()
 		.startObject()
@@ -383,7 +383,7 @@ public class ElasticSearchSchemaManager
 	XContentBuilder makeSettingsUpdate(SettingsData settingsData) throws IOException
 	{
 		// Convert the settings data to JSON. Store the JSON and convert it to a content factory object
-		String settingsJSON = SanimalData.getInstance().getGson().toJson(settingsData);
+		String settingsJSON = CalliopeData.getInstance().getGson().toJson(settingsData);
 		// The field is called settings, and the value is the JSON we just produced
 		return XContentFactory.jsonBuilder()
 		.startObject()
@@ -402,7 +402,7 @@ public class ElasticSearchSchemaManager
 	XContentBuilder makeCreateCollection(ImageCollection imageCollection) throws IOException
 	{
 		// Convert the collection to JSON
-		String collectionJSON = SanimalData.getInstance().getGson().toJson(imageCollection);
+		String collectionJSON = CalliopeData.getInstance().getGson().toJson(imageCollection);
 
 		// Read this JSON directly and return it. Simple as that
 		return XContentFactory.jsonBuilder()
@@ -420,7 +420,7 @@ public class ElasticSearchSchemaManager
 	{
 		// Convert the collection's permission data to JSON. Store the JSON and convert it to a content factory object
 		// We can't do the entire document at once because we don't want to overwrite uploads
-		String permissionsJSON = SanimalData.getInstance().getGson().toJson(imageCollection.getPermissions());
+		String permissionsJSON = CalliopeData.getInstance().getGson().toJson(imageCollection.getPermissions());
 		return XContentFactory.jsonBuilder()
 		.startObject()
 			// Setup all the basic fields
@@ -470,7 +470,7 @@ public class ElasticSearchSchemaManager
 			.field("storagePath", fixedAbsolutePath)
 			.field("collectionID", collectionID)
 			.startObject("imageMetadata")
-				.field("dateTaken", imageEntry.getDateTaken().atZone(ZoneId.systemDefault()).format(SanimalMetadataFields.INDEX_DATE_TIME_FORMAT))
+				.field("dateTaken", imageEntry.getDateTaken().atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT))
 				.field("yearTaken", imageEntry.getDateTaken().getYear())
 				.field("monthTaken", imageEntry.getDateTaken().getMonthValue())
 				.field("hourTaken", imageEntry.getDateTaken().getHour())

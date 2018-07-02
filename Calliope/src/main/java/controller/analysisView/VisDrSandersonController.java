@@ -7,7 +7,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.text.Font;
 import model.analysis.DataAnalyzer;
-import model.analysis.SanimalTextOutputFormatter;
+import model.analysis.CalliopeTextOutputFormatter;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -33,7 +33,7 @@ public class VisDrSandersonController implements VisControllerBase
 	///
 
 	// Formatter used to format our data into Dr. Sanderson's format
-	private SanimalTextOutputFormatter outputFormatter = new SanimalTextOutputFormatter();
+	private CalliopeTextOutputFormatter outputFormatter = new CalliopeTextOutputFormatter();
 
 	/**
 	 * Initializes the Dr. Sanderson output controller by setting the text area fonts

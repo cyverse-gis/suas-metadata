@@ -1,8 +1,8 @@
 package model.query;
 
 
-import model.SanimalData;
-import model.constant.SanimalMetadataFields;
+import model.CalliopeData;
+import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.location.Location;
 import model.query.conditions.ElevationCondition;
@@ -126,7 +126,7 @@ public class ElasticSearchQuery
 	 */
 	public void setStartDate(LocalDateTime startDate)
 	{
-		this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.dateTaken").gte(startDate.atZone(ZoneId.systemDefault()).format(SanimalMetadataFields.INDEX_DATE_TIME_FORMAT)));
+		this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.dateTaken").gte(startDate.atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT)));
 	}
 
 	/**
@@ -136,7 +136,7 @@ public class ElasticSearchQuery
 	 */
 	public void setEndDate(LocalDateTime endDate)
 	{
-		this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.dateTaken").lte(endDate.atZone(ZoneId.systemDefault()).format(SanimalMetadataFields.INDEX_DATE_TIME_FORMAT)));
+		this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.dateTaken").lte(endDate.atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT)));
 	}
 
 	/**
@@ -166,7 +166,7 @@ public class ElasticSearchQuery
 				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.location.elevation").lte(elevation));
 				break;
 			default:
-				SanimalData.getInstance().getErrorDisplay().printError("Got an impossible elevation condition");
+				CalliopeData.getInstance().getErrorDisplay().printError("Got an impossible elevation condition");
 				break;
 		}
 	}

@@ -7,7 +7,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.image.Image;
-import model.SanimalData;
+import model.CalliopeData;
 import model.location.Location;
 import model.species.Species;
 import model.threading.ErrorTask;
@@ -70,14 +70,14 @@ public class CloudImageEntry extends ImageEntry
 			// For some reason we can't just do new File(getResource("/files/placeholderImage.jpg")) because we're working with resources inside JAR files
 			// This is a work around
 			InputStream inputStream = ImageEntry.class.getResourceAsStream("/files/placeholderImage.jpg");
-			PLACEHOLDER_FILE = SanimalData.getInstance().getTempDirectoryManager().createTempFile("placeholderImage.jpg");
+			PLACEHOLDER_FILE = CalliopeData.getInstance().getTempDirectoryManager().createTempFile("placeholderImage.jpg");
 			try
 			{
 				FileUtils.copyInputStreamToFile(inputStream, PLACEHOLDER_FILE);
 			}
 			catch (IOException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Error initializing placeholder image for cloud images!\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Error initializing placeholder image for cloud images!\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
 
@@ -259,7 +259,7 @@ public class CloudImageEntry extends ImageEntry
 			protected File call()
 			{
 				this.updateMessage("Downloading the image " + getCyverseFile().getName() + " for editing...");
-				return SanimalData.getInstance().getCyConnectionManager().remoteToLocalImageFile(getCyverseFile());
+				return CalliopeData.getInstance().getCyConnectionManager().remoteToLocalImageFile(getCyverseFile());
 			}
 		};
 
@@ -269,7 +269,7 @@ public class CloudImageEntry extends ImageEntry
 			File localFile = pullTask.getValue();
 			this.getFileProperty().setValue(localFile);
 			// Read the metadata into the image file
-			super.readFileMetadataIntoImage(SanimalData.getInstance().getLocationList(), SanimalData.getInstance().getSpeciesList());
+			super.readFileMetadataIntoImage(CalliopeData.getInstance().getLocationList(), CalliopeData.getInstance().getSpeciesList());
 			// Update flags
 			if (!this.getSpeciesPresent().isEmpty())
 				wasTaggedWithSpecies.set(true);
@@ -278,7 +278,7 @@ public class CloudImageEntry extends ImageEntry
 			this.markCloudDirty(false);
 		});
 
-		SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(pullTask);
+		CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(pullTask);
 	}
 
 	/**

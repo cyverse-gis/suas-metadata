@@ -15,7 +15,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
-import model.SanimalData;
+import model.CalliopeData;
 import model.analysis.DataAnalyzer;
 import model.image.ImageEntry;
 import model.query.ElasticSearchQuery;
@@ -32,7 +32,7 @@ import java.util.ResourceBundle;
 /**
  * Controller class for the analysis page
  */
-public class SanimalAnalysisController implements Initializable
+public class CalliopeAnalysisController implements Initializable
 {
 	///
 	/// FXML bound fields start
@@ -94,12 +94,12 @@ public class SanimalAnalysisController implements Initializable
 	public void initialize(URL location, ResourceBundle resources)
 	{
 		// Set the query conditions to be specified by the data model
-		this.lvwQueryConditions.setItems(SanimalData.getInstance().getQueryEngine().getQueryConditions());
+		this.lvwQueryConditions.setItems(CalliopeData.getInstance().getQueryEngine().getQueryConditions());
 		// Set the cell factory to be our custom query condition cell which adapts itself to the specific condition
 		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("analysisView/QueryConditionsListCell.fxml").getController());
 
 		// Hide the Dr. Sanderson tab and the event interval if we don't have Dr. Sanderson's compatibility
-		if (!SanimalData.getInstance().getSettings().getDrSandersonOutput())
+		if (!CalliopeData.getInstance().getSettings().getDrSandersonOutput())
 		{
 			this.tpnVisualizations.getTabs().remove(this.tabDrSanderson);
 			this.eventIntervalIndex = this.vbxQuery.getChildren().indexOf(this.txtEventInterval);
@@ -107,7 +107,7 @@ public class SanimalAnalysisController implements Initializable
 		}
 
 		// Hide the Dr. Sanderson tab if compatibility is not enabled
-		SanimalData.getInstance().getSettings().drSandersonOutputProperty().addListener((observable, oldValue, newValue) ->
+		CalliopeData.getInstance().getSettings().drSandersonOutputProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (newValue)
 			{
@@ -125,7 +125,7 @@ public class SanimalAnalysisController implements Initializable
 		});
 
 		// Set the items in the list to be the list of possible query filters
-		this.lvwFilters.setItems(SanimalData.getInstance().getQueryEngine().getQueryFilters());
+		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
 
 		this.mpnQuerying.setVisible(false);
 	}
@@ -151,7 +151,7 @@ public class SanimalAnalysisController implements Initializable
 		// Create a query
 		ElasticSearchQuery query = new ElasticSearchQuery();
 		// For each condition listed in the listview, apply that to the overall query
-		for (IQueryCondition queryCondition : SanimalData.getInstance().getQueryEngine().getQueryConditions())
+		for (IQueryCondition queryCondition : CalliopeData.getInstance().getQueryEngine().getQueryConditions())
 			queryCondition.appendConditionToQuery(query);
 
 		Task<List<ImageEntry>> queryTask = new ErrorTask<List<ImageEntry>>()
@@ -161,7 +161,7 @@ public class SanimalAnalysisController implements Initializable
 			{
 				this.updateMessage("Performing query...");
 				// Grab the result of the query
-				return SanimalData.getInstance().getEsConnectionManager().performQuery(query);
+				return CalliopeData.getInstance().getEsConnectionManager().performQuery(query);
 			}
 		};
 		Integer finalEventInterval = eventInterval;
@@ -178,7 +178,7 @@ public class SanimalAnalysisController implements Initializable
 			visDrSandersonController.visualize(dataAnalyzer);
 			visCSVController.visualize(dataAnalyzer);
 		});
-		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(queryTask);
+		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(queryTask);
 
 		actionEvent.consume();
 	}
@@ -191,7 +191,7 @@ public class SanimalAnalysisController implements Initializable
 	public void clickedAdd(MouseEvent mouseEvent)
 	{
 		// If a filter was clicked, we instantiate it and append it to the end of the list (-1 so that the + is at the end)
-		ObservableList<IQueryCondition> queryConditions = SanimalData.getInstance().getQueryEngine().getQueryConditions();
+		ObservableList<IQueryCondition> queryConditions = CalliopeData.getInstance().getQueryEngine().getQueryConditions();
 		if (this.lvwFilters.getSelectionModel().selectedItemProperty().getValue() != null)
 			queryConditions.add(this.lvwFilters.getSelectionModel().selectedItemProperty().getValue().createInstance());
 		mouseEvent.consume();

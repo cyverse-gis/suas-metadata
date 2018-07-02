@@ -4,7 +4,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import model.SanimalData;
+import model.CalliopeData;
 import model.location.Location;
 import model.query.ElasticSearchQuery;
 import model.query.IQueryCondition;
@@ -71,7 +71,7 @@ public class LocationFilterCondition implements IQueryCondition
 	 */
 	public ObservableList<Location> getLocationList()
 	{
-		return SanimalData.getInstance().getLocationList();
+		return CalliopeData.getInstance().getLocationList();
 	}
 
 	/**

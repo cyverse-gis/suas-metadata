@@ -9,9 +9,9 @@
 <?import library.ImageViewPane?>
 <?import org.controlsfx.control.MaskerPane?>
 <?import java.net.URL?>
-<StackPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.SanimalAnalysisController">
+<StackPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeAnalysisController">
     <stylesheets>
-        <URL value="@SanimalAnalysis.css"/>
+        <URL value="@CalliopeAnalysis.css"/>
     </stylesheets>
     <SplitPane dividerPositions="0.5" orientation="VERTICAL">
         <padding>

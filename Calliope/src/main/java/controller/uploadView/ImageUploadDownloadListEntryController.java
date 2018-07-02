@@ -8,7 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
-import model.SanimalData;
+import model.CalliopeData;
 import model.image.CloudUploadEntry;
 import model.image.ImageDirectory;
 import org.fxmisc.easybind.EasyBind;
@@ -57,15 +57,15 @@ public class ImageUploadDownloadListEntryController extends ListCell<CloudUpload
 	public void initialize()
 	{
 		// If the date or time settings are changed, recompute the label
-		SanimalData.getInstance().getSettings().dateFormatProperty().addListener((observable, oldValue, newValue) ->
+		CalliopeData.getInstance().getSettings().dateFormatProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (this.getItem() != null)
-				this.lblDate.setText(SanimalData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
+				this.lblDate.setText(CalliopeData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
 		});
-		SanimalData.getInstance().getSettings().timeFormatProperty().addListener((observable, oldValue, newValue) ->
+		CalliopeData.getInstance().getSettings().timeFormatProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (this.getItem() != null)
-				this.lblDate.setText(SanimalData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
+				this.lblDate.setText(CalliopeData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
 		});
 	}
 
@@ -94,7 +94,7 @@ public class ImageUploadDownloadListEntryController extends ListCell<CloudUpload
 			// Update the labels
 			this.lblUsername.setText(cloudUploadEntry.getUploadUser());
 			this.lblTagged.setText(cloudUploadEntry.getImagesWithSpecies() + "/" + cloudUploadEntry.getImageCount() + " tagged with species.");
-			this.lblDate.setText(SanimalData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
+			this.lblDate.setText(CalliopeData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
 			// Grab the list of edits and show it
 			this.lstEdits.getItems().clear();
 			this.lstEdits.getItems().addAll(cloudUploadEntry.getEditComments());

@@ -1,7 +1,7 @@
 package model.cyverse;
 
 import javafx.util.Pair;
-import model.SanimalData;
+import model.CalliopeData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.irods.jargon.core.connection.IRODSAccount;
 import org.irods.jargon.core.connection.IRODSSession;
@@ -61,7 +61,7 @@ public class CyVerseSessionManager
 			// Print an error and return false
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Error creating a session!\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Error creating a session!\n" + ExceptionUtils.getStackTrace(e));
 				return false;
 			}
 		}
@@ -86,7 +86,7 @@ public class CyVerseSessionManager
 			// An error occured, ignore it
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Error closing a session!\n" + org.apache.commons.lang.exception.ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Error closing a session!\n" + org.apache.commons.lang.exception.ExceptionUtils.getStackTrace(e));
 			}
 			this.sessions.remove(current);
 		}

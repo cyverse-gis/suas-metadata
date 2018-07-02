@@ -7,16 +7,16 @@
 <?import javafx.scene.layout.*?>
 <?import library.ImageViewPane?>
 <?import java.net.URL?>
-<AnchorPane fx:id="mainPane" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.SanimalHomeController">
+<AnchorPane fx:id="mainPane" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeHomeController">
     <stylesheets>
-        <URL value="@SanimalHome.css" />
+        <URL value="@CalliopeHome.css" />
     </stylesheets>
     <children>
         <ImageViewPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
             <imageView>
                 <ImageView fx:id="backgroundImage">
                     <image>
-                        <Image url="@../images/mainMenu/sanimalBackground.JPG" />
+                        <Image url="@../images/mainMenu/calliopeBackground.JPG" />
                     </image>
                 </ImageView>
             </imageView>
@@ -25,7 +25,7 @@
             <children>
                 <ImageView fitHeight="168.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="TOP_LEFT">
                     <image>
-                        <Image url="@../images/mainMenu/sanimalTitle.png" />
+                        <Image url="@../images/mainMenu/calliopeTitle.png" />
                     </image>
                 </ImageView>
                 <Label fx:id="lblUsername" styleClass="usernameLbl" text="Welcome &lt;Username&gt;" textAlignment="RIGHT" GridPane.hgrow="ALWAYS" StackPane.alignment="TOP_LEFT">

@@ -12,7 +12,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
-import model.SanimalData;
+import model.CalliopeData;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
 
@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * A class used to display errors in the sanimal program
+ * A class used to display errors in the Calliope program
  */
 public class ErrorDisplay
 {
@@ -34,16 +34,16 @@ public class ErrorDisplay
 	/**
 	 * Constructor takes in a reference to the global data model
 	 *
-	 * @param sanimalData The data model
+	 * @param calliopeData The data model
 	 */
-	public ErrorDisplay(SanimalData sanimalData)
+	public ErrorDisplay(CalliopeData calliopeData)
 	{
 		// Load in the image
 		this.infoImage = new ImageView(new Image("images/generic/info64.png"));
 		// Set the duration of the fade to be equal to what is in the settings. If the settings update, make sure to
 		// update this value too
-		this.delay.setDuration(Duration.seconds(sanimalData.getSettings().getPopupDelaySec()));
-		sanimalData.getSettings().popupDelaySecProperty().addListener((observable, oldValue, newValue) ->
+		this.delay.setDuration(Duration.seconds(calliopeData.getSettings().getPopupDelaySec()));
+		calliopeData.getSettings().popupDelaySecProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (newValue != null)
 				this.delay.setDelay(Duration.seconds(newValue));
@@ -74,7 +74,7 @@ public class ErrorDisplay
 	 */
 	private void notifyOnFX(String content, Action... actions)
 	{
-		if (SanimalData.getInstance().getSettings().getDisablePopups())
+		if (CalliopeData.getInstance().getSettings().getDisablePopups())
 		{
 			notificationPane.getActions().clear();
 			// When any action is pressed, we hide the notification. This makes sure that each action is mapped to a new action that hides

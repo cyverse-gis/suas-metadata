@@ -10,11 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Utility class for Sanimal analysis
+ * Utility class for Calliope analysis
  * 
  * @author David Slovikosky
  */
-public class SanimalAnalysisUtils
+public class CalliopeAnalysisUtils
 {
 	/**
 	 * Turns a CSV string into a list of integers

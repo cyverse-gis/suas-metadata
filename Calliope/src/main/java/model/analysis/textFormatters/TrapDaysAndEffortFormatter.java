@@ -2,7 +2,7 @@ package model.analysis.textFormatters;
 
 import model.analysis.DataAnalyzer;
 import model.analysis.ImageQuery;
-import model.analysis.SanimalAnalysisUtils;
+import model.analysis.CalliopeAnalysisUtils;
 import model.image.ImageEntry;
 import model.location.Location;
 import model.species.SpeciesEntry;
@@ -47,7 +47,7 @@ public class TrapDaysAndEffortFormatter extends TextFormatter
 			ImageEntry lastEntry = analysis.getLastImageInList(withLocation);
 			LocalDateTime firstCal = firstEntry.getDateTaken();
 			LocalDateTime lastCal = lastEntry.getDateTaken();
-			long currentDuration = SanimalAnalysisUtils.daysBetween(firstEntry.getDateTaken(), lastEntry.getDateTaken()) + 1;
+			long currentDuration = CalliopeAnalysisUtils.daysBetween(firstEntry.getDateTaken(), lastEntry.getDateTaken()) + 1;
 			durationTotal = durationTotal + currentDuration;
 
 			StringBuilder speciesPresent = new StringBuilder();

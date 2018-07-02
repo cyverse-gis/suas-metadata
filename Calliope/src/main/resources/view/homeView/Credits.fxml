@@ -13,7 +13,7 @@
         <URL value="@Credits.css"/>
     </stylesheets>
     <top>
-        <Label BorderPane.alignment="CENTER" text="SANIMAL Credits">
+        <Label BorderPane.alignment="CENTER" text="Calliope Credits">
             <font>
                 <Font size="32"/>
             </font>

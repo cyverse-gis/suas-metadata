@@ -10,7 +10,7 @@ import java.util.List;
  * 
  * @author David Slovikosky
  */
-public class SanimalTextOutputFormatter
+public class CalliopeTextOutputFormatter
 {
 	/**
 	 * Returns a massive string that is perfectly formatted to look like "Output.txt"

@@ -2,7 +2,7 @@ package controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import model.SanimalData;
+import model.CalliopeData;
 import org.controlsfx.control.PropertySheet;
 import org.fxmisc.easybind.EasyBind;
 
@@ -12,13 +12,13 @@ import java.util.ResourceBundle;
 /**
  * Controller for the settings tab
  */
-public class SanimalSettingsController implements Initializable
+public class CalliopeSettingsController implements Initializable
 {
 	///
 	/// FXML bound fields start
 	///
 
-	// The sheet of sanimal properties
+	// The sheet of Calliope properties
 	@FXML
 	public PropertySheet pstSettings;
 
@@ -36,14 +36,14 @@ public class SanimalSettingsController implements Initializable
 	@SuppressWarnings("unchecked")
 	public void initialize(URL location, ResourceBundle resources)
 	{
-		// Bind the sanimal settings list to the property sheet settings because we cant bind the list property...
-		EasyBind.listBind(this.pstSettings.getItems(), SanimalData.getInstance().getSettings().getSettingList());
+		// Bind the Calliope settings list to the property sheet settings because we cant bind the list property...
+		EasyBind.listBind(this.pstSettings.getItems(), CalliopeData.getInstance().getSettings().getSettingList());
 
 		/*
 
 		@FXML
 		public TaskProgressView<Task<?>> tpvTaskProgress;
-		FilteredList<Worker<?>> tasks = SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().getActiveTasks().filtered(worker -> worker instanceof Task<?>);
+		FilteredList<Worker<?>> tasks = CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveTasks().filtered(worker -> worker instanceof Task<?>);
 		EasyBind.listBind(this.tpvTaskProgress.getTasks(), EasyBind.map(tasks, worker -> (Task<?>) worker));
 
 		 */

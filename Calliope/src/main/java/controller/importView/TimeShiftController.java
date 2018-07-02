@@ -7,7 +7,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import model.SanimalData;
+import model.CalliopeData;
 import org.fxmisc.easybind.EasyBind;
 
 import java.net.URL;
@@ -101,7 +101,7 @@ public class TimeShiftController implements Initializable
 	 */
 	private void refreshLabel()
 	{
-		this.lblDate.setText(SanimalData.getInstance().getSettings().formatDateTime(this.original, " ") + " -> " + SanimalData.getInstance().getSettings().formatDateTime(this.dateToEdit, " "));
+		this.lblDate.setText(CalliopeData.getInstance().getSettings().formatDateTime(this.original, " ") + " -> " + CalliopeData.getInstance().getSettings().formatDateTime(this.dateToEdit, " "));
 	}
 
 	/**

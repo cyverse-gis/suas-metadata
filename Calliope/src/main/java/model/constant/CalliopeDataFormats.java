@@ -2,7 +2,7 @@ package model.constant;
 
 import javafx.scene.input.DataFormat;
 
-public class SanimalDataFormats
+public class CalliopeDataFormats
 {
 	// Data formats are used for drag and drop
 	// Store the location name and id

@@ -12,7 +12,7 @@ import java.util.concurrent.Future;
 /**
  * Class used as a base for all thread executors
  */
-public abstract class BaseSanimalExecutor
+public abstract class BaseCalliopeExecutor
 {
 	// The task performer that does the thread execution
 	private ExecutorService taskPerformer;
@@ -22,7 +22,7 @@ public abstract class BaseSanimalExecutor
 	 *
 	 * @param taskPerformer The task performer to do the threading
 	 */
-	public BaseSanimalExecutor(ExecutorService taskPerformer)
+	public BaseCalliopeExecutor(ExecutorService taskPerformer)
 	{
 		this.taskPerformer = taskPerformer;
 	}

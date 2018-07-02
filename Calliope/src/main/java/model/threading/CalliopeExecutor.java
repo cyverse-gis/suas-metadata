@@ -3,7 +3,7 @@ package model.threading;
 /**
  * Class used to keep track of threads to run in the background
  */
-public class SanimalExecutor
+public class CalliopeExecutor
 {
 	// Queued executor is used to perform tasks one by one
 	private QueuedExecutor queuedExecutor = new QueuedExecutor();

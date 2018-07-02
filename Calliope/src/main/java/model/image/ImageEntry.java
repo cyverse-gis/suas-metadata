@@ -9,8 +9,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
-import model.SanimalData;
-import model.constant.SanimalMetadataFields;
+import model.CalliopeData;
+import model.constant.CalliopeMetadataFields;
 import model.location.Location;
 import model.species.Species;
 import model.species.SpeciesEntry;
@@ -104,7 +104,7 @@ public class ImageEntry extends ImageContainer
 		}
 		catch (ImageReadException | IOException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Error reading image metadata for file " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error reading image metadata for file " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -138,7 +138,7 @@ public class ImageEntry extends ImageContainer
 		if (tiffImageMetadata != null)
 		{
 			// Grab the species field from the metadata
-			String[] locationField = tiffImageMetadata.getFieldValue(SanimalMetadataFields.LOCATION_ENTRY);
+			String[] locationField = tiffImageMetadata.getFieldValue(CalliopeMetadataFields.LOCATION_ENTRY);
 			// Ensure that the field does actually exist...
 			if (locationField != null)
 			{
@@ -182,7 +182,7 @@ public class ImageEntry extends ImageContainer
 					}
 					catch (NumberFormatException ignored)
 					{
-						SanimalData.getInstance().getErrorDisplay().notify("Error parsing elevation for image, it was " + locationElevation + "!");
+						CalliopeData.getInstance().getErrorDisplay().notify("Error parsing elevation for image, it was " + locationElevation + "!");
 					}
 				}
 			}
@@ -202,7 +202,7 @@ public class ImageEntry extends ImageContainer
 		if (tiffImageMetadata != null)
 		{
 			// Grab the species field from the metadata
-			String[] speciesField = tiffImageMetadata.getFieldValue(SanimalMetadataFields.SPECIES_ENTRY);
+			String[] speciesField = tiffImageMetadata.getFieldValue(CalliopeMetadataFields.SPECIES_ENTRY);
 			// Ensure that the field does actually exist...
 			if (speciesField != null)
 			{
@@ -249,7 +249,7 @@ public class ImageEntry extends ImageContainer
 							}
 							catch (NumberFormatException ignored)
 							{
-								SanimalData.getInstance().getErrorDisplay().notify("Error parsing species count for image, it was " + speciesCount + "!");
+								CalliopeData.getInstance().getErrorDisplay().notify("Error parsing species count for image, it was " + speciesCount + "!");
 							}
 						}
 					}
@@ -424,15 +424,15 @@ public class ImageEntry extends ImageContainer
 			exif.removeField(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL);
 			exif.add(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, DATE_FORMAT_FOR_DISK.format(this.getDateTaken()));
 
-			// Grab the sanimal directory from the output set
-			TiffOutputDirectory directory = MetadataUtils.getOrCreateSanimalDirectory(outputSet);
+			// Grab the Calliope directory from the output set
+			TiffOutputDirectory directory = MetadataUtils.getOrCreateCalliopeDirectory(outputSet);
 
 			// Remove the species field if it exists
-			directory.removeField(SanimalMetadataFields.SPECIES_ENTRY);
+			directory.removeField(CalliopeMetadataFields.SPECIES_ENTRY);
 			// Use the species format name, scientific name, count
 			String[] metaVals = this.speciesPresent.stream().map(speciesEntry -> speciesEntry.getSpecies().getCommonName() + ", " + speciesEntry.getSpecies().getScientificName() + ", " + speciesEntry.getCount()).toArray(String[]::new);
 			// Add the species entry field
-			directory.add(SanimalMetadataFields.SPECIES_ENTRY, metaVals);
+			directory.add(CalliopeMetadataFields.SPECIES_ENTRY, metaVals);
 
 			// If we have a valid location, write that too
 			if (this.getLocationTaken() != null && this.getLocationTaken().locationValid())
@@ -440,9 +440,9 @@ public class ImageEntry extends ImageContainer
 				// Write the lat/lng
 				outputSet.setGPSInDegrees(this.getLocationTaken().getLongitude(), this.getLocationTaken().getLatitude());
 				// Remove the location entry name and elevation
-				directory.removeField(SanimalMetadataFields.LOCATION_ENTRY);
+				directory.removeField(CalliopeMetadataFields.LOCATION_ENTRY);
 				// Add the new location entry name and elevation
-				directory.add(SanimalMetadataFields.LOCATION_ENTRY, this.getLocationTaken().getName(), this.getLocationTaken().getElevation().toString(), this.getLocationTaken().getId());
+				directory.add(CalliopeMetadataFields.LOCATION_ENTRY, this.getLocationTaken().getName(), this.getLocationTaken().getElevation().toString(), this.getLocationTaken().getId());
 			}
 
 			// Write the metadata
@@ -452,7 +452,7 @@ public class ImageEntry extends ImageContainer
 		}
 		catch (ImageReadException | IOException | ImageWriteException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Error writing metadata to the image " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error writing metadata to the image " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 }

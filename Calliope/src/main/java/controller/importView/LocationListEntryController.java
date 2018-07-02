@@ -4,8 +4,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
-import model.SanimalData;
-import model.analysis.SanimalAnalysisUtils;
+import model.CalliopeData;
+import model.analysis.CalliopeAnalysisUtils;
 import model.location.Location;
 import model.location.UTMCoord;
 import model.util.SettingsData;
@@ -52,16 +52,16 @@ public class LocationListEntryController extends ListCell<Location>
     public void initialize()
     {
         // When we change the location format refresh the labels
-        SanimalData.getInstance().getSettings().locationFormatProperty().addListener((observable, oldValue, newValue) ->
+        CalliopeData.getInstance().getSettings().locationFormatProperty().addListener((observable, oldValue, newValue) ->
         {
             if (this.getItem() != null)
-                this.refreshLabels(this.getItem(), newValue, SanimalData.getInstance().getSettings().getDistanceUnits());
+                this.refreshLabels(this.getItem(), newValue, CalliopeData.getInstance().getSettings().getDistanceUnits());
         });
         // When we change the distance unit format refresh the labels
-        SanimalData.getInstance().getSettings().distanceUnitsProperty().addListener((observable, oldValue, newValue) ->
+        CalliopeData.getInstance().getSettings().distanceUnitsProperty().addListener((observable, oldValue, newValue) ->
         {
             if (this.getItem() != null)
-                this.refreshLabels(this.getItem(), SanimalData.getInstance().getSettings().getLocationFormat(), newValue);
+                this.refreshLabels(this.getItem(), CalliopeData.getInstance().getSettings().getLocationFormat(), newValue);
         });
     }
 
@@ -90,7 +90,7 @@ public class LocationListEntryController extends ListCell<Location>
         {
             this.lblName.setText(location.getName());
             this.lblId.setText(location.getId());
-            this.refreshLabels(location, SanimalData.getInstance().getSettings().getLocationFormat(), SanimalData.getInstance().getSettings().getDistanceUnits());
+            this.refreshLabels(location, CalliopeData.getInstance().getSettings().getLocationFormat(), CalliopeData.getInstance().getSettings().getDistanceUnits());
             this.setGraphic(mainPane);
         }
     }
@@ -116,7 +116,7 @@ public class LocationListEntryController extends ListCell<Location>
         else if (format == SettingsData.LocationFormat.UTM)
         {
             // Convert to UTM
-            UTMCoord utmEquiv = SanimalAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
+            UTMCoord utmEquiv = CalliopeAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
             // Update the labels
             this.lblLocationFirst.setText(utmEquiv.getEasting().intValue() + "E");
             this.lblLocationSecond.setText(utmEquiv.getNorthing().intValue() + "N");

@@ -4,10 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.dslovikosky</groupId>
-    <artifactId>SanimalFX</artifactId>
+    <groupId>com.cyverse</groupId>
+    <artifactId>Calliope</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Scientific Animal Image Analysis</name>
+    <name>Calliope</name>
     <packaging>jar</packaging>
 
     <build>
@@ -26,7 +26,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>controller.Sanimal</mainClass>
+                            <mainClass>controller.Calliope</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

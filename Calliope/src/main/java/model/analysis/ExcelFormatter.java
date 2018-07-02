@@ -112,7 +112,7 @@ public class ExcelFormatter
 		{
 			OutputStream stream = null;
 			if (location.isDirectory())
-				stream = new FileOutputStream(new File(location, "Sanimal.xlsx"));
+				stream = new FileOutputStream(new File(location, "Calliope.xlsx"));
 			else if (location.getAbsolutePath().endsWith(".xlsx"))
 				stream = new FileOutputStream(location);
 			else

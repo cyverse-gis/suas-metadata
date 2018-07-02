@@ -3,7 +3,7 @@ package model.cyverse;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
-import model.SanimalData;
+import model.CalliopeData;
 import model.image.*;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,7 +43,7 @@ public class CyVerseConnectionManager
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
 	// The directory that collections are stored in
-	private static final String COLLECTIONS_DIRECTORY = "/iplant/home/dslovikosky/Sanimal/Collections";
+	private static final String COLLECTIONS_DIRECTORY = "/iplant/home/dslovikosky/Calliope/Collections";
 	// Each user is part of the iPlant zone
 	private static final String ZONE = "iplant";
 	private static final SimpleDateFormat FOLDER_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss") ;
@@ -87,20 +87,20 @@ public class CyVerseConnectionManager
 			else
 			{
 				// If the authentication failed, print a message, and logout in case the login partially completed
-				SanimalData.getInstance().getErrorDisplay().printError("Authentication failed. Response was: " + authResponse.getAuthMessage());
+				CalliopeData.getInstance().getErrorDisplay().printError("Authentication failed. Response was: " + authResponse.getAuthMessage());
 			}
 			session.closeSession(account);
 		}
 		// If the authentication failed, print a message, and logout in case the login partially completed
 		catch (InvalidUserException | AuthenticationException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().printError("Authentication failed!");
+			CalliopeData.getInstance().getErrorDisplay().printError("Authentication failed!");
 		}
 		// If the authentication failed due to a jargon exception, print a message, and logout in case the login partially completed
 		// Not really sure how this happens, probably if the server incorrectly responds or is down
 		catch (JargonException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Could not authenticate the user!\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Could not authenticate the user!\n" + ExceptionUtils.getStackTrace(e));
 		}
 		// Default, just return false
 		return false;
@@ -117,7 +117,7 @@ public class CyVerseConnectionManager
 		{
 			// Check if we are the owner of the collection
 			String ownerUsername = collection.getOwner();
-			if (ownerUsername != null && ownerUsername.equals(SanimalData.getInstance().getUsername()))
+			if (ownerUsername != null && ownerUsername.equals(CalliopeData.getInstance().getUsername()))
 			{
 				try
 				{
@@ -143,7 +143,7 @@ public class CyVerseConnectionManager
 				}
 				catch (JargonException e)
 				{
-					SanimalData.getInstance().getErrorDisplay().notify("Error creating the collections directory! Error was:\n" + ExceptionUtils.getStackTrace(e));
+					CalliopeData.getInstance().getErrorDisplay().notify("Error creating the collections directory! Error was:\n" + ExceptionUtils.getStackTrace(e));
 				}
 			}
 
@@ -171,7 +171,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Could not delete the collection from CyVerse!\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not delete the collection from CyVerse!\n" + ExceptionUtils.getStackTrace(e));
 			}
 			this.sessionManager.closeSession();
 		}
@@ -207,7 +207,7 @@ public class CyVerseConnectionManager
 				}
 				catch (JargonException e)
 				{
-					SanimalData.getInstance().getErrorDisplay().notify("Error setting permissions for user!\n" + ExceptionUtils.getStackTrace(e));
+					CalliopeData.getInstance().getErrorDisplay().notify("Error setting permissions for user!\n" + ExceptionUtils.getStackTrace(e));
 				}
 			});
 		}
@@ -228,7 +228,7 @@ public class CyVerseConnectionManager
 				}
 				catch (JargonException e)
 				{
-					SanimalData.getInstance().getErrorDisplay().notify("Error setting permissions for user!\n" + ExceptionUtils.getStackTrace(e));
+					CalliopeData.getInstance().getErrorDisplay().notify("Error setting permissions for user!\n" + ExceptionUtils.getStackTrace(e));
 				}
 			});
 		}
@@ -257,7 +257,7 @@ public class CyVerseConnectionManager
 					}
 					catch (JargonException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().notify("Error removing permissions from user!\n" + ExceptionUtils.getStackTrace(e));
+						CalliopeData.getInstance().getErrorDisplay().notify("Error removing permissions from user!\n" + ExceptionUtils.getStackTrace(e));
 					}
 			});
 		}
@@ -274,7 +274,7 @@ public class CyVerseConnectionManager
 					}
 					catch (JargonException e)
 					{
-						SanimalData.getInstance().getErrorDisplay().notify("Error removing permissions from user!\n" + ExceptionUtils.getStackTrace(e));
+						CalliopeData.getInstance().getErrorDisplay().notify("Error removing permissions from user!\n" + ExceptionUtils.getStackTrace(e));
 					}
 			});
 		}
@@ -330,7 +330,7 @@ public class CyVerseConnectionManager
 						messageCallback.setValue("Creating upload folder on CyVerse...");
 
 					// Create a new folder for the upload, we will use the current date as the name plus our username
-					String uploadFolderName = FOLDER_FORMAT.format(new Date(this.sessionManager.getCurrentAO().getEnvironmentalInfoAO(this.authenticatedAccount).getIRODSServerCurrentTime())) + " " + SanimalData.getInstance().getUsername();
+					String uploadFolderName = FOLDER_FORMAT.format(new Date(this.sessionManager.getCurrentAO().getEnvironmentalInfoAO(this.authenticatedAccount).getIRODSServerCurrentTime())) + " " + CalliopeData.getInstance().getUsername();
 					String uploadDirName = collectionUploadDirStr + "/" + uploadFolderName;
 
 					if (messageCallback != null)
@@ -339,7 +339,7 @@ public class CyVerseConnectionManager
 					// Create the JSON file representing the upload
 					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
 					Integer imagesWithSpecies = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry && !((ImageEntry) imageContainer).getSpeciesPresent().isEmpty()).count());
-					CloudUploadEntry uploadEntry = new CloudUploadEntry(SanimalData.getInstance().getUsername(), LocalDateTime.now(), imagesWithSpecies, imageCount, uploadDirName);
+					CloudUploadEntry uploadEntry = new CloudUploadEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), imagesWithSpecies, imageCount, uploadDirName);
 
 					// Create the meta.csv representing the metadata for all images in the tar file
 					String localDirAbsolutePath = directoryToWrite.getFile().getAbsolutePath();
@@ -370,18 +370,18 @@ public class CyVerseConnectionManager
 					}
 
 					// Finally we actually index the image metadata using elasticsearch
-					SanimalData.getInstance().getEsConnectionManager().indexImages(uploadDirName + "/" + localDirName, collection.getID().toString(), directoryToWrite, uploadEntry);
+					CalliopeData.getInstance().getEsConnectionManager().indexImages(uploadDirName + "/" + localDirName, collection.getID().toString(), directoryToWrite, uploadEntry);
 
 					// Let rules do the rest!
 				}
 				else
 				{
-					SanimalData.getInstance().getErrorDisplay().notify("You don't have permission to upload to this collection!");
+					CalliopeData.getInstance().getErrorDisplay().notify("You don't have permission to upload to this collection!");
 				}
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Could not upload the images to CyVerse!\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not upload the images to CyVerse!\n" + ExceptionUtils.getStackTrace(e));
 			}
 			this.sessionManager.closeSession();
 		}
@@ -453,21 +453,21 @@ public class CyVerseConnectionManager
 					}
 
 					// Add an edit comment so users know the file was edited
-					uploadEntryToSave.getEditComments().add("Edited by " + SanimalData.getInstance().getUsername() + " on " + FOLDER_FORMAT.format(Calendar.getInstance().getTime()));
+					uploadEntryToSave.getEditComments().add("Edited by " + CalliopeData.getInstance().getUsername() + " on " + FOLDER_FORMAT.format(Calendar.getInstance().getTime()));
 					Integer imagesWithSpecies = uploadEntryToSave.getImagesWithSpecies() - numberOfDetaggedImages + numberOfRetaggedImages;
 					uploadEntryToSave.setImagesWithSpecies(imagesWithSpecies);
 
 					// Finally we update our metadata index
-					SanimalData.getInstance().getEsConnectionManager().updateIndexedImages(toUpload, collection.getID().toString(), uploadEntryToSave);
+					CalliopeData.getInstance().getEsConnectionManager().updateIndexedImages(toUpload, collection.getID().toString(), uploadEntryToSave);
 				}
 				else
 				{
-					SanimalData.getInstance().getErrorDisplay().notify("You don't have permission to save to this collection!");
+					CalliopeData.getInstance().getErrorDisplay().notify("You don't have permission to save to this collection!");
 				}
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Could not save the image list to the collection on CyVerse!\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not save the image list to the collection on CyVerse!\n" + ExceptionUtils.getStackTrace(e));
 			}
 			this.sessionManager.closeSession();
 		}
@@ -499,7 +499,7 @@ public class CyVerseConnectionManager
 			catch (JargonException e)
 			{
 				e.printStackTrace();
-				SanimalData.getInstance().getErrorDisplay().notify("Downloading uploaded collection failed!");
+				CalliopeData.getInstance().getErrorDisplay().notify("Downloading uploaded collection failed!");
 			}
 			this.sessionManager.closeSession();
 		}
@@ -554,7 +554,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Error indexing existing images. Error was:\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Error indexing existing images. Error was:\n" + ExceptionUtils.getStackTrace(e));
 			}
 
 			this.sessionManager.closeSession();
@@ -576,7 +576,7 @@ public class CyVerseConnectionManager
 				// Grab the name of the CyVerse file
 				String fileName = cyverseFile.getName();
 				// Create a temporary file to write to with the same name
-				File localImageFile = SanimalData.getInstance().getTempDirectoryManager().createTempFile(fileName);
+				File localImageFile = CalliopeData.getInstance().getTempDirectoryManager().createTempFile(fileName);
 
 				// Download the file locally
 				this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount).getOperation(cyverseFile, localImageFile, new TransferStatusCallbackListener()
@@ -594,7 +594,7 @@ public class CyVerseConnectionManager
 			}
 			catch (JargonException e)
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Could not pull the remote file (" + cyverseFile.getName() + ")!\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not pull the remote file (" + cyverseFile.getName() + ")!\n" + ExceptionUtils.getStackTrace(e));
 			}
 			this.sessionManager.closeSession();
 		}

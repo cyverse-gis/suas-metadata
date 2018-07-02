@@ -11,11 +11,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Class containing sanimal settings
+ * Class containing Calliope settings
  */
 public class SettingsData
 {
-	// A list of settings SANIMAL uses
+	// A list of settings Calliope uses
 	private transient ObservableList<CustomPropertyItem<?>> settingList = FXCollections.observableArrayList(item -> new Observable[] { item.getObservableValue().get() });
 
 	// The current setting value
@@ -31,7 +31,7 @@ public class SettingsData
 	private BooleanProperty disablePopups = new SimpleBooleanProperty(false);
 
 	/**
-	 * Constructor adds all settings SANIMAL will use to the dictionary
+	 * Constructor adds all settings Calliope will use to the dictionary
 	 */
 	public SettingsData()
 	{

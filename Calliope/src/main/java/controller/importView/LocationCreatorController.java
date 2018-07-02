@@ -11,7 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import library.ToggleButtonSelector;
-import model.analysis.SanimalAnalysisUtils;
+import model.analysis.CalliopeAnalysisUtils;
 import model.location.Location;
 import model.location.UTMCoord;
 import model.util.RoundingUtils;
@@ -282,7 +282,7 @@ public class LocationCreatorController implements Initializable
 	 */
 	private void recalculateUTMFromLatLng()
 	{
-		UTMCoord equivalent = SanimalAnalysisUtils.Deg2UTM(Double.parseDouble(this.newZoneOrLat.getValue()), Double.parseDouble(this.newLetterOrLng.getValue()));
+		UTMCoord equivalent = CalliopeAnalysisUtils.Deg2UTM(Double.parseDouble(this.newZoneOrLat.getValue()), Double.parseDouble(this.newLetterOrLng.getValue()));
 		this.newLetterOrLng.setValue(equivalent.getLetter().toString());
 		this.newZoneOrLat.setValue(equivalent.getZone().toString());
 		this.newEasting.setValue(Long.toString(Math.round(equivalent.getEasting())));
@@ -294,7 +294,7 @@ public class LocationCreatorController implements Initializable
 	 */
 	private void recalculateLatLngFromUTM()
 	{
-		Double[] equivalent = SanimalAnalysisUtils.UTM2Deg(new UTMCoord(Double.parseDouble(this.newEasting.getValue()), Double.parseDouble(this.newNorthing.getValue()), Integer.parseInt(this.newZoneOrLat.getValue()), this.newLetterOrLng.getValue().charAt(0)));
+		Double[] equivalent = CalliopeAnalysisUtils.UTM2Deg(new UTMCoord(Double.parseDouble(this.newEasting.getValue()), Double.parseDouble(this.newNorthing.getValue()), Integer.parseInt(this.newZoneOrLat.getValue()), this.newLetterOrLng.getValue().charAt(0)));
 		// Round to 4 decimal places
 		this.newZoneOrLat.setValue(Double.toString(RoundingUtils.roundLat(equivalent[0])));
 		this.newLetterOrLng.setValue(Double.toString(RoundingUtils.roundLng(equivalent[1])));

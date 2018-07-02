@@ -2,7 +2,7 @@ package model.analysis.textFormatters;
 
 import model.analysis.DataAnalyzer;
 import model.analysis.ImageQuery;
-import model.analysis.SanimalAnalysisUtils;
+import model.analysis.CalliopeAnalysisUtils;
 import model.image.ImageEntry;
 import model.species.Species;
 import org.apache.commons.lang3.tuple.Pair;
@@ -39,7 +39,7 @@ public class FirstLastSpeciesFormatter extends TextFormatter
 		LocalDateTime firstImageDate = analysis.getImagesSortedByDate().get(0).getDateTaken();
 		LocalDateTime lastImageDate = analysis.getImagesSortedByDate().get(analysis.getImagesSortedByDate().size() - 1).getDateTaken();
 
-		toReturn = toReturn + "NUMBER OF DAYS IN CAMERA TRAP PROGRAM = " + (SanimalAnalysisUtils.daysBetween(firstImageDate, lastImageDate) + 1) + "\n";
+		toReturn = toReturn + "NUMBER OF DAYS IN CAMERA TRAP PROGRAM = " + (CalliopeAnalysisUtils.daysBetween(firstImageDate, lastImageDate) + 1) + "\n";
 		toReturn = toReturn + "First picture: Year = " + firstImageDate.getYear() + " Month = " + (firstImageDate.getMonthValue() + 1) + " Day = " + firstImageDate.getDayOfMonth() + "\n";
 		toReturn = toReturn + "Last picture: Year = " + firstImageDate.getYear() + " Month = " + (firstImageDate.getMonthValue() + 1) + " Day = " + firstImageDate.getDayOfMonth() + "\n";
 		toReturn = toReturn + "\n";
@@ -67,7 +67,7 @@ public class FirstLastSpeciesFormatter extends TextFormatter
 		{
 			ImageEntry imageToPrint = analysis.getFirstImageInList(new ImageQuery().speciesOnly(speciesToPrint).query(images));
 			LocalDateTime date = imageToPrint.getDateTaken();
-			toReturn.append(String.format("%-28s %4d  %4d %4d %4d %3d %5d %6d   %-28s\n", speciesToPrint, SanimalAnalysisUtils.daysBetween(analysis.getImagesSortedByDate().get(0).getDateTaken(), date) + 1, date.getYear(), (date.getMonthValue() + 1),
+			toReturn.append(String.format("%-28s %4d  %4d %4d %4d %3d %5d %6d   %-28s\n", speciesToPrint, CalliopeAnalysisUtils.daysBetween(analysis.getImagesSortedByDate().get(0).getDateTaken(), date) + 1, date.getYear(), (date.getMonthValue() + 1),
 					date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), (imageToPrint.getLocationTaken() == null ? "Unknown" : imageToPrint.getLocationTaken().getName())));
 		}
 		toReturn.append("\n");
@@ -96,7 +96,7 @@ public class FirstLastSpeciesFormatter extends TextFormatter
 			ImageEntry imageToPrint = analysis.getLastImageInList(withSpecies);
 			ImageEntry firstImage = analysis.getFirstImageInList(withSpecies);
 			LocalDateTime date = imageToPrint.getDateTaken();
-			toReturn.append(String.format("%-28s %4d  %4d %4d %4d %3d %5d %6d   %-28s %4d\n", speciesToPrint, SanimalAnalysisUtils.daysBetween(analysis.getImagesSortedByDate().get(0).getDateTaken(), date) + 1, date.getYear(), (date.getMonthValue() + 1), date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), (imageToPrint.getLocationTaken() == null ? "Unknown" : imageToPrint.getLocationTaken().getName()), SanimalAnalysisUtils
+			toReturn.append(String.format("%-28s %4d  %4d %4d %4d %3d %5d %6d   %-28s %4d\n", speciesToPrint, CalliopeAnalysisUtils.daysBetween(analysis.getImagesSortedByDate().get(0).getDateTaken(), date) + 1, date.getYear(), (date.getMonthValue() + 1), date.getDayOfMonth(), date.getHour(), date.getMinute(), date.getSecond(), (imageToPrint.getLocationTaken() == null ? "Unknown" : imageToPrint.getLocationTaken().getName()), CalliopeAnalysisUtils
 					.daysBetween(firstImage.getDateTaken(), date) + 1));
 		}
 
@@ -133,7 +133,7 @@ public class FirstLastSpeciesFormatter extends TextFormatter
 		toReturn.append("  DAY    NUMBER    SPECIES\n");
 		int number = 0;
 		for (Pair<Species, ImageEntry> entry : speciesFirstImage)
-			toReturn.append(String.format("%5d     %3d      %s\n", SanimalAnalysisUtils.daysBetween(analysis.getImagesSortedByDate().get(0).getDateTaken(), entry.getValue().getDateTaken()) + 1, ++number, entry.getKey().getCommonName()));
+			toReturn.append(String.format("%5d     %3d      %s\n", CalliopeAnalysisUtils.daysBetween(analysis.getImagesSortedByDate().get(0).getDateTaken(), entry.getValue().getDateTaken()) + 1, ++number, entry.getKey().getCommonName()));
 
 		toReturn.append("\n");
 

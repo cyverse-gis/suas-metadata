@@ -35,8 +35,8 @@ import javafx.util.Duration;
 import javafx.util.Pair;
 import library.ImageViewPane;
 import library.TreeViewAutomatic;
-import model.SanimalData;
-import model.constant.SanimalDataFormats;
+import model.CalliopeData;
+import model.constant.CalliopeDataFormats;
 import model.image.*;
 import model.location.Location;
 import model.species.Species;
@@ -61,7 +61,7 @@ import java.util.function.Consumer;
 /**
  * Controller class for the main import window
  */
-public class SanimalImportController implements Initializable
+public class CalliopeImportController implements Initializable
 {
 	///
 	/// FXML bound fields start
@@ -197,7 +197,7 @@ public class SanimalImportController implements Initializable
 	private TimeShiftController timeShiftController;
 
 	/**
-	 * Initialize the sanimal import view and data bindings
+	 * Initialize the Calliope import view and data bindings
 	 *
 	 * @param ignored   ignored
 	 * @param resources ignored
@@ -208,7 +208,7 @@ public class SanimalImportController implements Initializable
 		// First we setup the species list
 
 		// Grab the global species list
-		SortedList<Species> species = new SortedList<>(SanimalData.getInstance().getSpeciesList());
+		SortedList<Species> species = new SortedList<>(CalliopeData.getInstance().getSpeciesList());
 		// We set the comparator to be the name of the species
 		species.setComparator(Comparator.comparing(Species::getCommonName));
 		// We create a local wrapper of the species list to filter
@@ -235,7 +235,7 @@ public class SanimalImportController implements Initializable
 		// Then we setup the locations list in a similar manner
 
 		// Grab the global location list
-		SortedList<Location> locations = new SortedList<>(SanimalData.getInstance().getLocationList());
+		SortedList<Location> locations = new SortedList<>(CalliopeData.getInstance().getLocationList());
 		// Set the comparator to be the name of the location
 		locations.setComparator(Comparator.comparing(Location::getName));
 		// Set the items of the location list view to the newly sorted list
@@ -267,13 +267,13 @@ public class SanimalImportController implements Initializable
 		// This is because a treeview must have ONE root.
 
 		// Create a fake invisible root node whos children
-		final TreeItem<ImageContainer> ROOT = new TreeItem<>(SanimalData.getInstance().getImageTree());
+		final TreeItem<ImageContainer> ROOT = new TreeItem<>(CalliopeData.getInstance().getImageTree());
 		// Hide the fake invisible root
 		this.imageTree.setShowRoot(false);
 		// Set the fake invisible root
 		this.imageTree.setRoot(ROOT);
 		// Set the items of the tree to be the children of the fake invisible root
-		this.imageTree.setItems(SanimalData.getInstance().getImageTree().getChildren());
+		this.imageTree.setItems(CalliopeData.getInstance().getImageTree().getChildren());
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImageTreeCell.fxml").getController());
 		// If we select a node that's being uploaded clear the selection
@@ -329,9 +329,9 @@ public class SanimalImportController implements Initializable
 		// Also bind the disable button's disable property if an adjustable image is selected
 		this.btnResetImage.disableProperty().bind(currentlySelectedImage.isNull());
 		// Finally bind the date taken's disable property if an adjustable image is selected
-		this.txtDateTaken.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty).map(localDateTime -> SanimalData.getInstance().getSettings().formatDateTime(localDateTime, " at ")).orElse(""));
+		this.txtDateTaken.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty).map(localDateTime -> CalliopeData.getInstance().getSettings().formatDateTime(localDateTime, " at ")).orElse(""));
 		// Bind the image preview to the selected image from the right side tree view
-		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file -> new Image(file.toURI().toString(), SanimalData.getInstance().getSettings().getBackgroundImageLoading())));
+		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file -> new Image(file.toURI().toString(), CalliopeData.getInstance().getSettings().getBackgroundImageLoading())));
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the species entry list view items to the selected image species present
 		this.speciesEntryListView.itemsProperty().bind(EasyBind.monadic(currentlySelectedImage).map(ImageEntry::getSpeciesPresent));
@@ -340,11 +340,11 @@ public class SanimalImportController implements Initializable
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).map(location -> true).orElse(false));
 		// Hide the progress bar when no tasks remain
-		this.sbrTaskProgress.visibleProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().taskRunningProperty());
+		this.sbrTaskProgress.visibleProperty().bind(CalliopeData.getInstance().getExecutor().getQueuedExecutor().taskRunningProperty());
 		// Bind the progress bar's text property to tasks remaining
-		this.sbrTaskProgress.textProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().messageProperty());
+		this.sbrTaskProgress.textProperty().bind(CalliopeData.getInstance().getExecutor().getQueuedExecutor().messageProperty());
 		// Bind the progress bar's progress property to the current task's progress
-		this.sbrTaskProgress.progressProperty().bind(SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().progressProperty());
+		this.sbrTaskProgress.progressProperty().bind(CalliopeData.getInstance().getExecutor().getQueuedExecutor().progressProperty());
 		// Bind the left arrow's visibility property to if there is a previous item available
 		this.btnLeftArrow.visibleProperty().bind(
 				this.imageTree.getSelectionModel().selectedIndexProperty()
@@ -410,11 +410,11 @@ public class SanimalImportController implements Initializable
 				if (!this.txtSpeciesSearch.isFocused())
 				{
 					// Filter the species list by correctly key-bound species, and add them to the current image
-					SanimalData.getInstance().getSpeciesList().filtered(boundSpecies -> boundSpecies.getKeyBinding() == event.getCode()).forEach(boundSpecies ->
+					CalliopeData.getInstance().getSpeciesList().filtered(boundSpecies -> boundSpecies.getKeyBinding() == event.getCode()).forEach(boundSpecies ->
 					{
 						this.currentlySelectedImage.getValue().addSpecies(boundSpecies, 1);
 						// Automatically select the next image in the image list view if the option is selected
-						if (SanimalData.getInstance().getSettings().getAutomaticNextImage())
+						if (CalliopeData.getInstance().getSettings().getAutomaticNextImage())
 							this.imageTree.getSelectionModel().selectNext();
 					});
 					event.consume();
@@ -521,7 +521,7 @@ public class SanimalImportController implements Initializable
 		requestEdit(newSpecies);
 		// After the edit is complete, check if it's uninitialized. If it isn't, add it to the global species list
 		if (!newSpecies.isUninitialized())
-			SanimalData.getInstance().getSpeciesList().add(newSpecies);
+			CalliopeData.getInstance().getSpeciesList().add(newSpecies);
 		// Consume the event
 		actionEvent.consume();
 	}
@@ -543,7 +543,7 @@ public class SanimalImportController implements Initializable
 		// Otherwise show an alert that no species was selected
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("No species from the species list to selected to edit");
+			CalliopeData.getInstance().getErrorDisplay().notify("No species from the species list to selected to edit");
 		}
 		// Consume the event
 		actionEvent.consume();
@@ -556,7 +556,7 @@ public class SanimalImportController implements Initializable
 	 */
 	private void requestEdit(Species species)
 	{
-		if (!SanimalData.getInstance().getSettings().getDisablePopups())
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
 		{
 			// Load the FXML file of the editor window
 			FXMLLoader loader = FXMLLoaderUtils.loadFXML("importView/SpeciesCreator.fxml");
@@ -579,7 +579,7 @@ public class SanimalImportController implements Initializable
 		}
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit a species!");
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit a species!");
 		}
 	}
 
@@ -595,7 +595,7 @@ public class SanimalImportController implements Initializable
 		if (selected != null)
 		{
 			// Grab a list of all images registered in the program
-			List<ImageEntry> imageList = SanimalData.getInstance().getAllImages();
+			List<ImageEntry> imageList = CalliopeData.getInstance().getAllImages();
 			// Count the number of images that contain the species
 			Long speciesUsages = imageList
 					.stream()
@@ -606,16 +606,16 @@ public class SanimalImportController implements Initializable
 			// If no images contain the species, we're good to delete
 			if (speciesUsages == 0)
 			{
-				SanimalData.getInstance().getSpeciesList().remove(selected);
+				CalliopeData.getInstance().getSpeciesList().remove(selected);
 			}
 			// Otherwise prompt the user if they want to untag all images with the species
 			else
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("This species (" + selected.getCommonName() + ") has already been tagged in " + speciesUsages + " images.\nYes will untag all images with the species and remove it.",
+				CalliopeData.getInstance().getErrorDisplay().notify("This species (" + selected.getCommonName() + ") has already been tagged in " + speciesUsages + " images.\nYes will untag all images with the species and remove it.",
 					new Action("Yes", actionEvent1 ->
 					{
 						// Remove the species and remove each species entry that has its species set to the selected species
-						SanimalData.getInstance().getSpeciesList().remove(selected);
+						CalliopeData.getInstance().getSpeciesList().remove(selected);
 						imageList.forEach(imageEntry -> imageEntry.getSpeciesPresent().removeIf(speciesEntry -> speciesEntry.getSpecies() == selected));
 					}));
 			}
@@ -623,7 +623,7 @@ public class SanimalImportController implements Initializable
 		// Otherwise show an alert that no species was selected
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Please select a species from the species list to remove.");
+			CalliopeData.getInstance().getErrorDisplay().notify("Please select a species from the species list to remove.");
 		}
 		actionEvent.consume();
 	}
@@ -640,7 +640,7 @@ public class SanimalImportController implements Initializable
 		// After the edit is complete, check if it's uninitialized. If it isn't, add it to the global location list
 		requestEdit(newLocation);
 		if (newLocation.locationValid())
-			SanimalData.getInstance().getLocationList().add(newLocation);
+			CalliopeData.getInstance().getLocationList().add(newLocation);
 		// Consume the event
 		actionEvent.consume();
 	}
@@ -662,7 +662,7 @@ public class SanimalImportController implements Initializable
 		// Otherwise show an alert that no location was selected
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Please select a location from the location list to edit.");
+			CalliopeData.getInstance().getErrorDisplay().notify("Please select a location from the location list to edit.");
 		}
 		// Consume the event
 		actionEvent.consume();
@@ -675,7 +675,7 @@ public class SanimalImportController implements Initializable
 	 */
 	private void requestEdit(Location location)
 	{
-		if (!SanimalData.getInstance().getSettings().getDisablePopups())
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
 		{
 			// Load the FXML file of the editor window
 			FXMLLoader loader = FXMLLoaderUtils.loadFXML("importView/LocationCreator.fxml");
@@ -698,7 +698,7 @@ public class SanimalImportController implements Initializable
 		}
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit locations!");
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit locations!");
 		}
 	}
 
@@ -714,7 +714,7 @@ public class SanimalImportController implements Initializable
 		if (selected != null)
 		{
 			// Grab a list of all images registered in the program
-			List<ImageEntry> imageList = SanimalData.getInstance().getAllImages();
+			List<ImageEntry> imageList = CalliopeData.getInstance().getAllImages();
 			Long locationUsages = imageList
 					.stream()
 					.filter(imageEntry -> imageEntry.getLocationTaken() == selected).count();
@@ -722,16 +722,16 @@ public class SanimalImportController implements Initializable
 			// If no images contain the location, we're good to delete
 			if (locationUsages == 0)
 			{
-				SanimalData.getInstance().getLocationList().remove(selected);
+				CalliopeData.getInstance().getLocationList().remove(selected);
 			}
 			// Otherwise prompt the user if they want to untag all images with the location
 			else
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("This location (\" + selected.getCommonName() + \") has already been tagged in \" + locationUsages + \" images.\\nYes will untag all images with the location and remove it.",
+				CalliopeData.getInstance().getErrorDisplay().notify("This location (\" + selected.getCommonName() + \") has already been tagged in \" + locationUsages + \" images.\\nYes will untag all images with the location and remove it.",
 					new Action("Yes", actionEvent1 ->
 					{
 						// Remove the location and remove each image that has its location set to the selected location
-						SanimalData.getInstance().getLocationList().remove(selected);
+						CalliopeData.getInstance().getLocationList().remove(selected);
 						imageList.stream().filter(imageEntry -> imageEntry.getLocationTaken() == selected).forEach(imageEntry -> imageEntry.setLocationTaken(null));
 					}));
 			}
@@ -739,7 +739,7 @@ public class SanimalImportController implements Initializable
 		// Otherwise show an alert that no location was selected
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Please select a location from the location list to remove.");
+			CalliopeData.getInstance().getErrorDisplay().notify("Please select a location from the location list to remove.");
 		}
 		actionEvent.consume();
 	}
@@ -775,8 +775,8 @@ public class SanimalImportController implements Initializable
 						this.updateMessage("Loading directory...");
 
 						// Grab the current list of species and locations and duplicate it
-						List<Species> currentSpecies = new ArrayList<>(SanimalData.getInstance().getSpeciesList());
-						List<Location> currentLocations = new ArrayList<>(SanimalData.getInstance().getLocationList());
+						List<Species> currentSpecies = new ArrayList<>(CalliopeData.getInstance().getSpeciesList());
+						List<Location> currentLocations = new ArrayList<>(CalliopeData.getInstance().getLocationList());
 
 						// Convert the file to a recursive image directory data structure
 						ImageDirectory directory = DirectoryManager.loadDirectory(file, currentLocations, currentSpecies);
@@ -791,13 +791,13 @@ public class SanimalImportController implements Initializable
 						this.updateMessage("Detecting species in images...");
 
 						// Diff the new species list and the old one to see if we have new species
-						List<Species> newSpecies = ListUtils.subtract(currentSpecies, SanimalData.getInstance().getSpeciesList());
+						List<Species> newSpecies = ListUtils.subtract(currentSpecies, CalliopeData.getInstance().getSpeciesList());
 
 						this.updateProgress(4, MAX_WORK);
 						this.updateMessage("Detecting locations in images...");
 
 						// Diff the new locations list and the old one to see if we have new locations
-						List<Location> newLocations = ListUtils.subtract(currentLocations, SanimalData.getInstance().getLocationList());
+						List<Location> newLocations = ListUtils.subtract(currentLocations, CalliopeData.getInstance().getLocationList());
 
 						// If we have new locations or have new species, show an alert
 						if (!newSpecies.isEmpty() || !newLocations.isEmpty())
@@ -811,7 +811,7 @@ public class SanimalImportController implements Initializable
 							else
 								message = "New species and locations ";
 							// Print the message
-							SanimalData.getInstance().getErrorDisplay().notify(message + "found tagged on these images were automatically added to the list(s).");
+							CalliopeData.getInstance().getErrorDisplay().notify(message + "found tagged on these images were automatically added to the list(s).");
 
 							this.updateProgress(5, MAX_WORK);
 							this.updateMessage("Adding images to the visual tree...");
@@ -819,8 +819,8 @@ public class SanimalImportController implements Initializable
 							// Add the new species and locations to the data
 							Platform.runLater(() ->
 							{
-								SanimalData.getInstance().getSpeciesList().addAll(newSpecies);
-								SanimalData.getInstance().getLocationList().addAll(newLocations);
+								CalliopeData.getInstance().getSpeciesList().addAll(newSpecies);
+								CalliopeData.getInstance().getLocationList().addAll(newLocations);
 							});
 						}
 
@@ -836,7 +836,7 @@ public class SanimalImportController implements Initializable
 					if (!importAsLegacy)
 					{
 						// Add the directory to the image tree
-						SanimalData.getInstance().getImageTree().addChild(importTask.getValue());
+						CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
 						this.btnImportImages.setDisable(false);
 					}
 					// If we're reading legacy data, start a new task to read it
@@ -853,8 +853,8 @@ public class SanimalImportController implements Initializable
 								this.updateMessage("Duplicating the species and location list temporarily...");
 
 								// Grab the current list of species and locations and duplicate it
-								List<Species> currentSpecies = new ArrayList<>(SanimalData.getInstance().getSpeciesList());
-								List<Location> currentLocations = new ArrayList<>(SanimalData.getInstance().getLocationList());
+								List<Species> currentSpecies = new ArrayList<>(CalliopeData.getInstance().getSpeciesList());
+								List<Location> currentLocations = new ArrayList<>(CalliopeData.getInstance().getLocationList());
 
 								this.updateProgress(1, 2);
 								this.updateMessage("Reading Dr. Sanderson's Legacy Format");
@@ -874,53 +874,53 @@ public class SanimalImportController implements Initializable
 						legacySyncTask.setOnSucceeded(event2 ->
 						{
 							// Some locations may not be initialized due to Dr. Sanderson's format so we ask the user to fix them for us
-							List<Species> newSpecies = ListUtils.subtract(legacySyncTask.getValue().getKey(), SanimalData.getInstance().getSpeciesList());
-							List<Location> newLocations = ListUtils.subtract(legacySyncTask.getValue().getValue(), SanimalData.getInstance().getLocationList());
+							List<Species> newSpecies = ListUtils.subtract(legacySyncTask.getValue().getKey(), CalliopeData.getInstance().getSpeciesList());
+							List<Location> newLocations = ListUtils.subtract(legacySyncTask.getValue().getValue(), CalliopeData.getInstance().getLocationList());
 
 							// If the species list is not empty, show a popup
 							if (!newSpecies.isEmpty())
 							{
-								SanimalData.getInstance().getErrorDisplay().notify(newSpecies.size() + " new species were found on the images that were not registered yet. Add any additional species information now.");
+								CalliopeData.getInstance().getErrorDisplay().notify(newSpecies.size() + " new species were found on the images that were not registered yet. Add any additional species information now.");
 
 								// Request the edit of each species, because they may not be valid yet
 								for (Species species : newSpecies)
 									requestEdit(species);
 
 								// Add all new species
-								SanimalData.getInstance().getSpeciesList().addAll(newSpecies);
+								CalliopeData.getInstance().getSpeciesList().addAll(newSpecies);
 							}
 
 							// If the locations list is not empty, show a popup
 							if (!newLocations.isEmpty())
 							{
-								SanimalData.getInstance().getErrorDisplay().notify(newLocations.size() + " new locations were found on the images that were not registered yet. Please add location latitude/longitude/elevation.");
+								CalliopeData.getInstance().getErrorDisplay().notify(newLocations.size() + " new locations were found on the images that were not registered yet. Please add location latitude/longitude/elevation.");
 
 								// Request the edit of each locations, because they may not be valid yet
 								for (Location location : newLocations)
 									requestEdit(location);
 
 								// Add all new locations
-								SanimalData.getInstance().getLocationList().addAll(newLocations);
+								CalliopeData.getInstance().getLocationList().addAll(newLocations);
 							}
 
 							// Add the directory to the image tree
-							SanimalData.getInstance().getImageTree().addChild(directory);
+							CalliopeData.getInstance().getImageTree().addChild(directory);
 							this.btnImportImages.setDisable(false);
 						});
 
-						SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(legacySyncTask);
+						CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(legacySyncTask);
 					}
 				});
 
-				SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(importTask);
+				CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
 			}
 		};
 
 		// If Dr. Sanderson's compatibility is enabled, ask
-		if (SanimalData.getInstance().getSettings().getDrSandersonDirectoryCompatibility())
+		if (CalliopeData.getInstance().getSettings().getDrSandersonDirectoryCompatibility())
 		{
 			// Ask if the data is legacy
-			SanimalData.getInstance().getErrorDisplay().notify("Would you like the directory to be read as legacy data used by Dr. Sanderson's 'Data Analyze' program?",
+			CalliopeData.getInstance().getErrorDisplay().notify("Would you like the directory to be read as legacy data used by Dr. Sanderson's 'Data Analyze' program?",
 				new Action("Yes, Auto-Tag it", actionEvent1 ->
 				{
 					imageImporter.accept(true);
@@ -931,7 +931,7 @@ public class SanimalImportController implements Initializable
 				}),
 				new Action("No, don't ask again", actionEvent1 ->
 				{
-					SanimalData.getInstance().getSettings().setDrSandersonDirectoryCompatibility(false);
+					CalliopeData.getInstance().getSettings().setDrSandersonDirectoryCompatibility(false);
 					imageImporter.accept(false);
 				}));
 		}
@@ -954,7 +954,7 @@ public class SanimalImportController implements Initializable
 		// Grab the selected item
 		TreeItem<ImageContainer> item = this.imageTree.getSelectionModel().getSelectedItem();
 		// Remove that item from the image tree
-		SanimalData.getInstance().getImageTree().removeChildRecursive(item.getValue());
+		CalliopeData.getInstance().getImageTree().removeChildRecursive(item.getValue());
 		// Make sure to clear the selection in the tree. This ensures that our left & right arrows will properly hide themselves if no more directories are present
 		this.imageTree.getSelectionModel().clearSelection();
 		// Consume the event
@@ -1008,7 +1008,7 @@ public class SanimalImportController implements Initializable
 		// If either a date from the directory or image was detected, process it
 		if (first != null)
 		{
-			if (!SanimalData.getInstance().getSettings().getDisablePopups())
+			if (!CalliopeData.getInstance().getSettings().getDisablePopups())
 			{
 				timeShiftController.setDate(first);
 				if (timeShiftStage.getOwner() == null)
@@ -1038,7 +1038,7 @@ public class SanimalImportController implements Initializable
 			}
 			else
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("Popups must be enabled to shift the image date and time!");
+				CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to shift the image date and time!");
 			}
 		}
 
@@ -1061,8 +1061,8 @@ public class SanimalImportController implements Initializable
 
 			// Create a clipboard and put the species unique ID into that clipboard
 			ClipboardContent content = new ClipboardContent();
-			content.put(SanimalDataFormats.SPECIES_NAME_FORMAT, selected.getCommonName());
-			content.put(SanimalDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT, selected.getScientificName());
+			content.put(CalliopeDataFormats.SPECIES_NAME_FORMAT, selected.getCommonName());
+			content.put(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT, selected.getScientificName());
 			// Set the dragboard's context, and then consume the event
 			dragboard.setContent(content);
 
@@ -1086,8 +1086,8 @@ public class SanimalImportController implements Initializable
 
 			// Create a clipboard and put the location unique ID into that clipboard
 			ClipboardContent content = new ClipboardContent();
-			content.put(SanimalDataFormats.LOCATION_NAME_FORMAT, selected.getName());
-			content.put(SanimalDataFormats.LOCATION_ID_FORMAT, selected.getId());
+			content.put(CalliopeDataFormats.LOCATION_NAME_FORMAT, selected.getName());
+			content.put(CalliopeDataFormats.LOCATION_ID_FORMAT, selected.getId());
 			// Set the dragboard's context, and then consume the event
 			dragboard.setContent(content);
 
@@ -1104,7 +1104,7 @@ public class SanimalImportController implements Initializable
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(SanimalDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(SanimalDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
+		if ((dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
 			dragEvent.acceptTransferModes(TransferMode.COPY);
 		dragEvent.consume();
 	}
@@ -1118,7 +1118,7 @@ public class SanimalImportController implements Initializable
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(SanimalDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(SanimalDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
+		if ((dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
 			this.fadeAddPanelOut.play();
 		dragEvent.consume();
 	}
@@ -1132,7 +1132,7 @@ public class SanimalImportController implements Initializable
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(SanimalDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(SanimalDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
+		if ((dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
 			this.fadeAddPanelIn.play();
 		dragEvent.consume();
 	}
@@ -1149,31 +1149,31 @@ public class SanimalImportController implements Initializable
 		// Grab the dragboard
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If our dragboard has a string we have data which we need
-		if (dragboard.hasContent(SanimalDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null)
+		if (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null)
 		{
-			String commonName = (String) dragboard.getContent(SanimalDataFormats.SPECIES_NAME_FORMAT);
-			String scientificName = (String) dragboard.getContent(SanimalDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT);
+			String commonName = (String) dragboard.getContent(CalliopeDataFormats.SPECIES_NAME_FORMAT);
+			String scientificName = (String) dragboard.getContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT);
 			// Grab the species with the given ID
-			Optional<Species> toAdd = SanimalData.getInstance().getSpeciesList().stream().filter(species -> species.getScientificName().equals(scientificName) && species.getCommonName().equals(commonName)).findFirst();
+			Optional<Species> toAdd = CalliopeData.getInstance().getSpeciesList().stream().filter(species -> species.getScientificName().equals(scientificName) && species.getCommonName().equals(commonName)).findFirst();
 			// Add the species to the image
 			if (toAdd.isPresent())
 				if (currentlySelectedImage.getValue() != null)
 				{
 					currentlySelectedImage.getValue().addSpecies(toAdd.get(), 1);
 					// Automatically select the next image in the image list view if the option is selected
-					if (SanimalData.getInstance().getSettings().getAutomaticNextImage())
+					if (CalliopeData.getInstance().getSettings().getAutomaticNextImage())
 						this.imageTree.getSelectionModel().selectNext();
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;
 				}
 		}
-		else if (dragboard.hasContent(SanimalDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(SanimalDataFormats.LOCATION_ID_FORMAT))
+		else if (dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT))
 		{
-			String locationName = (String) dragboard.getContent(SanimalDataFormats.LOCATION_NAME_FORMAT);
-			String locationId = (String) dragboard.getContent(SanimalDataFormats.LOCATION_ID_FORMAT);
+			String locationName = (String) dragboard.getContent(CalliopeDataFormats.LOCATION_NAME_FORMAT);
+			String locationId = (String) dragboard.getContent(CalliopeDataFormats.LOCATION_ID_FORMAT);
 			// Grab the species with the given ID
-			Optional<Location> toAdd = SanimalData.getInstance().getLocationList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
+			Optional<Location> toAdd = CalliopeData.getInstance().getLocationList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
 			// Add the species to the image
 			if (toAdd.isPresent())
 				// Check if we have a selected image or directory to update!

@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 import javafx.util.converter.DefaultStringConverter;
 import library.EditCell;
 import library.TableColumnHeaderUtil;
-import model.SanimalData;
+import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.threading.ErrorTask;
@@ -221,7 +221,7 @@ public class ImageCollectionSettingsController implements Initializable
 		// Otherwise show an alert that no permission was selected
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Please select a permission from the permissions list to edit.");
+			CalliopeData.getInstance().getErrorDisplay().notify("Please select a permission from the permissions list to edit.");
 		}
 		// Consume the event
 		actionEvent.consume();
@@ -241,9 +241,9 @@ public class ImageCollectionSettingsController implements Initializable
 		for (Permission permission : currentlySelected.getPermissions())
 		{
 			// Double check that each username entered is valid
-			if (!SanimalData.getInstance().getCyConnectionManager().isValidUsername(permission.getUsername()))
+			if (!CalliopeData.getInstance().getCyConnectionManager().isValidUsername(permission.getUsername()))
 			{
-				SanimalData.getInstance().getErrorDisplay().notify("The username (" + permission.getUsername() + ") you entered was not found on the CyVerse system. Reminder: permissions are expecting usernames, not real names.");
+				CalliopeData.getInstance().getErrorDisplay().notify("The username (" + permission.getUsername() + ") you entered was not found on the CyVerse system. Reminder: permissions are expecting usernames, not real names.");
 				btnSave.setDisable(false);
 				// Just return if there is an invalid username
 				return;
@@ -271,8 +271,8 @@ public class ImageCollectionSettingsController implements Initializable
 				StringProperty messageUpdater = new SimpleStringProperty("");
 				messageUpdater.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
 
-				SanimalData.getInstance().getCyConnectionManager().pushLocalCollection(originalCollection, messageUpdater);
-				SanimalData.getInstance().getEsConnectionManager().pushLocalCollection(originalCollection);
+				CalliopeData.getInstance().getCyConnectionManager().pushLocalCollection(originalCollection, messageUpdater);
+				CalliopeData.getInstance().getEsConnectionManager().pushLocalCollection(originalCollection);
 
 				this.updateProgress(1, 1);
 				return null;
@@ -280,7 +280,7 @@ public class ImageCollectionSettingsController implements Initializable
 		};
 
 		// Perform the task
-		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(saveTask);
+		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(saveTask);
 
 		// Close the edit window, since we're done with the edit
 		((Stage) this.tvwPermissions.getScene().getWindow()).close();
@@ -312,18 +312,18 @@ public class ImageCollectionSettingsController implements Initializable
 				// Grab the owner string
 				newOwner = inputValue.get();
 				// Test if it is valid
-				gotValidUsername = SanimalData.getInstance().getCyConnectionManager().isValidUsername(newOwner);
+				gotValidUsername = CalliopeData.getInstance().getCyConnectionManager().isValidUsername(newOwner);
 				if (!gotValidUsername)
 				{
 					// If we didn't get a valid name, show an alert, and ask for a new username
-					SanimalData.getInstance().getErrorDisplay().notify("The username you entered was not found on the CyVerse system, please try again...");
+					CalliopeData.getInstance().getErrorDisplay().notify("The username you entered was not found on the CyVerse system, please try again...");
 				}
 			}
 			else
 				return;
 		}
 
-		SanimalData.getInstance().getErrorDisplay().notify("Once the owner has been set, you will no longer be able to edit collection permissions, description, title, or any other settings. Are you sure you want to continue?",
+		CalliopeData.getInstance().getErrorDisplay().notify("Once the owner has been set, you will no longer be able to edit collection permissions, description, title, or any other settings. Are you sure you want to continue?",
 			new Action("Confirm", actionEvent1 ->
 			{
 				// For now, this is not supported

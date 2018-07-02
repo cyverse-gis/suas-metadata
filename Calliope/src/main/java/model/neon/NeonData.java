@@ -1,24 +1,16 @@
 package model.neon;
 
 import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
-import model.SanimalData;
-import model.neon.jsonPOJOs.ProductAvailability;
+import model.CalliopeData;
+import model.analysis.CalliopeAnalysisUtils;
 import model.neon.jsonPOJOs.Site;
 import model.neon.jsonPOJOs.Sites;
-import model.threading.ErrorTask;
-import model.util.SanimalAnalysisUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.fxmisc.easybind.EasyBind;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.UUID;
@@ -56,7 +48,7 @@ public class NeonData
 		Site closestSite = null;
 		for (Site site : this.sites)
 		{
-			Double distanceToSite = SanimalAnalysisUtils.distanceBetween(latitude, site.getSiteLatitude(), longitude, site.getSiteLongitude(), 0, 0);
+			Double distanceToSite = CalliopeAnalysisUtils.distanceBetween(latitude, site.getSiteLatitude(), longitude, site.getSiteLongitude());
 			if (distanceToSite < shortestDistance)
 			{
 				shortestDistance = distanceToSite;
@@ -72,7 +64,7 @@ public class NeonData
 		URLConnection neonSiteConnection = neonSiteAPI.openConnection();
 		BufferedReader jsonReader = new BufferedReader(new InputStreamReader(neonSiteConnection.getInputStream()));
 		String json = jsonReader.lines().collect(Collectors.joining());
-		return SanimalData.getInstance(sessionID).getGson().fromJson(json, Sites.class);
+		return CalliopeData.getInstance().getGson().fromJson(json, Sites.class);
 	}
 
 	public void setSites(Sites sites)

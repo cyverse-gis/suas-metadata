@@ -6,7 +6,7 @@ import com.lynden.gmapsfx.javascript.object.*;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import model.SanimalData;
+import model.CalliopeData;
 import model.location.Location;
 import netscape.javascript.JSObject;
 
@@ -18,7 +18,7 @@ import java.util.ResourceBundle;
 /**
  * Controller class for the map page
  */
-public class SanimalMapController implements Initializable
+public class CalliopeMapController implements Initializable
 {
 	///
 	/// FXML bound fields start
@@ -69,7 +69,7 @@ public class SanimalMapController implements Initializable
 			this.googleMap = this.googleMapView.createMap(mapOptions);
 
 			// When the location list changes, we put the locations onto the map display
-			SanimalData.getInstance().getLocationList().addListener((ListChangeListener<Location>) c -> {
+			CalliopeData.getInstance().getLocationList().addListener((ListChangeListener<Location>) c -> {
 				// Iterate over changes
 				while (c.next())
 				{

@@ -1,7 +1,7 @@
 package model.util;
 
 import com.google.gson.*;
-import model.constant.SanimalMetadataFields;
+import model.constant.CalliopeMetadataFields;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
@@ -24,7 +24,7 @@ public class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, Json
 	@Override
 	public JsonElement serialize(LocalDateTime localDateTime, Type type, JsonSerializationContext jsonSerializationContext)
 	{
-		return new JsonPrimitive(localDateTime.atZone(ZoneId.systemDefault()).format(SanimalMetadataFields.INDEX_DATE_TIME_FORMAT));
+		return new JsonPrimitive(localDateTime.atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT));
 	}
 
 	/**
@@ -39,6 +39,6 @@ public class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, Json
 	@Override
 	public LocalDateTime deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
 	{
-		return ZonedDateTime.parse(jsonElement.getAsString(), SanimalMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime();
+		return ZonedDateTime.parse(jsonElement.getAsString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime();
 	}
 }

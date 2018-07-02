@@ -1,8 +1,8 @@
 package model.util;
 
-import controller.Sanimal;
+import controller.Calliope;
 import javafx.fxml.FXMLLoader;
-import model.SanimalData;
+import model.CalliopeData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class FXMLLoaderUtils
 	public static FXMLLoader loadFXML(String FXMLFileName)
 	{
 		// Create the loader
-		FXMLLoader loader = new FXMLLoader(Sanimal.class.getClass().getResource("/view/" + FXMLFileName));
+		FXMLLoader loader = new FXMLLoader(Calliope.class.getClass().getResource("/view/" + FXMLFileName));
 
 		// Attempt to load the file. If we get an error throw an exception
 		try
@@ -30,7 +30,7 @@ public class FXMLLoaderUtils
 		}
 		catch (IOException exception)
 		{
-			SanimalData.getInstance().getErrorDisplay().printError("Could not load the FXML file for the file " + FXMLFileName + "!\n" + ExceptionUtils.getStackTrace(exception));
+			CalliopeData.getInstance().getErrorDisplay().printError("Could not load the FXML file for the file " + FXMLFileName + "!\n" + ExceptionUtils.getStackTrace(exception));
 			System.exit(-1);
 		}
 

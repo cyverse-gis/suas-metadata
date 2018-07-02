@@ -6,9 +6,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.text.Font;
-import model.SanimalData;
+import model.CalliopeData;
 import model.analysis.DataAnalyzer;
-import model.analysis.SanimalAnalysisUtils;
+import model.analysis.CalliopeAnalysisUtils;
 import model.location.Location;
 import model.location.UTMCoord;
 import model.util.RoundingUtils;
@@ -76,7 +76,7 @@ public class VisCSVController implements VisControllerBase
 					location.getId() + ",";
 
 			// If we're using Lat/Lng
-			if (SanimalData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
+			if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
 			{
 				// Add lat/lng
 				locationString = locationString +
@@ -84,20 +84,20 @@ public class VisCSVController implements VisControllerBase
 					location.getLongitude() + ",";
 			}
 			// If we're using UTM
-			else if (SanimalData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.UTM)
+			else if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.UTM)
 			{
 				// Convert to UTM, and print it
-				UTMCoord utmCoord = SanimalAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
+				UTMCoord utmCoord = CalliopeAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
 				locationString = locationString +
 					utmCoord.getZone().toString() + utmCoord.getLetter().toString() + "," +
 					utmCoord.getEasting() + "E," +
 					utmCoord.getNorthing() + "N,";
 			}
 			// Add elevation
-			SettingsData.DistanceUnits distanceUnits = SanimalData.getInstance().getSettings().getDistanceUnits();
+			SettingsData.DistanceUnits distanceUnits = CalliopeData.getInstance().getSettings().getDistanceUnits();
 			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
 			return imageEntry.getFile().getName() + "," +
-				SanimalData.getInstance().getSettings().formatDateTime(imageEntry.getDateTaken(), " ") + "," +
+				CalliopeData.getInstance().getSettings().formatDateTime(imageEntry.getDateTaken(), " ") + "," +
 				imageEntry.getSpeciesPresent().stream().map(speciesEntry ->
 					speciesEntry.getSpecies().getCommonName() + ";" +
 					speciesEntry.getSpecies().getScientificName() + ";" +
@@ -119,7 +119,7 @@ public class VisCSVController implements VisControllerBase
 					location.getId() + ",";
 
 			// If we're using lat long
-			if (SanimalData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
+			if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
 			{
 				// Use lat,lng
 				locationString = locationString +
@@ -129,14 +129,14 @@ public class VisCSVController implements VisControllerBase
 			// If we're using UTM
 			else
 			{
-				UTMCoord utmCoord = SanimalAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
+				UTMCoord utmCoord = CalliopeAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
 				locationString = locationString +
 					utmCoord.getZone().toString() + utmCoord.getLetter().toString() + "," +
 					utmCoord.getEasting() + "E," +
 					utmCoord.getNorthing() + "N,";
 			}
 			// Distance units depend on feet or meters
-			SettingsData.DistanceUnits distanceUnits = SanimalData.getInstance().getSettings().getDistanceUnits();
+			SettingsData.DistanceUnits distanceUnits = CalliopeData.getInstance().getSettings().getDistanceUnits();
 			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
 			return locationString;
 		})

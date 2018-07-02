@@ -1,7 +1,7 @@
 package model.util;
 
-import model.SanimalData;
-import model.constant.SanimalMetadataFields;
+import model.CalliopeData;
+import model.constant.CalliopeMetadataFields;
 import model.image.ImageEntry;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.ImageWriteException;
@@ -67,7 +67,7 @@ public class MetadataUtils
 	public static void writeOutputSet(TiffOutputSet outputSet, ImageEntry imageEntry) throws IOException, ImageWriteException, ImageReadException
 	{
 		// Write the new metadata back to the image, first we write it to a temporary file
-		File tempToWriteTo = SanimalData.getInstance().getTempDirectoryManager().createTempFile("sanimalTMP.jpg");
+		File tempToWriteTo = CalliopeData.getInstance().getTempDirectoryManager().createTempFile("calliopeTMP.jpg");
 		// Copy the current image file to the temporary file
 		FileUtils.copyFile(imageEntry.getFile(), tempToWriteTo);
 		// Then we create an output stream to that file
@@ -85,51 +85,51 @@ public class MetadataUtils
 	}
 
 	/**
-	 * Finds the sanimal EXIF directory or creates it if it is not present yet
+	 * Finds the Calliope EXIF directory or creates it if it is not present yet
 	 *
-	 * @param outputSet The output set to search for the sanimal directory
+	 * @param outputSet The output set to search for the Calliope directory
 	 *
-	 * @return The sanimal directory, cannot be null
+	 * @return The Calliope directory, cannot be null
 	 *
 	 * @throws ImageWriteException If something went wrong reading the directory...
 	 */
-	public static TiffOutputDirectory getOrCreateSanimalDirectory(TiffOutputSet outputSet) throws ImageWriteException
+	public static TiffOutputDirectory getOrCreateCalliopeDirectory(TiffOutputSet outputSet) throws ImageWriteException
 	{
-		// Sanimal directory type goes in 3? Currently -4, -3, -2, -1, 0, 1, and 2 are used by the JPEG format. Anything less than -4 is NOT allowed
-		Integer sanimalDirIndex = 1;
+		// Calliope directory type goes in 3? Currently -4, -3, -2, -1, 0, 1, and 2 are used by the JPEG format. Anything less than -4 is NOT allowed
+		Integer calliopeDirIndex = 1;
 
 		// Ensure we have a root directory
 		outputSet.getOrCreateRootDirectory();
 
-		TiffOutputDirectory sanimalDir = null;
+		TiffOutputDirectory calliopeDir = null;
 
-		// Loop while we don't have a sanimal directory yet
-		for (; sanimalDir == null; sanimalDirIndex++)
+		// Loop while we don't have a Calliope directory yet
+		for (; calliopeDir == null; calliopeDirIndex++)
 		{
 			// Find the directory at the current index
-			TiffOutputDirectory current = outputSet.findDirectory(sanimalDirIndex);
+			TiffOutputDirectory current = outputSet.findDirectory(calliopeDirIndex);
 			// If the directory is null, we have an empty slot, so create the directory
 			if (current == null)
 			{
-				sanimalDir = new TiffOutputDirectory(sanimalDirIndex, outputSet.byteOrder);
-				sanimalDir.add(SanimalMetadataFields.SANIMAL, (short) 1);
-				outputSet.addDirectory(sanimalDir);
+				calliopeDir = new TiffOutputDirectory(calliopeDirIndex, outputSet.byteOrder);
+				calliopeDir.add(CalliopeMetadataFields.CALLIOPE, (short) 1);
+				outputSet.addDirectory(calliopeDir);
 			}
-			// Otherwise, we check if we have the sanimal field, and if we do return it!
+			// Otherwise, we check if we have the Calliope field, and if we do return it!
 			else
 			{
-				if (current.findField(SanimalMetadataFields.SANIMAL) != null)
+				if (current.findField(CalliopeMetadataFields.CALLIOPE) != null)
 				{
-					sanimalDir = current;
+					calliopeDir = current;
 				}
 			}
 		}
 
-		return sanimalDir;
+		return calliopeDir;
 	}
 
 	/**
-	 * Returns the tiff image metadata which we can read sanimal data from
+	 * Returns the tiff image metadata which we can read Calliope data from
 	 *
 	 * @param imageFile The image to read the metadata from
 	 *

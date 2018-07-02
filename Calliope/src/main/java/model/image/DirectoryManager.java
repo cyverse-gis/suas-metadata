@@ -1,7 +1,7 @@
 package model.image;
 
-import model.SanimalData;
-import model.analysis.SanimalAnalysisUtils;
+import model.CalliopeData;
+import model.analysis.CalliopeAnalysisUtils;
 import model.location.Location;
 import model.species.Species;
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -115,7 +115,7 @@ public class DirectoryManager
 			for (File file : subFiles)
 			{
 				// Add all image files to the directory
-				if (SanimalAnalysisUtils.fileIsImage(file))
+				if (CalliopeAnalysisUtils.fileIsImage(file))
 				{
 					ImageEntry imageEntry = new ImageEntry(file);
 					imageEntry.readFileMetadataIntoImage(knownLocations, knownSpecies);
@@ -160,11 +160,11 @@ public class DirectoryManager
 			for (Integer tarIndex = 0; tarIndex < numberOfTars; tarIndex++)
 			{
 				// Create a temporarily TAR file to write to
-				File tempTar = SanimalData.getInstance().getTempDirectoryManager().createTempFile("tarToUpload.tar");
+				File tempTar = CalliopeData.getInstance().getTempDirectoryManager().createTempFile("tarToUpload.tar");
 				// Create a TAR output stream to write to
 				TarArchiveOutputStream tarOut = new TarArchiveOutputStream(new FileOutputStream(tempTar));
 
-				File tempMetaCSV = SanimalData.getInstance().getTempDirectoryManager().createTempFile("meta.csv");
+				File tempMetaCSV = CalliopeData.getInstance().getTempDirectoryManager().createTempFile("meta.csv");
 				tempMetaCSV.createNewFile();
 
 				PrintWriter metaOut = new PrintWriter(tempMetaCSV);

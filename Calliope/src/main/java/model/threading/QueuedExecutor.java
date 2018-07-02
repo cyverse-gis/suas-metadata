@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 /**
  * Executor that queues all tasks and performs them one by one
  */
-public class QueuedExecutor extends BaseSanimalExecutor
+public class QueuedExecutor extends BaseCalliopeExecutor
 {
 	// The current message to be displayed
 	private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper();

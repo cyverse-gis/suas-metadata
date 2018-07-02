@@ -13,7 +13,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.SanimalData;
+import model.CalliopeData;
 import model.util.FXMLLoaderUtils;
 import org.fxmisc.easybind.EasyBind;
 
@@ -27,7 +27,7 @@ import java.util.ResourceBundle;
 /**
  * Controller class for the main program
  */
-public class SanimalHomeController implements Initializable
+public class CalliopeHomeController implements Initializable
 {
 	///
 	/// FXML bound fields start
@@ -69,10 +69,10 @@ public class SanimalHomeController implements Initializable
 	public void initialize(URL location, ResourceBundle resources)
 	{
 		// If we're logged in show the logged in person's username
-		this.lblUsername.textProperty().bind(EasyBind.monadic(SanimalData.getInstance().usernameProperty()).map(username -> "Welcome " + username + "!").orElse(""));
+		this.lblUsername.textProperty().bind(EasyBind.monadic(CalliopeData.getInstance().usernameProperty()).map(username -> "Welcome " + username + "!").orElse(""));
 
 		// Grab the logged in property
-		ReadOnlyBooleanProperty loggedIn = SanimalData.getInstance().loggedInProperty();
+		ReadOnlyBooleanProperty loggedIn = CalliopeData.getInstance().loggedInProperty();
 
 		// Hide the logout button and text when not logged in
 		this.lblUsername.visibleProperty().bind(loggedIn);
@@ -180,7 +180,7 @@ public class SanimalHomeController implements Initializable
 		// Load the FXML file of the editor window
 		FXMLLoader loader = FXMLLoaderUtils.loadFXML("homeView/Credits.fxml");
 
-		if (!SanimalData.getInstance().getSettings().getDisablePopups())
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
 		{
 			// Create the stage that will have the species creator/editor
 			Stage dialogStage = new Stage();
@@ -198,7 +198,7 @@ public class SanimalHomeController implements Initializable
 		}
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
 		}
 
 		actionEvent.consume();

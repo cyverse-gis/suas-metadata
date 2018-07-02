@@ -19,7 +19,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import library.TreeViewAutomatic;
-import model.SanimalData;
+import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.image.*;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 /**
  * Controller class for the upload page
  */
-public class SanimalUploadController implements Initializable
+public class CalliopeUploadController implements Initializable
 {
 	///
 	/// FXML Bound Fields Start
@@ -113,11 +113,11 @@ public class SanimalUploadController implements Initializable
 		// First setup the collection list
 
 		// Grab the global collection list
-		SortedList<ImageCollection> collections = new SortedList<>(SanimalData.getInstance().getCollectionList());
+		SortedList<ImageCollection> collections = new SortedList<>(CalliopeData.getInstance().getCollectionList());
 		// Set the comparator to be the name of the image collection
 		collections.setComparator(Comparator.comparing(ImageCollection::getName));
 		// Set the list of items to be the collections
-		this.collectionListView.setItems(SanimalData.getInstance().getCollectionList());
+		this.collectionListView.setItems(CalliopeData.getInstance().getCollectionList());
 		// Set the cell factory to be our custom cell factory
 		this.collectionListView.setCellFactory(x -> {
 			ImageCollectionListEntryController controller = FXMLLoaderUtils.loadFXML("uploadView/ImageCollectionListEntry.fxml").getController();
@@ -138,7 +138,7 @@ public class SanimalUploadController implements Initializable
 		this.btnDeleteCollection.disableProperty().bind(EasyBind.monadic(this.selectedCollection).map(collection ->
 		{
 			String ownerUsername = collection.getOwner();
-			return ownerUsername == null || !ownerUsername.equals(SanimalData.getInstance().getUsername());
+			return ownerUsername == null || !ownerUsername.equals(CalliopeData.getInstance().getUsername());
 		}).orElse(nothingSelected));
 
 		this.btnRefreshUploads.disableProperty().bind(nothingSelected);
@@ -148,13 +148,13 @@ public class SanimalUploadController implements Initializable
 		// This is because a treeview must have ONE root.
 
 		// Create a fake invisible root node whos children
-		final TreeItem<ImageContainer> ROOT = new TreeItem<>(SanimalData.getInstance().getImageTree());
+		final TreeItem<ImageContainer> ROOT = new TreeItem<>(CalliopeData.getInstance().getImageTree());
 		// Hide the fake invisible root
 		this.imageTree.setShowRoot(false);
 		// Set the fake invisible root
 		this.imageTree.setRoot(ROOT);
 		// Set the items of the tree to be the children of the fake invisible root
-		this.imageTree.setItems(SanimalData.getInstance().getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry) && !(imageContainer instanceof CloudImageDirectory)));
+		this.imageTree.setItems(CalliopeData.getInstance().getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry) && !(imageContainer instanceof CloudImageDirectory)));
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("uploadView/UploadTreeCell.fxml").getController());
 
@@ -175,7 +175,7 @@ public class SanimalUploadController implements Initializable
 			filteredSortedUploads.predicateProperty().bind(Bindings.createObjectBinding(() -> (cloudUploadEntry ->
 					// Allow any cloud upload entry with a username cloud upload entry search text
 					StringUtils.containsIgnoreCase(cloudUploadEntry.getUploadUser(), this.txtUploadSearch.getCharacters()) ||
-							StringUtils.containsIgnoreCase(SanimalData.getInstance().getSettings().formatDateTime(cloudUploadEntry.getUploadDate(), " "), this.txtUploadSearch.getCharacters()) ||
+							StringUtils.containsIgnoreCase(CalliopeData.getInstance().getSettings().formatDateTime(cloudUploadEntry.getUploadDate(), " "), this.txtUploadSearch.getCharacters()) ||
 							StringUtils.containsIgnoreCase(cloudUploadEntry.getImageCount().toString(), this.txtUploadSearch.getCharacters())), this.txtUploadSearch.textProperty()));
 			return filteredSortedUploads;
 		}));
@@ -196,7 +196,7 @@ public class SanimalUploadController implements Initializable
 			}
 		});
 
-		ObservableList<Task<?>> activeTasks = SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().getActiveTasks();
+		ObservableList<Task<?>> activeTasks = CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveTasks();
 
 		// Bind the tasks
 		EasyBind.listBind(this.tpvUploads.getTasks(), activeTasks);
@@ -241,7 +241,7 @@ public class SanimalUploadController implements Initializable
 				this.updateMessage("Downloading list of uploads to collection: " + collection.getName());
 				DoubleProperty progress = new SimpleDoubleProperty(0.0);
 				progress.addListener((observable, oldValue, newValue) -> this.updateProgress(progress.getValue(), 1.0));
-				SanimalData.getInstance().getEsConnectionManager().retrieveAndInsertUploadListFor(collection);
+				CalliopeData.getInstance().getEsConnectionManager().retrieveAndInsertUploadListFor(collection);
 				return null;
 			}
 		};
@@ -257,7 +257,7 @@ public class SanimalUploadController implements Initializable
 		});
 
 		// Add the task
-		SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(collectionUploadDownloader);
+		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(collectionUploadDownloader);
 	}
 
 	/**
@@ -272,13 +272,13 @@ public class SanimalUploadController implements Initializable
 		// Create permissions for the owner
 		Permission owner = new Permission();
 		// Ensure that the owner has own permissions and then add it to the collection
-		owner.setUsername(SanimalData.getInstance().usernameProperty().getValue());
+		owner.setUsername(CalliopeData.getInstance().usernameProperty().getValue());
 		owner.setRead(true);
 		owner.setUpload(true);
 		owner.setOwner(true);
 		collection.getPermissions().add(owner);
 		// Add the collection to the global collection list
-		SanimalData.getInstance().getCollectionList().add(collection);
+		CalliopeData.getInstance().getCollectionList().add(collection);
 	}
 
 	/**
@@ -293,19 +293,19 @@ public class SanimalUploadController implements Initializable
 		if (selected != null)
 		{
 			// If a collection is selected, show an alert that data may be deleted!
-			SanimalData.getInstance().getErrorDisplay().notify("Are you sure you want to delete this collection?\nDeleting this collection will result in the permanent removal of all images uploaded to CyVerse to this collection.\nAre you sure you want to continue?",
+			CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to delete this collection?\nDeleting this collection will result in the permanent removal of all images uploaded to CyVerse to this collection.\nAre you sure you want to continue?",
 					new Action("Continue", actionEvent1 ->
 					{
 						// Remove the collection on the CyVerse system
-						SanimalData.getInstance().getCyConnectionManager().removeCollection(selected);
+						CalliopeData.getInstance().getCyConnectionManager().removeCollection(selected);
 
 						// Remove the selected collection
-						SanimalData.getInstance().getCollectionList().remove(selected);
+						CalliopeData.getInstance().getCollectionList().remove(selected);
 					}));
 		} else
 		{
 			// If no collection is selected, show an alert
-			SanimalData.getInstance().getErrorDisplay().notify("Please select a collection from the collection list to remove.");
+			CalliopeData.getInstance().getErrorDisplay().notify("Please select a collection from the collection list to remove.");
 		}
 		actionEvent.consume();
 	}
@@ -334,11 +334,11 @@ public class SanimalUploadController implements Initializable
 				{
 					this.updateMessage("Downloading directory for editing...");
 					// Download the directory and add it to our tree structure
-					CloudImageDirectory cloudDirectory = SanimalData.getInstance().getCyConnectionManager().downloadUploadDirectory(uploadEntry);
+					CloudImageDirectory cloudDirectory = CalliopeData.getInstance().getCyConnectionManager().downloadUploadDirectory(uploadEntry);
 					Platform.runLater(() ->
 					{
 						uploadEntry.setCloudImageDirectory(cloudDirectory);
-						SanimalData.getInstance().getImageTree().addChild(cloudDirectory);
+						CalliopeData.getInstance().getImageTree().addChild(cloudDirectory);
 					});
 					return null;
 				}
@@ -352,7 +352,7 @@ public class SanimalUploadController implements Initializable
 				uploadEntry.setDownloaded(true);
 			});
 
-			SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(downloadTask);
+			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(downloadTask);
 		}
 	}
 
@@ -396,7 +396,7 @@ public class SanimalUploadController implements Initializable
 						messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
 
 						// Save images to CyVerse, we give it a transfer status callback so that we can show the progress
-						SanimalData.getInstance().getCyConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
+						CalliopeData.getInstance().getCyConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
 						return null;
 					}
 				};
@@ -404,18 +404,18 @@ public class SanimalUploadController implements Initializable
 				saveTask.setOnSucceeded(event ->
 				{
 					imageDirectory.setUploadProgress(-1);
-					SanimalData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
+					CalliopeData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
 					uploadEntry.clearLocalCopy();
 				});
-				SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(saveTask);
+				CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(saveTask);
 			} else
 			{
 				// If an invalid directory is selected, show an alert
-				SanimalData.getInstance().getErrorDisplay().notify("An image in the directory (" + imageDirectory.getFile().getName() + ") you selected to save does not have a location. Please ensure all images are tagged with a location!");
+				CalliopeData.getInstance().getErrorDisplay().notify("An image in the directory (" + imageDirectory.getFile().getName() + ") you selected to save does not have a location. Please ensure all images are tagged with a location!");
 			}
 		} else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("The Cloud directory has not been downloaded yet, how are you going to save it?");
+			CalliopeData.getInstance().getErrorDisplay().notify("The Cloud directory has not been downloaded yet, how are you going to save it?");
 		}
 	}
 
@@ -433,14 +433,14 @@ public class SanimalUploadController implements Initializable
 			if (selectedCollection.getValue().getUploads().stream().anyMatch(CloudUploadEntry::hasBeenDownloaded))
 			{
 				// Create the alert
-				SanimalData.getInstance().getErrorDisplay().notify("Any unsaved changes to uploads will be lost, continue?",
+				CalliopeData.getInstance().getErrorDisplay().notify("Any unsaved changes to uploads will be lost, continue?",
 						// If they clicked OK, clear known uploads and resync
 						new Action("Continue", actionEvent1 ->
 						{
 							// Clear any known uploads
 							for (CloudUploadEntry cloudUploadEntry : this.selectedCollection.getValue().getUploads())
 								if (cloudUploadEntry.hasBeenDownloaded())
-									SanimalData.getInstance().getImageTree().removeChildRecursive(cloudUploadEntry.getCloudImageDirectory());
+									CalliopeData.getInstance().getImageTree().removeChildRecursive(cloudUploadEntry.getCloudImageDirectory());
 
 							// Clear the uploads and resync
 							this.selectedCollection.getValue().getUploads().clear();
@@ -473,7 +473,7 @@ public class SanimalUploadController implements Initializable
 	 */
 	public void indexExisting(ActionEvent actionEvent)
 	{
-		if (!SanimalData.getInstance().getSettings().getDisablePopups())
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
 		{
 			TextInputDialog dialog = new TextInputDialog();
 			dialog.setContentText(null);
@@ -483,12 +483,12 @@ public class SanimalUploadController implements Initializable
 			dialog.showAndWait().ifPresent(result ->
 			{
 				if (this.selectedCollection.getValue() != null)
-					SanimalData.getInstance().getCyConnectionManager().indexExisitingImages(this.selectedCollection.getValue(), result);
+					CalliopeData.getInstance().getCyConnectionManager().indexExisitingImages(this.selectedCollection.getValue(), result);
 			});
 		}
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
 		}
 		actionEvent.consume();
 	}

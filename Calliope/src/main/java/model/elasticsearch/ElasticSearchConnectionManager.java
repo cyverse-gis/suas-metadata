@@ -3,8 +3,8 @@ package model.elasticsearch;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
-import model.SanimalData;
-import model.constant.SanimalMetadataFields;
+import model.CalliopeData;
+import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.CloudImageEntry;
 import model.image.CloudUploadEntry;
@@ -63,31 +63,31 @@ public class ElasticSearchConnectionManager
 	private static final String ELASTIC_SEARCH_SCHEME = "http";
 
 	// The name of the user's index
-	private static final String INDEX_SANIMAL_USERS = "users";
-	// The type for the sanimal user's index
-	private static final String INDEX_SANIMAL_USERS_TYPE = "_doc";
+	private static final String INDEX_CALLIOPE_USERS = "users";
+	// The type for the Calliope user's index
+	private static final String INDEX_CALLIOPE_USERS_TYPE = "_doc";
 	// The number of shards to be used by the users index, for development we just need 1
-	private static final Integer INDEX_SANIMAL_USERS_SHARD_COUNT = 1;
+	private static final Integer INDEX_CALLIOPE_USERS_SHARD_COUNT = 1;
 	// The number of replicas to be created by the users index, for development we don't need any
-	private static final Integer INDEX_SANIMAL_USERS_REPLICA_COUNT = 0;
+	private static final Integer INDEX_CALLIOPE_USERS_REPLICA_COUNT = 0;
 
 	// The name of the metadata index
-	private static final String INDEX_SANIMAL_METADATA = "metadata";
-	// The type for the sanimal metadata index
-	private static final String INDEX_SANIMAL_METADATA_TYPE = "_doc";
+	private static final String INDEX_CALLIOPE_METADATA = "metadata";
+	// The type for the Calliope metadata index
+	private static final String INDEX_CALLIOPE_METADATA_TYPE = "_doc";
 	// The number of shards to be used by the metadata index, for development we just need 1
-	private static final Integer INDEX_SANIMAL_METADATA_SHARD_COUNT = 1;
+	private static final Integer INDEX_CALLIOPE_METADATA_SHARD_COUNT = 1;
 	// The number of replicas to be created by the metadata index, for development we don't need any
-	private static final Integer INDEX_SANIMAL_METADATA_REPLICA_COUNT = 0;
+	private static final Integer INDEX_CALLIOPE_METADATA_REPLICA_COUNT = 0;
 
 	// The name of the collections index
-	private static final String INDEX_SANIMAL_COLLECTIONS = "collections";
-	// The type for the sanimal collections index
-	private static final String INDEX_SANIMAL_COLLECTIONS_TYPE = "_doc";
+	private static final String INDEX_CALLIOPE_COLLECTIONS = "collections";
+	// The type for the Calliope collections index
+	private static final String INDEX_CALLIOPE_COLLECTIONS_TYPE = "_doc";
 	// The number of shards to be used by the collections index, for development we just need 1
-	private static final Integer INDEX_SANIMAL_COLLECTIONS_SHARD_COUNT = 1;
+	private static final Integer INDEX_CALLIOPE_COLLECTIONS_SHARD_COUNT = 1;
 	// The number of replicas to be created by the collections index, for development we don't need any
-	private static final Integer INDEX_SANIMAL_COLLECTIONS_REPLICA_COUNT = 0;
+	private static final Integer INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT = 0;
 
 	// The type used to serialize a list of species through Gson
 	private static final Type SPECIES_LIST_TYPE = new TypeToken<ArrayList<Species>>()
@@ -128,26 +128,26 @@ public class ElasticSearchConnectionManager
 	public void nukeAndRecreateUserIndex()
 	{
 		// Delete the original index
-		deleteIndex(INDEX_SANIMAL_USERS);
+		deleteIndex(INDEX_CALLIOPE_USERS);
 
 		// The index is gone now, so recreate it
 		try
 		{
 			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_SANIMAL_USERS);
+			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_CALLIOPE_USERS);
 			// Make sure to set the number of shards and replicas
 			createIndexRequest.settings(Settings.builder()
-				.put("index.number_of_shards", INDEX_SANIMAL_USERS_SHARD_COUNT)
-				.put("index.number_of_replicas", INDEX_SANIMAL_USERS_REPLICA_COUNT));
+				.put("index.number_of_shards", INDEX_CALLIOPE_USERS_SHARD_COUNT)
+				.put("index.number_of_replicas", INDEX_CALLIOPE_USERS_REPLICA_COUNT));
 			// Add the users type mapping which defines our schema
-			createIndexRequest.mapping(INDEX_SANIMAL_USERS_TYPE, this.elasticSearchSchemaManager.makeSanimalUsersIndexMapping(INDEX_SANIMAL_USERS_TYPE));
+			createIndexRequest.mapping(INDEX_CALLIOPE_USERS_TYPE, this.elasticSearchSchemaManager.makeCalliopeUsersIndexMapping(INDEX_CALLIOPE_USERS_TYPE));
 			// Execute the index request
 			this.elasticSearchClient.indices().create(createIndexRequest);
 		}
 		catch (IOException e)
 		{
 			// Print any errors we may have encountered
-			SanimalData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_SANIMAL_USERS + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_CALLIOPE_USERS + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -157,50 +157,50 @@ public class ElasticSearchConnectionManager
 	public void nukeAndRecreateMetadataIndex()
 	{
 		// Delete the original index
-		deleteIndex(INDEX_SANIMAL_METADATA);
+		deleteIndex(INDEX_CALLIOPE_METADATA);
 
 		// The index is gone now, so recreate it
 		try
 		{
 			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_SANIMAL_METADATA);
+			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_CALLIOPE_METADATA);
 			// Make sure to set the number of shards and replicas
 			createIndexRequest.settings(Settings.builder()
-					.put("index.number_of_shards", INDEX_SANIMAL_METADATA_SHARD_COUNT)
-					.put("index.number_of_replicas", INDEX_SANIMAL_METADATA_REPLICA_COUNT));
+					.put("index.number_of_shards", INDEX_CALLIOPE_METADATA_SHARD_COUNT)
+					.put("index.number_of_replicas", INDEX_CALLIOPE_METADATA_REPLICA_COUNT));
 			// Add the users type mapping which defines our schema
-			createIndexRequest.mapping(INDEX_SANIMAL_METADATA_TYPE, this.elasticSearchSchemaManager.makeSanimalMetadataIndexMapping(INDEX_SANIMAL_METADATA_TYPE));
+			createIndexRequest.mapping(INDEX_CALLIOPE_METADATA_TYPE, this.elasticSearchSchemaManager.makeCalliopeMetadataIndexMapping(INDEX_CALLIOPE_METADATA_TYPE));
 			// Execute the index request
 			this.elasticSearchClient.indices().create(createIndexRequest);
 		}
 		catch (IOException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_SANIMAL_METADATA + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_CALLIOPE_METADATA + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
 	public void nukeAndRecreateCollectionsIndex()
 	{
 		// Delete the original index
-		deleteIndex(INDEX_SANIMAL_COLLECTIONS);
+		deleteIndex(INDEX_CALLIOPE_COLLECTIONS);
 
 		// The index is gone now, so recreate it
 		try
 		{
 			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_SANIMAL_COLLECTIONS);
+			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_CALLIOPE_COLLECTIONS);
 			// Make sure to set the number of shards and replicas
 			createIndexRequest.settings(Settings.builder()
-					.put("index.number_of_shards", INDEX_SANIMAL_COLLECTIONS_SHARD_COUNT)
-					.put("index.number_of_replicas", INDEX_SANIMAL_COLLECTIONS_REPLICA_COUNT));
+					.put("index.number_of_shards", INDEX_CALLIOPE_COLLECTIONS_SHARD_COUNT)
+					.put("index.number_of_replicas", INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT));
 			// Add the users type mapping which defines our schema
-			createIndexRequest.mapping(INDEX_SANIMAL_COLLECTIONS_TYPE, this.elasticSearchSchemaManager.makeSanimalCollectionsIndexMapping(INDEX_SANIMAL_COLLECTIONS_TYPE));
+			createIndexRequest.mapping(INDEX_CALLIOPE_COLLECTIONS_TYPE, this.elasticSearchSchemaManager.makeCalliopeCollectionsIndexMapping(INDEX_CALLIOPE_COLLECTIONS_TYPE));
 			// Execute the index request
 			this.elasticSearchClient.indices().create(createIndexRequest);
 		}
 		catch (IOException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_SANIMAL_COLLECTIONS + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_CALLIOPE_COLLECTIONS + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -213,37 +213,37 @@ public class ElasticSearchConnectionManager
 	{
 		try
 		{
-			// Create a delete request to remove the Sanimal Users index and execute it
+			// Create a delete request to remove the Calliope Users index and execute it
 			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(index);
 			this.elasticSearchClient.indices().delete(deleteIndexRequest);
 		}
 		catch (IOException e)
 		{
 			// If the delete fails just print out an error message
-			SanimalData.getInstance().getErrorDisplay().notify("Error deleting '" + index + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error deleting '" + index + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 		catch (ElasticsearchStatusException e)
 		{
 			// If the delete fails just print out an error message
-			SanimalData.getInstance().getErrorDisplay().notify("Delete failed, status = " + e.status());
+			CalliopeData.getInstance().getErrorDisplay().notify("Delete failed, status = " + e.status());
 		}
 	}
 
 	/**
-	 * Initializes the remote SANIMAL directory which is more like the remote SANIMAL index now. Indices are
+	 * Initializes the remote CALLIOPE directory which is more like the remote CALLIOPE index now. Indices are
 	 * updated with default user settings if not present
 	 */
-	public void initSanimalRemoteDirectory()
+	public void initCalliopeRemoteDirectory()
 	{
 		try
 		{
 			// Get the document corresponding to this user's username. By doing this we get the exact document which contains our user settings
 			GetRequest getRequest = new GetRequest();
 			getRequest
-					.index(INDEX_SANIMAL_USERS)
-					.type(INDEX_SANIMAL_USERS_TYPE)
+					.index(INDEX_CALLIOPE_USERS)
+					.type(INDEX_CALLIOPE_USERS_TYPE)
 					// Make sure the ID corresponds to our username
-					.id(SanimalData.getInstance().getUsername())
+					.id(CalliopeData.getInstance().getUsername())
 					// Ignore source to speed up the fetch
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
@@ -254,12 +254,12 @@ public class ElasticSearchConnectionManager
 				// Create an index request which we use to put data into the elastic search index
 				IndexRequest indexRequest = new IndexRequest();
 				indexRequest
-						.index(INDEX_SANIMAL_USERS)
-						.type(INDEX_SANIMAL_USERS_TYPE)
+						.index(INDEX_CALLIOPE_USERS)
+						.type(INDEX_CALLIOPE_USERS_TYPE)
 						// Make sure the ID is our username
-						.id(SanimalData.getInstance().getUsername())
+						.id(CalliopeData.getInstance().getUsername())
 						// The source will be a new
-						.source(this.elasticSearchSchemaManager.makeCreateUser(SanimalData.getInstance().getUsername()));
+						.source(this.elasticSearchSchemaManager.makeCreateUser(CalliopeData.getInstance().getUsername()));
 				// Perform the index request
 				this.elasticSearchClient.index(indexRequest);
 			}
@@ -267,7 +267,7 @@ public class ElasticSearchConnectionManager
 		catch (IOException e)
 		{
 			// Print an error if anything went wrong
-			SanimalData.getInstance().getErrorDisplay().notify("Error initializing user '" + SanimalData.getInstance().getUsername() + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error initializing user '" + CalliopeData.getInstance().getUsername() + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -284,10 +284,10 @@ public class ElasticSearchConnectionManager
 		if (settings instanceof Map<?, ?>)
 		{
 			// Convert this HashMap to JSON, and finally from JSON into the SettingsData object. Once this is done, return!
-			String json = SanimalData.getInstance().getGson().toJson(settings);
+			String json = CalliopeData.getInstance().getGson().toJson(settings);
 			if (json != null)
 			{
-				return SanimalData.getInstance().getGson().fromJson(json, SettingsData.class);
+				return CalliopeData.getInstance().getGson().fromJson(json, SettingsData.class);
 			}
 		}
 
@@ -306,11 +306,11 @@ public class ElasticSearchConnectionManager
 		// Species should be a list of maps, so test that
 		if (species instanceof List<?>)
 		{
-			String json = SanimalData.getInstance().getGson().toJson(species);
+			String json = CalliopeData.getInstance().getGson().toJson(species);
 			// Convert this HashMap to JSON, and finally from JSON into the List<Species> object. Once this is done, return!
 			if (json != null)
 			{
-				return SanimalData.getInstance().getGson().fromJson(json, SPECIES_LIST_TYPE);
+				return CalliopeData.getInstance().getGson().fromJson(json, SPECIES_LIST_TYPE);
 			}
 		}
 
@@ -349,7 +349,7 @@ public class ElasticSearchConnectionManager
 						// Make sure the split was successful
 						if (split.length == 2)
 						{
-							// Save latitude and longitude into the map to be used by Sanimal
+							// Save latitude and longitude into the map to be used by Calliope
 							locationsMap.put("latitude", split[0]);
 							locationsMap.put("longitude", split[1]);
 						}
@@ -357,10 +357,10 @@ public class ElasticSearchConnectionManager
 				}
 			});
 			// Convert the locations list of maps into JSON, and finally into a list of locations ready to be returned
-			String json = SanimalData.getInstance().getGson().toJson(locations);
+			String json = CalliopeData.getInstance().getGson().toJson(locations);
 			if (json != null)
 			{
-				return SanimalData.getInstance().getGson().fromJson(json, LOCATION_LIST_TYPE);
+				return CalliopeData.getInstance().getGson().fromJson(json, LOCATION_LIST_TYPE);
 			}
 		}
 
@@ -383,8 +383,8 @@ public class ElasticSearchConnectionManager
 		// Create a search request, and populate the fields
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest
-				.indices(INDEX_SANIMAL_COLLECTIONS)
-				.types(INDEX_SANIMAL_COLLECTIONS_TYPE)
+				.indices(INDEX_CALLIOPE_COLLECTIONS)
+				.types(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 				.scroll(scroll)
 				.source(new SearchSourceBuilder()
 					// Fetch results 10 at a time, and use a query that matches everything
@@ -410,8 +410,8 @@ public class ElasticSearchConnectionManager
 					// Grab the collection as a map object
 					Map<String, Object> collection = searchHit.getSourceAsMap();
 					// Convert the map to JSON, and then into an ImageCollection object. It's a bit of a hack but it works well
-					String collectionJSON = SanimalData.getInstance().getGson().toJson(collection);
-					toReturn.add(SanimalData.getInstance().getGson().fromJson(collectionJSON, ImageCollection.class));
+					String collectionJSON = CalliopeData.getInstance().getGson().toJson(collection);
+					toReturn.add(CalliopeData.getInstance().getGson().fromJson(collectionJSON, ImageCollection.class));
 				}
 
 				// Now that we've processed this wave of results, get the next 10 results
@@ -433,12 +433,12 @@ public class ElasticSearchConnectionManager
 			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
 			// If clearing the scroll request fails, show an error
 			if (!clearScrollResponse.isSucceeded())
-				SanimalData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading collections");
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading collections");
 		}
 		catch (IOException e)
 		{
 			// Something went wrong, so show an error
-			SanimalData.getInstance().getErrorDisplay().notify("Error pulling remote collections, error was:\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote collections, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		// Collections are deserialized and have null listeners, call initFromJSON to fix those listeners
@@ -465,9 +465,9 @@ public class ElasticSearchConnectionManager
 			List<String> excludes = ListUtils.subtract(Arrays.asList("username", "species", "locations", "settings"), includes);
 			// Setup our get request, make sure to specify the user we want to query for and the source fields we want to return
 			getRequest
-					.index(INDEX_SANIMAL_USERS)
-					.type(INDEX_SANIMAL_USERS_TYPE)
-					.id(SanimalData.getInstance().getUsername())
+					.index(INDEX_CALLIOPE_USERS)
+					.type(INDEX_CALLIOPE_USERS_TYPE)
+					.id(CalliopeData.getInstance().getUsername())
 					.fetchSourceContext(new FetchSourceContext(true, includes.toArray(new String[0]), excludes.toArray(new String[0])));
 			// Store the response
 			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
@@ -481,13 +481,13 @@ public class ElasticSearchConnectionManager
 			else
 			{
 				// Bad response, print out an error message. User probably doesnt exist
-				SanimalData.getInstance().getErrorDisplay().notify("User not found on the DB. This should not be possible.");
+				CalliopeData.getInstance().getErrorDisplay().notify("User not found on the DB. This should not be possible.");
 			}
 		}
 		catch (IOException e)
 		{
 			// Error happened when executing a GET request. Print an error
-			SanimalData.getInstance().getErrorDisplay().notify("Error pulling remote field '" + field + "' for the user '" + SanimalData.getInstance().getUsername() + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote field '" + field + "' for the user '" + CalliopeData.getInstance().getUsername() + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return null;
@@ -506,9 +506,9 @@ public class ElasticSearchConnectionManager
 			UpdateRequest updateRequest = new UpdateRequest();
 			// Set up the update's fields
 			updateRequest
-					.index(INDEX_SANIMAL_USERS)
-					.type(INDEX_SANIMAL_USERS_TYPE)
-					.id(SanimalData.getInstance().getUsername())
+					.index(INDEX_CALLIOPE_USERS)
+					.type(INDEX_CALLIOPE_USERS_TYPE)
+					.id(CalliopeData.getInstance().getUsername())
 					.doc(this.elasticSearchSchemaManager.makeSpeciesUpdate(species));
 
 			// Send off the update
@@ -516,12 +516,12 @@ public class ElasticSearchConnectionManager
 
 			// Test to make sure it went OK, if not, return an error
 			if (updateResponse.status() != RestStatus.OK)
-				SanimalData.getInstance().getErrorDisplay().notify("Error syncing species list, error response was: " + updateResponse.status());
+				CalliopeData.getInstance().getErrorDisplay().notify("Error syncing species list, error response was: " + updateResponse.status());
 		}
 		catch (IOException e)
 		{
 			// Print an error if the update fails
-			SanimalData.getInstance().getErrorDisplay().notify("Error updating species list for the user '" + SanimalData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error updating species list for the user '" + CalliopeData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -538,9 +538,9 @@ public class ElasticSearchConnectionManager
 			UpdateRequest updateRequest = new UpdateRequest();
 			// Setup the location update request with data
 			updateRequest
-					.index(INDEX_SANIMAL_USERS)
-					.type(INDEX_SANIMAL_USERS_TYPE)
-					.id(SanimalData.getInstance().getUsername())
+					.index(INDEX_CALLIOPE_USERS)
+					.type(INDEX_CALLIOPE_USERS_TYPE)
+					.id(CalliopeData.getInstance().getUsername())
 					.doc(this.elasticSearchSchemaManager.makeLocationsUpdate(locations));
 
 			// Fire off the update request
@@ -548,12 +548,12 @@ public class ElasticSearchConnectionManager
 
 			// Print an error if the response code is not OK
 			if (updateResponse.status() != RestStatus.OK)
-				SanimalData.getInstance().getErrorDisplay().notify("Error syncing location list, error response was: " + updateResponse.status());
+				CalliopeData.getInstance().getErrorDisplay().notify("Error syncing location list, error response was: " + updateResponse.status());
 		}
 		catch (IOException e)
 		{
 			// Print an error if the update request fails
-			SanimalData.getInstance().getErrorDisplay().notify("Error updating location list for the user '" + SanimalData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error updating location list for the user '" + CalliopeData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -570,9 +570,9 @@ public class ElasticSearchConnectionManager
 			UpdateRequest updateRequest = new UpdateRequest();
 			// Initialize the update request with data
 			updateRequest
-					.index(INDEX_SANIMAL_USERS)
-					.type(INDEX_SANIMAL_USERS_TYPE)
-					.id(SanimalData.getInstance().getUsername())
+					.index(INDEX_CALLIOPE_USERS)
+					.type(INDEX_CALLIOPE_USERS_TYPE)
+					.id(CalliopeData.getInstance().getUsername())
 					.doc(this.elasticSearchSchemaManager.makeSettingsUpdate(settingsData));
 
 			// Perform the update and test the response
@@ -580,12 +580,12 @@ public class ElasticSearchConnectionManager
 
 			// If the response is OK, continue, if not print an error
 			if (updateResponse.status() != RestStatus.OK)
-				SanimalData.getInstance().getErrorDisplay().notify("Error syncing settings, error response was: " + updateResponse.status());
+				CalliopeData.getInstance().getErrorDisplay().notify("Error syncing settings, error response was: " + updateResponse.status());
 		}
 		catch (IOException e)
 		{
 			// Print an error if the update fails
-			SanimalData.getInstance().getErrorDisplay().notify("Error updating settings for the user '" + SanimalData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error updating settings for the user '" + CalliopeData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -602,8 +602,8 @@ public class ElasticSearchConnectionManager
 			// This will just make a blank collection
 			IndexRequest indexRequest = new IndexRequest();
 			indexRequest
-					.index(INDEX_SANIMAL_COLLECTIONS)
-					.type(INDEX_SANIMAL_COLLECTIONS_TYPE)
+					.index(INDEX_CALLIOPE_COLLECTIONS)
+					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					.id(imageCollection.getID().toString())
 					.source(this.elasticSearchSchemaManager.makeCreateCollection(imageCollection));
 
@@ -611,8 +611,8 @@ public class ElasticSearchConnectionManager
 			UpdateRequest updateRequest = new UpdateRequest();
 			// Initialize the update request with data
 			updateRequest
-					.index(INDEX_SANIMAL_COLLECTIONS)
-					.type(INDEX_SANIMAL_COLLECTIONS_TYPE)
+					.index(INDEX_CALLIOPE_COLLECTIONS)
+					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					.id(imageCollection.getID().toString())
 					.doc(this.elasticSearchSchemaManager.makeCollectionUpdate(imageCollection))
 					// Upsert means "if the collection does not exist, call this request"
@@ -623,12 +623,12 @@ public class ElasticSearchConnectionManager
 
 			// If the response is OK, continue, if not print an error
 			if (updateResponse.status() != RestStatus.OK && updateResponse.status() != RestStatus.CREATED)
-				SanimalData.getInstance().getErrorDisplay().notify("Error saving collection '" + imageCollection.getName() + "', error response was: " + updateResponse.status());
+				CalliopeData.getInstance().getErrorDisplay().notify("Error saving collection '" + imageCollection.getName() + "', error response was: " + updateResponse.status());
 		}
 		catch (IOException e)
 		{
 			// Print an error if the update fails
-			SanimalData.getInstance().getErrorDisplay().notify("Error saving collection '" + imageCollection.getName() + "'\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error saving collection '" + imageCollection.getName() + "'\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -647,9 +647,9 @@ public class ElasticSearchConnectionManager
 			if (uploadsForCollection.containsKey("uploads"))
 			{
 				// Grab the JSON representing the uploads list
-				String uploadJSON = SanimalData.getInstance().getGson().toJson(uploadsForCollection.get("uploads"));
+				String uploadJSON = CalliopeData.getInstance().getGson().toJson(uploadsForCollection.get("uploads"));
 				// Convert the JSON to a list of objects
-				List<CloudUploadEntry> uploads = SanimalData.getInstance().getGson().fromJson(uploadJSON, CLOUD_UPLOAD_ENTRY_LIST_TYPE);
+				List<CloudUploadEntry> uploads = CalliopeData.getInstance().getGson().fromJson(uploadJSON, CLOUD_UPLOAD_ENTRY_LIST_TYPE);
 				// Because we deserialized our list from JSON, we need to initialize any extra fields using this call
 				uploads.forEach(CloudUploadEntry::initFromJSON);
 				// Update our collection's uploads
@@ -671,8 +671,8 @@ public class ElasticSearchConnectionManager
 			// Get the document corresponding to this imageCollection's ID
 			GetRequest getRequest = new GetRequest();
 			getRequest
-					.index(INDEX_SANIMAL_COLLECTIONS)
-					.type(INDEX_SANIMAL_COLLECTIONS_TYPE)
+					.index(INDEX_CALLIOPE_COLLECTIONS)
+					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					// Make sure the ID corresponds to the imageCollection ID
 					.id(collectionID)
 					// Only fetch the uploads part of the document
@@ -689,7 +689,7 @@ public class ElasticSearchConnectionManager
 		catch (IOException e)
 		{
 			// If something went wrong, print out an error.
-			SanimalData.getInstance().getErrorDisplay().notify("Error retrieving uploads for image collection '" + collectionID + "', error was:\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error retrieving uploads for image collection '" + collectionID + "', error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 		return null;
 	}
@@ -722,8 +722,8 @@ public class ElasticSearchConnectionManager
 				// Our image to JSON map will return 2 items, one is the ID of the document and one is the JSON request
 				Tuple<String, XContentBuilder> idAndJSON = this.elasticSearchSchemaManager.imageToJSONMap(imageEntry, collectionID, basePath, localDirAbsolutePath);
 				IndexRequest request = new IndexRequest()
-						.index(INDEX_SANIMAL_METADATA)
-						.type(INDEX_SANIMAL_METADATA_TYPE)
+						.index(INDEX_CALLIOPE_METADATA)
+						.type(INDEX_CALLIOPE_METADATA_TYPE)
 						.id(idAndJSON.v1())
 						.source(idAndJSON.v2());
 				bulkRequest.add(request);
@@ -734,7 +734,7 @@ public class ElasticSearchConnectionManager
 
 			// Check if everything went OK, if not return an error
 			if (bulkResponse.status() != RestStatus.OK)
-				SanimalData.getInstance().getErrorDisplay().notify("Error bulk inserting metadata, error response was: " + bulkResponse.status());
+				CalliopeData.getInstance().getErrorDisplay().notify("Error bulk inserting metadata, error response was: " + bulkResponse.status());
 
 			// Now that we've updated our metadata index, update the collections uploads field
 
@@ -748,14 +748,14 @@ public class ElasticSearchConnectionManager
 			{{
 				put("imageCount", uploadEntry.getImageCount());
 				put("imagesWithSpecies", uploadEntry.getImagesWithSpecies());
-				put("uploadDate", uploadEntry.getUploadDate().atZone(ZoneId.systemDefault()).format(SanimalMetadataFields.INDEX_DATE_TIME_FORMAT));
+				put("uploadDate", uploadEntry.getUploadDate().atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT));
 				put("editComments", uploadEntry.getEditComments());
 				put("uploadUser", uploadEntry.getUploadUser());
 				put("uploadIRODSPath", uploadEntry.getUploadIRODSPath());
 			}});
 			updateRequest
-				.index(INDEX_SANIMAL_COLLECTIONS)
-				.type(INDEX_SANIMAL_COLLECTIONS_TYPE)
+				.index(INDEX_CALLIOPE_COLLECTIONS)
+				.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 				.id(collectionID)
 				// We use a script because we're updating nested fields. The script written out looks like:
 				/*
@@ -766,12 +766,12 @@ public class ElasticSearchConnectionManager
 			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest);
 			// If the response was not OK, print an error
 			if (updateResponse.status() != RestStatus.OK)
-				SanimalData.getInstance().getErrorDisplay().notify("Could not update the Collection's index with a new upload!");
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not update the Collection's index with a new upload!");
 		}
 		catch (IOException e)
 		{
 			// If the update failed for some reason, print that error
-			SanimalData.getInstance().getErrorDisplay().notify("Could not insert the upload into the collection index!\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Could not insert the upload into the collection index!\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -797,8 +797,8 @@ public class ElasticSearchConnectionManager
 				// The first update will update the metadata in the metadata index
 				UpdateRequest updateMetaRequest = new UpdateRequest();
 				updateMetaRequest
-						.index(INDEX_SANIMAL_METADATA)
-						.type(INDEX_SANIMAL_METADATA_TYPE)
+						.index(INDEX_CALLIOPE_METADATA)
+						.type(INDEX_CALLIOPE_METADATA_TYPE)
 						.id(idAndJSON.v1())
 						// The new document will contain all new fields
 						.doc(idAndJSON.v2());
@@ -813,8 +813,8 @@ public class ElasticSearchConnectionManager
 
 				// Setup the collection update request
 				updateCollectionRequest
-						.index(INDEX_SANIMAL_COLLECTIONS)
-						.type(INDEX_SANIMAL_COLLECTIONS_TYPE)
+						.index(INDEX_CALLIOPE_COLLECTIONS)
+						.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 						.id(collectionID)
 						// We use a script because we're updating nested fields. The script written out looks like:
 						/*
@@ -847,7 +847,7 @@ public class ElasticSearchConnectionManager
 		catch (IOException e)
 		{
 			// If something went wrong while updating, print an error
-			SanimalData.getInstance().getErrorDisplay().notify("Error updating the image index. Error was:\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error updating the image index. Error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -868,8 +868,8 @@ public class ElasticSearchConnectionManager
 		// The search request to perform the query
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest
-				.indices(INDEX_SANIMAL_METADATA)
-				.types(INDEX_SANIMAL_METADATA_TYPE)
+				.indices(INDEX_CALLIOPE_METADATA)
+				.types(INDEX_CALLIOPE_METADATA_TYPE)
 				// Set the scroll up so that we don't retrieve all results at once
 				.scroll(scroll)
 				// The source of the query will be our query builder
@@ -925,12 +925,12 @@ public class ElasticSearchConnectionManager
 			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
 			// If the clear fails, print an error
 			if (!clearScrollResponse.isSucceeded())
-				SanimalData.getInstance().getErrorDisplay().notify("Clearing the scroll after querying did not succeed!");
+				CalliopeData.getInstance().getErrorDisplay().notify("Clearing the scroll after querying did not succeed!");
 		}
 		catch (IOException e)
 		{
 			// If something goes wrong with the query print an error
-			SanimalData.getInstance().getErrorDisplay().notify("Error occurred when performing query!\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error occurred when performing query!\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return toReturn;
@@ -972,7 +972,7 @@ public class ElasticSearchConnectionManager
 						if (dateTakenObj instanceof String && locationObj instanceof Map<?, ?> && speciesListObj instanceof List<?>)
 						{
 							// Cast the objects to the correct type
-							LocalDateTime dateTaken = ZonedDateTime.parse((String) dateTakenObj, SanimalMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime();
+							LocalDateTime dateTaken = ZonedDateTime.parse((String) dateTakenObj, CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime();
 							Map<String, Object> locationMap = (Map<String, Object>) locationObj;
 							List<Object> speciesEntryList = (List<Object>) speciesListObj;
 							// Make sure that our location map has a position field
@@ -995,7 +995,7 @@ public class ElasticSearchConnectionManager
 										locationMap.put("longitude", latLongArray[1]);
 
 										// Convert our hashmaps into a usable format
-										Gson gson = SanimalData.getInstance().getGson();
+										Gson gson = CalliopeData.getInstance().getGson();
 										Location tempLocation = gson.fromJson(gson.toJson(locationMap), Location.class);
 										List<SpeciesEntry> tempSpeciesEntries = gson.fromJson(gson.toJson(speciesEntryList), SPECIES_ENTRY_LIST_TYPE);
 										// Pull unique species off of the species entries list
@@ -1065,7 +1065,7 @@ public class ElasticSearchConnectionManager
 		}
 		catch (IOException e)
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Could not close ElasticSearch connection: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Could not close ElasticSearch connection: \n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 }

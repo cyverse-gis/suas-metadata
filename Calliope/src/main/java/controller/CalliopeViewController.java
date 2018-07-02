@@ -23,7 +23,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
-import model.SanimalData;
+import model.CalliopeData;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
@@ -47,7 +47,7 @@ import java.util.ResourceBundle;
 /**
  * Controller class for the program main view
  */
-public class SanimalViewController implements Initializable
+public class CalliopeViewController implements Initializable
 {
 	///
 	/// FXML Bound fields start
@@ -152,7 +152,7 @@ public class SanimalViewController implements Initializable
 		});
 
 		// Grab the logged in property
-		ReadOnlyBooleanProperty loggedIn = SanimalData.getInstance().loggedInProperty();
+		ReadOnlyBooleanProperty loggedIn = CalliopeData.getInstance().loggedInProperty();
 
 		// Disable the main pane when not logged in
 		this.tabPane.disableProperty().bind(loggedIn.not());
@@ -178,7 +178,7 @@ public class SanimalViewController implements Initializable
 		tabPane.tabMinWidthProperty().bind(tabPane.widthProperty().divide(tabPane.getTabs().size()).subtract(25));
 
 		// Grab the stored username if the user had 'remember username' selected
-		String storedUsername = SanimalData.getInstance().getSanimalPreferences().get(USERNAME_PREF, "");
+		String storedUsername = CalliopeData.getInstance().getPreferences().get(USERNAME_PREF, "");
 
 		// Load default username if it was stored
 		if (!storedUsername.isEmpty())
@@ -190,7 +190,7 @@ public class SanimalViewController implements Initializable
 		// If the user deselects the remember username box, remove the stored username
 		this.cbxRememberUsername.selectedProperty().addListener((observable, oldValue, newValue) -> {
 			if (!newValue)
-				SanimalData.getInstance().getSanimalPreferences().put(USERNAME_PREF, "");
+				CalliopeData.getInstance().getPreferences().put(USERNAME_PREF, "");
 		});
 	}
 
@@ -230,18 +230,18 @@ public class SanimalViewController implements Initializable
 	{
 		// Save username preference if the box is checked
 		if (this.cbxRememberUsername.isSelected())
-			SanimalData.getInstance().getSanimalPreferences().put(USERNAME_PREF, this.txtUsername.getText());
+			CalliopeData.getInstance().getPreferences().put(USERNAME_PREF, this.txtUsername.getText());
 
 		// Only login if we're not logged in
-		if (!SanimalData.getInstance().loggedInProperty().getValue())
+		if (!CalliopeData.getInstance().loggedInProperty().getValue())
 		{
 			this.loggingIn.setValue(true);
 
 			// Show the loading icon graphic
 			this.btnLogin.setGraphic(new ImageView(new Image("/images/mainMenu/loading.gif", 26, 26, true, true)));
 			// Grab our connection managers
-			ElasticSearchConnectionManager esConnectionManager = SanimalData.getInstance().getEsConnectionManager();
-			CyVerseConnectionManager cyConnectionManager = SanimalData.getInstance().getCyConnectionManager();
+			ElasticSearchConnectionManager esConnectionManager = CalliopeData.getInstance().getEsConnectionManager();
+			CyVerseConnectionManager cyConnectionManager = CalliopeData.getInstance().getCyConnectionManager();
 			// Grab the username and password
 			String username = this.txtUsername.getText();
 			String password = this.txtPassword.getText();
@@ -260,27 +260,27 @@ public class SanimalViewController implements Initializable
 					{
 						Platform.runLater(() ->
 						{
-							SanimalData.getInstance().setUsername(username);
-							SanimalData.getInstance().setLoggedIn(true);
-							SanimalData.getInstance().getErrorDisplay().setNotificationPane(notificationPane);
+							CalliopeData.getInstance().setUsername(username);
+							CalliopeData.getInstance().setLoggedIn(true);
+							CalliopeData.getInstance().getErrorDisplay().setNotificationPane(notificationPane);
 						});
 
 						//esConnectionManager.nukeAndRecreateUserIndex();
 						//esConnectionManager.nukeAndRecreateMetadataIndex();
 						//esConnectionManager.nukeAndRecreateCollectionsIndex();
 
-						// Then initialize the remove sanimal directory
-						this.updateMessage("Initializing Sanimal remote directory...");
+						// Then initialize the remove calliope directory
+						this.updateMessage("Initializing Calliope remote directory...");
 						this.updateProgress(2, 7);
-						esConnectionManager.initSanimalRemoteDirectory();
+						esConnectionManager.initCalliopeRemoteDirectory();
 
-						// Pull Sanimal settings from the remote directory
+						// Pull Calliope settings from the remote directory
 						this.updateMessage("Pulling settings from remote directory...");
 						this.updateProgress(3, 7);
 						SettingsData settingsData = esConnectionManager.pullRemoteSettings();
 
 						// Set the settings data
-						Platform.runLater(() -> SanimalData.getInstance().getSettings().loadFromOther(settingsData));
+						Platform.runLater(() -> CalliopeData.getInstance().getSettings().loadFromOther(settingsData));
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling species from remote directory...");
@@ -288,7 +288,7 @@ public class SanimalViewController implements Initializable
 						List<Species> species = esConnectionManager.pullRemoteSpecies();
 
 						// Set the species list to be these species
-						Platform.runLater(() -> SanimalData.getInstance().getSpeciesList().addAll(species));
+						Platform.runLater(() -> CalliopeData.getInstance().getSpeciesList().addAll(species));
 
 						// Pull any locations from the remote directory
 						this.updateMessage("Pulling locations from remote directory...");
@@ -296,7 +296,7 @@ public class SanimalViewController implements Initializable
 						List<Location> locations = esConnectionManager.pullRemoteLocations();
 
 						// Set the location list to be these locations
-						Platform.runLater(() -> SanimalData.getInstance().getLocationList().addAll(locations));
+						Platform.runLater(() -> CalliopeData.getInstance().getLocationList().addAll(locations));
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling collections from remote directory...");
@@ -304,7 +304,7 @@ public class SanimalViewController implements Initializable
 						List<ImageCollection> imageCollections = esConnectionManager.pullRemoteCollections();
 
 						// Set the image collection list to be these collections
-						Platform.runLater(() -> SanimalData.getInstance().getCollectionList().addAll(imageCollections));
+						Platform.runLater(() -> CalliopeData.getInstance().getCollectionList().addAll(imageCollections));
 
 						this.updateProgress(7, 7);
 					}
@@ -325,7 +325,7 @@ public class SanimalViewController implements Initializable
 				this.btnLogin.setGraphic(null);
 			});
 			// Perform the task
-			SanimalData.getInstance().getSanimalExecutor().getQueuedExecutor().addTask(loginAttempt);
+			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(loginAttempt);
 		}
 	}
 

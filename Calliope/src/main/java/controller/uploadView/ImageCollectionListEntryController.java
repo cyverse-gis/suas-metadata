@@ -19,7 +19,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.SanimalData;
+import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.image.CloudImageDirectory;
@@ -35,7 +35,7 @@ import java.io.File;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static model.constant.SanimalDataFormats.IMAGE_DIRECTORY_FILE_FORMAT;
+import static model.constant.CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT;
 
 /**
  * Controller class for the image collection list
@@ -118,7 +118,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 			// Set the description of the collection
 			this.lblCollectionDescription.setText(collection.getDescription());
 			// Hide the settings button if we are not the owner
-			Permission forUser = collection.getPermissions().stream().filter(perm -> perm.getUsername().equals(SanimalData.getInstance().getUsername())).findFirst().orElse(null);
+			Permission forUser = collection.getPermissions().stream().filter(perm -> perm.getUsername().equals(CalliopeData.getInstance().getUsername())).findFirst().orElse(null);
 			boolean isOwner = forUser != null && forUser.isOwner();
 			boolean canUpload = forUser != null && forUser.canUpload();
 			boolean canRead = forUser != null && forUser.canRead();
@@ -145,7 +145,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		ImageCollectionSettingsController controller = loader.getController();
 		controller.setCollectionToEdit(this.getItem());
 
-		if (!SanimalData.getInstance().getSettings().getDisablePopups())
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
 		{
 			// Create the stage that will have the Image Collection Editor
 			Stage dialogStage = new Stage();
@@ -162,7 +162,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		}
 		else
 		{
-			SanimalData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit a collection!");
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit a collection!");
 		}
 		if (actionEvent != null)
 			actionEvent.consume();
@@ -225,7 +225,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		{
 			File imageDirectoryFile = (File) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
 			// Filter our list of images by directory that has the right file path
-			Optional<ImageDirectory> imageDirectoryOpt = SanimalData.getInstance().getImageTree().flattened().filter(
+			Optional<ImageDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree().flattened().filter(
 					imageContainer -> imageContainer instanceof ImageDirectory &&
 					!(imageContainer instanceof CloudImageDirectory) &&
 					imageContainer.getFile().getAbsolutePath().equals(imageDirectoryFile.getAbsolutePath())).map(imageContainer -> (ImageDirectory) imageContainer).findFirst();
@@ -247,7 +247,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 				// If we have a valid directory, perform the upload
 				if (validDirectory)
 				{
-					SanimalData.getInstance().getErrorDisplay().notify("Are you sure you want to upload these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images to the collection " + this.getItem().getName() + "?",
+					CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images to the collection " + this.getItem().getName() + "?",
 						new Action("Yes", actionEvent ->
 						{
 							// Set the upload to 0% so that we don't edit it anymore
@@ -266,7 +266,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 									this.updateMessage("Uploading image directory " + imageDirectory.getFile().getName() + " to CyVerse.");
 									messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
 									// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress
-									SanimalData.getInstance().getCyConnectionManager().uploadImages(ImageCollectionListEntryController.this.getItem(), imageDirectory, new TransferStatusCallbackListener()
+									CalliopeData.getInstance().getCyConnectionManager().uploadImages(ImageCollectionListEntryController.this.getItem(), imageDirectory, new TransferStatusCallbackListener()
 									{
 										@Override
 										public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus)
@@ -299,17 +299,17 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 							{
 								imageDirectory.setUploadProgress(-1);
 								// Remove the directory because it's uploaded now
-								SanimalData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
+								CalliopeData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
 							});
 							uploadTask.setOnCancelled(event -> imageDirectory.setUploadProgress(-1));
 							dragEvent.setDropCompleted(true);
-							SanimalData.getInstance().getSanimalExecutor().getImmediateExecutor().addTask(uploadTask);
+							CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(uploadTask);
 						}));
 				}
 				else
 				{
 					// If an invalid directory is selected, show an alert
-					SanimalData.getInstance().getErrorDisplay().notify("An image in the directory (" + imageDirectory.getFile().getName() + ") you selected does not have a location. Please ensure all images are tagged with a location!");
+					CalliopeData.getInstance().getErrorDisplay().notify("An image in the directory (" + imageDirectory.getFile().getName() + ") you selected does not have a location. Please ensure all images are tagged with a location!");
 				}
 			});
 		}
