@@ -11,6 +11,7 @@ import model.image.CloudUploadEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.location.Location;
+import model.neon.BoundedSite;
 import model.query.ElasticSearchQuery;
 import model.species.Species;
 import model.species.SpeciesEntry;
@@ -24,6 +25,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -37,6 +39,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -86,6 +89,15 @@ public class ElasticSearchConnectionManager
 	// The number of replicas to be created by the collections index, for development we don't need any
 	private static final Integer INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT = 0;
 
+	// The name of the neonSite index
+	private static final String INDEX_CALLIOPE_NEON_SITES = "neon_sites";
+	// The type for the Calliope neonSite index
+	private static final String INDEX_CALLIOPE_NEON_SITES_TYPE = "_doc";
+	// The number of shards to be used by the neonSite index, for development we just need 1
+	private static final Integer INDEX_CALLIOPE_NEON_SITES_SHARD_COUNT = 1;
+	// The number of replicas to be created by the neonSite index, for development we don't need any
+	private static final Integer INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT = 0;
+
 	// The type used to serialize a list of species through Gson
 	private static final Type SPECIES_LIST_TYPE = new TypeToken<ArrayList<Species>>()
 	{
@@ -130,21 +142,11 @@ public class ElasticSearchConnectionManager
 		// The index is gone now, so recreate it
 		try
 		{
-			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_CALLIOPE_USERS);
-			// Make sure to set the number of shards and replicas
-			createIndexRequest.settings(Settings.builder()
-				.put("index.number_of_shards", INDEX_CALLIOPE_USERS_SHARD_COUNT)
-				.put("index.number_of_replicas", INDEX_CALLIOPE_USERS_REPLICA_COUNT));
-			// Add the users type mapping which defines our schema
-			createIndexRequest.mapping(INDEX_CALLIOPE_USERS_TYPE, this.elasticSearchSchemaManager.makeCalliopeUsersIndexMapping(INDEX_CALLIOPE_USERS_TYPE));
-			// Execute the index request
-			this.elasticSearchClient.indices().create(createIndexRequest);
+			this.createIndex(INDEX_CALLIOPE_USERS, INDEX_CALLIOPE_USERS_TYPE, this.elasticSearchSchemaManager.makeCalliopeUsersIndexMapping(INDEX_CALLIOPE_USERS_TYPE), INDEX_CALLIOPE_USERS_SHARD_COUNT, INDEX_CALLIOPE_USERS_REPLICA_COUNT);
 		}
 		catch (IOException e)
 		{
-			// Print any errors we may have encountered
-			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_CALLIOPE_USERS + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating collections index mapping. Error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -159,23 +161,17 @@ public class ElasticSearchConnectionManager
 		// The index is gone now, so recreate it
 		try
 		{
-			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_CALLIOPE_METADATA);
-			// Make sure to set the number of shards and replicas
-			createIndexRequest.settings(Settings.builder()
-					.put("index.number_of_shards", INDEX_CALLIOPE_METADATA_SHARD_COUNT)
-					.put("index.number_of_replicas", INDEX_CALLIOPE_METADATA_REPLICA_COUNT));
-			// Add the users type mapping which defines our schema
-			createIndexRequest.mapping(INDEX_CALLIOPE_METADATA_TYPE, this.elasticSearchSchemaManager.makeCalliopeMetadataIndexMapping(INDEX_CALLIOPE_METADATA_TYPE));
-			// Execute the index request
-			this.elasticSearchClient.indices().create(createIndexRequest);
+			this.createIndex(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, this.elasticSearchSchemaManager.makeCalliopeMetadataIndexMapping(INDEX_CALLIOPE_METADATA_TYPE), INDEX_CALLIOPE_METADATA_SHARD_COUNT, INDEX_CALLIOPE_METADATA_REPLICA_COUNT);
 		}
 		catch (IOException e)
 		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_CALLIOPE_METADATA + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating collections index mapping. Error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
+	/**
+	 * Destroys and rebuilds entire collections index. All collections stored will be lost
+	 */
 	public void nukeAndRecreateCollectionsIndex()
 	{
 		// Delete the original index
@@ -184,20 +180,30 @@ public class ElasticSearchConnectionManager
 		// The index is gone now, so recreate it
 		try
 		{
-			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(INDEX_CALLIOPE_COLLECTIONS);
-			// Make sure to set the number of shards and replicas
-			createIndexRequest.settings(Settings.builder()
-					.put("index.number_of_shards", INDEX_CALLIOPE_COLLECTIONS_SHARD_COUNT)
-					.put("index.number_of_replicas", INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT));
-			// Add the users type mapping which defines our schema
-			createIndexRequest.mapping(INDEX_CALLIOPE_COLLECTIONS_TYPE, this.elasticSearchSchemaManager.makeCalliopeCollectionsIndexMapping(INDEX_CALLIOPE_COLLECTIONS_TYPE));
-			// Execute the index request
-			this.elasticSearchClient.indices().create(createIndexRequest);
+			this.createIndex(INDEX_CALLIOPE_COLLECTIONS, INDEX_CALLIOPE_COLLECTIONS_TYPE, this.elasticSearchSchemaManager.makeCalliopeCollectionsIndexMapping(INDEX_CALLIOPE_COLLECTIONS_TYPE), INDEX_CALLIOPE_COLLECTIONS_SHARD_COUNT, INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT);
 		}
 		catch (IOException e)
 		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + INDEX_CALLIOPE_COLLECTIONS + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating collections index mapping. Error was:\n" + ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	/**
+	 * Destroys and rebuilds entire neon sites index. All neon sites stored will be lost
+	 */
+	public void nukeAndRecreateNeonSitesIndex()
+	{
+		// Delete the original index
+		this.deleteIndex(INDEX_CALLIOPE_NEON_SITES);
+
+		// The index is gone now, so recreate it
+		try
+		{
+			this.createIndex(INDEX_CALLIOPE_NEON_SITES, INDEX_CALLIOPE_NEON_SITES_TYPE, this.elasticSearchSchemaManager.makeCalliopeNeonSiteIndexMapping(INDEX_CALLIOPE_NEON_SITES_TYPE), INDEX_CALLIOPE_NEON_SITES_SHARD_COUNT, INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT);
+		}
+		catch (IOException e)
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating neon site index mapping. Error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -223,6 +229,41 @@ public class ElasticSearchConnectionManager
 		{
 			// If the delete fails just print out an error message
 			CalliopeData.getInstance().getErrorDisplay().notify("Delete failed, status = " + e.status());
+		}
+	}
+
+	/**
+	 * Creates an index given all necessary parameters
+	 *
+	 * @param index The name of the index
+	 * @param type The type of the index
+	 * @param mapping The mapping for the index
+	 * @param shardCount The number of shards the index should use
+	 * @param replicaCount The number of replicas the index should use
+	 */
+	private void createIndex(String index, String type, XContentBuilder mapping, Integer shardCount, Integer replicaCount)
+	{
+		// Delete the original index
+		deleteIndex(index);
+
+		// The index is gone now, so recreate it
+		try
+		{
+			// Create a create index request
+			CreateIndexRequest createIndexRequest = new CreateIndexRequest(index);
+			// Make sure to set the number of shards and replicas
+			createIndexRequest.settings(Settings.builder()
+					.put("index.number_of_shards", shardCount)
+					.put("index.number_of_replicas", replicaCount));
+			// Add the type mapping which defines our schema
+			createIndexRequest.mapping(type, mapping);
+			// Execute the index request
+			this.elasticSearchClient.indices().create(createIndexRequest);
+		}
+		catch (IOException e)
+		{
+			// If the creation fails, print an error out
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating '" + index + "' in the ElasticSearch index:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -1043,6 +1084,17 @@ public class ElasticSearchConnectionManager
 		{
 		}
 		return null;
+	}
+
+	public void refreshNeonSiteCache()
+	{
+		List<BoundedSite> boundedSites = CalliopeData.getInstance().getNeonData().parseBoundedSites(CalliopeData.getInstance().getNeonData().getCurrentSiteKML());
+		for (BoundedSite boundedSite : boundedSites)
+		{
+			DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest();
+			deleteByQueryRequest.indices(INDEX_CALLIOPE_NEON_SITES);
+			deleteByQueryRequest.types(INDEX_CALLIOPE_NEON_SITES_TYPE);
+		}
 	}
 
 	/**

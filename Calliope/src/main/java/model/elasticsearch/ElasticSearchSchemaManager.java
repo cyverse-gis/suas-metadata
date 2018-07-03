@@ -274,6 +274,35 @@ public class ElasticSearchSchemaManager
 	}
 
 	/**
+	 * Helper function which returns the JSON required to create the neonBoundaries index mapping
+	 *
+	 * @return An XContentBuilder which can be used to create JSON in Java
+	 */
+	XContentBuilder makeCalliopeNeonSiteIndexMapping(String indexType) throws IOException
+	{
+		// Well, it's the builder design pattern. RIP me
+		return XContentFactory.jsonBuilder()
+		.startObject()
+			.startObject(indexType)
+				.startObject("properties")
+					.startObject("name")
+						.field("type", "text")
+					.endObject()
+					.startObject("description")
+						.field("type", "text")
+					.endObject()
+					.startObject("boundary")
+						.field("type", "geo_shape")
+					.endObject()
+					.startObject("code")
+						.field("type", "keyword")
+					.endObject()
+				.endObject()
+			.endObject()
+		.endObject();
+	}
+
+	/**
 	 * Given a username, this function returns the JSON representing a default user with that username
 	 *
 	 * @param username The username of the user to be added into an index

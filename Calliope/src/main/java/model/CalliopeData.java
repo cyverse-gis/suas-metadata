@@ -17,6 +17,7 @@ import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.location.Location;
+import model.neon.NeonData;
 import model.query.QueryEngine;
 import model.species.Species;
 import model.threading.ErrorService;
@@ -100,6 +101,9 @@ public class CalliopeData
 
 	// Query engine used in storing the current query setup
 	private QueryEngine queryEngine = new QueryEngine();
+
+	// NEON data api connection
+	private NeonData neonData = new NeonData();
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
@@ -502,6 +506,11 @@ public class CalliopeData
 
 	public SensitiveConfigurationManager getSensitiveConfigurationManager()
 	{
-		return sensitiveConfigurationManager;
+		return this.sensitiveConfigurationManager;
+	}
+
+	public NeonData getNeonData()
+	{
+		return this.neonData;
 	}
 }

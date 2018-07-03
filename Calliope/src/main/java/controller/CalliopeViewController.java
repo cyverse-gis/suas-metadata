@@ -251,9 +251,11 @@ public class CalliopeViewController implements Initializable
 				@Override
 				protected Boolean call() throws Exception
 				{
+					Integer NUM_STEPS = 8;
+
 					// First login
 					this.updateMessage("Logging in...");
-					this.updateProgress(1, 7);
+					this.updateProgress(1, NUM_STEPS);
 					Boolean loginSuccessful = cyConnectionManager.login(username, password);
 
 					if (loginSuccessful)
@@ -268,15 +270,16 @@ public class CalliopeViewController implements Initializable
 						//esConnectionManager.nukeAndRecreateUserIndex();
 						//esConnectionManager.nukeAndRecreateMetadataIndex();
 						//esConnectionManager.nukeAndRecreateCollectionsIndex();
+						//esConnectionManager.nukeAndRecreateNeonSitesIndex();
 
 						// Then initialize the remove calliope directory
 						this.updateMessage("Initializing Calliope remote directory...");
-						this.updateProgress(2, 7);
+						this.updateProgress(2, NUM_STEPS);
 						esConnectionManager.initCalliopeRemoteDirectory();
 
 						// Pull Calliope settings from the remote directory
 						this.updateMessage("Pulling settings from remote directory...");
-						this.updateProgress(3, 7);
+						this.updateProgress(3, NUM_STEPS);
 						SettingsData settingsData = esConnectionManager.pullRemoteSettings();
 
 						// Set the settings data
@@ -284,7 +287,7 @@ public class CalliopeViewController implements Initializable
 
 						// Pull any species from the remote directory
 						this.updateMessage("Pulling species from remote directory...");
-						this.updateProgress(4, 7);
+						this.updateProgress(4, NUM_STEPS);
 						List<Species> species = esConnectionManager.pullRemoteSpecies();
 
 						// Set the species list to be these species
@@ -292,21 +295,26 @@ public class CalliopeViewController implements Initializable
 
 						// Pull any locations from the remote directory
 						this.updateMessage("Pulling locations from remote directory...");
-						this.updateProgress(5, 7);
+						this.updateProgress(5, NUM_STEPS);
 						List<Location> locations = esConnectionManager.pullRemoteLocations();
 
 						// Set the location list to be these locations
 						Platform.runLater(() -> CalliopeData.getInstance().getLocationList().addAll(locations));
 
-						// Pull any species from the remote directory
+						// Pull any collections from the remote directory
 						this.updateMessage("Pulling collections from remote directory...");
-						this.updateProgress(6, 7);
+						this.updateProgress(6, NUM_STEPS);
 						List<ImageCollection> imageCollections = esConnectionManager.pullRemoteCollections();
 
 						// Set the image collection list to be these collections
 						Platform.runLater(() -> CalliopeData.getInstance().getCollectionList().addAll(imageCollections));
 
-						this.updateProgress(7, 7);
+						// Pull any NEON sites from the NEON API
+						this.updateMessage("Pulling NEON sites from NEON API...");
+						this.updateProgress(7, NUM_STEPS);
+						CalliopeData.getInstance().getNeonData().pullAndStoreSites();
+
+						this.updateProgress(8, NUM_STEPS);
 					}
 
 					return loginSuccessful;
