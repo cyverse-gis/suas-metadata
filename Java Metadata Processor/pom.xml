@@ -26,7 +26,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>DroneMetadata</mainClass>
+                            <mainClass>controller.DroneMetadata</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

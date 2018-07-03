@@ -1,3 +1,5 @@
+package model;
+
 /**
  * Class used to wrap any debug or error messages with a boolean
  */

@@ -1,3 +1,5 @@
+package model;
+
 import org.elasticsearch.common.collect.Tuple;
 
 import java.time.LocalDateTime;

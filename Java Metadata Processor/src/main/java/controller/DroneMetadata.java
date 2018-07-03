@@ -1,3 +1,8 @@
+package controller;
+
+import model.DroneLogger;
+import model.MetadataIndexer;
+import model.MetadataParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
