@@ -1,16 +1,17 @@
-/Drone FX/.idea/*
-/Drone FX/Drone FX.iml
-/Drone FX/out/*
-/Drone FX/demoApplication.log
-/Drone FX/debug.log
-/Drone FX/target/
-/Drone FX/.gradle/*
-/Drone FX/build/*
-/Drone FX/logs/*
-/Drone FX/tmp/*
-/Drone FX/gradlew
-/Drone FX/gradle/*
-/Drone FX/gradlew.bat
+/Calliope/.idea/*
+/Calliope/Drone FX.iml
+/Calliope/out/*
+/Calliope/demoApplication.log
+/Calliope/debug.log
+/Calliope/target/
+/Calliope/.gradle/*
+/Calliope/build/*
+/Calliope/logs/*
+/Calliope/tmp/*
+/Calliope/gradlew
+/Calliope/gradle/*
+/Calliope/gradlew.bat
+/Calliope/src/main/resources/calliope.properties
 
 /Java Metadata Processor/.idea/*
 /Java Metadata Processor/Java Metadata Processor.iml
