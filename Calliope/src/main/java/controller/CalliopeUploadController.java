@@ -482,8 +482,9 @@ public class CalliopeUploadController implements Initializable
 
 			dialog.showAndWait().ifPresent(result ->
 			{
-				if (this.selectedCollection.getValue() != null)
-					CalliopeData.getInstance().getCyConnectionManager().indexExisitingImages(this.selectedCollection.getValue(), result);
+				CalliopeData.getInstance().getEsConnectionManager().refreshNeonSiteCache();
+				//if (this.selectedCollection.getValue() != null)
+				//	CalliopeData.getInstance().getCyConnectionManager().indexExisitingImages(this.selectedCollection.getValue(), result);
 			});
 		}
 		else

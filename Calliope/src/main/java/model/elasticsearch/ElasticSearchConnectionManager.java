@@ -25,7 +25,6 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -39,7 +38,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -1086,14 +1084,40 @@ public class ElasticSearchConnectionManager
 		return null;
 	}
 
+	/**
+	 * Clears and reloads the NEON site cache from the NEON api
+	 */
 	public void refreshNeonSiteCache()
 	{
 		List<BoundedSite> boundedSites = CalliopeData.getInstance().getNeonData().parseBoundedSites(CalliopeData.getInstance().getNeonData().getCurrentSiteKML());
-		for (BoundedSite boundedSite : boundedSites)
+		// Clear the current index
+		this.nukeAndRecreateNeonSitesIndex();
+		try
 		{
-			DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest();
-			deleteByQueryRequest.indices(INDEX_CALLIOPE_NEON_SITES);
-			deleteByQueryRequest.types(INDEX_CALLIOPE_NEON_SITES_TYPE);
+			// Use a bulk insert
+			BulkRequest bulkRequest = new BulkRequest();
+
+			// Iterate over each of the bounded sites
+			for (BoundedSite boundedSite : boundedSites)
+			{
+				// Create an index request, use our schema manager to ensure the proper fields are inserted
+				IndexRequest indexRequest = new IndexRequest()
+						.index(INDEX_CALLIOPE_NEON_SITES)
+						.type(INDEX_CALLIOPE_NEON_SITES_TYPE)
+						.source(this.elasticSearchSchemaManager.makeCreateNEONSite(boundedSite));
+				bulkRequest.add(indexRequest);
+			}
+
+			// Store the response of the bulk insert
+			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+			// Make sure it was OK, if not, print an error
+			if (bulkResponse.status() != RestStatus.OK)
+				CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk NEON insert! Status = " + bulkResponse.status());
+		}
+		catch (IOException e)
+		{
+			// The insert failed, print an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error inserting updated NEON sites into the index!\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 

@@ -2,8 +2,16 @@ package model.neon.jsonPOJOs;
 
 import javafx.beans.property.*;
 
+/**
+ * POJO class used in JSON deserialization
+ */
 public class Site
 {
+	/*
+	All fields below are listed because they are required for JSON serialization. Only a few of the fields are actually used.
+	Getters are found below too, but mostly unused.
+	 */
+
 	private final StringProperty domainCode = new SimpleStringProperty(null);
 	private final StringProperty domainName = new SimpleStringProperty(null);
 	private final StringProperty siteCode = new SimpleStringProperty(null);
@@ -126,6 +134,11 @@ public class Site
 		return dataProducts;
 	}
 
+	/**
+	 * To string returns the site as a more readable string
+	 *
+	 * @return Print the object in the format '<name> at <latitude>, <longitude>'
+	 */
 	@Override
 	public String toString()
 	{

@@ -1,10 +1,13 @@
 package model.elasticsearch;
 
+import de.micromata.opengis.kml.v_2_2_0.Boundary;
+import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.ImageEntry;
 import model.location.Location;
+import model.neon.BoundedSite;
 import model.species.Species;
 import model.species.SpeciesEntry;
 import model.util.SettingsData;
@@ -17,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -534,5 +538,68 @@ public class ElasticSearchSchemaManager
 
 		// We return two fields, one is the absolute path of the image file, and the other is the JSON representing the image metadata
 		return Tuple.tuple(fixedAbsolutePath, imageJSON);
+	}
+
+	/**
+	 * Utility function used to create a JSON request body which creates a neon site entry
+	 *
+	 * @param boundedSite The NEON site with boundary
+	 * @return A JSON creator used by ES to create a request
+	 * @throws IOException IO Exception if the JSON is invalid, this shouldn't happen
+	 */
+	public XContentBuilder makeCreateNEONSite(BoundedSite boundedSite) throws IOException
+	{
+		// Grab the bounded site's outer boundary which is the real polygon that makes up the boundary
+		Boundary outerBoundary = boundedSite.getBoundary().getOuterBoundaryIs();
+		// Grab the bounded site's inner boundary which is a list of holes inside of the outer boundary
+		List<Boundary> innerBoundaries = boundedSite.getBoundary().getInnerBoundaryIs();
+		// ElasticSearch assumes the first array we give it contains the outer boundary which is then followed by 0 or more inner boundary arrays
+		List<Boundary> boundariesCombined = new ArrayList<>();
+		// Add the outer boundary, then the inner boundaries
+		boundariesCombined.add(outerBoundary);
+		if (innerBoundaries != null)
+			boundariesCombined.addAll(innerBoundaries);
+
+		// Start off the content builder with fields we know such as name, code, and description
+		XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
+		.startObject()
+			.field("name", boundedSite.getSite().getSiteName())
+			.field("code", boundedSite.getSite().getStateCode())
+			.field("description", boundedSite.getSite().getSiteDescription())
+			.startObject("boundary")
+				.field("type", "polygon")
+				// Polygon coordinates are given as a 3-deep array. First an array of boundaries,
+				// where each boundary is an array of locations, where each location is an array of [long, lat] positions
+				.startArray("coordinates");
+
+		// Go over each boundary
+		for (Boundary boundary : boundariesCombined)
+		{
+			// Start the boundary array
+			xContentBuilder
+					.startArray();
+
+			// Go over each coordinate in the boundary array
+			for (Coordinate coordinate : boundary.getLinearRing().getCoordinates())
+			{
+				// Start the coordinate array, and insert [long, lat]
+				xContentBuilder
+						.startArray()
+							.value(coordinate.getLongitude())
+							.value(coordinate.getLatitude())
+						.endArray();
+			}
+
+			// Finish the boundary array
+			xContentBuilder
+					.endArray();
+		}
+
+		// Finish the coordinates array
+		xContentBuilder
+				.endArray()
+			.endObject()
+		.endObject();
+		return xContentBuilder;
 	}
 }
