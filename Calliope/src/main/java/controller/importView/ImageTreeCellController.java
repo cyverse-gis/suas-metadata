@@ -9,14 +9,9 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
-import model.CalliopeData;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.location.Location;
-import model.species.Species;
-
-import java.util.Optional;
 
 import static model.constant.CalliopeDataFormats.*;
 
@@ -111,7 +106,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 		{
 			// Unbind the existing image and bind it to the new image icon
 			this.imgIcon.imageProperty().unbind();
-			this.imgIcon.imageProperty().bind(item.getTreeIconProperty());
+			this.imgIcon.imageProperty().bind(item.treeIconProperty());
 			this.lblText.setText(item.toString());
 
 			// If the item is a directory, we disable the node if it is being uploaded
@@ -183,29 +178,13 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 		// Grab the dragboard
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If our dragboard has a string we have data which we need
-		if (dragboard.hasContent(SPECIES_NAME_FORMAT) && dragboard.hasContent(SPECIES_SCIENTIFIC_NAME_FORMAT) && this.getItem() instanceof ImageEntry)
-		{
-			String commonName = (String) dragboard.getContent(SPECIES_NAME_FORMAT);
-			String scientificName = (String) dragboard.getContent(SPECIES_SCIENTIFIC_NAME_FORMAT);
-			// Grab the species with the given ID
-			Optional<Species> toAdd = CalliopeData.getInstance().getSpeciesList().stream().filter(species -> species.getScientificName().equals(scientificName) && species.getCommonName().equals(commonName)).findFirst();
-			// Add the species to the image
-			ImageContainer item = this.getItem();
-			if (toAdd.isPresent())
-			{
-				((ImageEntry) item).addSpecies(toAdd.get(), 1);
-				// Automatically select the next image in the image list view if the option is selected
-				if (CalliopeData.getInstance().getSettings().getAutomaticNextImage())
-					this.getTreeView().getSelectionModel().selectNext();
-				success = true;
-			}
-		}
-		else if (dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT))
+		/*
+		if (dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT))
 		{
 			String locationName = (String) dragboard.getContent(LOCATION_NAME_FORMAT);
 			String locationId = (String) dragboard.getContent(LOCATION_ID_FORMAT);
 			// Grab the species with the given ID
-			Optional<Location> toAdd = CalliopeData.getInstance().getLocationList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
+			Optional<Location> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
 			// Add the species to the image
 			if (toAdd.isPresent())
 			{
@@ -213,6 +192,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 				success = true;
 			}
 		}
+		*/
 		// Set the success equal to the flag, and consume the event
 		dragEvent.setDropCompleted(success);
 		dragEvent.consume();

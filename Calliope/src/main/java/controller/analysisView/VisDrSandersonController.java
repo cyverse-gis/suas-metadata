@@ -7,7 +7,6 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.text.Font;
 import model.analysis.DataAnalyzer;
-import model.analysis.CalliopeTextOutputFormatter;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -32,9 +31,6 @@ public class VisDrSandersonController implements VisControllerBase
 	/// FXML Bound fields end
 	///
 
-	// Formatter used to format our data into Dr. Sanderson's format
-	private CalliopeTextOutputFormatter outputFormatter = new CalliopeTextOutputFormatter();
-
 	/**
 	 * Initializes the Dr. Sanderson output controller by setting the text area fonts
 	 *
@@ -57,9 +53,6 @@ public class VisDrSandersonController implements VisControllerBase
 	@Override
 	public void visualize(DataAnalyzer dataAnalyzer)
 	{
-		// Have our output formatter do all the hard work and just stick the result into the two text areas
-		this.txtOutput.setText(outputFormatter.format(dataAnalyzer));
-		this.txtAllPictures.setText(outputFormatter.createAllPictures(dataAnalyzer));
 	}
 
 	/**

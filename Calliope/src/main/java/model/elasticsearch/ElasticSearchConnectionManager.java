@@ -2,6 +2,10 @@ package model.elasticsearch;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import de.micromata.opengis.kml.v_2_2_0.Boundary;
+import de.micromata.opengis.kml.v_2_2_0.Coordinate;
+import de.micromata.opengis.kml.v_2_2_0.LinearRing;
+import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import javafx.application.Platform;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
@@ -12,6 +16,7 @@ import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.location.Location;
 import model.neon.BoundedSite;
+import model.neon.jsonPOJOs.Site;
 import model.query.ElasticSearchQuery;
 import model.species.Species;
 import model.species.SpeciesEntry;
@@ -23,6 +28,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -134,13 +140,15 @@ public class ElasticSearchConnectionManager
 	 */
 	public void nukeAndRecreateUserIndex()
 	{
-		// Delete the original index
-		deleteIndex(INDEX_CALLIOPE_USERS);
-
-		// The index is gone now, so recreate it
 		try
 		{
-			this.createIndex(INDEX_CALLIOPE_USERS, INDEX_CALLIOPE_USERS_TYPE, this.elasticSearchSchemaManager.makeCalliopeUsersIndexMapping(INDEX_CALLIOPE_USERS_TYPE), INDEX_CALLIOPE_USERS_SHARD_COUNT, INDEX_CALLIOPE_USERS_REPLICA_COUNT);
+			this.createIndex(
+					INDEX_CALLIOPE_USERS,
+					INDEX_CALLIOPE_USERS_TYPE,
+					this.elasticSearchSchemaManager.makeCalliopeUsersIndexMapping(INDEX_CALLIOPE_USERS_TYPE),
+					INDEX_CALLIOPE_USERS_SHARD_COUNT,
+					INDEX_CALLIOPE_USERS_REPLICA_COUNT,
+					true);
 		}
 		catch (IOException e)
 		{
@@ -153,13 +161,15 @@ public class ElasticSearchConnectionManager
 	 */
 	public void nukeAndRecreateMetadataIndex()
 	{
-		// Delete the original index
-		deleteIndex(INDEX_CALLIOPE_METADATA);
-
-		// The index is gone now, so recreate it
 		try
 		{
-			this.createIndex(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, this.elasticSearchSchemaManager.makeCalliopeMetadataIndexMapping(INDEX_CALLIOPE_METADATA_TYPE), INDEX_CALLIOPE_METADATA_SHARD_COUNT, INDEX_CALLIOPE_METADATA_REPLICA_COUNT);
+			this.createIndex(
+					INDEX_CALLIOPE_METADATA,
+					INDEX_CALLIOPE_METADATA_TYPE,
+					this.elasticSearchSchemaManager.makeCalliopeMetadataIndexMapping(INDEX_CALLIOPE_METADATA_TYPE),
+					INDEX_CALLIOPE_METADATA_SHARD_COUNT,
+					INDEX_CALLIOPE_METADATA_REPLICA_COUNT,
+					true);
 		}
 		catch (IOException e)
 		{
@@ -172,13 +182,15 @@ public class ElasticSearchConnectionManager
 	 */
 	public void nukeAndRecreateCollectionsIndex()
 	{
-		// Delete the original index
-		deleteIndex(INDEX_CALLIOPE_COLLECTIONS);
-
-		// The index is gone now, so recreate it
 		try
 		{
-			this.createIndex(INDEX_CALLIOPE_COLLECTIONS, INDEX_CALLIOPE_COLLECTIONS_TYPE, this.elasticSearchSchemaManager.makeCalliopeCollectionsIndexMapping(INDEX_CALLIOPE_COLLECTIONS_TYPE), INDEX_CALLIOPE_COLLECTIONS_SHARD_COUNT, INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT);
+			this.createIndex(
+					INDEX_CALLIOPE_COLLECTIONS,
+					INDEX_CALLIOPE_COLLECTIONS_TYPE,
+					this.elasticSearchSchemaManager.makeCalliopeCollectionsIndexMapping(INDEX_CALLIOPE_COLLECTIONS_TYPE),
+					INDEX_CALLIOPE_COLLECTIONS_SHARD_COUNT,
+					INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT,
+					true);
 		}
 		catch (IOException e)
 		{
@@ -191,13 +203,15 @@ public class ElasticSearchConnectionManager
 	 */
 	public void nukeAndRecreateNeonSitesIndex()
 	{
-		// Delete the original index
-		this.deleteIndex(INDEX_CALLIOPE_NEON_SITES);
-
-		// The index is gone now, so recreate it
 		try
 		{
-			this.createIndex(INDEX_CALLIOPE_NEON_SITES, INDEX_CALLIOPE_NEON_SITES_TYPE, this.elasticSearchSchemaManager.makeCalliopeNeonSiteIndexMapping(INDEX_CALLIOPE_NEON_SITES_TYPE), INDEX_CALLIOPE_NEON_SITES_SHARD_COUNT, INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT);
+			this.createIndex(
+					INDEX_CALLIOPE_NEON_SITES,
+					INDEX_CALLIOPE_NEON_SITES_TYPE,
+					this.elasticSearchSchemaManager.makeCalliopeNeonSiteIndexMapping(INDEX_CALLIOPE_NEON_SITES_TYPE),
+					INDEX_CALLIOPE_NEON_SITES_SHARD_COUNT,
+					INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT,
+					true);
 		}
 		catch (IOException e)
 		{
@@ -220,7 +234,7 @@ public class ElasticSearchConnectionManager
 		}
 		catch (IOException e)
 		{
-			// If the delete fails just print out an error message
+			// If the delete fa	ils just print out an error message
 			CalliopeData.getInstance().getErrorDisplay().notify("Error deleting '" + index + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 		catch (ElasticsearchStatusException e)
@@ -238,25 +252,41 @@ public class ElasticSearchConnectionManager
 	 * @param mapping The mapping for the index
 	 * @param shardCount The number of shards the index should use
 	 * @param replicaCount The number of replicas the index should use
+	 * @param deleteOriginalIfPresent Removes the current index if it is already present in the DB
 	 */
-	private void createIndex(String index, String type, XContentBuilder mapping, Integer shardCount, Integer replicaCount)
+	private void createIndex(String index, String type, XContentBuilder mapping, Integer shardCount, Integer replicaCount, Boolean deleteOriginalIfPresent)
 	{
-		// Delete the original index
-		deleteIndex(index);
-
-		// The index is gone now, so recreate it
 		try
 		{
-			// Create a create index request
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(index);
-			// Make sure to set the number of shards and replicas
-			createIndexRequest.settings(Settings.builder()
-					.put("index.number_of_shards", shardCount)
-					.put("index.number_of_replicas", replicaCount));
-			// Add the type mapping which defines our schema
-			createIndexRequest.mapping(type, mapping);
-			// Execute the index request
-			this.elasticSearchClient.indices().create(createIndexRequest);
+			// Perform a test if the index exists with a get index
+			GetIndexRequest getIndexRequest = new GetIndexRequest();
+			getIndexRequest
+					.indices(index)
+					.humanReadable(false)
+					.includeDefaults(false)
+					.local(false);
+
+			// Boolean if it exists
+			Boolean exists = this.elasticSearchClient.indices().exists(getIndexRequest);
+
+			// Delete the original index if it exists and we want to delete the original
+			if (deleteOriginalIfPresent && exists)
+				this.deleteIndex(index);
+
+			// If the delete original if present flag is checked, the index will be deleted. If not, then we check if it existed originally. If it did not create
+			if (deleteOriginalIfPresent || !exists)
+			{
+				// Create a create index request
+				CreateIndexRequest createIndexRequest = new CreateIndexRequest(index);
+				// Make sure to set the number of shards and replicas
+				createIndexRequest.settings(Settings.builder()
+						.put("index.number_of_shards", shardCount)
+						.put("index.number_of_replicas", replicaCount));
+				// Add the type mapping which defines our schema
+				createIndexRequest.mapping(type, mapping);
+				// Execute the index request
+				this.elasticSearchClient.indices().create(createIndexRequest);
+			}
 		}
 		catch (IOException e)
 		{
@@ -315,16 +345,45 @@ public class ElasticSearchConnectionManager
 	public SettingsData pullRemoteSettings()
 	{
 		// Pull the settings from the ElasticSearch cluster
-		Object settings = fetchFieldForUser("settings");
-		// Settings should be a map, so test that
-		if (settings instanceof Map<?, ?>)
+		try
 		{
-			// Convert this HashMap to JSON, and finally from JSON into the SettingsData object. Once this is done, return!
-			String json = CalliopeData.getInstance().getGson().toJson(settings);
-			if (json != null)
+			// Use a get request to pull the correct field
+			GetRequest getRequest = new GetRequest();
+			// Setup our get request, make sure to specify the user we want to query for and the source fields we want to return
+			getRequest
+					.index(INDEX_CALLIOPE_USERS)
+					.type(INDEX_CALLIOPE_USERS_TYPE)
+					.id(CalliopeData.getInstance().getUsername())
+					.fetchSourceContext(new FetchSourceContext(true));
+			// Store the response
+			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
+			// If we got a good response, grab it
+			if (getResponse.isExists() && !getResponse.isSourceEmpty())
 			{
-				return CalliopeData.getInstance().getGson().fromJson(json, SettingsData.class);
+				// Result comes back as a map, search the map for our field and return it
+				Map<String, Object> sourceAsMap = getResponse.getSourceAsMap();
+				Object settings = sourceAsMap.get("settings");
+				// Settings should be a map, so test that
+				if (settings instanceof Map<?, ?>)
+				{
+					// Convert this HashMap to JSON, and finally from JSON into the SettingsData object. Once this is done, return!
+					String json = CalliopeData.getInstance().getGson().toJson(settings);
+					if (json != null)
+					{
+						return CalliopeData.getInstance().getGson().fromJson(json, SettingsData.class);
+					}
+				}
 			}
+			else
+			{
+				// Bad response, print out an error message. User probably doesnt exist
+				CalliopeData.getInstance().getErrorDisplay().notify("User not found on the DB. This should not be possible.");
+			}
+		}
+		catch (IOException e)
+		{
+			// Error happened when executing a GET request. Print an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling settings for the user '" + CalliopeData.getInstance().getUsername() + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return null;
@@ -337,6 +396,7 @@ public class ElasticSearchConnectionManager
 	 */
 	public List<Species> pullRemoteSpecies()
 	{
+		/*
 		// Pull the species list from the ElasticSearch cluster
 		Object species = fetchFieldForUser("species");
 		// Species should be a list of maps, so test that
@@ -349,59 +409,115 @@ public class ElasticSearchConnectionManager
 				return CalliopeData.getInstance().getGson().fromJson(json, SPECIES_LIST_TYPE);
 			}
 		}
+		*/
 
 		return Collections.emptyList();
 	}
 
 	/**
-	 * Fetches the user's locations from the ElasticSearch index
+	 * Fetches the global site list from the ElasticSearch index
 	 *
-	 * @return The user's locations
+	 * @return The user's sites
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Location> pullRemoteLocations()
+	public List<BoundedSite> pullRemoteSites()
 	{
-		// Pull the locations list from the ElasticSearch cluster
-		Object locations = fetchFieldForUser("locations");
-		// Location should be in the form of a list of maps, so check that
-		if (locations instanceof List<?>)
+		// A list of sites to return
+		List<BoundedSite> toReturn = new ArrayList<>();
+
+		// Because the site list could be potentially long, we use a scroll to ensure reading results in reasonable chunks
+		Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1));
+		// Create a search request, and populate the fields
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest
+				.indices(INDEX_CALLIOPE_NEON_SITES)
+				.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+				.scroll(scroll)
+				.source(new SearchSourceBuilder()
+						// Fetch results 10 at a time, and use a query that matches everything
+						.size(10)
+						.fetchSource(true)
+						.query(QueryBuilders.matchAllQuery()));
+
+		try
 		{
-			// Iterate over each location map in the list
-			((List<?>) locations).forEach(locationMapObj ->
+			// Grab the search results
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			// Store the scroll id that was returned because we specified a scroll in the search request
+			String scrollID = searchResponse.getScrollId();
+			// Get a list of sites (hits)
+			SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+			// Iterate while there are more collections to be read
+			while (searchHits != null && searchHits.length > 0)
 			{
-				// Make sure the object is a map
-				if (locationMapObj instanceof Map<?, ?>)
+				// Iterate over all current results
+				for (SearchHit searchHit : searchHits)
 				{
-					// Convert from Object to actual map object. Here we do extra processing to ensure that the
-					// position field is expanded to latitude and longitude locally
-					Map<String, Object> locationsMap = (Map<String, Object>) locationMapObj;
-					// Grab the position field which should be in the form of "latitude, longitude"
-					Object position = locationsMap.remove("position");
-					// Test if position is a string
-					if (position instanceof String)
+					// Grab the sites as a map object
+					Map<String, Object> sitesMap = searchHit.getSourceAsMap();
+					if (sitesMap.containsKey("site") && sitesMap.containsKey("boundary"))
 					{
-						// Split that string by the central comma
-						String[] split = ((String) position).split(", ");
-						// Make sure the split was successful
-						if (split.length == 2)
+						// Convert the map to JSON, and then into an ImageCollection object. It's a bit of a hack but it works well
+						String siteJSON = CalliopeData.getInstance().getGson().toJson(sitesMap.get("site"));
+						Site site = CalliopeData.getInstance().getGson().fromJson(siteJSON, Site.class);
+						site.initFromJSON();
+
+						if (sitesMap.containsKey("boundary"))
 						{
-							// Save latitude and longitude into the map to be used by Calliope
-							locationsMap.put("latitude", split[0]);
-							locationsMap.put("longitude", split[1]);
+							Object boundaryMap = sitesMap.get("boundary");
+							if (boundaryMap instanceof Map<?, ?>)
+							{
+								Object polygonObject = ((Map<?, ?>) boundaryMap).get("coordinates");
+								if (polygonObject instanceof List<?>)
+								{
+									List<List<List<Double>>> polygonRaw = (List<List<List<Double>>>) polygonObject;
+
+									Polygon boundary = new Polygon();
+									boundary.setOuterBoundaryIs(this.rawToBoundary(polygonRaw.get(0)));
+									boundary.setInnerBoundaryIs(polygonRaw.subList(1, polygonRaw.size()).stream().map(this::rawToBoundary).collect(Collectors.toList()));
+
+									toReturn.add(new BoundedSite(site, boundary));
+								}
+							}
+
 						}
 					}
 				}
-			});
-			// Convert the locations list of maps into JSON, and finally into a list of locations ready to be returned
-			String json = CalliopeData.getInstance().getGson().toJson(locations);
-			if (json != null)
-			{
-				return CalliopeData.getInstance().getGson().fromJson(json, LOCATION_LIST_TYPE);
+
+				// Now that we've processed this wave of results, get the next 10 results
+				SearchScrollRequest scrollRequest = new SearchScrollRequest();
+				// Setup the scroll request
+				scrollRequest
+						.scrollId(scrollID)
+						.scroll(scroll);
+				// Perform the scroll, yielding another set of results
+				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+				// Store the hits and the new scroll id
+				scrollID = searchResponse.getScrollId();
+				searchHits = searchResponse.getHits().getHits();
 			}
+
+			// Finish off the scroll request
+			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+			clearScrollRequest.addScrollId(scrollID);
+			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+			// If clearing the scroll request fails, show an error
+			if (!clearScrollResponse.isSucceeded())
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading neon sites");
+		}
+		catch (IOException e)
+		{
+			// Something went wrong, so show an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote neon sites, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
-		// Default return nothing
-		return Collections.emptyList();
+		return toReturn;
+	}
+
+	private Boundary rawToBoundary(List<List<Double>> rawBoundary)
+	{
+		return new Boundary().withLinearRing(new LinearRing().withCoordinates(rawBoundary.stream().map(latLongList -> new Coordinate(latLongList.get(1), latLongList.get(0))).collect(Collectors.toList())));
 	}
 
 	/**
@@ -481,116 +597,6 @@ public class ElasticSearchConnectionManager
 		toReturn.forEach(imageCollection -> imageCollection.getUploads().forEach(CloudUploadEntry::initFromJSON));
 
 		return toReturn;
-	}
-
-	/**
-	 * Fetches a top level field from the user's elastic search index
-	 *
-	 * @param field The field to fetch
-	 * @return An object representing the field. May be something concrete or a container such as a list/map
-	 */
-	private Object fetchFieldForUser(String field)
-	{
-		try
-		{
-			// Use a get request to pull the correct field
-			GetRequest getRequest = new GetRequest();
-			// We return the username field and the specified field.
-			List<String> includes = Arrays.asList("username", field);
-			// All other fields are excluded
-			List<String> excludes = ListUtils.subtract(Arrays.asList("username", "species", "locations", "settings"), includes);
-			// Setup our get request, make sure to specify the user we want to query for and the source fields we want to return
-			getRequest
-					.index(INDEX_CALLIOPE_USERS)
-					.type(INDEX_CALLIOPE_USERS_TYPE)
-					.id(CalliopeData.getInstance().getUsername())
-					.fetchSourceContext(new FetchSourceContext(true, includes.toArray(new String[0]), excludes.toArray(new String[0])));
-			// Store the response
-			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
-			// If we got a good response, grab it
-			if (getResponse.isExists() && !getResponse.isSourceEmpty())
-			{
-				// Result comes back as a map, search the map for our field and return it
-				Map<String, Object> sourceAsMap = getResponse.getSourceAsMap();
-				return sourceAsMap.get(field);
-			}
-			else
-			{
-				// Bad response, print out an error message. User probably doesnt exist
-				CalliopeData.getInstance().getErrorDisplay().notify("User not found on the DB. This should not be possible.");
-			}
-		}
-		catch (IOException e)
-		{
-			// Error happened when executing a GET request. Print an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote field '" + field + "' for the user '" + CalliopeData.getInstance().getUsername() + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
-		}
-
-		return null;
-	}
-
-	/**
-	 * Pushes a list of species into the cloud and to the user's index
-	 *
-	 * @param species The list of species to store
-	 */
-	public void pushLocalSpecies(List<Species> species)
-	{
-		try
-		{
-			// Create an update request that will update just the species field in the user's index
-			UpdateRequest updateRequest = new UpdateRequest();
-			// Set up the update's fields
-			updateRequest
-					.index(INDEX_CALLIOPE_USERS)
-					.type(INDEX_CALLIOPE_USERS_TYPE)
-					.id(CalliopeData.getInstance().getUsername())
-					.doc(this.elasticSearchSchemaManager.makeSpeciesUpdate(species));
-
-			// Send off the update
-			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest);
-
-			// Test to make sure it went OK, if not, return an error
-			if (updateResponse.status() != RestStatus.OK)
-				CalliopeData.getInstance().getErrorDisplay().notify("Error syncing species list, error response was: " + updateResponse.status());
-		}
-		catch (IOException e)
-		{
-			// Print an error if the update fails
-			CalliopeData.getInstance().getErrorDisplay().notify("Error updating species list for the user '" + CalliopeData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
-		}
-	}
-
-	/**
-	 * Pushes a list of locations into the cloud and to the user's index
-	 *
-	 * @param locations The list of locations to store
-	 */
-	public void pushLocalLocations(List<Location> locations)
-	{
-		try
-		{
-			// Create an update request that will update just the locations field in the user's index
-			UpdateRequest updateRequest = new UpdateRequest();
-			// Setup the location update request with data
-			updateRequest
-					.index(INDEX_CALLIOPE_USERS)
-					.type(INDEX_CALLIOPE_USERS_TYPE)
-					.id(CalliopeData.getInstance().getUsername())
-					.doc(this.elasticSearchSchemaManager.makeLocationsUpdate(locations));
-
-			// Fire off the update request
-			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest);
-
-			// Print an error if the response code is not OK
-			if (updateResponse.status() != RestStatus.OK)
-				CalliopeData.getInstance().getErrorDisplay().notify("Error syncing location list, error response was: " + updateResponse.status());
-		}
-		catch (IOException e)
-		{
-			// Print an error if the update request fails
-			CalliopeData.getInstance().getErrorDisplay().notify("Error updating location list for the user '" + CalliopeData.getInstance().getUsername() + "'\n" + ExceptionUtils.getStackTrace(e));
-		}
 	}
 
 	/**
@@ -1039,12 +1045,6 @@ public class ElasticSearchConnectionManager
 										// Make sure each of the species has the default icon set
 										tempSpeciesList.forEach(species -> species.setSpeciesIcon(Species.DEFAULT_ICON));
 
-										// Compute a new location if we need to
-										Boolean locationForImagePresent = uniqueLocations.stream().anyMatch(location -> location.getId().equals(tempLocation.getId()));
-										// Do we have the location? If not add it
-										if (!locationForImagePresent)
-											uniqueLocations.add(tempLocation);
-
 										// Compute a new species (s) if we need to
 										for (Species tempSpecies : tempSpeciesList)
 										{
@@ -1054,10 +1054,13 @@ public class ElasticSearchConnectionManager
 												uniqueSpecies.add(tempSpecies);
 										}
 
-										// Grab the correct location for the image entry
-										Location correctLocation = uniqueLocations.stream().filter(location -> location.getId().equals(tempLocation.getId())).findFirst().get();
 										// Create the image entry
 										ImageEntry entry = new ImageEntry(new File(storagePath));
+
+										/*
+
+										// Grab the correct location for the image entry
+										Location correctLocation = uniqueLocations.stream().filter(location -> location.getId().equals(tempLocation.getId())).findFirst().get();
 										// Set the location and date taken
 										entry.setLocationTaken(correctLocation);
 										entry.setDateTaken(dateTaken);
@@ -1068,6 +1071,7 @@ public class ElasticSearchConnectionManager
 											Species correctSpecies = uniqueSpecies.stream().filter(species -> species.getScientificName().equals(tempSpeciesEntry.getSpecies().getScientificName())).findFirst().get();
 											entry.addSpecies(correctSpecies, tempSpeciesEntry.getCount());
 										}
+										*/
 										return entry;
 									}
 								}
@@ -1089,7 +1093,7 @@ public class ElasticSearchConnectionManager
 	 */
 	public void refreshNeonSiteCache()
 	{
-		List<BoundedSite> boundedSites = CalliopeData.getInstance().getNeonData().parseBoundedSites(CalliopeData.getInstance().getNeonData().getCurrentSiteKML());
+		List<BoundedSite> boundedSites = CalliopeData.getInstance().getNeonData().retrieveBoundedSites();
 		// Clear the current index
 		this.nukeAndRecreateNeonSitesIndex();
 		try

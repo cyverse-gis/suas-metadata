@@ -24,9 +24,6 @@ public class SettingsData
 	private ObjectProperty<LocationFormat> locationFormat = new SimpleObjectProperty<>(LocationFormat.LatLong);
 	private ObjectProperty<DistanceUnits> distanceUnits = new SimpleObjectProperty<>(DistanceUnits.Meters);
 	private ObjectProperty<Double> popupDelaySec = new SimpleDoubleProperty(10).asObject();
-	private BooleanProperty drSandersonDirectoryCompatibility = new SimpleBooleanProperty(false);
-	private BooleanProperty drSandersonOutput = new SimpleBooleanProperty(false);
-	private BooleanProperty automaticNextImage = new SimpleBooleanProperty(false);
 	private BooleanProperty backgroundImageLoading = new SimpleBooleanProperty(false);
 	private BooleanProperty disablePopups = new SimpleBooleanProperty(false);
 
@@ -50,9 +47,6 @@ public class SettingsData
 		this.locationFormat.setValue(otherSettings.getLocationFormat());
 		this.distanceUnits.setValue(otherSettings.getDistanceUnits());
 		this.popupDelaySec.setValue(otherSettings.getPopupDelaySec());
-		this.drSandersonDirectoryCompatibility.setValue(otherSettings.getDrSandersonDirectoryCompatibility());
-		this.drSandersonOutput.setValue(otherSettings.getDrSandersonOutput());
-		this.automaticNextImage.setValue(otherSettings.getAutomaticNextImage());
 		this.backgroundImageLoading.setValue(otherSettings.getBackgroundImageLoading());
 		this.disablePopups.setValue(otherSettings.getDisablePopups());
 	}
@@ -67,9 +61,6 @@ public class SettingsData
 		settingList.add(new CustomPropertyItem<>("Location Format: ", "Location", "The location format to be used when displaying positional information", locationFormat, LocationFormat.class));
 		settingList.add(new CustomPropertyItem<>("Distance Units: ", "Units", "The units to be used by the program", distanceUnits, DistanceUnits.class));
 		settingList.add(new CustomPropertyItem<>("Popup Hide Delay (in seconds): ", "Options", "How many seconds the popup should wait before disappearing", popupDelaySec, Double.class));
-		settingList.add(new CustomPropertyItem<>("Dr. Sanderson's Directory Compatibility: ", "Legacy", "Gives the option to read a directory in Dr. Jim Sanderson's format and automatically tag it", drSandersonDirectoryCompatibility, Boolean.class));
-		settingList.add(new CustomPropertyItem<>("Show Dr. Sanderson's Output Replicas: ", "Legacy", "Gives the option to see Dr. Jim Sanderson's Output.txt and AllPictures.txt replicas when querying", drSandersonOutput, Boolean.class));
-		settingList.add(new CustomPropertyItem<>("Automatically Select Next Image: ", "Legacy", "Automatically select the next image after tagging one with species", automaticNextImage, Boolean.class));
 		settingList.add(new CustomPropertyItem<>("Background Image Loading: ", "Options", "Load images in the background when selecting them, useful for slow hard drives or SD cards", backgroundImageLoading, Boolean.class));
 		settingList.add(new CustomPropertyItem<>("Disable Popups: ", "Options", "Lose some program functionality to avoid popups at all costs", disablePopups, Boolean.class));
 	}
@@ -384,36 +375,6 @@ public class SettingsData
 		return distanceUnits;
 	}
 
-	public void setDrSandersonDirectoryCompatibility(boolean drSandersonDirectoryCompatibility)
-	{
-		this.drSandersonDirectoryCompatibility.set(drSandersonDirectoryCompatibility);
-	}
-
-	public boolean getDrSandersonDirectoryCompatibility()
-	{
-		return this.drSandersonDirectoryCompatibility.get();
-	}
-
-	public BooleanProperty drSandersonDirectoryCompatibilityProperty()
-	{
-		return drSandersonDirectoryCompatibility;
-	}
-
-	public void setAutomaticNextImage(boolean automaticNextImage)
-	{
-		this.automaticNextImage.set(automaticNextImage);
-	}
-
-	public boolean getAutomaticNextImage()
-	{
-		return automaticNextImage.get();
-	}
-
-	public BooleanProperty automaticNextImageProperty()
-	{
-		return automaticNextImage;
-	}
-
 	public void setBackgroundImageLoading(boolean backgroundImageLoading)
 	{
 		this.backgroundImageLoading.set(backgroundImageLoading);
@@ -427,21 +388,6 @@ public class SettingsData
 	public BooleanProperty backgroundImageLoadingProperty()
 	{
 		return backgroundImageLoading;
-	}
-
-	public void setDrSandersonOutput(boolean drSandersonOutput)
-	{
-		this.drSandersonOutput.set(drSandersonOutput);
-	}
-
-	public boolean getDrSandersonOutput()
-	{
-		return drSandersonOutput.get();
-	}
-
-	public BooleanProperty drSandersonOutputProperty()
-	{
-		return drSandersonOutput;
 	}
 
 	public void setPopupDelaySec(Double popupDelaySec)

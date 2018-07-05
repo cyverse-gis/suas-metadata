@@ -22,7 +22,12 @@ public class Site
 	private final StringProperty siteType = new SimpleStringProperty(null);
 	private final StringProperty stateCode = new SimpleStringProperty(null);
 	private final StringProperty stateName = new SimpleStringProperty(null);
-	private final ObjectProperty<ProductAvailability[]> dataProducts = new SimpleObjectProperty<>();
+	private transient ObjectProperty<ProductAvailability[]> dataProducts = new SimpleObjectProperty<>();
+
+	public void initFromJSON()
+	{
+		this.dataProducts = new SimpleObjectProperty<>();
+	}
 
 	public String getDomainCode()
 	{

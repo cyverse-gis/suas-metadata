@@ -1,0 +1,8 @@
+.largeBold {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}
+
+.mediumItalic {
+    -fx-font-style: italic;
+}

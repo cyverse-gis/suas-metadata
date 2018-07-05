@@ -12,20 +12,14 @@ import javafx.beans.property.StringProperty;
  */
 public class Location
 {
-	// Properties of a location are the name, latitude, longitude, and elevation
-	private final StringProperty name = new SimpleStringProperty();
-	private final StringProperty id = new SimpleStringProperty();
+	// Properties of a location are the latitude, longitude, and elevation
 	private final DoubleProperty latitude = new SimpleDoubleProperty();
 	private final DoubleProperty longitude = new SimpleDoubleProperty();
 	private final DoubleProperty elevation = new SimpleDoubleProperty();
 
 	/**
 	 * Location constructor
-	 * 
-	 * @param name
-	 *            The name of the location
-	 * @param id
-	 * 			  The id of the location
+	 *
 	 * @param lat
 	 *            The latitude of the location
 	 * @param lng
@@ -33,10 +27,8 @@ public class Location
 	 * @param elevation
 	 *            The location elevation
 	 */
-	public Location(String name, String id, Double lat, Double lng, Double elevation)
+	public Location(Double lat, Double lng, Double elevation)
 	{
-		this.name.setValue(name);
-		this.id.setValue(id);
 		this.latitude.setValue(lat);
 		this.longitude.setValue(lng);
 		this.elevation.setValue(elevation);
@@ -47,22 +39,10 @@ public class Location
 	 */
 	public Location()
 	{
-		this.name.setValue("");
-		this.id.setValue("");
 		this.latitude.setValue(-1000);
 		this.longitude.setValue(-1000);
 		this.elevation.setValue(-20000);
 	}
-
-	/**
-	 * @return True if the name is not empty
-	 */
-	public Boolean nameValid() { return !this.name.getValue().isEmpty(); }
-
-	/**
-	 * @return True if the id is not empty
-	 */
-	public Boolean idValid() { return !this.id.getValue().isEmpty(); }
 
 	/**
 	 * @return True if latitude is between -85 and +85
@@ -82,81 +62,7 @@ public class Location
 	/**
 	 * @return True if the name, latitude, longitude, and elevation are valid
 	 */
-	public Boolean locationValid() { return nameValid() && idValid() && latValid() && lngValid() && elevationValid(); }
-
-	/**
-	 * Two locations are equal if their site codes align
-	 *
-	 * @param obj The other location to compare to
-	 * @return True if the site codes of the locations match, false otherwise
-	 */
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (obj instanceof Location)
-			return ((Location) obj).getId().compareTo(this.getId()) == 0;
-		return false;
-	}
-
-	/**
-	 * Set the name of the location
-	 *
-	 * @param name the name of the location
-	 */
-	public void setName(String name)
-	{
-		this.name.setValue(name);
-	}
-
-	/**
-	 * Get the name of the location
-	 * 
-	 * @return the name of the location
-	 */
-	public String getName()
-	{
-		return name.getValue();
-	}
-
-	/**
-	 * Get the name property
-	 *
-	 * @return The name property
-	 */
-	public StringProperty nameProperty()
-	{
-		return name;
-	}
-
-	/**
-	 * Set the id of the location
-	 *
-	 * @param id the id of the location
-	 */
-	public void setId(String id)
-	{
-		this.id.setValue(id);
-	}
-
-	/**
-	 * Get the id of the location
-	 *
-	 * @return the id of the location
-	 */
-	public String getId()
-	{
-		return id.getValue();
-	}
-
-	/**
-	 * Get the id property
-	 *
-	 * @return The id property
-	 */
-	public StringProperty idProperty()
-	{
-		return id;
-	}
+	public Boolean locationValid() { return latValid() && lngValid() && elevationValid(); }
 
 	/**
 	 * Set the latitude property
@@ -254,6 +160,6 @@ public class Location
 	@Override
 	public String toString()
 	{
-		return this.getName() + "\nID: " + this.getId() + "\nLatitude: " + this.getLatitude() + "\nLongitude: " + this.getLongitude() + "\nElevation: " + this.getElevation();
+		return "\nLatitude: " + this.getLatitude() + "\nLongitude: " + this.getLongitude() + "\nElevation: " + this.getElevation();
 	}
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+<?import java.net.URL?>
+<VBox fx:id="mainPane" spacing="3" prefWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.importView.SiteListEntryController">
+    <stylesheets>
+        <URL value="@SiteListEntry.css"/>
+    </stylesheets>
+    <padding>
+        <Insets bottom="5" left="5" right="5" top="5"/>
+    </padding>
+    <children>
+        <Label fx:id="lblName" styleClass="largeBold" wrapText="true" text="Name"/>
+        <Label fx:id="lblCode" styleClass="mediumItalic" wrapText="true" text="Site Code"/>
+        <Label fx:id="lblLocationFirst" wrapText="true" text="Lat/Easting"/>
+        <Label fx:id="lblLocationSecond" wrapText="true" text="Lng/Northing"/>
+        <Label fx:id="lblLocationThird" wrapText="true" text="Elevation+Zone"/>
+    </children>
+</VBox>

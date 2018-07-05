@@ -28,12 +28,8 @@ public class CloudImageEntry extends ImageEntry
 {
 	// The icon to use for all downloaded untagged images
 	private static final Image DEFAULT_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIcon.png").toString());
-	// The icon to use for all location only tagged images
-	private static final Image LOCATION_ONLY_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconLocation.png").toString());
-	// The icon to use for all species only tagged images
-	private static final Image SPECIES_ONLY_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconSpecies.png").toString());
-	// The icon to use for all tagged images
-	private static final Image CHECKED_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconDone.png").toString());
+	// The icon to use for all neon only tagged images
+	private static final Image NEON_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNeon.png").toString());
 	// The icon to use for an undownloaded images
 	private static final Image NO_DOWNLOAD_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNotDownloaded.png").toString());
 
@@ -49,8 +45,6 @@ public class CloudImageEntry extends ImageEntry
 	private transient final BooleanProperty hasBeenPulledFromCloud = new SimpleBooleanProperty(false);
 	// If the image entry is currently being downloaded from CyVerse
 	private transient final BooleanProperty isBeingPulledFromCloud = new SimpleBooleanProperty(false);
-	// If the image entry was tagged with species on CyVerse
-	private transient final AtomicBoolean wasTaggedWithSpecies = new AtomicBoolean(false);
 	// If the current version of the image is dirty compared to the one on CyVerse
 	private transient final AtomicBoolean isCloudDirty = new AtomicBoolean(false);
 
@@ -87,16 +81,12 @@ public class CloudImageEntry extends ImageEntry
 		{
 			if (!this.hasBeenPulledFromCloud.getValue())
 				return NO_DOWNLOAD_CLOUD_IMAGE_ICON;
-			else if (this.getLocationTaken() != null && this.getLocationTaken().locationValid() && !this.getSpeciesPresent().isEmpty())
-				return CHECKED_CLOUD_IMAGE_ICON;
-			else if (!this.getSpeciesPresent().isEmpty())
-				return SPECIES_ONLY_CLOUD_IMAGE_ICON;
-			else if (this.getLocationTaken() != null && this.getLocationTaken().locationValid())
-				return LOCATION_ONLY_CLOUD_IMAGE_ICON;
+			else if (this.getSiteTaken() != null)
+				return NEON_CLOUD_IMAGE_ICON;
 			else
 				return DEFAULT_CLOUD_IMAGE_ICON;
-		}, this.locationTakenProperty(), this.getSpeciesPresent(), this.hasBeenPulledFromCloud);
-		this.selectedImageProperty.bind(imageBinding);
+		}, this.siteTakenProperty(), this.hasBeenPulledFromCloud);
+		this.selectedImage.bind(imageBinding);
 
 		this.getFileProperty().setValue(PLACEHOLDER_FILE);
 		this.setCyverseFile(cloudFile);
@@ -163,44 +153,6 @@ public class CloudImageEntry extends ImageEntry
 	}
 
 	/**
-	 * Add a species and a count to the image
-	 *
-	 * @param species The species of the animal
-	 * @param amount The amount of that species to add
-	 */
-	@Override
-	public void addSpecies(Species species, Integer amount)
-	{
-		this.pullFromCloudIfNotPulled();
-		super.addSpecies(species, amount);
-	}
-
-	/**
-	 * Remove a species from the image
-	 *
-	 * @param species The species to remove
-	 */
-	@Override
-	public void removeSpecies(Species species)
-	{
-		this.pullFromCloudIfNotPulled();
-		super.removeSpecies(species);
-	}
-
-	/**
-	 * Marks the image entry as dirty meaning it needs to be written to disk
-	 *
-	 * @param dirty If the image is dirty
-	 */
-	@Override
-	public void markDiskDirty(Boolean dirty)
-	{
-		super.markDiskDirty(dirty);
-		if (dirty)
-			this.markCloudDirty(true);
-	}
-
-	/**
 	 * Marks the image entry as dirty meaning it needs to be updated on CyVerse
 	 *
 	 * @param dirty If the image is dirty
@@ -213,19 +165,6 @@ public class CloudImageEntry extends ImageEntry
 	/**
 	 * True if the image is dirty, false otherwise
 	 *
-	 * @return Tells us if the image is dirty
-	 */
-	@Override
-	public Boolean isDiskDirty()
-	{
-		if (!this.hasBeenPulledFromCloud.getValue())
-			return false;
-		return super.isDiskDirty();
-	}
-
-	/**
-	 * True if the image is dirty, false otherwise
-	 *
 	 * @return Tells us if the image is dirty (aka different from CyVerse)
 	 */
 	public Boolean isCloudDirty()
@@ -233,16 +172,6 @@ public class CloudImageEntry extends ImageEntry
 		if (!this.hasBeenPulledFromCloud.getValue())
 			return false;
 		return this.isCloudDirty.get();
-	}
-
-	/**
-	 * Writes the image to disk if it has been downloaded from the cloud
-	 */
-	@Override
-	public synchronized void writeToDisk()
-	{
-		if (this.hasBeenPulledFromCloud.getValue())
-			super.writeToDisk();
 	}
 
 	/**
@@ -269,10 +198,8 @@ public class CloudImageEntry extends ImageEntry
 			File localFile = pullTask.getValue();
 			this.getFileProperty().setValue(localFile);
 			// Read the metadata into the image file
-			super.readFileMetadataIntoImage(CalliopeData.getInstance().getLocationList(), CalliopeData.getInstance().getSpeciesList());
+			//super.readFileMetadataIntoImage(CalliopeData.getInstance().getSiteList(), CalliopeData.getInstance().getSpeciesList());
 			// Update flags
-			if (!this.getSpeciesPresent().isEmpty())
-				wasTaggedWithSpecies.set(true);
 			this.hasBeenPulledFromCloud.setValue(true);
 			this.isBeingPulledFromCloud.setValue(false);
 			this.markCloudDirty(false);
@@ -324,10 +251,5 @@ public class CloudImageEntry extends ImageEntry
 	public Boolean hasBeenPulledFromCloud()
 	{
 		return this.hasBeenPulledFromCloud.getValue();
-	}
-
-	public Boolean wasTaggedWithSpecies()
-	{
-		return this.wasTaggedWithSpecies.get();
 	}
 }

@@ -101,7 +101,7 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 		{
 			// Update the icon property
 			this.imgIcon.imageProperty().unbind();
-			this.imgIcon.imageProperty().bind(item.getTreeIconProperty());
+			this.imgIcon.imageProperty().bind(item.treeIconProperty());
 			this.lblText.setText(item.toString());
 
 			// If the item is a directory that is being uploaded, disable it

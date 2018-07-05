@@ -1,152 +1,90 @@
 package model.util;
 
-import model.CalliopeData;
-import model.constant.CalliopeMetadataFields;
-import model.image.ImageEntry;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.ImageWriteException;
-import org.apache.commons.imaging.Imaging;
-import org.apache.commons.imaging.common.ImageMetadata;
-import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
-import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
-import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
-import org.apache.commons.io.FileUtils;
+import com.thebuzzmedia.exiftool.ExifTool;
+import com.thebuzzmedia.exiftool.ExifToolBuilder;
+import com.thebuzzmedia.exiftool.Tag;
+import com.thebuzzmedia.exiftool.core.StandardTag;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Class containing utils for writing & reading metadata
  */
 public class MetadataUtils
 {
-	/**
-	 * Reads the output set from a given image entry which contains metadata
-	 *
-	 * @param imageEntry The image entry to read from
-	 *
-	 * @return The output set containing metadata of the image entry
-	 *
-	 * @throws ImageWriteException If something went wrong reading the file...
-	 * @throws IOException If something went wrong reading the file...
-	 * @throws ImageReadException If something went wrong reading the file...
-	 */
-	public static TiffOutputSet readOutputSet(ImageEntry imageEntry) throws ImageWriteException, IOException, ImageReadException
+	private static ExifTool exifToolInstance = new ExifToolBuilder().enableStayOpen().withPath("C:\\Users\\David\\Desktop\\Software\\CyVerse\\suas-metadata\\Calliope\\src\\main\\resources\\files\\exiftool.exe").build();
+
+	public enum CustomTags implements Tag
 	{
-		// Grab the tiff output set which we write the metadata to, or create a new one if it's empty
-		TiffOutputSet outputSet = null;
+		PITCH("Pitch", Type.DOUBLE),
+		ROLL("Roll", Type.DOUBLE),
+		YAW("Yaw", Type.DOUBLE),
+		SPEED_X("SpeedX", Type.DOUBLE),
+		SPEED_Y("SpeedY", Type.DOUBLE),
+		SPEED_Z("SpeedZ", Type.DOUBLE),
+		CAMERA_MODEL_NAME("Model", Type.STRING);
 
-		// Grab the image metadata to read from
-		TiffImageMetadata tiffImageMetadata = MetadataUtils.readImageMetadata(imageEntry.getFile());
+		/**
+		 * Used to get the name of the tag (e.g. "Orientation", "ISO", etc.).
+		 */
+		private final String name;
 
-		// Check if it's not null, create the output set to write to
-		if (tiffImageMetadata != null)
-			outputSet = tiffImageMetadata.getOutputSet();
+		/**
+		 * Used to get a hint for the native type of this tag's value as
+		 * specified by Phil Harvey's <a href="http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/index.html">ExifTool Tag Guide</a>.
+		 */
+		private final CustomTags.Type type;
 
-		// If we don't have an output set, the image doesn't have any metadata so create one
-		if (outputSet == null)
-			outputSet = new TiffOutputSet();
-
-		return outputSet;
-	}
-
-	/**
-	 * Write the output set to a given image entry
-	 *
-	 * @param outputSet The metadata output set
-	 * @param imageEntry The image entry to write to
-	 *
-	 * @throws ImageWriteException If something went wrong reading the file...
-	 * @throws IOException If something went wrong reading the file...
-	 * @throws ImageReadException If something went wrong reading the file...
-	 */
-	public static void writeOutputSet(TiffOutputSet outputSet, ImageEntry imageEntry) throws IOException, ImageWriteException, ImageReadException
-	{
-		// Write the new metadata back to the image, first we write it to a temporary file
-		File tempToWriteTo = CalliopeData.getInstance().getTempDirectoryManager().createTempFile("calliopeTMP.jpg");
-		// Copy the current image file to the temporary file
-		FileUtils.copyFile(imageEntry.getFile(), tempToWriteTo);
-		// Then we create an output stream to that file
-		if (tempToWriteTo.exists())
-		{
-			try (OutputStream outputStream = new FileOutputStream(tempToWriteTo))
-			{
-				// And perform the write to the temporary file
-				new ExifRewriter().updateExifMetadataLossless(imageEntry.getFile(), outputStream, outputSet);
-				// Then copy the temporary file over top of the current file to update it
-				FileUtils.forceDelete(imageEntry.getFile());
-				FileUtils.moveFile(tempToWriteTo, imageEntry.getFile());
-			}
+		CustomTags(String name, CustomTags.Type type) {
+			this.name = name;
+			this.type = type;
 		}
-	}
 
-	/**
-	 * Finds the Calliope EXIF directory or creates it if it is not present yet
-	 *
-	 * @param outputSet The output set to search for the Calliope directory
-	 *
-	 * @return The Calliope directory, cannot be null
-	 *
-	 * @throws ImageWriteException If something went wrong reading the directory...
-	 */
-	public static TiffOutputDirectory getOrCreateCalliopeDirectory(TiffOutputSet outputSet) throws ImageWriteException
-	{
-		// Calliope directory type goes in 3? Currently -4, -3, -2, -1, 0, 1, and 2 are used by the JPEG format. Anything less than -4 is NOT allowed
-		Integer calliopeDirIndex = 1;
+		@Override
+		public String getName() {
+			return name;
+		}
 
-		// Ensure we have a root directory
-		outputSet.getOrCreateRootDirectory();
+		@Override
+		public <T> T parse(String value) {
+			return type.parse(value);
+		}
 
-		TiffOutputDirectory calliopeDir = null;
-
-		// Loop while we don't have a Calliope directory yet
-		for (; calliopeDir == null; calliopeDirIndex++)
-		{
-			// Find the directory at the current index
-			TiffOutputDirectory current = outputSet.findDirectory(calliopeDirIndex);
-			// If the directory is null, we have an empty slot, so create the directory
-			if (current == null)
-			{
-				calliopeDir = new TiffOutputDirectory(calliopeDirIndex, outputSet.byteOrder);
-				calliopeDir.add(CalliopeMetadataFields.CALLIOPE, (short) 1);
-				outputSet.addDirectory(calliopeDir);
-			}
-			// Otherwise, we check if we have the Calliope field, and if we do return it!
-			else
-			{
-				if (current.findField(CalliopeMetadataFields.CALLIOPE) != null)
-				{
-					calliopeDir = current;
+		@SuppressWarnings("unchecked")
+		private static enum Type {
+			INTEGER {
+				@Override
+				public <T> T parse(String value) {
+					return (T) Integer.valueOf(Integer.parseInt(value));
 				}
-			}
-		}
+			},
+			DOUBLE {
+				@Override
+				public <T> T parse(String value) {
+					return (T) Double.valueOf(Double.parseDouble(value));
+				}
+			},
+			STRING {
+				@Override
+				public <T> T parse(String value) {
+					return (T) value;
+				}
+			};
 
-		return calliopeDir;
+			public abstract <T> T parse(String value);
+		}
 	}
 
-	/**
-	 * Returns the tiff image metadata which we can read Calliope data from
-	 *
-	 * @param imageFile The image to read the metadata from
-	 *
-	 * @return The Image's metadata or null if no metadata was found (this probably means it's not a jpeg image...)
-	 *
-	 * @throws ImageReadException If something went wrong reading the image...
-	 * @throws IOException If something went wrong reading the image...
-	 */
-	public static TiffImageMetadata readImageMetadata(File imageFile) throws ImageReadException, IOException
+	public static Map<Tag, String> readImageMetadata(File imageFile) throws IOException
 	{
-		// Read the image's metadata
-		ImageMetadata metadata = Imaging.getMetadata(imageFile);
-
-		// Grab the tiff metadata to read from, or return null
-		if (metadata instanceof JpegImageMetadata)
-			return ((JpegImageMetadata) metadata).getExif();
-		else
-			return null;
+		List<Tag> standardTags = new ArrayList<>(Arrays.asList(StandardTag.values()));
+		standardTags.addAll(Arrays.asList(CustomTags.values()));
+		return exifToolInstance.getImageMeta(imageFile, standardTags);
 	}
 }

@@ -28,6 +28,7 @@ import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
 import model.location.Location;
+import model.neon.BoundedSite;
 import model.species.Species;
 import model.threading.ErrorTask;
 import model.util.SettingsData;
@@ -273,36 +274,36 @@ public class CalliopeViewController implements Initializable
 						//esConnectionManager.nukeAndRecreateNeonSitesIndex();
 
 						// Then initialize the remove calliope directory
-						this.updateMessage("Initializing Calliope remote directory...");
+						this.updateMessage("Initializing Calliope elastic index...");
 						this.updateProgress(2, NUM_STEPS);
 						esConnectionManager.initCalliopeRemoteDirectory();
 
-						// Pull Calliope settings from the remote directory
-						this.updateMessage("Pulling settings from remote directory...");
+						// Pull Calliope settings from the elastic index
+						this.updateMessage("Pulling settings from elastic index...");
 						this.updateProgress(3, NUM_STEPS);
 						SettingsData settingsData = esConnectionManager.pullRemoteSettings();
 
 						// Set the settings data
 						Platform.runLater(() -> CalliopeData.getInstance().getSettings().loadFromOther(settingsData));
 
-						// Pull any species from the remote directory
-						this.updateMessage("Pulling species from remote directory...");
+						// Pull any species from the elastic index
+						this.updateMessage("Pulling species from elastic index...");
 						this.updateProgress(4, NUM_STEPS);
 						List<Species> species = esConnectionManager.pullRemoteSpecies();
 
 						// Set the species list to be these species
 						Platform.runLater(() -> CalliopeData.getInstance().getSpeciesList().addAll(species));
 
-						// Pull any locations from the remote directory
-						this.updateMessage("Pulling locations from remote directory...");
+						// Pull any locations from the elastic index
+						this.updateMessage("Pulling locations from elastic index...");
 						this.updateProgress(5, NUM_STEPS);
-						List<Location> locations = esConnectionManager.pullRemoteLocations();
+						List<BoundedSite> sites = esConnectionManager.pullRemoteSites();
 
 						// Set the location list to be these locations
-						Platform.runLater(() -> CalliopeData.getInstance().getLocationList().addAll(locations));
+						Platform.runLater(() -> CalliopeData.getInstance().getSiteList().addAll(sites));
 
-						// Pull any collections from the remote directory
-						this.updateMessage("Pulling collections from remote directory...");
+						// Pull any collections from the elastic index
+						this.updateMessage("Pulling collections from elastic index...");
 						this.updateProgress(6, NUM_STEPS);
 						List<ImageCollection> imageCollections = esConnectionManager.pullRemoteCollections();
 
@@ -310,9 +311,9 @@ public class CalliopeViewController implements Initializable
 						Platform.runLater(() -> CalliopeData.getInstance().getCollectionList().addAll(imageCollections));
 
 						// Pull any NEON sites from the NEON API
-						this.updateMessage("Pulling NEON sites from NEON API...");
+						this.updateMessage("Pulling NEON sites from elastic index...");
 						this.updateProgress(7, NUM_STEPS);
-						CalliopeData.getInstance().getNeonData().pullAndStoreSites();
+						//CalliopeData.getInstance().getNeonData().pullAndStoreSites();
 
 						this.updateProgress(8, NUM_STEPS);
 					}

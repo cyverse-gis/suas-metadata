@@ -71,9 +71,7 @@ public class VisCSVController implements VisControllerBase
 		{
 			Location location = imageEntry.getLocationTaken();
 			// Start with location name and id
-			String locationString =
-					location.getName() + "," +
-					location.getId() + ",";
+			String locationString = "";
 
 			// If we're using Lat/Lng
 			if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
@@ -96,14 +94,7 @@ public class VisCSVController implements VisControllerBase
 			// Add elevation
 			SettingsData.DistanceUnits distanceUnits = CalliopeData.getInstance().getSettings().getDistanceUnits();
 			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
-			return imageEntry.getFile().getName() + "," +
-				CalliopeData.getInstance().getSettings().formatDateTime(imageEntry.getDateTaken(), " ") + "," +
-				imageEntry.getSpeciesPresent().stream().map(speciesEntry ->
-					speciesEntry.getSpecies().getCommonName() + ";" +
-					speciesEntry.getSpecies().getScientificName() + ";" +
-					speciesEntry.getCount().toString()
-				).collect(Collectors.joining(";")) + "," +
-				locationString;
+			return locationString;
 		}).collect(Collectors.joining("\n"));
 		if (rawCSV.isEmpty())
 			rawCSV = "No query results found.";
@@ -114,9 +105,7 @@ public class VisCSVController implements VisControllerBase
 		String locationCSV = dataAnalyzer.getAllImageLocations().stream().map(location ->
 		{
 			// Location name and ID
-			String locationString =
-					location.getName() + "," +
-					location.getId() + ",";
+			String locationString = "";
 
 			// If we're using lat long
 			if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)

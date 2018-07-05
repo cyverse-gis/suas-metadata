@@ -57,6 +57,7 @@ public class DataAnalyzer
 			else
 				nullLocationsFound = true;
 
+		/*
 		// Sort the locations by name
 		allImageLocations.sort(Comparator.comparing(Location::getName));
 
@@ -65,6 +66,7 @@ public class DataAnalyzer
 			for (SpeciesEntry speciesEntry : imageEntry.getSpeciesPresent())
 				if (!allImageSpecies.contains(speciesEntry.getSpecies()))
 					allImageSpecies.add(speciesEntry.getSpecies());
+					*/
 
 		// Sort species by name
 		allImageSpecies.sort(Comparator.comparing(Species::getCommonName));
@@ -165,7 +167,7 @@ public class DataAnalyzer
 				if (!locations.contains(image.getLocationTaken()))
 					locations.add(image.getLocationTaken());
 
-		locations.sort(Comparator.comparing(Location::getName));
+		//locations.sort(Comparator.comparing(Location::getName));
 
 		return locations;
 	}
@@ -260,9 +262,9 @@ public class DataAnalyzer
 			}
 
 			// The max number of animals is the max number of animals in this image or the max number of animals in the last image
-			for (SpeciesEntry speciesEntry : image.getSpeciesPresent())
-				if (speciesFilter == null || speciesEntry.getSpecies() == speciesFilter)
-					maxAnimalsInEvent = Math.max(maxAnimalsInEvent, speciesEntry.getCount());
+			//for (SpeciesEntry speciesEntry : image.getSpeciesPresent())
+			//	if (speciesFilter == null || speciesEntry.getSpecies() == speciesFilter)
+			//		maxAnimalsInEvent = Math.max(maxAnimalsInEvent, speciesEntry.getCount());
 
 			lastImageTimeMillis = imageTimeMillis;
 		}

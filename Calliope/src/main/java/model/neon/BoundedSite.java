@@ -1,6 +1,8 @@
 package model.neon;
 
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import model.neon.jsonPOJOs.Site;
 
 /**
@@ -9,9 +11,9 @@ import model.neon.jsonPOJOs.Site;
 public class BoundedSite
 {
 	// The site
-	private Site site;
+	private ObjectProperty<Site> site = new SimpleObjectProperty<>();
 	// The boundary of the site
-	private Polygon boundary;
+	private ObjectProperty<Polygon> boundary = new SimpleObjectProperty<>();
 
 	/**
 	 * Constructor just initializes fields
@@ -21,8 +23,16 @@ public class BoundedSite
 	 */
 	public BoundedSite(Site site, Polygon boundary)
 	{
-		this.site = site;
-		this.boundary = boundary;
+		this.site.setValue(site);
+		this.boundary.setValue(boundary);
+	}
+
+	/**
+	 * @return Getter for site property
+	 */
+	public ObjectProperty<Site> siteProperty()
+	{
+		return this.site;
 	}
 
 	/**
@@ -30,7 +40,15 @@ public class BoundedSite
 	 */
 	public Site getSite()
 	{
-		return this.site;
+		return this.site.getValue();
+	}
+
+	/**
+	 * @return Getter for boundary property
+	 */
+	public ObjectProperty<Polygon> boundaryProperty()
+	{
+		return this.boundary;
 	}
 
 	/**
@@ -38,6 +56,6 @@ public class BoundedSite
 	 */
 	public Polygon getBoundary()
 	{
-		return this.boundary;
+		return this.boundary.getValue();
 	}
 }

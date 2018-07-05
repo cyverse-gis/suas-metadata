@@ -190,8 +190,8 @@ public class ElasticSearchQuery
 
 		// Make sure that we have at least one location we're looking for
 		// Locations are IDd by site code
-		if (!locationQuery.isEmpty())
-			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.location.id", this.locationQuery.stream().map(Location::getId).collect(Collectors.toList())));
+		//if (!locationQuery.isEmpty())
+		//	this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.location.id", this.locationQuery.stream().map(Location::getId).collect(Collectors.toList())));
 
 		// Make sure that we have at least one collection we're looking for
 		// Collections are IDd by UUID

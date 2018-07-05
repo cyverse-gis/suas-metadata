@@ -1,37 +1,24 @@
 package model.image;
 
-import javafx.beans.Observable;
+import com.thebuzzmedia.exiftool.Tag;
+import com.thebuzzmedia.exiftool.core.StandardTag;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.image.Image;
 import model.CalliopeData;
-import model.constant.CalliopeMetadataFields;
 import model.location.Location;
-import model.species.Species;
-import model.species.SpeciesEntry;
+import model.neon.BoundedSite;
 import model.util.MetadataUtils;
-import model.util.RoundingUtils;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.ImageWriteException;
-import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
-import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Map;
 
 
 /**
@@ -46,27 +33,21 @@ public class ImageEntry extends ImageContainer
 	// The icon to use for all images at the moment
 	private static final Image DEFAULT_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
 	// The icon to use for all location only tagged images at the moment
-	private static final Image LOCATION_ONLY_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIconLocation.png").toString());
-	// The icon to use for all species only tagged images at the moment
-	private static final Image SPECIES_ONLY_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIconSpecies.png").toString());
-	// The icon to use for all tagged images at the moment
-	private static final Image CHECKED_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIconDone.png").toString());
+	private static final Image NEON_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIconNeon.png").toString());
 
 	// A property to wrap the currently selected image property. Must not be static!
-	transient final ObjectProperty<Image> selectedImageProperty = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
+	transient final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
 	// The actual file 
-	private final ObjectProperty<File> imageFileProperty = new SimpleObjectProperty<File>();
+	private final ObjectProperty<File> imageFile = new SimpleObjectProperty<File>();
 	// The date that the image was taken
-	private final ObjectProperty<LocalDateTime> dateTakenProperty = new SimpleObjectProperty<>();
-	// The location that the image was taken
-	private final ObjectProperty<Location> locationTakenProperty = new SimpleObjectProperty<Location>();
-	// The species present in the image
-	private final ObservableList<SpeciesEntry> speciesPresent = FXCollections.<SpeciesEntry> observableArrayList(image -> new Observable[] {
-			image.countProperty(),
-			image.speciesProperty()
-	});
-	// If this image is dirty, we set a flag to write it to disk at some later point
-	private transient final AtomicBoolean isDiskDirty = new AtomicBoolean(false);
+	private final ObjectProperty<LocalDateTime> dateTaken = new SimpleObjectProperty<>();
+	// The NEON site closest to the image
+	private final ObjectProperty<BoundedSite> siteTaken = new SimpleObjectProperty<>(null);
+	private final ObjectProperty<Location> locationTaken = new SimpleObjectProperty<>(null);
+	private final StringProperty droneMaker = new SimpleStringProperty(null);
+	private final StringProperty cameraModel = new SimpleStringProperty(null);
+	private final ObjectProperty<Vector3> speed = new SimpleObjectProperty<>(new Vector3());
+	private final ObjectProperty<Vector3> rotation = new SimpleObjectProperty<>(new Vector3());
 
 	/**
 	 * Create a new image entry with an image file
@@ -76,185 +57,40 @@ public class ImageEntry extends ImageContainer
 	 */
 	public ImageEntry(File file)
 	{
-		this.imageFileProperty.setValue(file);
-
-		this.locationTakenProperty.addListener((observable, oldValue, newValue) -> this.markDiskDirty(true));
-		this.speciesPresent.addListener((ListChangeListener<SpeciesEntry>) c -> this.markDiskDirty(true));
-		this.dateTakenProperty.addListener((observable, oldValue, newValue) -> this.markDiskDirty(true));
+		this.imageFile.setValue(file);
 	}
 
 	/**
 	 * Reads the file metadata and initializes fields
 	 */
-	public void readFileMetadataIntoImage(List<Location> knownLocations, List<Species> knownSpecies)
+	public void readFileMetadataIntoImage()
 	{
 		try
 		{
-			// Set the date to a default
-			this.dateTakenProperty.setValue(LocalDateTime.now());
-			//Read the metadata off of the image
-			TiffImageMetadata tiffImageMetadata = MetadataUtils.readImageMetadata(this.getFile());
+			final String UNSPECIFIED = "Unspecified";
 
-			// Read date, location, and species
-			this.readDateFromMetadata(tiffImageMetadata);
-			this.readLocationFromMetadata(tiffImageMetadata, knownLocations);
-			this.readSpeciesFroMetadata(tiffImageMetadata, knownSpecies);
+			//Read the metadata off of the imagee
+			Map<Tag, String> imageMetadataMap = MetadataUtils.readImageMetadata(this.getFile());
 
-			this.markDiskDirty(false);
+			this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
+			this.locationTaken.setValue(new Location(
+					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
+			this.droneMaker.setValue(imageMetadataMap.getOrDefault(StandardTag.MAKE, UNSPECIFIED));
+			this.cameraModel.setValue(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.CAMERA_MODEL_NAME, UNSPECIFIED));
+			this.speed.setValue(new Vector3(
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.SPEED_X, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.SPEED_Y, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.SPEED_Z, "0"))));
+			this.rotation.setValue(new Vector3(
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.ROLL, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.PITCH, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.YAW, "0"))));
 		}
-		catch (ImageReadException | IOException e)
+		catch (Exception e)
 		{
 			CalliopeData.getInstance().getErrorDisplay().notify("Error reading image metadata for file " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
-		}
-	}
-
-	/**
-	 * Reads the date off of an image given metadata
-	 *
-	 * @param tiffImageMetadata The image metadata
-	 * @throws ImageReadException If the image read fails
-	 */
-	private void readDateFromMetadata(TiffImageMetadata tiffImageMetadata) throws ImageReadException
-	{
-		if (tiffImageMetadata != null)
-		{
-			// Grab the date taken from the metadata
-			String[] dateTaken = tiffImageMetadata.getFieldValue(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL);
-			if (dateTaken != null && dateTaken.length == 1)
-				this.dateTakenProperty.setValue(LocalDateTime.parse(dateTaken[0], DATE_FORMAT_FOR_DISK));
-		}
-	}
-
-	/**
-	 * Reads the location off of an image given metadata
-	 *
-	 * @param tiffImageMetadata The image metadata
-	 * @param knownLocations The current list of known locations
-	 * @throws ImageReadException If the image read fails
-	 */
-	private void readLocationFromMetadata(TiffImageMetadata tiffImageMetadata, List<Location> knownLocations) throws ImageReadException
-	{
-		// Make sure it actually has metadata to read...
-		if (tiffImageMetadata != null)
-		{
-			// Grab the species field from the metadata
-			String[] locationField = tiffImageMetadata.getFieldValue(CalliopeMetadataFields.LOCATION_ENTRY);
-			// Ensure that the field does actually exist...
-			if (locationField != null)
-			{
-				// We look for length 3
-				if (locationField.length == 3)
-				{
-					// Grab the location, location id, elevation, and lat/lng
-					String locationName = locationField[0];
-					String locationElevation = locationField[1];
-					String locationId = locationField[2];
-					double locationLatitude = RoundingUtils.roundLat(tiffImageMetadata.getGPS().getLatitudeAsDegreesNorth());
-					double locationLongitude = RoundingUtils.roundLng(tiffImageMetadata.getGPS().getLongitudeAsDegreesEast());
-
-					// Use a try & catch to parse the elevation
-					try
-					{
-						// Find a matching location. It must have:
-						// The same name
-						// A latitude .00001 units apart from the original
-						// A longitude .00001 units apart from the original
-						// An elevation 25 units apart from the original location
-						Optional<Location> correctLocation =
-							knownLocations
-								.stream()
-								.filter(location ->
-										StringUtils.equalsIgnoreCase(location.getId(), locationId) &&
-												Math.abs(location.getLatitude() - locationLatitude) < 0.0001 &&
-												Math.abs(location.getLongitude() - locationLongitude) < 0.0001)// For now, ignore elevation Math.abs(location.elevationProperty() - Double.parseDouble(locationElevation)) < 25)
-								.findFirst();
-
-						if (correctLocation.isPresent())
-						{
-							this.setLocationTaken(correctLocation.get());
-						}
-						else
-						{
-							Location newLocation = new Location(locationName, locationId, locationLatitude, locationLongitude, Double.parseDouble(locationElevation));
-							knownLocations.add(newLocation);
-							this.setLocationTaken(newLocation);
-						}
-					}
-					catch (NumberFormatException ignored)
-					{
-						CalliopeData.getInstance().getErrorDisplay().notify("Error parsing elevation for image, it was " + locationElevation + "!");
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Reads the species off of an image given metadata
-	 *
-	 * @param tiffImageMetadata The image metadata
-	 * @param knownSpecies The current list of known species
-	 * @throws ImageReadException If the image read fails
-	 */
-	private void readSpeciesFroMetadata(TiffImageMetadata tiffImageMetadata, List<Species> knownSpecies) throws ImageReadException
-	{
-		// Make sure it actually has metadata to read...
-		if (tiffImageMetadata != null)
-		{
-			// Grab the species field from the metadata
-			String[] speciesField = tiffImageMetadata.getFieldValue(CalliopeMetadataFields.SPECIES_ENTRY);
-			// Ensure that the field does actually exist...
-			if (speciesField != null)
-			{
-				// Go through each of the species entries in the species field
-				// For some reason, the last element of the speciesField array will always be null. No idea why...
-				for (String speciesEntry : speciesField)
-				{
-					if (speciesEntry != null)
-					{
-						// Unpack the species entry by splitting it by the comma delimiter
-						String[] speciesEntryUnpacked = StringUtils.splitByWholeSeparator(speciesEntry, ",");
-						// Should be in the format: Name, ScientificName, Amount, so the length should be 3
-						if (speciesEntryUnpacked.length == 3)
-						{
-							// Grab the three fields
-							String speciesName = StringUtils.trim(speciesEntryUnpacked[0]);
-							String speciesScientificName = StringUtils.trim(speciesEntryUnpacked[1]);
-							String speciesCount = StringUtils.trim(speciesEntryUnpacked[2]);
-
-							// Check to see if we already have a species with the scientific and regular name
-							Optional<Species> correctSpecies =
-								knownSpecies
-									.stream()
-									.filter(species ->
-											StringUtils.equalsIgnoreCase(species.getCommonName(), speciesName) &&
-													StringUtils.equalsIgnoreCase(species.getScientificName(), speciesScientificName))
-									.findFirst();
-
-							// We need to parse a string into an integer so ensure that this doesn't crash using a try & catch
-							try
-							{
-								// Do we have a species? If so tag this image with the species and amount
-								if (correctSpecies.isPresent())
-								{
-									this.getSpeciesPresent().add(new SpeciesEntry(correctSpecies.get(), Integer.parseInt(speciesCount)));
-								}
-								// We got a species that was not registered in the program, what do we do?
-								else
-								{
-									Species newSpecies = new Species(speciesName, speciesScientificName);
-									knownSpecies.add(newSpecies);
-									this.addSpecies(newSpecies, Integer.parseInt(speciesCount));
-								}
-							}
-							catch (NumberFormatException ignored)
-							{
-								CalliopeData.getInstance().getErrorDisplay().notify("Error parsing species count for image, it was " + speciesCount + "!");
-							}
-						}
-					}
-				}
-			}
 		}
 	}
 
@@ -267,192 +103,131 @@ public class ImageEntry extends ImageContainer
 		// The image is checked if the location is valid and the species present list is not empty
 		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
 		{
-			if (this.getLocationTaken() != null && this.getLocationTaken().locationValid() && !this.getSpeciesPresent().isEmpty())
-				return CHECKED_IMAGE_ICON;
-			else if (!this.getSpeciesPresent().isEmpty())
-				return SPECIES_ONLY_IMAGE_ICON;
-			else if (this.getLocationTaken() != null && this.getLocationTaken().locationValid())
-				return LOCATION_ONLY_IMAGE_ICON;
+			if (this.siteTaken.getValue() != null)
+				return NEON_IMAGE_ICON;
 			return DEFAULT_IMAGE_ICON;
-		}, this.locationTakenProperty, this.speciesPresent);
-		selectedImageProperty.bind(imageBinding);
+		}, this.siteTaken);
+		selectedImage.bind(imageBinding);
 	}
 
-	/**
-	 * Getter for the tree icon property
-	 *
-	 * @return The tree icon to be used
-	 */
 	@Override
-	public ObjectProperty<Image> getTreeIconProperty()
+	public ObjectProperty<Image> treeIconProperty()
 	{
-		return selectedImageProperty;
+		return this.selectedImage;
 	}
 
-	/**
-	 * Get the image file
-	 * 
-	 * @return The image file
-	 */
 	public File getFile()
 	{
-		return this.imageFileProperty.getValue();
+		return this.imageFile.getValue();
 	}
 
-	/**
-	 * Get the image file property that this image represents
-	 *
-	 * @return The file property that this image represents
-	 */
 	public ObjectProperty<File> getFileProperty()
 	{
-		return this.imageFileProperty;
+		return this.imageFile;
 	}
 
 	public void setDateTaken(LocalDateTime date)
 	{
-		this.dateTakenProperty.setValue(date);
+		this.dateTaken.setValue(date);
 	}
 
-	/**
-	 * Returns the date the image was taken
-	 * 
-	 * @return The date the image was taken
-	 */
 	public LocalDateTime getDateTaken()
 	{
-		//this.validateDate();
-		return dateTakenProperty.getValue();
+		return dateTaken.getValue();
 	}
 
-	/**
-	 * Returns the date property of the image
-	 *
-	 * @return The date the image was taken property
-	 */
 	public ObjectProperty<LocalDateTime> dateTakenProperty()
 	{
-		return dateTakenProperty;
+		return dateTaken;
 	}
 
-	/**
-	 * Set the location that the image was taken at
-	 * 
-	 * @param location
-	 *            The location
-	 */
-	public void setLocationTaken(Location location)
+	public void setLocationTaken(Location locationTaken)
 	{
-		this.locationTakenProperty.setValue(location);
+		this.locationTaken.setValue(locationTaken);
 	}
 
-	/**
-	 * Return the location that the image was taken
-	 * 
-	 * @return The location
-	 */
 	public Location getLocationTaken()
 	{
-		return locationTakenProperty.getValue();
+		return locationTaken.getValue();
 	}
 
 	public ObjectProperty<Location> locationTakenProperty()
 	{
-		return locationTakenProperty;
+		return locationTaken;
 	}
 
-	/**
-	 * Add a new species to the image
-	 *
-	 * @param species
-	 *            The species of the animal
-	 * @param amount
-	 *            The number of animals in the image
-	 */
-	public void addSpecies(Species species, Integer amount)
+	public void setDroneMaker(String droneMaker)
 	{
-		// Grab the old species entry for the given species if present, and then add the amounts
-		Optional<SpeciesEntry> currentEntry = this.speciesPresent.stream().filter(speciesEntry -> speciesEntry.getSpecies().equals(species)).findFirst();
-		int oldAmount = currentEntry.map(SpeciesEntry::getCount).orElse(0);
-		this.removeSpecies(species);
-		this.speciesPresent.add(new SpeciesEntry(species, amount + oldAmount));
+		this.droneMaker.setValue(droneMaker);
 	}
 
-	/**
-	 * Remove a species from the list of image species
-	 * 
-	 * @param species
-	 *            The species to remove
-	 */
-	public void removeSpecies(Species species)
+	public String getDroneMaker()
 	{
-		this.speciesPresent.removeIf(entry -> entry.getSpecies() == species);
+		return droneMaker.getValue();
 	}
 
-	/**
-	 * Get the list of present species
-	 * 
-	 * @return A list of present species
-	 */
-	public ObservableList<SpeciesEntry> getSpeciesPresent()
+	public StringProperty droneMakerProperty()
 	{
-		return speciesPresent;
+		return this.droneMaker;
 	}
 
-	public void markDiskDirty(Boolean dirty)
+	public void setCameraModel(String cameraModel)
 	{
-		this.isDiskDirty.set(dirty);
+		this.cameraModel.setValue(cameraModel);
 	}
 
-	public Boolean isDiskDirty()
+	public String getCameraModel()
 	{
-		return this.isDiskDirty.get();
+		return cameraModel.getValue();
 	}
 
-	/**
-	 * Writes the species and location tagged in this image to the disk
-	 */
-	public synchronized void writeToDisk()
+	public StringProperty cameraModelProperty()
 	{
-		try
-		{
-			// Read the output set from the image entry
-			TiffOutputSet outputSet = MetadataUtils.readOutputSet(this);
+		return this.cameraModel;
+	}
 
-			// Grab the EXIF directory from the output set
-			TiffOutputDirectory exif = outputSet.getOrCreateExifDirectory();
-			exif.removeField(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL);
-			exif.add(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, DATE_FORMAT_FOR_DISK.format(this.getDateTaken()));
+	public void setSpeed(Vector3 speed)
+	{
+		this.speed.setValue(speed);
+	}
 
-			// Grab the Calliope directory from the output set
-			TiffOutputDirectory directory = MetadataUtils.getOrCreateCalliopeDirectory(outputSet);
+	public Vector3 getSpeed()
+	{
+		return speed.getValue();
+	}
 
-			// Remove the species field if it exists
-			directory.removeField(CalliopeMetadataFields.SPECIES_ENTRY);
-			// Use the species format name, scientific name, count
-			String[] metaVals = this.speciesPresent.stream().map(speciesEntry -> speciesEntry.getSpecies().getCommonName() + ", " + speciesEntry.getSpecies().getScientificName() + ", " + speciesEntry.getCount()).toArray(String[]::new);
-			// Add the species entry field
-			directory.add(CalliopeMetadataFields.SPECIES_ENTRY, metaVals);
+	public ObjectProperty<Vector3> speedProperty()
+	{
+		return this.speed;
+	}
 
-			// If we have a valid location, write that too
-			if (this.getLocationTaken() != null && this.getLocationTaken().locationValid())
-			{
-				// Write the lat/lng
-				outputSet.setGPSInDegrees(this.getLocationTaken().getLongitude(), this.getLocationTaken().getLatitude());
-				// Remove the location entry name and elevation
-				directory.removeField(CalliopeMetadataFields.LOCATION_ENTRY);
-				// Add the new location entry name and elevation
-				directory.add(CalliopeMetadataFields.LOCATION_ENTRY, this.getLocationTaken().getName(), this.getLocationTaken().getElevation().toString(), this.getLocationTaken().getId());
-			}
+	public void setRotation(Vector3 rotation)
+	{
+		this.rotation.setValue(rotation);
+	}
 
-			// Write the metadata
-			MetadataUtils.writeOutputSet(outputSet, this);
+	public Vector3 getRotation()
+	{
+		return rotation.getValue();
+	}
 
-			this.markDiskDirty(false);
-		}
-		catch (ImageReadException | IOException | ImageWriteException e)
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Error writing metadata to the image " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
-		}
+	public ObjectProperty<Vector3> rotationProperty()
+	{
+		return rotation;
+	}
+
+	public void setSiteTaken(BoundedSite siteTaken)
+	{
+		this.siteTaken.setValue(siteTaken);
+	}
+
+	public BoundedSite getSiteTaken()
+	{
+		return siteTaken.getValue();
+	}
+
+	public ObjectProperty<BoundedSite> siteTakenProperty()
+	{
+		return siteTaken;
 	}
 }

@@ -24,5 +24,5 @@ public interface HierarchyData<T extends HierarchyData> {
      *
      * @return The image to be put as the tree icon
      */
-    ObjectProperty<Image> getTreeIconProperty();
+    ObjectProperty<Image> treeIconProperty();
 }

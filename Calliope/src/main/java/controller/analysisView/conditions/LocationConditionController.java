@@ -63,6 +63,7 @@ public class LocationConditionController implements IConditionController
 		{
 			this.locationFilterCondition = (LocationFilterCondition) iQueryCondition;
 
+			/*
 			// Grab the global location list
 			SortedList<Location> locations = new SortedList<>(this.locationFilterCondition.getLocationList());
 			// We set the comparator to be the name of the location
@@ -80,6 +81,7 @@ public class LocationConditionController implements IConditionController
 			this.locationFilterListView.setItems(locationsFilteredList);
 			this.locationFilterListView.setCellFactory(CheckBoxListCell.forListView(location -> this.locationFilterCondition.locationSelectedProperty(location)));
 			this.locationFilterListView.setEditable(true);
+			*/
 		}
 	}
 

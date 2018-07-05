@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import model.CalliopeData;
 import model.location.Location;
+import model.neon.BoundedSite;
 import netscape.javascript.JSObject;
 
 import java.net.URL;
@@ -35,7 +36,7 @@ public class CalliopeMapController implements Initializable
 	private GoogleMap googleMap;
 
 	// A map of location to the marker representing that location
-	private Map<Location, Marker> locationMarkers = new HashMap<>();
+	private Map<BoundedSite, Marker> locationMarkers = new HashMap<>();
 
 	/**
 	 * Initialize sets up the analysis window and bindings
@@ -69,7 +70,7 @@ public class CalliopeMapController implements Initializable
 			this.googleMap = this.googleMapView.createMap(mapOptions);
 
 			// When the location list changes, we put the locations onto the map display
-			CalliopeData.getInstance().getLocationList().addListener((ListChangeListener<Location>) c -> {
+			CalliopeData.getInstance().getSiteList().addListener((ListChangeListener<BoundedSite>) c -> {
 				// Iterate over changes
 				while (c.next())
 				{
@@ -80,7 +81,7 @@ public class CalliopeMapController implements Initializable
 						for (int i = c.getFrom(); i < c.getTo(); ++i)
 						{
 							// Get the updated location
-							Location changed = c.getList().get(i);
+							BoundedSite changed = c.getList().get(i);
 							// This also removes the old marker!
 							this.addMarkerForLocation(changed);
 						}
@@ -138,32 +139,32 @@ public class CalliopeMapController implements Initializable
 	}
 
 	/**
-	 * Removes the current marker for the location if it exists, and adds a new one
+	 * Removes the current marker for the site if it exists, and adds a new one
 	 *
-	 * @param location The location to add/update a marker for
+	 * @param site The site to add/update a marker for
 	 */
-	private void addMarkerForLocation(Location location)
+	private void addMarkerForLocation(BoundedSite site)
 	{
-		// If we already have a marker for the location, remove it
-		if (locationMarkers.containsKey(location))
-			this.googleMap.removeMarker(locationMarkers.remove(location));
+		// If we already have a marker for the site, remove it
+		if (locationMarkers.containsKey(site))
+			this.googleMap.removeMarker(locationMarkers.remove(site));
 		// Create the marker options which defines the title and position
 		MarkerOptions options = new MarkerOptions()
-				.title(location.getName())
-				.position(new LatLong(location.getLatitude(), location.getLongitude()));
+				.title(site.getSite().getSiteName())
+				.position(new LatLong(site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude()));
 		Marker marker = new Marker(options);
 		// Add a marker to the map
 		this.googleMap.addMarker(marker);
-		// Create an info window that shows the location details when opened
+		// Create an info window that shows the site details when opened
 		InfoWindowOptions infoWindowOptions = new InfoWindowOptions()
-				.content(location.getName())
-				.position(new LatLong(location.getLatitude(), location.getLongitude()));
+				.content(site.getSite().getSiteName())
+				.position(new LatLong(site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude()));
 		InfoWindow infoWindow = new InfoWindow(infoWindowOptions);
 		// When we click the map marker, open the info window
 		this.googleMap.addUIEventHandler(marker, UIEventType.click, (JSObject obj) -> {
 			infoWindow.open(googleMap, marker);
 		});
 		// Add the marker reference to the map
-		locationMarkers.put(location, marker);
+		locationMarkers.put(site, marker);
 	}
 }

@@ -33,8 +33,11 @@ public class ImageDirectory extends ImageContainer
 					image.dateTakenProperty(),
 					image.getFileProperty(),
 					image.locationTakenProperty(),
-					image.getSpeciesPresent(),
-					image.getTreeIconProperty()
+					image.treeIconProperty(),
+					image.droneMakerProperty(),
+					image.cameraModelProperty(),
+					image.speedProperty(),
+					image.rotationProperty()
 			};
 		}
 		else if (imageContainer instanceof ImageDirectory)
@@ -78,7 +81,7 @@ public class ImageDirectory extends ImageContainer
 	 * @return An image representing this image directory
 	 */
 	@Override
-	public ObjectProperty<Image> getTreeIconProperty()
+	public ObjectProperty<Image> treeIconProperty()
 	{
 		return DEFAULT_DIRECTORY_ICON;
 	}

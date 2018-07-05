@@ -16,6 +16,8 @@ import java.util.List;
  */
 public class CalliopeAnalysisUtils
 {
+	private static final String[] ACCEPTED_EXTENSIONS = { "jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO" };
+
 	/**
 	 * Turns a CSV string into a list of integers
 	 * 
@@ -52,20 +54,7 @@ public class CalliopeAnalysisUtils
 	 */
 	public static boolean fileIsImage(File file)
 	{
-		return StringUtils.endsWithAny(file.getAbsolutePath(), "jpg", "jpeg", "JPEG", "JPG");
-
-		// This checks to see if the file is purely an image, we want JPGs only!
-		/*
-		String result = null;
-		try
-		{
-			result = Files.probeContentType(file.toPath());
-		}
-		catch (IOException ignored)
-		{
-		}
-		return !(result == null || !result.startsWith("image"));
-		*/
+		return StringUtils.endsWithAny(file.getAbsolutePath(), ACCEPTED_EXTENSIONS);
 	}
 
 	/**

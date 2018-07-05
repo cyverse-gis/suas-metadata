@@ -25,6 +25,8 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,75 +41,94 @@ public class NeonData
 	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-20180605v16.kmz";
 
 	// List of NEON sites
-	private ObservableList<Site> sites = FXCollections.observableArrayList(site -> new Observable[]
+	private ObservableList<BoundedSite> sites = FXCollections.observableArrayList(site -> new Observable[]
 	{
-			site.domainCodeProperty(),
-			site.domainNameProperty(),
-			site.siteCodeProperty(),
-			site.siteDescriptionProperty(),
-			site.siteLatitudeProperty(),
-			site.siteLongitudeProperty(),
-			site.siteNameProperty(),
-			site.siteTypeProperty(),
-			site.stateCodeProperty(),
-			site.stateNameProperty(),
-			site.dataProductsProperty()
+		site.siteProperty(),
+		site.boundaryProperty()
 	});
 
 	/**
-	 * Given a latitude and a longitude this method returns the closest site
+	 * Parses a KML document into a list of bounded sites
 	 *
-	 * @param latitude The latitude to test
-	 * @param longitude The longitude to test
-	 * @return The site closest to the lat/long pair
+	 * @return A list of sites + their boundaries
 	 */
-	public Site closestSiteTo(Double latitude, Double longitude)
+	public List<BoundedSite> retrieveBoundedSites()
 	{
-		// Compute the shortest distance, test each site
-		Double shortestDistance = Double.MAX_VALUE;
-		Site closestSite = null;
-		// Iterate over all sites
-		for (Site site : this.sites)
+		// Create a list of bounded sites to add to
+		List<BoundedSite> boundedSites = new ArrayList<>();
+
+		// Grab the current list of sites from the NEON API
+		List<Site> sites = this.pullSites();
+
+		// Grab the current KML from the NEON website
+		Kml kml = this.getCurrentSiteKML();
+
+		if (kml != null)
 		{
-			// Compute the distance between the site and the lat/long point
-			Double distanceToSite = CalliopeAnalysisUtils.distanceBetween(latitude, longitude, site.getSiteLatitude(), site.getSiteLongitude());
-			// If this site is the closest so far, store it
-			if (distanceToSite < shortestDistance)
+			// The top level directory contains a single directory which should have NEON project locations. Check that here
+			Feature lvl0Feature = kml.getFeature();
+			if (lvl0Feature.getName().equals("NEON Project Locations (v16)") && lvl0Feature instanceof Folder)
 			{
-				// Store the site and the distance
-				shortestDistance = distanceToSite;
-				closestSite = site;
+				// Cast the feature into a folder since we tested above
+				Folder topFolder = (Folder) lvl0Feature;
+				// In the top folder there are 6 sub-folders, and we are interested in a single one. Search for it here
+				for (Feature lvl1Feature : topFolder.getFeature())
+				{
+					// If the feature has the right name and type, we found it!
+					if (lvl1Feature.getName().equals("NEON_Field_Sampling_Boundaries") && lvl1Feature instanceof Document)
+					{
+						// Parse the feature into a document which we tested above
+						Document fieldSamplingBoundaries = (Document) lvl1Feature;
+						// This document should have two features, one list of names & positions and the other a list of boundaries
+						// Grab both features
+						Feature lvl2FeaturePoly = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Features")).findFirst().get();
+						Feature lvl2FeatureLabl = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Feature Labels (Name)")).findFirst().get();
+						// Test if they are non-null and the right type
+						if (lvl2FeaturePoly instanceof Folder && lvl2FeatureLabl instanceof Folder)
+						{
+							// The first feature should have a list of polygons, and the second feature should have a list of labels
+							List<Feature> polygons = ((Folder) lvl2FeaturePoly).getFeature();
+							List<Feature> labels = ((Folder) lvl2FeatureLabl).getFeature();
+							// These lists should be the same size as they contain parallel data, so ensure that here
+							if (polygons.size() == labels.size() && polygons.stream().allMatch(feature -> feature instanceof Placemark) && labels.stream().allMatch(label -> label instanceof Placemark))
+							{
+								// Iterate over parallel data
+								for (Integer i = 0; i < polygons.size(); i++)
+								{
+									// Grab one entry from both lists
+									Placemark polygonPlacemark = (Placemark) polygons.get(i);
+									Placemark labelPlacemark = (Placemark) labels.get(i);
+									// Grab the geometry from both lists, one should be a polygon and the other should be a point
+									Geometry polygonRaw = polygonPlacemark.getGeometry();
+									Geometry labelRaw = labelPlacemark.getGeometry();
+									// Ensure the geometry has the right type
+									if (polygonRaw instanceof Polygon && labelRaw instanceof Point)
+									{
+										// Grab the point and polygon
+										Polygon boundary = (Polygon) polygonRaw;
+										Point location = (Point) labelRaw;
+										// A point contains a list of coordinates, which contains exactly one element, grab it
+										Coordinate locationCoord = location.getCoordinates().get(0);
+										// Find the closest site to this location coordinate
+										Site site = this.closestSiteTo(sites, locationCoord.getLatitude(), locationCoord.getLongitude());
+										// Make sure the site is non-null
+										if (site != null)
+										{
+											// Add the bounded site to our list
+											boundedSites.add(new BoundedSite(site, boundary));
+										}
+									}
+								}
+							}
+						}
+						// We found the one entry we wanted, so no need to keep iterating
+						break;
+					}
+				}
 			}
 		}
-		// Return the closest site
-		return closestSite;
-	}
 
-	/**
-	 * Pulls the list of NEON sites from the NEON api and returns them in a structured format
-	 */
-	public void pullAndStoreSites()
-	{
-		try
-		{
-			// Setup the correct URL
-			URL neonSiteAPI = new URL(NEON_API_URL + "/sites");
-			// Establish a connection to the NEON site
-			URLConnection neonSiteConnection = neonSiteAPI.openConnection();
-			// Read the entire response into a buffered reader
-			BufferedReader jsonReader = new BufferedReader(new InputStreamReader(neonSiteConnection.getInputStream()));
-			// Join all the lines together into a single JSON string
-			String json = jsonReader.lines().collect(Collectors.joining());
-			// Convert the JSON string into a structured format
-			Site[] sites = CalliopeData.getInstance().getGson().fromJson(json, Sites.class).getData();
-			// Store the result
-			Platform.runLater(() -> this.sites.setAll(sites));
-		}
-		catch (IOException e)
-		{
-			// If an error happened, print the message
-			CalliopeData.getInstance().getErrorDisplay().notify("Could not retrieve NEON sites, error was:\n" + ExceptionUtils.getStackTrace(e));
-		}
+		return boundedSites;
 	}
 
 	/**
@@ -115,7 +136,7 @@ public class NeonData
 	 *
 	 * @return The KML document representing the KML file
 	 */
-	public Kml getCurrentSiteKML()
+	private Kml getCurrentSiteKML()
 	{
 		try
 		{
@@ -161,79 +182,61 @@ public class NeonData
 	}
 
 	/**
-	 * Parses a KML document into a list of bounded sites
+	 * Given a latitude and a longitude this method returns the closest site
 	 *
-	 * @param kml The raw KML to parse
-	 * @return A list of sites + their boundaries
+	 * @param sites The sites to search through
+	 * @param latitude The latitude to test
+	 * @param longitude The longitude to test
+	 * @return The site closest to the lat/long pair
 	 */
-	public List<BoundedSite> parseBoundedSites(Kml kml)
+	private Site closestSiteTo(List<Site> sites, Double latitude, Double longitude)
 	{
-		// Create a list of bounded sites to add to
-		List<BoundedSite> boundedSites = new ArrayList<>();
-
-		// The top level directory contains a single directory which should have NEON project locations. Check that here
-		Feature lvl0Feature = kml.getFeature();
-		if (lvl0Feature.getName().equals("NEON Project Locations (v16)") && lvl0Feature instanceof Folder)
+		// Compute the shortest distance, test each site
+		Double shortestDistance = Double.MAX_VALUE;
+		Site closestSite = null;
+		// Iterate over all sites
+		for (Site site : sites)
 		{
-			// Cast the feature into a folder since we tested above
-			Folder topFolder = (Folder) lvl0Feature;
-			// In the top folder there are 6 sub-folders, and we are interested in a single one. Search for it here
-			for (Feature lvl1Feature : topFolder.getFeature())
+			// Compute the distance between the site and the lat/long point
+			Double distanceToSite = CalliopeAnalysisUtils.distanceBetween(latitude, longitude, site.getSiteLatitude(), site.getSiteLongitude());
+			// If this site is the closest so far, store it
+			if (distanceToSite < shortestDistance)
 			{
-				// If the feature has the right name and type, we found it!
-				if (lvl1Feature.getName().equals("NEON_Field_Sampling_Boundaries") && lvl1Feature instanceof Document)
-				{
-					// Parse the feature into a document which we tested above
-					Document fieldSamplingBoundaries = (Document) lvl1Feature;
-					// This document should have two features, one list of names & positions and the other a list of boundaries
-					// Grab both features
-					Feature lvl2FeaturePoly = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Features")).findFirst().get();
-					Feature lvl2FeatureLabl = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Feature Labels (Name)")).findFirst().get();
-					// Test if they are non-null and the right type
-					if (lvl2FeaturePoly instanceof Folder && lvl2FeatureLabl instanceof Folder)
-					{
-						// The first feature should have a list of polygons, and the second feature should have a list of labels
-						List<Feature> polygons = ((Folder) lvl2FeaturePoly).getFeature();
-						List<Feature> labels = ((Folder) lvl2FeatureLabl).getFeature();
-						// These lists should be the same size as they contain parallel data, so ensure that here
-						if (polygons.size() == labels.size() && polygons.stream().allMatch(feature -> feature instanceof Placemark) && labels.stream().allMatch(label -> label instanceof Placemark))
-						{
-							// Iterate over parallel data
-							for (Integer i = 0; i < polygons.size(); i++)
-							{
-								// Grab one entry from both lists
-								Placemark polygonPlacemark = (Placemark) polygons.get(i);
-								Placemark labelPlacemark = (Placemark) labels.get(i);
-								// Grab the geometry from both lists, one should be a polygon and the other should be a point
-								Geometry polygonRaw = polygonPlacemark.getGeometry();
-								Geometry labelRaw = labelPlacemark.getGeometry();
-								// Ensure the geometry has the right type
-								if (polygonRaw instanceof Polygon && labelRaw instanceof Point)
-								{
-									// Grab the point and polygon
-									Polygon boundary = (Polygon) polygonRaw;
-									Point location = (Point) labelRaw;
-									// A point contains a list of coordinates, which contains exactly one element, grab it
-									Coordinate locationCoord = location.getCoordinates().get(0);
-									// Find the closest site to this location coordinate
-									Site site = this.closestSiteTo(locationCoord.getLatitude(), locationCoord.getLongitude());
-									// Make sure the site is non-null
-									if (site != null)
-									{
-										// Add the bounded site to our list
-										boundedSites.add(new BoundedSite(site, boundary));
-									}
-								}
-							}
-						}
-					}
-					// We found the one entry we wanted, so no need to keep iterating
-					break;
-				}
+				// Store the site and the distance
+				shortestDistance = distanceToSite;
+				closestSite = site;
 			}
 		}
+		// Return the closest site
+		return closestSite;
+	}
 
-		return boundedSites;
+	/**
+	 * Pulls the list of NEON sites from the NEON api and returns them in a structured format
+	 */
+	private List<Site> pullSites()
+	{
+		try
+		{
+			// Setup the correct URL
+			URL neonSiteAPI = new URL(NEON_API_URL + "/sites");
+			// Establish a connection to the NEON site
+			URLConnection neonSiteConnection = neonSiteAPI.openConnection();
+			// Read the entire response into a buffered reader
+			BufferedReader jsonReader = new BufferedReader(new InputStreamReader(neonSiteConnection.getInputStream()));
+			// Join all the lines together into a single JSON string
+			String json = jsonReader.lines().collect(Collectors.joining());
+			// Convert the JSON string into a structured format
+			Site[] sites = CalliopeData.getInstance().getGson().fromJson(json, Sites.class).getData();
+			// Store the result
+			return Arrays.asList(sites);
+		}
+		catch (IOException e)
+		{
+			// If an error happened, print the message
+			CalliopeData.getInstance().getErrorDisplay().notify("Could not retrieve NEON sites, error was:\n" + ExceptionUtils.getStackTrace(e));
+		}
+		return Collections.emptyList();
 	}
 
 	/**
@@ -285,13 +288,5 @@ public class NeonData
 		{
 			System.out.println(StringUtils.repeat("-", depth * 2) + " <tour> " + feature.getName());
 		}
-	}
-
-	/**
-	 * @return Getter to retrieve a list of NEON sites
-	 */
-	public ObservableList<Site> getSites()
-	{
-		return this.sites;
 	}
 }

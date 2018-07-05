@@ -213,7 +213,7 @@ public class TreeViewAutomatic<T extends HierarchyData<T>> extends TreeView<T>
         /*
 		 * Custom addition to add support for a default icon
          */
-		treeItem.graphicProperty().bind(Bindings.createObjectBinding(() -> new ImageView(treeItem.getValue().getTreeIconProperty().getValue()), treeItem.getValue().getTreeIconProperty()));
+		treeItem.graphicProperty().bind(Bindings.createObjectBinding(() -> new ImageView(treeItem.getValue().treeIconProperty().getValue()), treeItem.getValue().treeIconProperty()));
 
 		if (value != null && value.getChildren() != null)
 		{

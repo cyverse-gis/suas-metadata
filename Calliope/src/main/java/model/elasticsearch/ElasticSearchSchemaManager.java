@@ -44,40 +44,6 @@ public class ElasticSearchSchemaManager
 					.startObject("username")
 						.field("type", "keyword")
 					.endObject()
-					.startObject("species")
-						.field("type", "nested")
-						.startObject("properties")
-							.startObject("commonName")
-								.field("type", "text")
-							.endObject()
-							.startObject("scientificName")
-								.field("type", "text")
-							.endObject()
-							.startObject("keyBinding")
-								.field("type", "keyword")
-							.endObject()
-							.startObject("speciesIconURL")
-								.field("type", "keyword")
-							.endObject()
-						.endObject()
-					.endObject()
-					.startObject("locations")
-						.field("type", "nested")
-						.startObject("properties")
-							.startObject("name")
-								.field("type", "text")
-							.endObject()
-							.startObject("id")
-								.field("type", "keyword")
-							.endObject()
-							.startObject("position")
-								.field("type", "geo_point")
-							.endObject()
-							.startObject("elevation")
-								.field("type", "double")
-							.endObject()
-						.endObject()
-					.endObject()
 					.startObject("settings")
 						.field("type", "object")
 						.startObject("properties")
@@ -95,15 +61,6 @@ public class ElasticSearchSchemaManager
 							.endObject()
 							.startObject("popupDisplaySec")
 								.field("type", "double")
-							.endObject()
-							.startObject("drSandersonDirectoryCompatibility")
-								.field("type", "boolean")
-							.endObject()
-							.startObject("drSandersonOutput")
-								.field("type", "boolean")
-							.endObject()
-							.startObject("automaticNextImage")
-								.field("type", "boolean")
 							.endObject()
 							.startObject("backgroundImageLoading")
 								.field("type", "boolean")
@@ -162,40 +119,7 @@ public class ElasticSearchSchemaManager
 								.field("type", "integer")
 							.endObject()
 							.startObject("location")
-								.field("type", "object")
-								.startObject("properties")
-									.startObject("name")
-										.field("type", "keyword")
-									.endObject()
-									.startObject("id")
-										.field("type", "keyword")
-									.endObject()
-									.startObject("elevation")
-										.field("type", "double")
-									.endObject()
-									.startObject("position")
-										.field("type", "geo_point")
-									.endObject()
-								.endObject()
-							.endObject()
-							.startObject("speciesEntries")
-								.field("type", "nested")
-								.startObject("properties")
-									.startObject("species")
-										.field("type", "object")
-										.startObject("properties")
-											.startObject("commonName")
-												.field("type", "keyword")
-											.endObject()
-											.startObject("scientificName")
-												.field("type", "keyword")
-											.endObject()
-										.endObject()
-									.endObject()
-									.startObject("count")
-										.field("type", "integer")
-									.endObject()
-								.endObject()
+								.field("type", "keyword")
 							.endObject()
 						.endObject()
 					.endObject()
@@ -289,17 +213,43 @@ public class ElasticSearchSchemaManager
 		.startObject()
 			.startObject(indexType)
 				.startObject("properties")
-					.startObject("name")
-						.field("type", "text")
-					.endObject()
-					.startObject("description")
-						.field("type", "text")
+					.startObject("site")
+						.field("type", "object")
+						.startObject("properties")
+							.startObject("domainCode")
+								.field("type", "keyword")
+							.endObject()
+							.startObject("domainName")
+								.field("type", "text")
+							.endObject()
+							.startObject("siteCode")
+								.field("type", "keyword")
+							.endObject()
+							.startObject("siteDescription")
+								.field("type", "text")
+							.endObject()
+							.startObject("siteLatitude")
+								.field("type", "double")
+							.endObject()
+							.startObject("siteLongitude")
+								.field("type", "double")
+							.endObject()
+							.startObject("siteName")
+								.field("type", "text")
+							.endObject()
+							.startObject("siteType")
+								.field("type", "keyword")
+							.endObject()
+							.startObject("stateCode")
+								.field("type", "keyword")
+							.endObject()
+							.startObject("stateName")
+								.field("type", "keyword")
+							.endObject()
+						.endObject()
 					.endObject()
 					.startObject("boundary")
 						.field("type", "geo_shape")
-					.endObject()
-					.startObject("code")
-						.field("type", "keyword")
 					.endObject()
 				.endObject()
 			.endObject()
@@ -318,23 +268,11 @@ public class ElasticSearchSchemaManager
 		// Massive try-with-resources block used to read 3 default JSON files, one containing settings, one containing locations, and one
 		// containing species.
 		try (InputStreamReader inputStreamSettingsReader = new InputStreamReader(this.getClass().getResourceAsStream("/settings.json"));
-			 BufferedReader settingsFileReader = new BufferedReader(inputStreamSettingsReader);
-			 InputStreamReader inputStreamLocationsReader = new InputStreamReader(this.getClass().getResourceAsStream("/locations.json"));
-			 BufferedReader locationsFileReader = new BufferedReader(inputStreamLocationsReader);
-			 InputStreamReader inputStreamSpeciesReader = new InputStreamReader(this.getClass().getResourceAsStream("/species.json"));
-			 BufferedReader speciesFileReader = new BufferedReader(inputStreamSpeciesReader))
+			 BufferedReader settingsFileReader = new BufferedReader(inputStreamSettingsReader))
 		{
 			// Read the settings json file
 			String settingsJSON = settingsFileReader.lines().collect(Collectors.joining("\n"));
 			XContentParser settingsParser = XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, settingsJSON.getBytes());
-
-			// Read the locations json file
-			String locationsJSON = locationsFileReader.lines().collect(Collectors.joining("\n"));
-			XContentParser locationsParser = XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, locationsJSON.getBytes());
-
-			// Read the species json file
-			String speciesJSON = speciesFileReader.lines().collect(Collectors.joining("\n"));
-			XContentParser speciesParser = XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, speciesJSON.getBytes());
 
 			// Setup the JSON by using the default values found in the JSON files
 			builder = XContentFactory.jsonBuilder()
@@ -342,10 +280,6 @@ public class ElasticSearchSchemaManager
 				.field("username", username)
 				.field("settings")
 				.copyCurrentStructure(settingsParser)
-				.field("species")
-				.copyCurrentStructure(speciesParser)
-				.field("locations")
-				.copyCurrentStructure(locationsParser)
 			.endObject();
 		}
 		catch (IOException e)
@@ -354,57 +288,6 @@ public class ElasticSearchSchemaManager
 			CalliopeData.getInstance().getErrorDisplay().notify("Could not insert a new user into the index!\n" + ExceptionUtils.getStackTrace(e));
 		}
 		return builder;
-	}
-
-	/**
-	 * Helper function to create a species update JSON blob given a list of species as the replacement
-	 *
-	 * @param species A list of species to replace the existing list
-	 * @return A JSON blob ready to be executed by an update request
-	 */
-	XContentBuilder makeSpeciesUpdate(List<Species> species) throws IOException
-	{
-		// Convert the species list to JSON in preperatation
-		String speciesJSON = CalliopeData.getInstance().getGson().toJson(species);
-		// Create a species field with the value as the JSON blob we just created above
-		return XContentFactory.jsonBuilder()
-		.startObject()
-			.field("species")
-			.copyCurrentStructure(XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, speciesJSON.getBytes()))
-		.endObject();
-	}
-
-	/**
-	 * Helper function that takes a list of locations and turns them into a map of string->object format ready to
-	 * by converted into JSON by the elasticsearch client.
-	 *
-	 * @param locations The list of locations to be converted
-	 * @return A map of key value pairs to be converted into JSON
-	 */
-	XContentBuilder makeLocationsUpdate(List<Location> locations) throws IOException
-	{
-		// Begin locations updates with an array (since we have a list of locations)
-		XContentBuilder locationsJSON = XContentFactory.jsonBuilder()
-		.startObject()
-			.startArray("locations");
-
-		// Iterate over all locations passed in, for each create an object and assign proper fields
-		for (Location location : locations)
-		{
-			locationsJSON
-			.startObject()
-				.field("name", location.getName())
-				.field("id", location.getId())
-				.field("elevation", location.getElevation())
-				.field("position", location.getLatitude() + ", " + location.getLongitude())
-			.endObject();
-		}
-
-		// Finish the locations JSON array and return it
-		locationsJSON
-			.endArray()
-		.endObject();
-		return locationsJSON;
 	}
 
 	/**
@@ -508,31 +391,8 @@ public class ElasticSearchSchemaManager
 				.field("monthTaken", imageEntry.getDateTaken().getMonthValue())
 				.field("hourTaken", imageEntry.getDateTaken().getHour())
 				.field("dayOfYearTaken", imageEntry.getDateTaken().getDayOfYear())
-				.field("dayOfWeekTaken", imageEntry.	getDateTaken().getDayOfWeek().getValue())
-				.startObject("location")
-					.field("elevation", imageEntry.getLocationTaken().getElevation())
-					.field("id", imageEntry.getLocationTaken().getId())
-					.field("name", imageEntry.getLocationTaken().getName())
-					.field("position", imageEntry.getLocationTaken().getLatitude() + ", " + imageEntry.getLocationTaken().getLongitude())
-				.endObject()
-				.startArray("speciesEntries");
-
-		// For each species entry we write out one JSON object
-		for (SpeciesEntry speciesEntry : imageEntry.getSpeciesPresent())
-		{
-			imageJSON
-					.startObject()
-					.startObject("species")
-						.field("commonName", speciesEntry.getSpecies().getCommonName())
-						.field("scientificName", speciesEntry.getSpecies().getScientificName())
-					.endObject()
-					.field("count", speciesEntry.getCount())
-					.endObject();
-		}
-
-		// Finalize the JSON object
-		imageJSON
-				.endArray()
+				.field("dayOfWeekTaken", imageEntry.getDateTaken().getDayOfWeek().getValue())
+				.field("location", "")
 			.endObject()
 		.endObject();
 
@@ -560,12 +420,13 @@ public class ElasticSearchSchemaManager
 		if (innerBoundaries != null)
 			boundariesCombined.addAll(innerBoundaries);
 
+		String siteJSON = CalliopeData.getInstance().getGson().toJson(boundedSite.getSite());
+
 		// Start off the content builder with fields we know such as name, code, and description
 		XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
 		.startObject()
-			.field("name", boundedSite.getSite().getSiteName())
-			.field("code", boundedSite.getSite().getStateCode())
-			.field("description", boundedSite.getSite().getSiteDescription())
+			.field("site")
+			.copyCurrentStructure(XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, siteJSON.getBytes()))
 			.startObject("boundary")
 				.field("type", "polygon")
 				// Polygon coordinates are given as a 3-deep array. First an array of boundaries,

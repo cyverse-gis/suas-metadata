@@ -338,7 +338,7 @@ public class CyVerseConnectionManager
 
 					// Create the JSON file representing the upload
 					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
-					Integer imagesWithSpecies = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry && !((ImageEntry) imageContainer).getSpeciesPresent().isEmpty()).count());
+					Integer imagesWithSpecies = 0;//Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry && !((ImageEntry) imageContainer).getSpeciesPresent().isEmpty()).count());
 					CloudUploadEntry uploadEntry = new CloudUploadEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), imagesWithSpecies, imageCount, uploadDirName);
 
 					// Create the meta.csv representing the metadata for all images in the tar file
@@ -420,18 +420,11 @@ public class CyVerseConnectionManager
 					messageCallback.setValue("Saving " + toUpload.size() + " image(s) to CyVerse...");
 
 					Double numberOfImagesToUpload = (double) toUpload.size();
-					Integer numberOfDetaggedImages = 0;
-					Integer numberOfRetaggedImages = 0;
 					// Begin saving
 					for (int i = 0; i < toUpload.size(); i++)
 					{
 						// Grab the cloud image entry to upload
 						CloudImageEntry cloudImageEntry = toUpload.get(i);
-						// If it has been pulled save it
-						if (cloudImageEntry.getSpeciesPresent().isEmpty() && cloudImageEntry.wasTaggedWithSpecies())
-							numberOfDetaggedImages++;
-						else if (!cloudImageEntry.getSpeciesPresent().isEmpty() && !cloudImageEntry.wasTaggedWithSpecies())
-							numberOfRetaggedImages++;
 
 						// Save that specific cloud image
 						this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount).putOperation(cloudImageEntry.getFile(), cloudImageEntry.getCyverseFile(), new TransferStatusCallbackListener()
@@ -454,8 +447,7 @@ public class CyVerseConnectionManager
 
 					// Add an edit comment so users know the file was edited
 					uploadEntryToSave.getEditComments().add("Edited by " + CalliopeData.getInstance().getUsername() + " on " + FOLDER_FORMAT.format(Calendar.getInstance().getTime()));
-					Integer imagesWithSpecies = uploadEntryToSave.getImagesWithSpecies() - numberOfDetaggedImages + numberOfRetaggedImages;
-					uploadEntryToSave.setImagesWithSpecies(imagesWithSpecies);
+					uploadEntryToSave.setImagesWithSpecies(0);
 
 					// Finally we update our metadata index
 					CalliopeData.getInstance().getEsConnectionManager().updateIndexedImages(toUpload, collection.getID().toString(), uploadEntryToSave);

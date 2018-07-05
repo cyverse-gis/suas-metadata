@@ -1,27 +1,20 @@
 package controller;
 
-import controller.importView.LocationCreatorController;
-import controller.importView.SpeciesCreatorController;
-import controller.importView.SpeciesListEntryController;
-import controller.importView.TimeShiftController;
 import javafx.animation.FadeTransition;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -29,34 +22,32 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.util.Pair;
+import javafx.util.StringConverter;
+import jfxtras.scene.control.LocalDateTimeTextField;
 import library.ImageViewPane;
 import library.TreeViewAutomatic;
 import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
 import model.image.*;
 import model.location.Location;
-import model.species.Species;
-import model.species.SpeciesEntry;
+import model.neon.BoundedSite;
+import model.neon.jsonPOJOs.Site;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
-import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.controlsfx.control.StatusBar;
-import org.controlsfx.control.action.Action;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javax.imageio.ImageIO;
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * Controller class for the main import window
@@ -79,38 +70,13 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public StackPane imagePane;
 
-	// Button used to shift the time
-	@FXML
-	public Button btnTimeShift;
-
-	// The slider for image brightness
-	@FXML
-	public Slider sldBrightness;
-	// The slider for image contrast
-	@FXML
-	public Slider sldContrast;
-	// The slider for image hue
-	@FXML
-	public Slider sldHue;
-	// The slider for saturation
-	@FXML
-	public Slider sldSaturation;
-
-	// The date the image was taken
-	@FXML
-	public TextField txtDateTaken;
-
-	// The list view containing all species entries
-	@FXML
-	public ListView<SpeciesEntry> speciesEntryListView;
-
 	// The tree view containing all the images and folders
 	@FXML
 	public TreeViewAutomatic<ImageContainer> imageTree;
 
 	// The list view containg all locations
 	@FXML
-	public ListView<Location> locationListView;
+	public ListView<BoundedSite> siteListView;
 
 	// The button to reset the image effects
 	@FXML
@@ -137,22 +103,9 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public Button btnRightArrow;
 
-	// Search field for species entry list
-	@FXML
-	public TextField txtSpeciesSearch;
-	// Reset button for the search field
-	@FXML
-	public Button btnResetSearch;
-
 	// The main pane holding everything
 	@FXML
 	public SplitPane mainPane;
-
-	// The image pane used to do the species preview operation
-	@FXML
-	public StackPane speciesPreviewPane;
-	@FXML
-	public ImageView imageSpeciesPreview;
 
 	// Top right label containing location name
 	@FXML
@@ -161,23 +114,46 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public HBox hbxLocation;
 
-	// The list view containing the species
 	@FXML
-	private ListView<Species> speciesListView;
+	public Button btnRefreshNEONSites;
+
+	@FXML
+	public TextField txtSiteSearch;
+
+	@FXML
+	public LocalDateTimeTextField txtDateTaken;
+	@FXML
+	public TextField txtLatitude;
+	@FXML
+	public TextField txtLongitude;
+	@FXML
+	public TextField txtElevation;
+
+	@FXML
+	public TextField txtDroneBrand;
+	@FXML
+	public TextField txtCameraModel;
+	@FXML
+	public TextField txtXSpeed;
+	@FXML
+	public TextField txtYSpeed;
+	@FXML
+	public TextField txtZSpeed;
+	@FXML
+	public TextField txtXRotation;
+	@FXML
+	public TextField txtYRotation;
+	@FXML
+	public TextField txtZRotation;
 
 	///
 	/// FXML bound fields end
 	///
 
-	// The color adjust property is used to adjust the image preview's color FX
-	private ObjectProperty<ColorAdjust> colorAdjust = new SimpleObjectProperty<>(new ColorAdjust());
-
 	// Fields to hold the currently selected image entry and image directory
 	private ObjectProperty<ImageEntry> currentlySelectedImage = new SimpleObjectProperty<>(null);
 	private ObjectProperty<ImageDirectory> currentlySelectedDirectory = new SimpleObjectProperty<>(null);
 	// Use fade transitions to fade the species list in and out
-	private FadeTransition fadeSpeciesEntryListIn;
-	private FadeTransition fadeSpeciesEntryListOut;
 	private FadeTransition fadeLocationIn;
 	private FadeTransition fadeLocationOut;
 	private FadeTransition fadeAddPanelIn;
@@ -192,9 +168,7 @@ public class CalliopeImportController implements Initializable
 	// The current image being previewed
 	private ObjectProperty<Image> speciesPreviewImage = new SimpleObjectProperty<>(null);
 
-	// The stage containing the time shift controller used to shift dates around
-	private Stage timeShiftStage;
-	private TimeShiftController timeShiftController;
+	private List<Property<?>> cache = new ArrayList<>();
 
 	/**
 	 * Initialize the Calliope import view and data bindings
@@ -205,63 +179,23 @@ public class CalliopeImportController implements Initializable
 	@Override
 	public void initialize(URL ignored, ResourceBundle resources)
 	{
-		// First we setup the species list
+		// Then we setup the site list in a similar manner
 
-		// Grab the global species list
-		SortedList<Species> species = new SortedList<>(CalliopeData.getInstance().getSpeciesList());
-		// We set the comparator to be the name of the species
-		species.setComparator(Comparator.comparing(Species::getCommonName));
-		// We create a local wrapper of the species list to filter
-		FilteredList<Species> speciesFilteredList = new FilteredList<>(species);
-		// Set the filter to update whenever the species search text changes
-		speciesFilteredList.predicateProperty().bind(Bindings.createObjectBinding(() -> (speciesToFilter ->
-			// Allow any species with a name or scientific name containing the species search text
-			(StringUtils.containsIgnoreCase(speciesToFilter.getCommonName(), this.txtSpeciesSearch.getCharacters()) ||
-					StringUtils.containsIgnoreCase(speciesToFilter.getScientificName(), this.txtSpeciesSearch.getCharacters()))), this.txtSpeciesSearch.textProperty()));
-		// Set the items of the species list view to the newly sorted list
-		this.speciesListView.setItems(speciesFilteredList);
-		// Set the cell factory to be our custom species list cell
-		this.speciesListView.setCellFactory(x -> {
-			SpeciesListEntryController controller = FXMLLoaderUtils.loadFXML("importView/SpeciesListEntry.fxml").getController();
-			controller.setCurrentImagePreview(this.speciesPreviewImage);
-			return controller;
-		});
-		// When we double click the species list view items, we want to edit the species
-		this.speciesListView.setOnMouseClicked(event -> {
-			if (event.getClickCount() >= 2 && this.speciesListView.getSelectionModel().getSelectedItem() != null)
-				this.requestEdit(this.speciesListView.getSelectionModel().getSelectedItem());
-		});
-
-		// Then we setup the locations list in a similar manner
-
-		// Grab the global location list
-		SortedList<Location> locations = new SortedList<>(CalliopeData.getInstance().getLocationList());
-		// Set the comparator to be the name of the location
-		locations.setComparator(Comparator.comparing(Location::getName));
-		// Set the items of the location list view to the newly sorted list
-		this.locationListView.setItems(locations);
+		// Grab the global site list
+		SortedList<BoundedSite> sites = new SortedList<>(CalliopeData.getInstance().getSiteList());
+		// Set the comparator to be the name of the site
+		sites.setComparator(Comparator.comparing(boundedSite -> boundedSite.getSite().getSiteName()));
+		// Create a filtered list of sites
+		FilteredList<BoundedSite> filteredSites = new FilteredList<>(sites);
+		// Set the filter to update whenever the site search text changes
+		filteredSites.predicateProperty().bind(Bindings.createObjectBinding(() -> (siteToFilter ->
+				// Allow any site with a name or code search text
+				(StringUtils.containsIgnoreCase(siteToFilter.getSite().getSiteName(), this.txtSiteSearch.getCharacters()) ||
+				 StringUtils.containsIgnoreCase(siteToFilter.getSite().getSiteCode(), this.txtSiteSearch.getCharacters()))), this.txtSiteSearch.textProperty()));
+		// Set the items of the site list view to the newly sorted list
+		this.siteListView.setItems(filteredSites);
 		// Set the cell factory to be our custom location list cell
-		this.locationListView.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/LocationListEntry.fxml").getController());
-		// When we double click the location list view items, we want to edit the location
-		this.locationListView.setOnMouseClicked(event -> {
-			if (event.getClickCount() >= 2 && this.locationListView.getSelectionModel().getSelectedItem() != null)
-				this.requestEdit(this.locationListView.getSelectionModel().getSelectedItem());
-		});
-
-		// Setup the species entry list view
-
-		// The species entry list view just needs to have a cell factory
-		this.speciesEntryListView.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/SpeciesEntryListEntry.fxml").getController());
-
-		// Setup the color adjustment property on the image
-
-		// We bind the brightness, contrast, hue, and saturation from the sliders to the color adjust object
-		colorAdjust.getValue().brightnessProperty().bind(this.sldBrightness.valueProperty());
-		colorAdjust.getValue().contrastProperty().bind(this.sldContrast.valueProperty());
-		colorAdjust.getValue().hueProperty().bind(this.sldHue.valueProperty());
-		colorAdjust.getValue().saturationProperty().bind(this.sldSaturation.valueProperty());
-		// Finally we bind the effect property to the color adjust so that the sliders are bound to the image adjustment
-		this.imagePreview.effectProperty().bind(this.colorAdjust);
+		this.siteListView.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/SiteListEntry.fxml").getController());
 
 		// Initialize root of the right side directory/image tree and make the root invisible
 		// This is because a treeview must have ONE root.
@@ -319,24 +253,74 @@ public class CalliopeImportController implements Initializable
 
 		// Create bindings in the GUI
 
-		// First bind the 4 color adjustment sliders disable property to if an adjustable image is selected
-		this.sldSaturation.disableProperty().bind(currentlySelectedImage.isNull());
-		this.sldHue.disableProperty().bind(currentlySelectedImage.isNull());
-		this.sldContrast.disableProperty().bind(currentlySelectedImage.isNull());
-		this.sldBrightness.disableProperty().bind(currentlySelectedImage.isNull());
 		// Also bind the date taken text field's disable property if an image is selected
 		this.txtDateTaken.disableProperty().bind(currentlySelectedImage.isNull());
 		// Also bind the disable button's disable property if an adjustable image is selected
 		this.btnResetImage.disableProperty().bind(currentlySelectedImage.isNull());
 		// Finally bind the date taken's disable property if an adjustable image is selected
-		this.txtDateTaken.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty).map(localDateTime -> CalliopeData.getInstance().getSettings().formatDateTime(localDateTime, " at ")).orElse(""));
+		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty)));
+
+		StringConverter<Number> converter = new StringConverter<Number>()
+		{
+			@Override
+			public String toString(Number number)
+			{
+				if (number != null)
+					return number.toString();
+				else
+					return "";
+			}
+
+			@Override
+			public Number fromString(String string)
+			{
+				if (string != null)
+					return NumberUtils.toDouble(string, 0);
+				else
+					return 0;
+			}
+		};
+
+		this.txtLatitude.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::latitudeProperty)), converter);
+		this.txtLongitude.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::longitudeProperty)), converter);
+		this.txtElevation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::elevationProperty)), converter);
+		this.txtDroneBrand.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::droneMakerProperty)));
+		this.txtCameraModel.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtCameraModel.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::cameraModelProperty)));
+		this.txtXSpeed.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtXSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::xProperty)), converter);
+		this.txtYSpeed.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtYSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::yProperty)), converter);
+		this.txtZSpeed.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtZSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::zProperty)), converter);
+		this.txtXRotation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtXRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::xProperty)), converter);
+		this.txtYRotation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::yProperty)), converter);
+		this.txtZRotation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::zProperty)), converter);
 		// Bind the image preview to the selected image from the right side tree view
-		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file -> new Image(file.toURI().toString(), CalliopeData.getInstance().getSettings().getBackgroundImageLoading())));
+		// Can't use 'new Image(file.toURI().toString()));'
+		// because it doesn't support tiffs. Sad day.
+		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file ->
+		{
+			try
+			{
+				return SwingFXUtils.toFXImage(ImageIO.read(file), null);
+			}
+			catch (IOException e)
+			{
+				CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file\n" + ExceptionUtils.getStackTrace(e));
+			}
+			return null;
+		}));
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
-		// Bind the species entry list view items to the selected image species present
-		this.speciesEntryListView.itemsProperty().bind(EasyBind.monadic(currentlySelectedImage).map(ImageEntry::getSpeciesPresent));
 		// Bind the species entry location name to the selected image's location
-		this.lblLocation.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).map(Location::getName));
+		this.lblLocation.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).map(location -> true).orElse(false));
 		// Hide the progress bar when no tasks remain
@@ -366,32 +350,6 @@ public class CalliopeImportController implements Initializable
 								.isEqualTo(-1))
 						// Make sure to negate because we want to hide the arrow when the above things are true
 						.not());
-		// When we preview an image, bind the image property to the image view
-		this.imageSpeciesPreview.imageProperty().bind(this.speciesPreviewImage);
-		// When we get a new species to preview, we show the preview pane
-		this.speciesPreviewPane.visibleProperty().bind(this.speciesPreviewImage.isNotNull());
-		// If we have a folder or image selected, allow time shifting
-		this.btnTimeShift.disableProperty().bind(this.currentlySelectedImage.isNull().and(this.currentlySelectedDirectory.isNull()));
-
-		// The listener we will apply to each species entry list
-		// Here we use a magic number of 75. This is the height of a list cell. Unfortunately I have no other way of getting the cell height.
-		// Possibly this.speciesEntryListView.lookup(".list-cell")? Or new ListCell().getHeight()? These don't seem to work right now.
-		final ListChangeListener<SpeciesEntry> listener = change -> this.speciesEntryListView.setMaxHeight(this.speciesEntryListView.getItems() == null ? 0 : this.speciesEntryListView.getItems().size() * 75);
-
-		// Make the species entry list view dynamically resize using the above listener
-		this.speciesEntryListView.itemsProperty().addListener((observable, oldValue, newValue) ->
-		{
-			if (oldValue != null)
-				// Remove the old listener
-				oldValue.removeListener(listener);
-			if (newValue != null)
-			{
-				// Add the new listener
-				newValue.addListener(listener);
-				// Force an on changed event to trigger a resize
-				listener.onChanged(null);
-			}
-		});
 
 		this.currentlySelectedImage.addListener((observable, oldValue, newValue) ->
 		{
@@ -401,61 +359,7 @@ public class CalliopeImportController implements Initializable
 			if (newValue instanceof CloudImageEntry) ((CloudImageEntry) newValue).pullFromCloudIfNotPulled();
 		});
 
-		// When we press a key, we want to add the bound species to the species entry
-		this.mainPane.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-			// If we have a selected image
-			if (this.currentlySelectedImage.getValue() != null)
-			{
-				// We don't want to trigger keybindings if we're typing into the search box
-				if (!this.txtSpeciesSearch.isFocused())
-				{
-					// Filter the species list by correctly key-bound species, and add them to the current image
-					CalliopeData.getInstance().getSpeciesList().filtered(boundSpecies -> boundSpecies.getKeyBinding() == event.getCode()).forEach(boundSpecies ->
-					{
-						this.currentlySelectedImage.getValue().addSpecies(boundSpecies, 1);
-						// Automatically select the next image in the image list view if the option is selected
-						if (CalliopeData.getInstance().getSettings().getAutomaticNextImage())
-							this.imageTree.getSelectionModel().selectNext();
-					});
-					event.consume();
-				}
-			}
-		});
-
-		// Initialize the time shift controller stage
-
-		// Load the FXML file of the editor window
-		FXMLLoader timeShiftLoader = FXMLLoaderUtils.loadFXML("importView/TimeShift.fxml");
-		// Grab the controller and set the location of that controller
-		this.timeShiftController = timeShiftLoader.getController();
-
-		// Create the stage that will have the date editor
-		this.timeShiftStage = new Stage();
-		// Set the title
-		timeShiftStage.setTitle("Date Editor");
-		// Set the modality and initialize the owner to be this current window
-		timeShiftStage.initModality(Modality.WINDOW_MODAL);
-		// Make sure the window is the right size and can't be resized
-		timeShiftStage.setResizable(false);
-		timeShiftStage.setWidth(950);
-		// Set the scene to the root of the FXML file
-		Scene timeShiftScene = new Scene(timeShiftLoader.getRoot());
-		// Set the scene of the stage, and show it!
-		timeShiftStage.setScene(timeShiftScene);
-
 		// Initialize the fade transitions
-
-		// First create a fade-in transition for the species entry list view
-		this.fadeSpeciesEntryListIn = new FadeTransition(Duration.millis(100), this.speciesEntryListView);
-		this.fadeSpeciesEntryListIn.setFromValue(1);
-		this.fadeSpeciesEntryListIn.setToValue(0.4);
-		this.fadeSpeciesEntryListIn.setCycleCount(1);
-
-		// First create a fade-out transition for the species entry list view
-		this.fadeSpeciesEntryListOut = new FadeTransition(Duration.millis(100), this.speciesEntryListView);
-		this.fadeSpeciesEntryListOut.setFromValue(0.4);
-		this.fadeSpeciesEntryListOut.setToValue(1);
-		this.fadeSpeciesEntryListOut.setCycleCount(1);
 
 		// First create a fade-in transition for the location
 		this.fadeLocationIn = new FadeTransition(Duration.millis(100), this.hbxLocation);
@@ -506,242 +410,12 @@ public class CalliopeImportController implements Initializable
 		this.fadeAddPanelIn.play();
 		this.fadeLeftIn.play();
 		this.fadeRightIn.play();
-		this.fadeSpeciesEntryListIn.play();
 	}
 
-	/**
-	 * If the new species button is clicked...
-	 *
-	 * @param actionEvent consumed when the button is clicked
-	 */
-	public void addNewSpecies(ActionEvent actionEvent)
+	private <T> Property<T> cache(Property<T> property)
 	{
-		// Create a new species, and request edit of the species
-		Species newSpecies = new Species();
-		requestEdit(newSpecies);
-		// After the edit is complete, check if it's uninitialized. If it isn't, add it to the global species list
-		if (!newSpecies.isUninitialized())
-			CalliopeData.getInstance().getSpeciesList().add(newSpecies);
-		// Consume the event
-		actionEvent.consume();
-	}
-
-	/**
-	 * If the edit species button is clicked...
-	 *
-	 * @param actionEvent consumed when the button is clicked
-	 */
-	public void editCurrentSpecies(ActionEvent actionEvent)
-	{
-		// Grab the selected species
-		Species selected = speciesListView.getSelectionModel().getSelectedItem();
-		// If it's not null (so something is indeed selected), request the edit of the species
-		if (selected != null)
-		{
-			requestEdit(selected);
-		}
-		// Otherwise show an alert that no species was selected
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("No species from the species list to selected to edit");
-		}
-		// Consume the event
-		actionEvent.consume();
-	}
-
-	/**
-	 * Create a popup that requests that the player edits the species
-	 *
-	 * @param species The species to edit
-	 */
-	private void requestEdit(Species species)
-	{
-		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
-		{
-			// Load the FXML file of the editor window
-			FXMLLoader loader = FXMLLoaderUtils.loadFXML("importView/SpeciesCreator.fxml");
-			// Grab the controller and set the species of that controller
-			SpeciesCreatorController controller = loader.getController();
-			controller.setSpecies(species);
-
-			// Create the stage that will have the species creator/editor
-			Stage dialogStage = new Stage();
-			// Set the title
-			dialogStage.setTitle("Species Creator/Editor");
-			// Set the modality and initialize the owner to be this current window
-			dialogStage.initModality(Modality.WINDOW_MODAL);
-			dialogStage.initOwner(this.imagePreview.getScene().getWindow());
-			// Set the scene to the root of the FXML file
-			Scene scene = new Scene(loader.getRoot());
-			// Set the scene of the stage, and show it!
-			dialogStage.setScene(scene);
-			dialogStage.showAndWait();
-		}
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit a species!");
-		}
-	}
-
-	/**
-	 * When the delete species is clicked we delete the selected species
-	 *
-	 * @param actionEvent consumed when the button is clicked
-	 */
-	public void deleteCurrentSpecies(ActionEvent actionEvent)
-	{
-		Species selected = speciesListView.getSelectionModel().getSelectedItem();
-		// If it's not null (so something is indeed selected), delete the species
-		if (selected != null)
-		{
-			// Grab a list of all images registered in the program
-			List<ImageEntry> imageList = CalliopeData.getInstance().getAllImages();
-			// Count the number of images that contain the species
-			Long speciesUsages = imageList
-					.stream()
-					.flatMap(imageEntry -> imageEntry.getSpeciesPresent()
-							.stream())
-					.filter(speciesEntry -> speciesEntry.getSpecies() == selected).count();
-
-			// If no images contain the species, we're good to delete
-			if (speciesUsages == 0)
-			{
-				CalliopeData.getInstance().getSpeciesList().remove(selected);
-			}
-			// Otherwise prompt the user if they want to untag all images with the species
-			else
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("This species (" + selected.getCommonName() + ") has already been tagged in " + speciesUsages + " images.\nYes will untag all images with the species and remove it.",
-					new Action("Yes", actionEvent1 ->
-					{
-						// Remove the species and remove each species entry that has its species set to the selected species
-						CalliopeData.getInstance().getSpeciesList().remove(selected);
-						imageList.forEach(imageEntry -> imageEntry.getSpeciesPresent().removeIf(speciesEntry -> speciesEntry.getSpecies() == selected));
-					}));
-			}
-		}
-		// Otherwise show an alert that no species was selected
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Please select a species from the species list to remove.");
-		}
-		actionEvent.consume();
-	}
-
-	/**
-	 * If the new location button is clicked...
-	 *
-	 * @param actionEvent consumed when the button is clicked
-	 */
-	public void addNewLocation(ActionEvent actionEvent)
-	{
-		// Create a new location, and request edit of the location
-		Location newLocation = new Location();
-		// After the edit is complete, check if it's uninitialized. If it isn't, add it to the global location list
-		requestEdit(newLocation);
-		if (newLocation.locationValid())
-			CalliopeData.getInstance().getLocationList().add(newLocation);
-		// Consume the event
-		actionEvent.consume();
-	}
-
-	/**
-	 * If the edit location button is clicked...
-	 *
-	 * @param actionEvent consumed when the button is clicked
-	 */
-	public void editCurrentLocation(ActionEvent actionEvent)
-	{
-		// Grab the selected location
-		Location selected = locationListView.getSelectionModel().getSelectedItem();
-		// If it's not null (so something is indeed selected), request the edit of the location
-		if (selected != null)
-		{
-			requestEdit(selected);
-		}
-		// Otherwise show an alert that no location was selected
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Please select a location from the location list to edit.");
-		}
-		// Consume the event
-		actionEvent.consume();
-	}
-
-	/**
-	 * Create a popup that requests that the player edits the location
-	 *
-	 * @param location The location to edit
-	 */
-	private void requestEdit(Location location)
-	{
-		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
-		{
-			// Load the FXML file of the editor window
-			FXMLLoader loader = FXMLLoaderUtils.loadFXML("importView/LocationCreator.fxml");
-			// Grab the controller and set the location of that controller
-			LocationCreatorController controller = loader.getController();
-			controller.setLocation(location);
-
-			// Create the stage that will have the species creator/editor
-			Stage dialogStage = new Stage();
-			// Set the title
-			dialogStage.setTitle("Location Creator/Editor");
-			// Set the modality and initialize the owner to be this current window
-			dialogStage.initModality(Modality.WINDOW_MODAL);
-			dialogStage.initOwner(this.imagePreview.getScene().getWindow());
-			// Set the scene to the root of the FXML file
-			Scene scene = new Scene(loader.getRoot());
-			// Set the scene of the stage, and show it!
-			dialogStage.setScene(scene);
-			dialogStage.showAndWait();
-		}
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to edit locations!");
-		}
-	}
-
-	/**
-	 * When the delete location is clicked we delete the selected location
-	 *
-	 * @param actionEvent consumed when the button is clicked
-	 */
-	public void deleteCurrentLocation(ActionEvent actionEvent)
-	{
-		Location selected = locationListView.getSelectionModel().getSelectedItem();
-		// If it's not null (so something is indeed selected), request the edit of the location
-		if (selected != null)
-		{
-			// Grab a list of all images registered in the program
-			List<ImageEntry> imageList = CalliopeData.getInstance().getAllImages();
-			Long locationUsages = imageList
-					.stream()
-					.filter(imageEntry -> imageEntry.getLocationTaken() == selected).count();
-
-			// If no images contain the location, we're good to delete
-			if (locationUsages == 0)
-			{
-				CalliopeData.getInstance().getLocationList().remove(selected);
-			}
-			// Otherwise prompt the user if they want to untag all images with the location
-			else
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("This location (\" + selected.getCommonName() + \") has already been tagged in \" + locationUsages + \" images.\\nYes will untag all images with the location and remove it.",
-					new Action("Yes", actionEvent1 ->
-					{
-						// Remove the location and remove each image that has its location set to the selected location
-						CalliopeData.getInstance().getLocationList().remove(selected);
-						imageList.stream().filter(imageEntry -> imageEntry.getLocationTaken() == selected).forEach(imageEntry -> imageEntry.setLocationTaken(null));
-					}));
-			}
-		}
-		// Otherwise show an alert that no location was selected
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Please select a location from the location list to remove.");
-		}
-		actionEvent.consume();
+		this.cache.add(property);
+		return property;
 	}
 
 	/**
@@ -751,193 +425,47 @@ public class CalliopeImportController implements Initializable
 	 */
 	public void importImages(ActionEvent actionEvent)
 	{
-		Consumer<Boolean> imageImporter = importAsLegacy ->
+		// Create a directory chooser to let the user choose where to get the images from
+		DirectoryChooser directoryChooser = new DirectoryChooser();
+		directoryChooser.setTitle("Select Folder with Images");
+		// Set the directory to be in documents
+		directoryChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
+		// Show the dialog
+		File file = directoryChooser.showDialog(this.imagePreview.getScene().getWindow());
+		// If the file chosen is a file and a directory process it
+		if (file != null && file.isDirectory())
 		{
-			// Create a directory chooser to let the user choose where to get the images from
-			DirectoryChooser directoryChooser = new DirectoryChooser();
-			directoryChooser.setTitle("Select Folder with Images");
-			// Set the directory to be in documents
-			directoryChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
-			// Show the dialog
-			File file = directoryChooser.showDialog(this.imagePreview.getScene().getWindow());
-			// If the file chosen is a file and a directory process it
-			if (file != null && file.isDirectory())
+			this.btnImportImages.setDisable(true);
+			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
 			{
-				this.btnImportImages.setDisable(true);
-				Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
+				@Override
+				protected ImageDirectory call()
 				{
-					@Override
-					protected ImageDirectory call()
-					{
-						final Long MAX_WORK = 6L;
+					final Long MAX_WORK = 2L;
 
-						this.updateProgress(1, MAX_WORK);
-						this.updateMessage("Loading directory...");
+					this.updateProgress(1, MAX_WORK);
+					this.updateMessage("Loading directory...");
 
-						// Grab the current list of species and locations and duplicate it
-						List<Species> currentSpecies = new ArrayList<>(CalliopeData.getInstance().getSpeciesList());
-						List<Location> currentLocations = new ArrayList<>(CalliopeData.getInstance().getLocationList());
+					// Convert the file to a recursive image directory data structure
+					ImageDirectory directory = DirectoryManager.loadDirectory(file);
 
-						// Convert the file to a recursive image directory data structure
-						ImageDirectory directory = DirectoryManager.loadDirectory(file, currentLocations, currentSpecies);
+					this.updateProgress(2, MAX_WORK);
+					this.updateMessage("Removing empty directories...");
 
-						this.updateProgress(2, MAX_WORK);
-						this.updateMessage("Removing empty directories...");
+					// Remove any directories that are empty and contain no images
+					DirectoryManager.removeEmptyDirectories(directory);
 
-						// Remove any directories that are empty and contain no images
-						DirectoryManager.removeEmptyDirectories(directory);
+					return directory;
+				}
+			};
+			importTask.setOnSucceeded(event ->
+			{
+				// Add the directory to the image tree
+				CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
+				this.btnImportImages.setDisable(false);
+			});
 
-						this.updateProgress(3, MAX_WORK);
-						this.updateMessage("Detecting species in images...");
-
-						// Diff the new species list and the old one to see if we have new species
-						List<Species> newSpecies = ListUtils.subtract(currentSpecies, CalliopeData.getInstance().getSpeciesList());
-
-						this.updateProgress(4, MAX_WORK);
-						this.updateMessage("Detecting locations in images...");
-
-						// Diff the new locations list and the old one to see if we have new locations
-						List<Location> newLocations = ListUtils.subtract(currentLocations, CalliopeData.getInstance().getLocationList());
-
-						// If we have new locations or have new species, show an alert
-						if (!newSpecies.isEmpty() || !newLocations.isEmpty())
-						{
-							// Depending on if new locations or species are found print an appropriate message
-							String message = "";
-							if (!newSpecies.isEmpty() && newLocations.isEmpty())
-								message = "New species ";
-							else if (newSpecies.isEmpty())
-								message = "New locations ";
-							else
-								message = "New species and locations ";
-							// Print the message
-							CalliopeData.getInstance().getErrorDisplay().notify(message + "found tagged on these images were automatically added to the list(s).");
-
-							this.updateProgress(5, MAX_WORK);
-							this.updateMessage("Adding images to the visual tree...");
-
-							// Add the new species and locations to the data
-							Platform.runLater(() ->
-							{
-								CalliopeData.getInstance().getSpeciesList().addAll(newSpecies);
-								CalliopeData.getInstance().getLocationList().addAll(newLocations);
-							});
-						}
-
-						this.updateProgress(6, MAX_WORK);
-						this.updateMessage("Finished!");
-
-						return directory;
-					}
-				};
-				importTask.setOnSucceeded(event ->
-				{
-					// If we're reading non-legacy data, we're done
-					if (!importAsLegacy)
-					{
-						// Add the directory to the image tree
-						CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
-						this.btnImportImages.setDisable(false);
-					}
-					// If we're reading legacy data, start a new task to read it
-					else
-					{
-						final ImageDirectory directory = importTask.getValue();
-						// If we're reading legacy data, sync legacy data
-						Task<Pair<List<Species>, List<Location>>> legacySyncTask = new ErrorTask<Pair<List<Species>, List<Location>>>()
-						{
-							@Override
-							protected Pair<List<Species>, List<Location>> call()
-							{
-								this.updateProgress(0, 2);
-								this.updateMessage("Duplicating the species and location list temporarily...");
-
-								// Grab the current list of species and locations and duplicate it
-								List<Species> currentSpecies = new ArrayList<>(CalliopeData.getInstance().getSpeciesList());
-								List<Location> currentLocations = new ArrayList<>(CalliopeData.getInstance().getLocationList());
-
-								this.updateProgress(1, 2);
-								this.updateMessage("Reading Dr. Sanderson's Legacy Format");
-
-								// parse dr. sanderson's format
-								DirectoryManager.parseLegacyDirectory(directory, currentLocations, currentSpecies);
-
-								this.updateProgress(2, 2);
-								this.updateMessage("Finished parsing Dr. Sanderson's Legacy data");
-
-								// A hack to return 2 values...
-								return new Pair<>(currentSpecies, currentLocations);
-							}
-						};
-
-						// If we finished reading legacy data, allow importing images
-						legacySyncTask.setOnSucceeded(event2 ->
-						{
-							// Some locations may not be initialized due to Dr. Sanderson's format so we ask the user to fix them for us
-							List<Species> newSpecies = ListUtils.subtract(legacySyncTask.getValue().getKey(), CalliopeData.getInstance().getSpeciesList());
-							List<Location> newLocations = ListUtils.subtract(legacySyncTask.getValue().getValue(), CalliopeData.getInstance().getLocationList());
-
-							// If the species list is not empty, show a popup
-							if (!newSpecies.isEmpty())
-							{
-								CalliopeData.getInstance().getErrorDisplay().notify(newSpecies.size() + " new species were found on the images that were not registered yet. Add any additional species information now.");
-
-								// Request the edit of each species, because they may not be valid yet
-								for (Species species : newSpecies)
-									requestEdit(species);
-
-								// Add all new species
-								CalliopeData.getInstance().getSpeciesList().addAll(newSpecies);
-							}
-
-							// If the locations list is not empty, show a popup
-							if (!newLocations.isEmpty())
-							{
-								CalliopeData.getInstance().getErrorDisplay().notify(newLocations.size() + " new locations were found on the images that were not registered yet. Please add location latitude/longitude/elevation.");
-
-								// Request the edit of each locations, because they may not be valid yet
-								for (Location location : newLocations)
-									requestEdit(location);
-
-								// Add all new locations
-								CalliopeData.getInstance().getLocationList().addAll(newLocations);
-							}
-
-							// Add the directory to the image tree
-							CalliopeData.getInstance().getImageTree().addChild(directory);
-							this.btnImportImages.setDisable(false);
-						});
-
-						CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(legacySyncTask);
-					}
-				});
-
-				CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
-			}
-		};
-
-		// If Dr. Sanderson's compatibility is enabled, ask
-		if (CalliopeData.getInstance().getSettings().getDrSandersonDirectoryCompatibility())
-		{
-			// Ask if the data is legacy
-			CalliopeData.getInstance().getErrorDisplay().notify("Would you like the directory to be read as legacy data used by Dr. Sanderson's 'Data Analyze' program?",
-				new Action("Yes, Auto-Tag it", actionEvent1 ->
-				{
-					imageImporter.accept(true);
-				}),
-				new Action("No", actionEvent1 ->
-				{
-					imageImporter.accept(false);
-				}),
-				new Action("No, don't ask again", actionEvent1 ->
-				{
-					CalliopeData.getInstance().getSettings().setDrSandersonDirectoryCompatibility(false);
-					imageImporter.accept(false);
-				}));
-		}
-		else
-		{
-			imageImporter.accept(false);
+			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
 		}
 
 		// Consume the event
@@ -968,11 +496,6 @@ public class CalliopeImportController implements Initializable
 	 */
 	public void resetImageView(ActionEvent actionEvent)
 	{
-		// Reset the sliders to their default value of 0
-		this.sldBrightness.setValue(0);
-		this.sldContrast.setValue(0);
-		this.sldHue.setValue(0);
-		this.sldSaturation.setValue(0);
 		// Reset the image preview viewport to its default state
 		if (this.imagePreview.getImage() != null)
 		{
@@ -986,103 +509,19 @@ public class CalliopeImportController implements Initializable
 	}
 
 	/**
-	 * Shifts the time stamp of the currently selected images
-	 * @param mouseEvent consumed
-	 */
-	public void timeShift(MouseEvent mouseEvent)
-	{
-		// Grab the first date in the image or image list
-		LocalDateTime first = null;
-		// If we have an image selected, grab the date of that one image
-		if (this.currentlySelectedImage.getValue() != null)
-			first = this.currentlySelectedImage.getValue().getDateTaken();
-		// If we have a directory selected, grab the date taken of the first image
-		else if (this.currentlySelectedDirectory.getValue() != null)
-		{
-			// Grab the first image's date
-			Optional<ImageEntry> firstImage = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).findFirst();
-			if (firstImage.isPresent())
-				first = firstImage.get().getDateTaken();
-		}
-
-		// If either a date from the directory or image was detected, process it
-		if (first != null)
-		{
-			if (!CalliopeData.getInstance().getSettings().getDisablePopups())
-			{
-				timeShiftController.setDate(first);
-				if (timeShiftStage.getOwner() == null)
-					timeShiftStage.initOwner(this.imagePreview.getScene().getWindow());
-				timeShiftStage.showAndWait();
-
-				// Grab the new date from the dialog stage
-				// If a new date was created...
-				if (timeShiftController.dateWasConfirmed())
-				{
-					LocalDateTime newDate = timeShiftController.getDate();
-					// If just an image was selected, set the date taken of that specific image
-					if (this.currentlySelectedImage.getValue() != null)
-						this.currentlySelectedImage.getValue().setDateTaken(newDate);
-						// If a directory was selected...
-					else if (this.currentlySelectedDirectory.getValue() != null)
-					{
-						// Calculate the time between the first date and the newly created date
-						long timeBetween = ChronoUnit.MILLIS.between(first, newDate);
-						// If the offset is non 0, offset the date of every image in the directory by the offset
-						if (timeBetween != 0)
-							this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).forEach(imageEntry -> {
-								imageEntry.setDateTaken(imageEntry.getDateTaken().plus(timeBetween, ChronoUnit.MILLIS));
-							});
-					}
-				}
-			}
-			else
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to shift the image date and time!");
-			}
-		}
-
-		mouseEvent.consume();
-	}
-
-	/**
-	 * Allow the species list to be drag & dropable onto the image view
-	 *
-	 * @param mouseEvent consumed if a species is selected
-	 */
-	public void speciesListDrag(MouseEvent mouseEvent)
-	{
-		// Grab the selected species, make sure it's not null
-		Species selected = this.speciesListView.getSelectionModel().getSelectedItem();
-		if (selected != null)
-		{
-			// Create a dragboard and begin the drag and drop
-			Dragboard dragboard = this.speciesListView.startDragAndDrop(TransferMode.ANY);
-
-			// Create a clipboard and put the species unique ID into that clipboard
-			ClipboardContent content = new ClipboardContent();
-			content.put(CalliopeDataFormats.SPECIES_NAME_FORMAT, selected.getCommonName());
-			content.put(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT, selected.getScientificName());
-			// Set the dragboard's context, and then consume the event
-			dragboard.setContent(content);
-
-			mouseEvent.consume();
-		}
-	}
-
-	/**
 	 * Allow the location list to be drag & dropable onto the image view
 	 *
 	 * @param mouseEvent consumed if a location is selected
 	 */
 	public void locationListDrag(MouseEvent mouseEvent)
 	{
+		/*
 		// Grab the selected location, make sure it's not null
-		Location selected = this.locationListView.getSelectionModel().getSelectedItem();
+		Location selected = this.siteListView.getSelectionModel().getSelectedItem();
 		if (selected != null)
 		{
 			// Create a dragboard and begin the drag and drop
-			Dragboard dragboard = this.locationListView.startDragAndDrop(TransferMode.ANY);
+			Dragboard dragboard = this.siteListView.startDragAndDrop(TransferMode.ANY);
 
 			// Create a clipboard and put the location unique ID into that clipboard
 			ClipboardContent content = new ClipboardContent();
@@ -1093,6 +532,7 @@ public class CalliopeImportController implements Initializable
 
 			mouseEvent.consume();
 		}
+		*/
 	}
 
 	/**
@@ -1149,31 +589,13 @@ public class CalliopeImportController implements Initializable
 		// Grab the dragboard
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If our dragboard has a string we have data which we need
-		if (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null)
-		{
-			String commonName = (String) dragboard.getContent(CalliopeDataFormats.SPECIES_NAME_FORMAT);
-			String scientificName = (String) dragboard.getContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT);
-			// Grab the species with the given ID
-			Optional<Species> toAdd = CalliopeData.getInstance().getSpeciesList().stream().filter(species -> species.getScientificName().equals(scientificName) && species.getCommonName().equals(commonName)).findFirst();
-			// Add the species to the image
-			if (toAdd.isPresent())
-				if (currentlySelectedImage.getValue() != null)
-				{
-					currentlySelectedImage.getValue().addSpecies(toAdd.get(), 1);
-					// Automatically select the next image in the image list view if the option is selected
-					if (CalliopeData.getInstance().getSettings().getAutomaticNextImage())
-						this.imageTree.getSelectionModel().selectNext();
-					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
-					this.imageTree.requestFocus();
-					success = true;
-				}
-		}
-		else if (dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT))
+		/*
+		if (dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT))
 		{
 			String locationName = (String) dragboard.getContent(CalliopeDataFormats.LOCATION_NAME_FORMAT);
 			String locationId = (String) dragboard.getContent(CalliopeDataFormats.LOCATION_ID_FORMAT);
 			// Grab the species with the given ID
-			Optional<Location> toAdd = CalliopeData.getInstance().getLocationList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
+			Optional<Location> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
 			// Add the species to the image
 			if (toAdd.isPresent())
 				// Check if we have a selected image or directory to update!
@@ -1192,9 +614,38 @@ public class CalliopeImportController implements Initializable
 					success = true;
 				}
 		}
+		*/
 		// Set the success equal to the flag, and consume the event
 		dragEvent.setDropCompleted(success);
 		dragEvent.consume();
+	}
+
+	public void refreshNEONSites(ActionEvent actionEvent)
+	{
+		this.btnRefreshNEONSites.setDisable(true);
+
+		ErrorTask<Void> refreshTask = new ErrorTask<Void>()
+		{
+			@Override
+			protected Void call()
+			{
+				this.updateMessage("Updating NEON site index from latest data...");
+				CalliopeData.getInstance().getEsConnectionManager().refreshNeonSiteCache();
+				return null;
+			}
+		};
+
+		refreshTask.setOnSucceeded(event -> this.btnRefreshNEONSites.setDisable(false));
+
+		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(refreshTask);
+
+		actionEvent.consume();
+	}
+
+	public void resetSiteSearch(ActionEvent actionEvent)
+	{
+		this.txtSiteSearch.clear();
+		actionEvent.consume();
 	}
 
 	/**
@@ -1217,26 +668,6 @@ public class CalliopeImportController implements Initializable
 	{
 		this.fadeLeftOut.play();
 		this.fadeRightOut.play();
-	}
-
-	/**
-	 * When we move our mouse over the species entry list we play a fade animation
-	 *
-	 * @param mouseEvent ignored
-	 */
-	public void onMouseEnteredSpeciesEntryList(MouseEvent mouseEvent)
-	{
-		fadeSpeciesEntryListOut.play();
-	}
-
-	/**
-	 * When we move our mouse away from the species entry list we play a fade animation
-	 *
-	 * @param mouseEvent ignored
-	 */
-	public void onMouseExitedSpeciesEntryList(MouseEvent mouseEvent)
-	{
-		fadeSpeciesEntryListIn.play();
 	}
 
 	/**
@@ -1277,26 +708,6 @@ public class CalliopeImportController implements Initializable
 	public void onRightArrowClicked(ActionEvent actionEvent)
 	{
 		this.imageTree.getSelectionModel().selectNext();
-	}
-
-	/**
-	 * When we click the X button we want to reset the species search box
-	 *
-	 * @param actionEvent ignored
-	 */
-	public void resetSpeciesSearch(ActionEvent actionEvent)
-	{
-		this.txtSpeciesSearch.clear();
-	}
-
-	/**
-	 * When we click the species clear preview button in the top right
-	 *
-	 * @param actionEvent ignored
-	 */
-	public void clearSpeciesPreview(ActionEvent actionEvent)
-	{
-		this.speciesPreviewImage.setValue(null);
 	}
 
 	///

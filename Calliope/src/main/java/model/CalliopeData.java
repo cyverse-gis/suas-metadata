@@ -17,6 +17,7 @@ import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.location.Location;
+import model.neon.BoundedSite;
 import model.neon.NeonData;
 import model.query.QueryEngine;
 import model.species.Species;
@@ -55,13 +56,12 @@ public class CalliopeData
 	private AtomicBoolean needSpeciesSync = new AtomicBoolean(false);
 	private AtomicBoolean speciesSyncInProgress = new AtomicBoolean(false);
 
-	// A global list of locations
-	private final ObservableList<Location> locationList;
-	private AtomicBoolean needLocationSync = new AtomicBoolean(false);
-	private AtomicBoolean locationSyncInProgress = new AtomicBoolean(false);
+	// A global list of neon locations
+	private final ObservableList<BoundedSite> siteList;
 
 	// A global list of image collections
 	private final ObservableList<ImageCollection> collectionList;
+
 
 	// A base directory to which we add all extra directories
 	private final ImageDirectory imageTree;
@@ -113,14 +113,8 @@ public class CalliopeData
 		// Create the species list, and add some default species
 		this.speciesList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(species -> new Observable[]{species.commonNameProperty(), species.scientificNameProperty(), species.speciesIconURLProperty(), species.keyBindingProperty()}));
 
-		// When the species list changes we push the changes to the CyVerse servers
-		this.setupAutoSpeciesSync();
-
 		// Create the location list and add some default locations
-		this.locationList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(location -> new Observable[]{location.nameProperty(), location.idProperty(), location.latitudeProperty(), location.longitudeProperty(), location.elevationProperty() }));
-
-		// When the location list changes we push the changes to the CyVerse servers
-		this.setupAutoLocationSync();
+		this.siteList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(site -> new Observable[]{ site.siteProperty(), site.boundaryProperty() }));
 
 		// Create the image collection list
 		this.collectionList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(collection -> new Observable[]{collection.nameProperty(), collection.getPermissions(), collection.organizationProperty(), collection.contactInfoProperty(), collection.descriptionProperty(), collection.idProperty() }));
@@ -128,191 +122,8 @@ public class CalliopeData
 		// The tree just starts in the current directory which is a dummy directory
 		this.imageTree = new ImageDirectory(new File("./"));
 
-		// When the metadata changes, we push the changes to disk
-		this.setupAutoWriteMetadata();
-
 		// When the settings change, we sync them
 		this.setupAutoSettingsSync();
-	}
-
-	/**
-	 * Ensures that when the species list has any changes, they get pushed to the CyVerse servers
-	 */
-	private void setupAutoSpeciesSync()
-	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
-		{
-			@Override
-			protected Task<Void> createTask()
-			{
-				return new ErrorTask<Void>()
-				{
-					@Override
-					protected Void call()
-					{
-						// Perform the push of the location data
-						this.updateMessage("Syncing new species list to CyVerse...");
-						CalliopeData.getInstance().getEsConnectionManager().pushLocalSpecies(CalliopeData.getInstance().getSpeciesList());
-						return null;
-					}
-				};
-			}
-		};
-		// When we finish syncing...
-		syncService.setOnSucceeded(event -> {
-			// After finishing the sync, check if we need to sync again. If so set the flag to false and sync once again
-			if (this.needSpeciesSync.get())
-			{
-				this.needSpeciesSync.set(false);
-				syncService.restart();
-			}
-			// If we don't need to sync again set the sync in progress flag to false
-			else
-			{
-				this.speciesSyncInProgress.set(false);
-			}
-		});
-		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
-
-		// When the species list changes...
-		this.speciesList.addListener((ListChangeListener<Species>) c -> {
-			// If a sync is already in progress, we set a flag telling the current sync to perform another sync right after it finishes
-			if (this.speciesSyncInProgress.get())
-			{
-				this.needSpeciesSync.set(true);
-			}
-			// If a sync is not in progress, go ahead and sync
-			else
-			{
-				this.speciesSyncInProgress.set(true);
-				// Perform the task
-				syncService.restart();
-			}
-		});
-	}
-
-	/**
-	 * Ensures that when the location list has any changes, they get pushed to the CyVerse servers
-	 */
-	private void setupAutoLocationSync()
-	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
-		{
-			@Override
-			protected Task<Void> createTask()
-			{
-				return new ErrorTask<Void>()
-				{
-					@Override
-					protected Void call()
-					{
-						// Perform the push of the location data
-						this.updateMessage("Syncing new location list to CyVerse...");
-						CalliopeData.getInstance().getEsConnectionManager().pushLocalLocations(CalliopeData.getInstance().getLocationList());
-						return null;
-					}
-				};
-			}
-		};
-		// When we finish syncing...
-		syncService.setOnSucceeded(event -> {
-			// After finishing the sync, check if we need to sync again. If so set the flag to false and sync once again
-			if (this.needLocationSync.get())
-			{
-				this.needLocationSync.set(false);
-				syncService.restart();
-			}
-			// If we don't need to sync again set the sync in progress flag to false
-			else
-			{
-				this.locationSyncInProgress.set(false);
-			}
-		});
-		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
-
-		// When the location list changes...
-		this.locationList.addListener((ListChangeListener<Location>) c -> {
-			// If a sync is already in progress, we set a flag telling the current sync to perform another sync right after it finishes
-			if (this.locationSyncInProgress.get())
-			{
-				this.needLocationSync.set(true);
-			}
-			// If a sync is not in progress, go ahead and sync
-			else
-			{
-				this.locationSyncInProgress.set(true);
-				// Perform the task
-				syncService.restart();
-			}
-		});
-	}
-
-	/**
-	 * Ensures that when the image metadata tree has any changes, they get pushed to disk
-	 */
-	private void setupAutoWriteMetadata()
-	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
-		{
-			@Override
-			protected Task<Void> createTask()
-			{
-				return new ErrorTask<Void>()
-				{
-					@Override
-					protected Void call()
-					{
-						// Notice we perform the stream twice. This is because we cannot re-use streams in Java.
-						long dirtyImageCount =
-								CalliopeData.this.getAllImages()
-										.stream()
-										.filter(ImageEntry::isDiskDirty)
-										.count();
-						List<ImageEntry> top100Dirty =
-								CalliopeData.this.getAllImages()
-										.stream()
-										.filter(ImageEntry::isDiskDirty)
-										.limit(NUM_IMAGES_AT_A_TIME).collect(Collectors.toList());
-						this.updateMessage("Writing updated images to disk (" + dirtyImageCount + " left, doing " + NUM_IMAGES_AT_A_TIME + " at a time)...");
-						for (int i = 0; i < top100Dirty.size(); i++)
-						{
-							top100Dirty.get(i).writeToDisk();
-							if (i % 10 == 0)
-								this.updateProgress(i, top100Dirty.size());
-						}
-						return null;
-					}
-				};
-			}
-		};
-		// When we finish syncing...
-		syncService.setOnSucceeded(event -> {
-			// After finishing the sync, check if we need to sync again. If so set the flag to false and sync once again
-			Boolean moreImagesToWrite = this.getAllImages().stream().anyMatch(ImageEntry::isDiskDirty);
-			if (moreImagesToWrite)
-				syncService.restart();
-			// If we don't need to sync again set the sync in progress flag to false
-			else
-				this.metadataSyncInProgress.set(false);
-		});
-		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
-
-		this.imageTree.getChildren().addListener((ListChangeListener<ImageContainer>) c ->
-		{
-			while (c.next())
-			{
-				if (c.wasUpdated() || c.wasAdded())
-				{
-					// If a sync is already in progress, we set a flag telling the current sync to perform another sync right after it finishes
-					if (!this.metadataSyncInProgress.get())
-					{
-						this.metadataSyncInProgress.set(true);
-						// Perform the task
-						syncService.restart();
-					}
-				}
-			}
-		});
 	}
 
 	/**
@@ -382,11 +193,11 @@ public class CalliopeData
 	}
 
 	/**
-	 * @return The global location list
+	 * @return The global site list
 	 */
-	public ObservableList<Location> getLocationList()
+	public ObservableList<BoundedSite> getSiteList()
 	{
-		return locationList;
+		return siteList;
 	}
 
 	/**

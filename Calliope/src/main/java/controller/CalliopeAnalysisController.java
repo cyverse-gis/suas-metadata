@@ -38,9 +38,6 @@ public class CalliopeAnalysisController implements Initializable
 	/// FXML bound fields start
 	///
 
-	// References to all controllers in the tabs of the analysis page
-	@FXML
-	public VisDrSandersonController visDrSandersonController;
 	@FXML
 	public VisCSVController visCSVController;
 
@@ -50,10 +47,6 @@ public class CalliopeAnalysisController implements Initializable
 	// The event interval used for Dr. Sanderson's output
 	@FXML
 	public TextField txtEventInterval;
-
-	// The detachable tab containing the Dr. Sanderson output
-	@FXML
-	public Tab tabDrSanderson;
 
 	// Tab pane full of visualizations
 	@FXML
@@ -79,8 +72,6 @@ public class CalliopeAnalysisController implements Initializable
 	/// FXML bound fields end
 	///
 
-	private Integer eventIntervalIndex = 0;
-
 	private Image standardArrow = new Image("/images/analysisWindow/arrowDivider.png");
 	private Image highlightedArrow = new Image("/images/analysisWindow/arrowDividerSelected.png");
 
@@ -98,32 +89,6 @@ public class CalliopeAnalysisController implements Initializable
 		// Set the cell factory to be our custom query condition cell which adapts itself to the specific condition
 		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("analysisView/QueryConditionsListCell.fxml").getController());
 
-		// Hide the Dr. Sanderson tab and the event interval if we don't have Dr. Sanderson's compatibility
-		if (!CalliopeData.getInstance().getSettings().getDrSandersonOutput())
-		{
-			this.tpnVisualizations.getTabs().remove(this.tabDrSanderson);
-			this.eventIntervalIndex = this.vbxQuery.getChildren().indexOf(this.txtEventInterval);
-			this.vbxQuery.getChildren().remove(this.txtEventInterval);
-		}
-
-		// Hide the Dr. Sanderson tab if compatibility is not enabled
-		CalliopeData.getInstance().getSettings().drSandersonOutputProperty().addListener((observable, oldValue, newValue) ->
-		{
-			if (newValue)
-			{
-				if (!this.tpnVisualizations.getTabs().contains(this.tabDrSanderson))
-					this.tpnVisualizations.getTabs().add(0, this.tabDrSanderson);
-				if (!this.vbxQuery.getChildren().contains(this.txtEventInterval))
-					this.vbxQuery.getChildren().add(this.eventIntervalIndex, this.txtEventInterval);
-			}
-			else
-			{
-				this.tpnVisualizations.getTabs().remove(this.tabDrSanderson);
-				this.eventIntervalIndex = this.vbxQuery.getChildren().indexOf(this.txtEventInterval);
-				this.vbxQuery.getChildren().remove(this.txtEventInterval);
-			}
-		});
-
 		// Set the items in the list to be the list of possible query filters
 		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
 
@@ -138,15 +103,6 @@ public class CalliopeAnalysisController implements Initializable
 	public void query(ActionEvent actionEvent)
 	{
 		this.mpnQuerying.setVisible(true);
-
-		// Default 60s event interval
-		Integer eventInterval = 60;
-		try
-		{
-			// Check if a different interval was given
-			eventInterval = Integer.parseInt(this.txtEventInterval.getText());
-		}
-		catch (NumberFormatException ignored) {}
 
 		// Create a query
 		ElasticSearchQuery query = new ElasticSearchQuery();
@@ -164,7 +120,6 @@ public class CalliopeAnalysisController implements Initializable
 				return CalliopeData.getInstance().getEsConnectionManager().performQuery(query);
 			}
 		};
-		Integer finalEventInterval = eventInterval;
 
 		// Once finished with the task, we test if the user wants to continue
 		queryTask.setOnSucceeded(event ->
@@ -172,11 +127,9 @@ public class CalliopeAnalysisController implements Initializable
 			this.mpnQuerying.setVisible(false);
 
 			// Analyze the result of the query
-			DataAnalyzer dataAnalyzer = new DataAnalyzer(queryTask.getValue(), finalEventInterval);
+			//DataAnalyzer dataAnalyzer = new DataAnalyzer(queryTask.getValue(), finalEventInterval);
 
-			// Hand the analysis over to the visualizations to graph
-			visDrSandersonController.visualize(dataAnalyzer);
-			visCSVController.visualize(dataAnalyzer);
+			//visCSVController.visualize(dataAnalyzer);
 		});
 		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(queryTask);
 

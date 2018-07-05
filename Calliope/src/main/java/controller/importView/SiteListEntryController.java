@@ -6,14 +6,14 @@ import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 import model.CalliopeData;
 import model.analysis.CalliopeAnalysisUtils;
-import model.location.Location;
 import model.location.UTMCoord;
+import model.neon.BoundedSite;
 import model.util.SettingsData;
 
 /**
  * Controller class for the location list cell
  */
-public class LocationListEntryController extends ListCell<Location>
+public class SiteListEntryController extends ListCell<BoundedSite>
 {
     ///
     /// FXML bound fields start
@@ -29,7 +29,7 @@ public class LocationListEntryController extends ListCell<Location>
 
     // The ID of the location
     @FXML
-    public Label lblId;
+    public Label lblCode;
 
     // The location location (lat/lng)
     @FXML
@@ -68,29 +68,29 @@ public class LocationListEntryController extends ListCell<Location>
 	/**
      * Update item is called whenever the cell gets updated
      *
-     * @param location The new location
+     * @param site The new site
      * @param empty If the cell is empty
      */
     @Override
-    protected void updateItem(Location location, boolean empty)
+    protected void updateItem(BoundedSite site, boolean empty)
     {
         // Update the cell first
-        super.updateItem(location, empty);
+        super.updateItem(site, empty);
 
         // Set the text to null
         this.setText(null);
 
         // If the cell is empty we have no graphic
-        if (empty && location == null)
+        if (empty && site == null)
         {
             this.setGraphic(null);
         }
         // if the cell is not empty, set the field's values and set the graphic
         else
         {
-            this.lblName.setText(location.getName());
-            this.lblId.setText(location.getId());
-            this.refreshLabels(location, CalliopeData.getInstance().getSettings().getLocationFormat(), CalliopeData.getInstance().getSettings().getDistanceUnits());
+            this.lblName.setText(site.getSite().getSiteName());
+            this.lblCode.setText(site.getSite().getSiteCode());
+            this.refreshLabels(site, CalliopeData.getInstance().getSettings().getLocationFormat(), CalliopeData.getInstance().getSettings().getDistanceUnits());
             this.setGraphic(mainPane);
         }
     }
@@ -102,25 +102,25 @@ public class LocationListEntryController extends ListCell<Location>
      * @param format The format of the location
      * @param distanceUnits The units to be used when creating distance labels
      */
-    private void refreshLabels(Location location, SettingsData.LocationFormat format, SettingsData.DistanceUnits distanceUnits)
+    private void refreshLabels(BoundedSite location, SettingsData.LocationFormat format, SettingsData.DistanceUnits distanceUnits)
     {
         // If we are using latitude & longitude
         if (format == SettingsData.LocationFormat.LatLong)
         {
             // Locations are stored in lat/lng so we can just use the value
-            this.lblLocationFirst.setText(location.getLatitude().toString());
-            this.lblLocationSecond.setText(location.getLongitude().toString());
-            this.lblLocationThird.setText(Math.round(distanceUnits.formatToMeters(location.getElevation())) + distanceUnits.getSymbol());
+            this.lblLocationFirst.setText(Double.toString(location.getSite().getSiteLatitude()));
+            this.lblLocationSecond.setText(Double.toString(location.getSite().getSiteLongitude()));
+            this.lblLocationThird.setText("");
         }
         // If we are using UTM
         else if (format == SettingsData.LocationFormat.UTM)
         {
             // Convert to UTM
-            UTMCoord utmEquiv = CalliopeAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
+            UTMCoord utmEquiv = CalliopeAnalysisUtils.Deg2UTM(location.getSite().getSiteLatitude(), location.getSite().getSiteLongitude());
             // Update the labels
             this.lblLocationFirst.setText(utmEquiv.getEasting().intValue() + "E");
             this.lblLocationSecond.setText(utmEquiv.getNorthing().intValue() + "N");
-            this.lblLocationThird.setText("Zone " + utmEquiv.getZone().toString() + utmEquiv.getLetter().toString() + " at " + Math.round(distanceUnits.formatToMeters(location.getElevation())) + distanceUnits.getSymbol());
+            this.lblLocationThird.setText("Zone " + utmEquiv.getZone().toString() + utmEquiv.getLetter().toString());
         }
     }
 }

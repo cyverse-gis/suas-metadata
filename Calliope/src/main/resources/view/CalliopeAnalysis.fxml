@@ -64,9 +64,6 @@
                 <ListView styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" fx:id="lvwQueryConditions" orientation="HORIZONTAL"/>
             </HBox>
             <TabPane fx:id="tpnVisualizations">
-                <Tab fx:id="tabDrSanderson" text="Dr. Sanderson's Output" closable="false">
-                    <fx:include fx:id="visDrSanderson" source="analysisView/VisDrSanderson.fxml"/>
-                </Tab>
                 <Tab text="CSV Output" closable="false">
                     <fx:include fx:id="visCSV" source="analysisView/VisCSV.fxml"/>
                 </Tab>
