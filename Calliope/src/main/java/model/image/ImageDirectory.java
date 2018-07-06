@@ -9,6 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import model.location.Location;
+import model.neon.BoundedSite;
 
 import java.io.File;
 import java.util.stream.Stream;
@@ -218,13 +219,13 @@ public class ImageDirectory extends ImageContainer
 	}
 
 	/**
-	 * Setting the location taken on a directory sets the location on all children recursively
-	 * @param location The location to set to
+	 * Setting the site taken on a directory sets the site on all children recursively
+	 * @param site The site to set to
 	 */
 	@Override
-	public void setLocationTaken(Location location)
+	public void setSiteTaken(BoundedSite site)
 	{
-		this.getChildren().forEach(child -> child.setLocationTaken(location));
+		this.getChildren().forEach(child -> child.setSiteTaken(site));
 	}
 
 	/**

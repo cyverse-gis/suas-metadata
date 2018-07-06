@@ -4,7 +4,7 @@ import com.thebuzzmedia.exiftool.ExifTool;
 import com.thebuzzmedia.exiftool.ExifToolBuilder;
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
-import org.apache.commons.lang3.math.NumberUtils;
+import controller.Calliope;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,12 @@ import java.util.Map;
  */
 public class MetadataUtils
 {
-	private static ExifTool exifToolInstance = new ExifToolBuilder().enableStayOpen().withPath("C:\\Users\\David\\Desktop\\Software\\CyVerse\\suas-metadata\\Calliope\\src\\main\\resources\\files\\exiftool.exe").build();
+	private static final ExifTool EXIF_TOOL_INSTANCE;
+
+	static
+	{
+		EXIF_TOOL_INSTANCE = new ExifToolBuilder().enableStayOpen().withPath(Calliope.class.getClass().getResource("/files/exiftool.exe").getFile()).build();
+	}
 
 	public enum CustomTags implements Tag
 	{
@@ -85,6 +90,6 @@ public class MetadataUtils
 	{
 		List<Tag> standardTags = new ArrayList<>(Arrays.asList(StandardTag.values()));
 		standardTags.addAll(Arrays.asList(CustomTags.values()));
-		return exifToolInstance.getImageMeta(imageFile, standardTags);
+		return EXIF_TOOL_INSTANCE.getImageMeta(imageFile, standardTags);
 	}
 }

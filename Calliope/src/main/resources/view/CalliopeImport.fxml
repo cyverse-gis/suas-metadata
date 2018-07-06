@@ -45,12 +45,12 @@
                                 <ImageView fx:id="imagePreview" onMouseClicked="#onImageClicked" onMouseDragged="#onImageDragged" onMousePressed="#onImagePressed" onScroll="#onImageScroll" preserveRatio="true" styleClass="imageView" />
                             </imageView>
                         </ImageViewPane>
-                        <HBox onMouseEntered="#onMouseEnteredLocation" onMouseExited="#onMouseExitedLocation" pickOnBounds="false" fx:id="hbxLocation" minHeight="80" maxHeight="80" alignment="CENTER_RIGHT" StackPane.alignment="TOP_RIGHT">
+                        <HBox onMouseEntered="#onMouseEnteredLocation" onMouseExited="#onMouseExitedLocation" onMouseClicked="#mouseClickedLocation" styleClass="siteBackground" pickOnBounds="false" fx:id="hbxLocation" minHeight="80" maxHeight="80" maxWidth="-Infinity" alignment="CENTER_RIGHT" StackPane.alignment="TOP_RIGHT">
                             <StackPane.margin>
                                 <Insets right="5" top="5"/>
                             </StackPane.margin>
                             <children>
-                                <Label fx:id="lblLocation" styleClass="locationLbl" text="Location Name"/>
+                                <Label fx:id="lblSite" styleClass="siteLbl" text="Site Name"/>
                                 <ImageView fitWidth="80" fitHeight="80">
                                     <Image url="@../images/importWindow/locationIconBackdrop.png"/>
                                 </ImageView>

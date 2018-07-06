@@ -9,9 +9,13 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import model.CalliopeData;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
+import model.neon.BoundedSite;
+
+import java.util.Optional;
 
 import static model.constant.CalliopeDataFormats.*;
 
@@ -131,7 +135,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT)) || (dragboard.hasContent(SPECIES_NAME_FORMAT) && dragboard.hasContent(SPECIES_SCIENTIFIC_NAME_FORMAT) && this.getItem() instanceof ImageEntry))
+		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
 			dragEvent.acceptTransferModes(TransferMode.COPY);
 		dragEvent.consume();
 	}
@@ -145,7 +149,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT)) || (dragboard.hasContent(SPECIES_NAME_FORMAT) && dragboard.hasContent(SPECIES_SCIENTIFIC_NAME_FORMAT) && this.getItem() instanceof ImageEntry))
+		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
 			if (!this.mainPane.getStyleClass().contains("draggedOver"))
 				this.mainPane.getStyleClass().add("draggedOver");
 		dragEvent.consume();
@@ -160,7 +164,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT)) || (dragboard.hasContent(SPECIES_NAME_FORMAT) && dragboard.hasContent(SPECIES_SCIENTIFIC_NAME_FORMAT) && this.getItem() instanceof ImageEntry))
+		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
 			if (this.mainPane.getStyleClass().contains("draggedOver"))
 				this.mainPane.getStyleClass().remove("draggedOver");
 		dragEvent.consume();
@@ -178,21 +182,18 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 		// Grab the dragboard
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If our dragboard has a string we have data which we need
-		/*
-		if (dragboard.hasContent(LOCATION_NAME_FORMAT) && dragboard.hasContent(LOCATION_ID_FORMAT))
+		if (dragboard.hasContent(SITE_CODE_FORMAT))
 		{
-			String locationName = (String) dragboard.getContent(LOCATION_NAME_FORMAT);
-			String locationId = (String) dragboard.getContent(LOCATION_ID_FORMAT);
+			String siteCode = (String) dragboard.getContent(SITE_CODE_FORMAT);
 			// Grab the species with the given ID
-			Optional<Location> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
+			Optional<BoundedSite> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(boundedSite -> boundedSite.getSite().getSiteCode().equals(siteCode)).findFirst();
 			// Add the species to the image
 			if (toAdd.isPresent())
 			{
-				this.getItem().setLocationTaken(toAdd.get());
+				this.getItem().setSiteTaken(toAdd.get());
 				success = true;
 			}
 		}
-		*/
 		// Set the success equal to the flag, and consume the event
 		dragEvent.setDropCompleted(success);
 		dragEvent.consume();

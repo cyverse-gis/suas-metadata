@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import library.HierarchyData;
 import model.location.Location;
+import model.neon.BoundedSite;
 
 import java.io.File;
 
@@ -15,8 +16,8 @@ public abstract class ImageContainer implements HierarchyData<ImageContainer>
 	// The file that this container represents. May be a directory or file
 	public abstract File getFile();
 
-	// Sets the location taken of the given image container
-	public abstract void setLocationTaken(Location location);
+	// Sets the site taken of the given image container
+	public abstract void setSiteTaken(BoundedSite site);
 
 	/**
 	 * To string just prints out the file name by default

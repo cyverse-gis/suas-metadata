@@ -109,7 +109,7 @@ public class CalliopeImportController implements Initializable
 
 	// Top right label containing location name
 	@FXML
-	public Label lblLocation;
+	public Label lblSite;
 	// Top right hbox containing location info
 	@FXML
 	public HBox hbxLocation;
@@ -320,7 +320,7 @@ public class CalliopeImportController implements Initializable
 		}));
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the species entry location name to the selected image's location
-		this.lblLocation.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
+		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).map(location -> true).orElse(false));
 		// Hide the progress bar when no tasks remain
@@ -364,12 +364,12 @@ public class CalliopeImportController implements Initializable
 		// First create a fade-in transition for the location
 		this.fadeLocationIn = new FadeTransition(Duration.millis(100), this.hbxLocation);
 		this.fadeLocationIn.setFromValue(1);
-		this.fadeLocationIn.setToValue(0.4);
+		this.fadeLocationIn.setToValue(0.3);
 		this.fadeLocationIn.setCycleCount(1);
 
 		// Then create a fade-out transition for the location
 		this.fadeLocationOut = new FadeTransition(Duration.millis(100), this.hbxLocation);
-		this.fadeLocationOut.setFromValue(0.4);
+		this.fadeLocationOut.setFromValue(0.3);
 		this.fadeLocationOut.setToValue(1);
 		this.fadeLocationOut.setCycleCount(1);
 
@@ -509,15 +509,14 @@ public class CalliopeImportController implements Initializable
 	}
 
 	/**
-	 * Allow the location list to be drag & dropable onto the image view
+	 * Allow the site list to be drag & dropable onto the image view
 	 *
-	 * @param mouseEvent consumed if a location is selected
+	 * @param mouseEvent consumed if a site is selected
 	 */
 	public void locationListDrag(MouseEvent mouseEvent)
 	{
-		/*
-		// Grab the selected location, make sure it's not null
-		Location selected = this.siteListView.getSelectionModel().getSelectedItem();
+		// Grab the selected site, make sure it's not null
+		BoundedSite selected = this.siteListView.getSelectionModel().getSelectedItem();
 		if (selected != null)
 		{
 			// Create a dragboard and begin the drag and drop
@@ -525,14 +524,12 @@ public class CalliopeImportController implements Initializable
 
 			// Create a clipboard and put the location unique ID into that clipboard
 			ClipboardContent content = new ClipboardContent();
-			content.put(CalliopeDataFormats.LOCATION_NAME_FORMAT, selected.getName());
-			content.put(CalliopeDataFormats.LOCATION_ID_FORMAT, selected.getId());
+			content.put(CalliopeDataFormats.SITE_CODE_FORMAT, selected.getSite().getSiteCode());
 			// Set the dragboard's context, and then consume the event
 			dragboard.setContent(content);
 
 			mouseEvent.consume();
 		}
-		*/
 	}
 
 	/**
@@ -543,42 +540,42 @@ public class CalliopeImportController implements Initializable
 	public void imagePaneDragOver(DragEvent dragEvent)
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
-		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
+		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			dragEvent.acceptTransferModes(TransferMode.COPY);
 		dragEvent.consume();
 	}
 
 	/**
-	 * When the drag from the species or location list enters the image
+	 * When the drag from the site list enters the image
 	 *
 	 * @param dragEvent The event that means we are dragging over the image pane
 	 */
 	public void imagePaneDragEntered(DragEvent dragEvent)
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
-		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
+		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			this.fadeAddPanelOut.play();
 		dragEvent.consume();
 	}
 
 	/**
-	 * When the drag from the species or location list exits the image
+	 * When the drag from the site list exits the image
 	 *
 	 * @param dragEvent The event that means we are dragging away from the image pane
 	 */
 	public void imagePaneDragExited(DragEvent dragEvent)
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
-		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if ((dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT)) || (dragboard.hasContent(CalliopeDataFormats.SPECIES_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.SPECIES_SCIENTIFIC_NAME_FORMAT) && this.currentlySelectedImage.getValue() != null))
+		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			this.fadeAddPanelIn.play();
 		dragEvent.consume();
 	}
 
 	/**
-	 * When we drop the species or location onto the image, we add that species or location to the list
+	 * When we drop the site onto the image, we add that species or location to the list
 	 *
 	 * @param dragEvent The event that means we are dragging away from the image pane
 	 */
@@ -589,32 +586,29 @@ public class CalliopeImportController implements Initializable
 		// Grab the dragboard
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If our dragboard has a string we have data which we need
-		/*
-		if (dragboard.hasContent(CalliopeDataFormats.LOCATION_NAME_FORMAT) && dragboard.hasContent(CalliopeDataFormats.LOCATION_ID_FORMAT))
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT))
 		{
-			String locationName = (String) dragboard.getContent(CalliopeDataFormats.LOCATION_NAME_FORMAT);
-			String locationId = (String) dragboard.getContent(CalliopeDataFormats.LOCATION_ID_FORMAT);
-			// Grab the species with the given ID
-			Optional<Location> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(location -> location.getName().equals(locationName) && location.getId().equals(locationId)).findFirst();
-			// Add the species to the image
+			String siteCode = (String) dragboard.getContent(CalliopeDataFormats.SITE_CODE_FORMAT);
+			// Grab the site with the given ID
+			Optional<BoundedSite> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(boundedSite -> boundedSite.getSite().getSiteCode().equals(siteCode)).findFirst();
+			// Add the site to the image
 			if (toAdd.isPresent())
 				// Check if we have a selected image or directory to update!
 				if (currentlySelectedImage.getValue() != null)
 				{
-					currentlySelectedImage.getValue().setLocationTaken(toAdd.get());
+					currentlySelectedImage.getValue().setSiteTaken(toAdd.get());
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;
 				}
 				else if (currentlySelectedDirectory.getValue() != null)
 				{
-					currentlySelectedDirectory.getValue().setLocationTaken(toAdd.get());
+					currentlySelectedDirectory.getValue().setSiteTaken(toAdd.get());
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;
 				}
 		}
-		*/
 		// Set the success equal to the flag, and consume the event
 		dragEvent.setDropCompleted(success);
 		dragEvent.consume();
@@ -688,6 +682,16 @@ public class CalliopeImportController implements Initializable
 	public void onMouseExitedLocation(MouseEvent mouseEvent)
 	{
 		fadeLocationIn.play();
+	}
+
+
+	public void mouseClickedLocation(MouseEvent mouseEvent)
+	{
+		if (this.currentlySelectedImage.getValue() != null)
+			this.currentlySelectedImage.getValue().setSiteTaken(null);
+		if (this.currentlySelectedDirectory.getValue() != null)
+			this.currentlySelectedDirectory.getValue().setSiteTaken(null);
+
 	}
 
 	/**

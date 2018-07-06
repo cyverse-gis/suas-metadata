@@ -216,6 +216,7 @@ public class ImageEntry extends ImageContainer
 		return rotation;
 	}
 
+	@Override
 	public void setSiteTaken(BoundedSite siteTaken)
 	{
 		this.siteTaken.setValue(siteTaken);
