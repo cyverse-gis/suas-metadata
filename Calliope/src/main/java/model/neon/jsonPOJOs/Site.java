@@ -24,6 +24,9 @@ public class Site
 	private final StringProperty stateName = new SimpleStringProperty(null);
 	private transient ObjectProperty<ProductAvailability[]> dataProducts = new SimpleObjectProperty<>();
 
+	/**
+	 * Utility function to be called if this class is deserialized from JSON
+	 */
 	public void initFromJSON()
 	{
 		this.dataProducts = new SimpleObjectProperty<>();

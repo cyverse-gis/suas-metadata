@@ -33,7 +33,7 @@
                     <ToggleGroup fx:id="tgpDetectionType"/>
                 </fx:define>
                 <RadioButton BorderPane.alignment="CENTER" fx:id="rbnByDistance" toggleGroup="$tgpDetectionType" selected="true" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <RadioButton BorderPane.alignment="CENTER" fx:id="rbnByInterior" toggleGroup="$tgpDetectionType" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <RadioButton BorderPane.alignment="CENTER" fx:id="rbnByBoundary" toggleGroup="$tgpDetectionType" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
 
                 <HBox fx:id="hbxDistance" BorderPane.alignment="CENTER" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1" spacing="5">
                     <children>

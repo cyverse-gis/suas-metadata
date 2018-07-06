@@ -39,13 +39,6 @@ public class NeonData
 	// A hard coded link to the NEON KMZ file containing all locations + boundaries
 	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-20180605v16.kmz";
 
-	// List of NEON sites
-	private ObservableList<BoundedSite> sites = FXCollections.observableArrayList(site -> new Observable[]
-	{
-		site.siteProperty(),
-		site.boundaryProperty()
-	});
-
 	/**
 	 * Parses a KML document into a list of bounded sites
 	 *

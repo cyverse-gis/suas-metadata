@@ -300,8 +300,15 @@ public class CalliopeImportController implements Initializable
 		// Finally bind the date taken's disable property if an adjustable image is selected
 		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty)));
 
-		StringConverter<Number> converter = new StringConverter<Number>()
+		// A converter used to convert from strings to numbers and back
+		StringConverter<Number> numStrconverter = new StringConverter<Number>()
 		{
+			/**
+			 * Function that takes a number as input and returns it as a string
+			 *
+			 * @param number The number to convert
+			 * @return The string representation of the number
+			 */
 			@Override
 			public String toString(Number number)
 			{
@@ -311,6 +318,12 @@ public class CalliopeImportController implements Initializable
 					return "";
 			}
 
+			/**
+			 * Function takes a string as input and returns it as a number or 0 if it is invalid
+			 *
+			 * @param string The number as a string to convert
+			 * @return The number string as a number
+			 */
 			@Override
 			public Number fromString(String string)
 			{
@@ -321,28 +334,33 @@ public class CalliopeImportController implements Initializable
 			}
 		};
 
+		///
+		/// The next properties are bound image fields. If no image is selected the text fields are disabled. We use bi-directional bindings so that
+		/// if we change the text field the model updates, and if the model is updated internally the text fields update.
+		///
+
 		this.txtLatitude.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::latitudeProperty)), converter);
+		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::latitudeProperty)), numStrconverter);
 		this.txtLongitude.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::longitudeProperty)), converter);
+		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::longitudeProperty)), numStrconverter);
 		this.txtElevation.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::elevationProperty)), converter);
+		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::elevationProperty)), numStrconverter);
 		this.txtDroneBrand.disableProperty().bind(currentlySelectedImage.isNull());
 		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::droneMakerProperty)));
 		this.txtCameraModel.disableProperty().bind(currentlySelectedImage.isNull());
 		this.txtCameraModel.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::cameraModelProperty)));
 		this.txtXSpeed.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtXSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::xProperty)), converter);
+		this.txtXSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::xProperty)), numStrconverter);
 		this.txtYSpeed.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtYSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::yProperty)), converter);
+		this.txtYSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::yProperty)), numStrconverter);
 		this.txtZSpeed.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtZSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::zProperty)), converter);
+		this.txtZSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::zProperty)), numStrconverter);
 		this.txtXRotation.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtXRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::xProperty)), converter);
+		this.txtXRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::xProperty)), numStrconverter);
 		this.txtYRotation.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::yProperty)), converter);
+		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::yProperty)), numStrconverter);
 		this.txtZRotation.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::zProperty)), converter);
+		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::zProperty)), numStrconverter);
 		// Bind the image preview to the selected image from the right side tree view
 		// Can't use 'new Image(file.toURI().toString()));'
 		// because it doesn't support tiffs. Sad day.
@@ -350,14 +368,17 @@ public class CalliopeImportController implements Initializable
 		{
 			try
 			{
+				// ImageIO can read tiffs with the library
 				return SwingFXUtils.toFXImage(ImageIO.read(file), null);
 			}
 			catch (IOException e)
 			{
+				// We couldn't read the image, so return null
 				CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file\n" + ExceptionUtils.getStackTrace(e));
 			}
 			return null;
 		}));
+		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the species entry location name to the selected image's location
 		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
@@ -426,11 +447,16 @@ public class CalliopeImportController implements Initializable
 		});
 
 		// Setup the metadata property sheet
+		// When we click a new image then load new metadata
 		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> { if (newValue != null) this.pstMetadata.getItems().setAll(newValue.getRawMetadata()); });
+		// Create a default factory
 		DefaultPropertyEditorFactory defaultFactory = new DefaultPropertyEditorFactory();
+		// Ensure that our editors are non-editable since metadata isn't editable
 		this.pstMetadata.setPropertyEditorFactory(item ->
 		{
+			// Call the default factory
 			PropertyEditor<?> toReturn = defaultFactory.call(item);
+			// If it returns a text field, make sure we can't edit it
 			if (toReturn.getEditor() instanceof TextField)
 				((TextField) toReturn.getEditor()).setEditable(false);
 			return toReturn;
@@ -489,10 +515,17 @@ public class CalliopeImportController implements Initializable
 		this.fadeRightIn.play();
 	}
 
-	private <T> Property<T> cache(Property<T> property)
+	/**
+	 * This is purely used so that the action listeners are not garbage collected early
+	 *
+	 * @param reference The reference to cache
+	 * @param <T> The type of the property, can be anything
+	 * @return Returns the property passed in purely for convenience
+	 */
+	private <T> Property<T> cache(Property<T> reference)
 	{
-		this.cache.add(property);
-		return property;
+		this.cache.add(reference);
+		return reference;
 	}
 
 	/**
@@ -512,6 +545,7 @@ public class CalliopeImportController implements Initializable
 		// If the file chosen is a file and a directory process it
 		if (file != null && file.isDirectory())
 		{
+			// Disable the import button for now
 			this.btnImportImages.setDisable(true);
 			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
 			{
@@ -542,6 +576,7 @@ public class CalliopeImportController implements Initializable
 				this.btnImportImages.setDisable(false);
 			});
 
+			// Execute the task
 			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
 		}
 
@@ -691,10 +726,17 @@ public class CalliopeImportController implements Initializable
 		dragEvent.consume();
 	}
 
+	/**
+	 * Called to reload the current NEON site cache on the ES index
+	 *
+	 * @param actionEvent consumed
+	 */
 	public void refreshNEONSites(ActionEvent actionEvent)
 	{
+		// Disable the button during processing
 		this.btnRefreshNEONSites.setDisable(true);
 
+		// The refresh task just calls our ES manager
 		ErrorTask<Void> refreshTask = new ErrorTask<Void>()
 		{
 			@Override
@@ -706,13 +748,21 @@ public class CalliopeImportController implements Initializable
 			}
 		};
 
+		// Enable the button after processing
 		refreshTask.setOnSucceeded(event -> this.btnRefreshNEONSites.setDisable(false));
 
+		// Add the task to be executed
 		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(refreshTask);
 
+		// Consume the event
 		actionEvent.consume();
 	}
 
+	/**
+	 * Reset the site search field when we press the button
+	 *
+	 * @param actionEvent consumed
+	 */
 	public void resetSiteSearch(ActionEvent actionEvent)
 	{
 		this.txtSiteSearch.clear();
@@ -761,17 +811,25 @@ public class CalliopeImportController implements Initializable
 		fadeLocationIn.play();
 	}
 
-
+	/**
+	 * When we click the location icon, either remove the location off of the image or pull the location if not present
+	 *
+	 * @param mouseEvent consumed
+	 */
 	public void mouseClickedLocation(MouseEvent mouseEvent)
 	{
+		// Ensure we have a valid image selected
 		if (this.currentlySelectedImage.getValue() != null)
 		{
+			// If the site is already present, remove it
 			if (this.currentlySelectedImage.getValue().getSiteTaken() != null)
 			{
 				this.currentlySelectedImage.getValue().setSiteTaken(null);
 			}
+			// If the site is not present, open the neon site detector to figure out which method the user wants to use to tag the site
 			else
 			{
+				// We need to wrap our image as a singleton list
 				this.neonSiteDetectorController.updateItems(Collections.singletonList(this.currentlySelectedImage.getValue()));
 				// Make sure that this stage belongs to the main stage
 				if (this.neonSiteDetectorStage.getOwner() == null)
@@ -779,8 +837,10 @@ public class CalliopeImportController implements Initializable
 				this.neonSiteDetectorStage.showAndWait();
 			}
 		}
+		// If an image is not selected, test if a directory is selected
 		else if (this.currentlySelectedDirectory.getValue() != null)
 		{
+			// Pull the sub-images in the directory
 			List<ImageEntry> images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
 			this.neonSiteDetectorController.updateItems(images);
 			// Make sure that this stage belongs to the main stage

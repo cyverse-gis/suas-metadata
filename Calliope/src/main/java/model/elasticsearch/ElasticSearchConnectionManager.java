@@ -430,20 +430,29 @@ public class ElasticSearchConnectionManager
 						Site site = CalliopeData.getInstance().getGson().fromJson(siteJSON, Site.class);
 						site.initFromJSON();
 
+						// Test if the site has a boundary
 						if (sitesMap.containsKey("boundary"))
 						{
+							// Grab the boundary map
 							Object boundaryMap = sitesMap.get("boundary");
+							// Make sure that it is indeed a map
 							if (boundaryMap instanceof Map<?, ?>)
 							{
+								// Grab the coordinates list
 								Object polygonObject = ((Map<?, ?>) boundaryMap).get("coordinates");
+								// Make sure the polygon object is a list
 								if (polygonObject instanceof List<?>)
 								{
+									// The object should be a list of lists of lists
 									List<List<List<Double>>> polygonRaw = (List<List<List<Double>>>) polygonObject;
 
+									// Create a new boundary polygon
 									Polygon boundary = new Polygon();
+									// Set the outer boundary to be the first polygon in the list
 									boundary.setOuterBoundaryIs(this.rawToBoundary(polygonRaw.get(0)));
+									// The rest of the polygons are inner boundaries, so map the remainder of the list to another list of boundary polygons
 									boundary.setInnerBoundaryIs(polygonRaw.subList(1, polygonRaw.size()).stream().map(this::rawToBoundary).collect(Collectors.toList()));
-
+									// Store the boundary
 									toReturn.add(new BoundedSite(site, boundary));
 								}
 							}
@@ -482,8 +491,15 @@ public class ElasticSearchConnectionManager
 		return toReturn;
 	}
 
+	/**
+	 * Convert a list of (longitude, latitude) lists to a linear ring boundary
+	 *
+	 * @param rawBoundary The raw boundary to be convereted
+	 * @return The boundary
+	 */
 	private Boundary rawToBoundary(List<List<Double>> rawBoundary)
 	{
+		// Map the raw boundary to a list of coordinates, and then that coordinate list to a boundary
 		return new Boundary().withLinearRing(new LinearRing().withCoordinates(rawBoundary.stream().map(latLongList -> new Coordinate(latLongList.get(1), latLongList.get(0))).collect(Collectors.toList())));
 	}
 
@@ -1093,6 +1109,117 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
+	 * Given a list of images this function returns a parallel array of site codes of NEON sites that each image belongs to
+	 *
+	 * @param imageEntries The list of images to detect NEON sites in
+	 * @return A list of NEON site codes as a parallel array to the original image list with null if no NEON site is at the location
+	 */
+	@SuppressWarnings("unchecked")
+	public String[] detectNEONSites(List<ImageEntry> imageEntries)
+	{
+		// A parallel array to return
+		String[] toReturn = new String[imageEntries.size()];
+
+		// Create a multi search (one per image)
+		MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
+		// Search once per image
+		for (Integer i = 0; i < imageEntries.size(); i++)
+		{
+			// Grab the image to search for
+			ImageEntry imageEntry = imageEntries.get(i);
+			// Create a search request
+			SearchRequest searchRequest = new SearchRequest();
+			try
+			{
+				// Initialize the search request
+				searchRequest
+						.indices(INDEX_CALLIOPE_NEON_SITES)
+						.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+						.source(new SearchSourceBuilder()
+								// We only care about site code
+								.fetchSource(new String[] { "site.siteCode" }, new String[] { "boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName" })
+								// We only care about a single result
+								.size(1)
+								// We want to search where the polygon intersects our image's location (as a point)
+								.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
+				// Store the search request
+				multiSearchRequest.add(searchRequest);
+			}
+			catch (IOException e)
+			{
+				// Return an error if something went wrong creating the index request
+				CalliopeData.getInstance().getErrorDisplay().notify("Error creating search request for the image " + imageEntry.getFile().getAbsolutePath() + "\n" + ExceptionUtils.getStackTrace(e));
+			}
+		}
+
+		try
+		{
+			// Execute the search
+			MultiSearchResponse multiSearchResponse = this.elasticSearchClient.multiSearch(multiSearchRequest);
+			// Grab all responses
+			MultiSearchResponse.Item[] responses = multiSearchResponse.getResponses();
+			// We should get one response per image
+			if (multiSearchResponse.getResponses().length == imageEntries.size())
+			{
+				// Iterate over all responses
+				for (Integer i = 0; i < responses.length; i++)
+				{
+					// Grab the response, and pull the hits
+					MultiSearchResponse.Item response = responses[i];
+					SearchHit[] hits = response.getResponse().getHits().getHits();
+					// If we got 1 hit, we have the right site. If we do not have a hit, return null for this image
+					if (hits.length == 1)
+					{
+						// Grab the raw hit map
+						Map<String, Object> siteMap = hits[0].getSourceAsMap();
+						// It should have a site field
+						if (siteMap.containsKey("site"))
+						{
+							// Grab the site field
+							Object siteDetailsMapObj = siteMap.get("site");
+							// The site field should be a map
+							if (siteDetailsMapObj instanceof Map<?, ?>)
+							{
+								// Convert the site field to a map
+								Map<String, Object> siteDetailsMap = (Map<String, Object>) siteDetailsMapObj;
+								// Make sure our site field has a site code field
+								if (siteDetailsMap.containsKey("siteCode"))
+								{
+									// Grab the site code field
+									Object siteCodeObj = siteDetailsMap.get("siteCode");
+									// Make sure the site code field is a string
+									if (siteCodeObj instanceof String)
+									{
+										// Store the site code field
+										toReturn[i] = (String) siteCodeObj;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						// No results = no NEON site
+						toReturn[i] = null;
+					}
+				}
+			}
+			else
+			{
+				// The query did not return the proper amount of responses, print an error
+				CalliopeData.getInstance().getErrorDisplay().notify("Did not get enough responses from the multisearch, this should not be possible.");
+			}
+		}
+		catch (IOException e)
+		{
+			// The query failed, print an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error performing multisearch for NEON site codes.\n" + ExceptionUtils.getStackTrace(e));
+		}
+
+		return toReturn;
+	}
+
+	/**
 	 * Finalize method is called like a deconstructor and can be used to clean up any floating objects
 	 *
 	 * @throws Throwable If finalization fails for some reason
@@ -1111,81 +1238,5 @@ public class ElasticSearchConnectionManager
 		{
 			CalliopeData.getInstance().getErrorDisplay().notify("Could not close ElasticSearch connection: \n" + ExceptionUtils.getStackTrace(e));
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	public String[] detectNEONSites(List<ImageEntry> imageEntries)
-	{
-		String[] toReturn = new String[imageEntries.size()];
-
-		MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
-		for (Integer i = 0; i < imageEntries.size(); i++)
-		{
-			ImageEntry imageEntry = imageEntries.get(i);
-			SearchRequest searchRequest = new SearchRequest();
-			try
-			{
-				searchRequest
-						.indices(INDEX_CALLIOPE_NEON_SITES)
-						.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
-						.source(new SearchSourceBuilder()
-							.fetchSource(new String[] { "site.siteCode" }, new String[] { "boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName" })
-							.size(1)
-							.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
-				multiSearchRequest.add(searchRequest);
-			}
-			catch (IOException e)
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Error creating search request for the image " + imageEntry.getFile().getAbsolutePath() + "\n" + ExceptionUtils.getStackTrace(e));
-			}
-		}
-
-		try
-		{
-			MultiSearchResponse multiSearchResponse = this.elasticSearchClient.multiSearch(multiSearchRequest);
-			if (multiSearchResponse.getResponses().length == imageEntries.size())
-			{
-				MultiSearchResponse.Item[] responses = multiSearchResponse.getResponses();
-				for (Integer i = 0; i < responses.length; i++)
-				{
-					MultiSearchResponse.Item response = responses[i];
-					SearchHit[] hits = response.getResponse().getHits().getHits();
-					if (hits.length == 1)
-					{
-						Map<String, Object> siteMap = hits[0].getSourceAsMap();
-						if (siteMap.containsKey("site"))
-						{
-							Object siteDetailsMapObj = siteMap.get("site");
-							if (siteDetailsMapObj instanceof Map<?, ?>)
-							{
-								Map<String, Object> siteDetailsMap = (Map<String, Object>) siteDetailsMapObj;
-								if (siteDetailsMap.containsKey("siteCode"))
-								{
-									Object siteCodeObj = siteDetailsMap.get("siteCode");
-									if (siteCodeObj instanceof String)
-									{
-										toReturn[i] = (String) siteCodeObj;
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						toReturn[i] = null;
-					}
-				}
-			}
-			else
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Did not get enough responses from the multisearch, this should not be possible.");
-			}
-		}
-		catch (IOException e)
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Error performing multisearch for NEON site codes.\n" + ExceptionUtils.getStackTrace(e));
-		}
-
-		return toReturn;
 	}
 }
