@@ -1,5 +1,6 @@
 package controller;
 
+import controller.importView.NeonSiteDetectorController;
 import javafx.animation.FadeTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
@@ -11,9 +12,11 @@ import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -22,6 +25,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.LocalDateTimeTextField;
@@ -38,7 +43,10 @@ import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.controlsfx.control.PropertySheet;
 import org.controlsfx.control.StatusBar;
+import org.controlsfx.property.editor.DefaultPropertyEditorFactory;
+import org.controlsfx.property.editor.PropertyEditor;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
@@ -48,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller class for the main import window
@@ -146,6 +155,12 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public TextField txtZRotation;
 
+	@FXML
+	public TabPane leftTabPane;
+
+	@FXML
+	public PropertySheet pstMetadata;
+
 	///
 	/// FXML bound fields end
 	///
@@ -170,6 +185,9 @@ public class CalliopeImportController implements Initializable
 
 	private List<Property<?>> cache = new ArrayList<>();
 
+	private Stage neonSiteDetectorStage;
+	private NeonSiteDetectorController neonSiteDetectorController;
+
 	/**
 	 * Initialize the Calliope import view and data bindings
 	 *
@@ -179,7 +197,10 @@ public class CalliopeImportController implements Initializable
 	@Override
 	public void initialize(URL ignored, ResourceBundle resources)
 	{
-		// Then we setup the site list in a similar manner
+		// Setup the tab pane on the left to have uniformly sized tabs
+		leftTabPane.tabMinWidthProperty().bind(leftTabPane.widthProperty().divide(leftTabPane.getTabs().size()).subtract(30));
+
+		// Then we setup the site list
 
 		// Grab the global site list
 		SortedList<BoundedSite> sites = new SortedList<>(CalliopeData.getInstance().getSiteList());
@@ -322,7 +343,7 @@ public class CalliopeImportController implements Initializable
 		// Bind the species entry location name to the selected image's location
 		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
 		// Hide the location panel when no location is selected
-		this.hbxLocation.visibleProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).map(location -> true).orElse(false));
+		this.hbxLocation.visibleProperty().bind(currentlySelectedImage.isNotNull().or(currentlySelectedDirectory.isNotNull()));
 		// Hide the progress bar when no tasks remain
 		this.sbrTaskProgress.visibleProperty().bind(CalliopeData.getInstance().getExecutor().getQueuedExecutor().taskRunningProperty());
 		// Bind the progress bar's text property to tasks remaining
@@ -357,6 +378,43 @@ public class CalliopeImportController implements Initializable
 			this.resetImageView(null);
 			// We also make sure to pull the image from online if it's a cloud based image
 			if (newValue instanceof CloudImageEntry) ((CloudImageEntry) newValue).pullFromCloudIfNotPulled();
+		});
+
+		// Setup the neon site detector stage
+
+		// Load the FXML file of the editor window
+		FXMLLoader timeShiftLoader = FXMLLoaderUtils.loadFXML("importView/NeonSiteDetector.fxml");
+		// Grab the controller
+		this.neonSiteDetectorController = timeShiftLoader.getController();
+
+		// Create the stage that will have the neon site detector
+		this.neonSiteDetectorStage = new Stage();
+		// Set the title
+		this.neonSiteDetectorStage.setTitle("Neon Site Detector");
+		// Set the modality and initialize the owner to be this current window
+		this.neonSiteDetectorStage.initModality(Modality.WINDOW_MODAL);
+		// Make sure the window is the right size and can't be resized
+		this.neonSiteDetectorStage.setResizable(false);
+		// Set the scene to the root of the FXML file
+		Scene timeShiftScene = new Scene(timeShiftLoader.getRoot());
+		// Set the scene of the stage, and show it!
+		this.neonSiteDetectorStage.setScene(timeShiftScene);
+		// When we close the stage don't close it, just hide it
+		this.neonSiteDetectorStage.setOnCloseRequest(event ->
+		{
+			this.neonSiteDetectorStage.hide();
+			event.consume();
+		});
+
+		// Setup the metadata property sheet
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> this.pstMetadata.getItems().setAll(newValue.getRawMetadata()));
+		DefaultPropertyEditorFactory defaultFactory = new DefaultPropertyEditorFactory();
+		this.pstMetadata.setPropertyEditorFactory(item ->
+		{
+			PropertyEditor<?> toReturn = defaultFactory.call(item);
+			if (toReturn.getEditor() instanceof TextField)
+				((TextField) toReturn.getEditor()).setEditable(false);
+			return toReturn;
 		});
 
 		// Initialize the fade transitions
@@ -688,10 +746,31 @@ public class CalliopeImportController implements Initializable
 	public void mouseClickedLocation(MouseEvent mouseEvent)
 	{
 		if (this.currentlySelectedImage.getValue() != null)
-			this.currentlySelectedImage.getValue().setSiteTaken(null);
-		if (this.currentlySelectedDirectory.getValue() != null)
-			this.currentlySelectedDirectory.getValue().setSiteTaken(null);
+		{
+			if (this.currentlySelectedImage.getValue().getSiteTaken() != null)
+			{
+				this.currentlySelectedImage.getValue().setSiteTaken(null);
+			}
+			else
+			{
+				this.neonSiteDetectorController.updateItems(Collections.singletonList(this.currentlySelectedImage.getValue()));
+				// Make sure that this stage belongs to the main stage
+				if (this.neonSiteDetectorStage.getOwner() == null)
+					this.neonSiteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
+				this.neonSiteDetectorStage.showAndWait();
+			}
+		}
+		else if (this.currentlySelectedDirectory.getValue() != null)
+		{
+			List<ImageEntry> images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+			this.neonSiteDetectorController.updateItems(images);
+			// Make sure that this stage belongs to the main stage
+			if (this.neonSiteDetectorStage.getOwner() == null)
+				this.neonSiteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
+			this.neonSiteDetectorStage.showAndWait();
+		}
 
+		mouseEvent.consume();
 	}
 
 	/**

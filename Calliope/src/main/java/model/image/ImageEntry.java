@@ -12,12 +12,17 @@ import javafx.scene.image.Image;
 import model.CalliopeData;
 import model.location.Location;
 import model.neon.BoundedSite;
-import model.util.MetadataUtils;
+import model.util.CustomPropertyItem;
+import model.util.MetadataCustomItem;
+import model.util.MetadataManager;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 
@@ -49,6 +54,9 @@ public class ImageEntry extends ImageContainer
 	private final ObjectProperty<Vector3> speed = new SimpleObjectProperty<>(new Vector3());
 	private final ObjectProperty<Vector3> rotation = new SimpleObjectProperty<>(new Vector3());
 
+	// The raw metadata entries without any modifications
+	private transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
+
 	/**
 	 * Create a new image entry with an image file
 	 * 
@@ -69,8 +77,13 @@ public class ImageEntry extends ImageContainer
 		{
 			final String UNSPECIFIED = "Unspecified";
 
-			//Read the metadata off of the imagee
-			Map<Tag, String> imageMetadataMap = MetadataUtils.readImageMetadata(this.getFile());
+			//Read the metadata off of the image
+			Map<Tag, String> imageMetadataMap = CalliopeData.getInstance().getMetadataManager().readImageMetadata(this.getFile());
+
+			this.rawMetadata.clear();
+			for (Map.Entry<Tag, String> entry : imageMetadataMap.entrySet())
+				this.rawMetadata.add(new MetadataCustomItem(entry.getKey().getName(), entry.getValue()));
+			this.rawMetadata.sort(Comparator.comparing(CustomPropertyItem::getName));
 
 			this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
 			this.locationTaken.setValue(new Location(
@@ -78,15 +91,15 @@ public class ImageEntry extends ImageContainer
 					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
 					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
 			this.droneMaker.setValue(imageMetadataMap.getOrDefault(StandardTag.MAKE, UNSPECIFIED));
-			this.cameraModel.setValue(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.CAMERA_MODEL_NAME, UNSPECIFIED));
+			this.cameraModel.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.CAMERA_MODEL_NAME, UNSPECIFIED));
 			this.speed.setValue(new Vector3(
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.SPEED_X, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.SPEED_Y, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.SPEED_Z, "0"))));
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_X, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_Y, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_Z, "0"))));
 			this.rotation.setValue(new Vector3(
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.ROLL, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.PITCH, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataUtils.CustomTags.YAW, "0"))));
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ROLL, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.PITCH, "0")),
+					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.YAW, "0"))));
 		}
 		catch (Exception e)
 		{
@@ -230,5 +243,10 @@ public class ImageEntry extends ImageContainer
 	public ObjectProperty<BoundedSite> siteTakenProperty()
 	{
 		return siteTaken;
+	}
+
+	public List<MetadataCustomItem> getRawMetadata()
+	{
+		return rawMetadata;
 	}
 }

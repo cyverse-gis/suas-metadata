@@ -2,7 +2,6 @@ package model.neon;
 
 import de.micromata.opengis.kml.v_2_2_0.*;
 import de.micromata.opengis.kml.v_2_2_0.gx.Tour;
-import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -288,5 +287,35 @@ public class NeonData
 		{
 			System.out.println(StringUtils.repeat("-", depth * 2) + " <tour> " + feature.getName());
 		}
+	}
+
+	/**
+	 * Given a latitude and a longitude this method returns the closest bounded site
+	 *
+	 * @param sites The sites to search through
+	 * @param latitude The latitude to test
+	 * @param longitude The longitude to test
+	 * @return The site closest to the lat/long pair
+	 */
+	public BoundedSite closestBoundedSiteTo(List<BoundedSite> sites, Double latitude, Double longitude)
+	{
+		// Compute the shortest distance, test each site
+		Double shortestDistance = Double.MAX_VALUE;
+		BoundedSite closestSite = null;
+		// Iterate over all sites
+		for (BoundedSite site : sites)
+		{
+			// Compute the distance between the site and the lat/long point
+			Double distanceToSite = CalliopeAnalysisUtils.distanceBetween(latitude, longitude, site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude());
+			// If this site is the closest so far, store it
+			if (distanceToSite < shortestDistance)
+			{
+				// Store the site and the distance
+				shortestDistance = distanceToSite;
+				closestSite = site;
+			}
+		}
+		// Return the closest site
+		return closestSite;
 	}
 }

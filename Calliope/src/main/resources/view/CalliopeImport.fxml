@@ -9,33 +9,43 @@
 <?import org.controlsfx.control.StatusBar?>
 <?import java.net.URL?>
 <?import jfxtras.scene.control.LocalDateTimeTextField?>
+<?import org.controlsfx.control.PropertySheet?>
 <SplitPane fx:id="mainPane" dividerPositions="0.28, 0.75" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeImportController">
     <stylesheets>
         <URL value="@CalliopeImport.css" />
     </stylesheets>
     <items>
-        <VBox styleClass="lightBorder" SplitPane.resizableWithParent="false">
-            <children>
-                <ListView fx:id="siteListView" onDragDetected="#locationListDrag" VBox.vgrow="ALWAYS" styleClass="locationList" maxHeight="Infinity" />
-                <HBox spacing="5">
-                    <VBox.margin>
-                        <Insets top="5" bottom="5" left="5" right="5"/>
-                    </VBox.margin>
-                    <children>
-                        <TextField fx:id="txtSiteSearch" promptText="Search Sites" HBox.hgrow="ALWAYS" />
-                        <Button onAction="#resetSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER" />
-                    </children>
-                </HBox>
-                <FlowPane alignment="CENTER" hgap="5" vgap="10">
-                    <padding>
-                        <Insets bottom="20" left="5" right="5" top="20" />
-                    </padding>
-                    <children>
-                        <Button fx:id="btnRefreshNEONSites" mnemonicParsing="false" onAction="#refreshNEONSites" styleClass="resetBtn" text="Refresh NEON Sites" />
-                    </children>
-                </FlowPane>
-            </children>
-        </VBox>
+        <TabPane fx:id="leftTabPane" styleClass="lightBorder" SplitPane.resizableWithParent="false">
+            <tabs>
+                <Tab closable="false" text="NEON Sites">
+                    <VBox>
+                        <children>
+                            <ListView fx:id="siteListView" onDragDetected="#locationListDrag" VBox.vgrow="ALWAYS" styleClass="locationList" maxHeight="Infinity" />
+                            <HBox spacing="5">
+                                <VBox.margin>
+                                    <Insets top="5" bottom="5" left="5" right="5"/>
+                                </VBox.margin>
+                                <children>
+                                    <TextField fx:id="txtSiteSearch" promptText="Search Sites" HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#resetSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER" />
+                                </children>
+                            </HBox>
+                            <FlowPane alignment="CENTER" hgap="5" vgap="10">
+                                <padding>
+                                    <Insets bottom="20" left="5" right="5" top="20" />
+                                </padding>
+                                <children>
+                                    <Button fx:id="btnRefreshNEONSites" mnemonicParsing="false" onAction="#refreshNEONSites" styleClass="resetBtn" text="Refresh NEON Sites" />
+                                </children>
+                            </FlowPane>
+                        </children>
+                    </VBox>
+                </Tab>
+                <Tab closable="false" text="Raw Metadata">
+                    <PropertySheet fx:id="pstMetadata"/>
+                </Tab>
+            </tabs>
+        </TabPane>
         <SplitPane dividerPositions="0.70" orientation="VERTICAL">
             <items>
                 <StackPane fx:id="imagePane" onDragDropped="#imagePaneDragDropped" onDragEntered="#imagePaneDragEntered" onDragExited="#imagePaneDragExited" onDragOver="#imagePaneDragOver" onMouseEntered="#imagePaneMouseEntered" onMouseExited="#imagePaneMouseExited">
@@ -79,9 +89,9 @@
                                 <Insets left="5" right="5" top="5" />
                             </padding>
                             <columnConstraints>
-                                <ColumnConstraints hgrow="NEVER" maxWidth="70.0" minWidth="70.0" />
+                                <ColumnConstraints hgrow="NEVER" maxWidth="90.0" minWidth="90.0" />
                                 <ColumnConstraints hgrow="SOMETIMES" />
-                                <ColumnConstraints hgrow="NEVER" maxWidth="100.0" minWidth="100.0" />
+                                <ColumnConstraints hgrow="NEVER" maxWidth="120.0" minWidth="120.0" />
                                 <ColumnConstraints hgrow="SOMETIMES" />
                             </columnConstraints>
                             <rowConstraints>

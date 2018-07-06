@@ -22,7 +22,6 @@ import model.species.Species;
 import model.species.SpeciesEntry;
 import model.util.SensitiveConfigurationManager;
 import model.util.SettingsData;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -40,6 +39,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.geo.builders.PointBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -102,14 +102,6 @@ public class ElasticSearchConnectionManager
 	// The number of replicas to be created by the neonSite index, for development we don't need any
 	private static final Integer INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT = 0;
 
-	// The type used to serialize a list of species through Gson
-	private static final Type SPECIES_LIST_TYPE = new TypeToken<ArrayList<Species>>()
-	{
-	}.getType();
-	// The type used to serialize a list of locations through Gson
-	private static final Type LOCATION_LIST_TYPE = new TypeToken<ArrayList<Location>>()
-	{
-	}.getType();
 	// The type used to serialize a list of cloud uploads
 	private static final Type CLOUD_UPLOAD_ENTRY_LIST_TYPE = new TypeToken<ArrayList<CloudUploadEntry>>()
 	{
@@ -387,31 +379,6 @@ public class ElasticSearchConnectionManager
 		}
 
 		return null;
-	}
-
-	/**
-	 * Fetches the user's species from the ElasticSearch index
-	 *
-	 * @return The user's species
-	 */
-	public List<Species> pullRemoteSpecies()
-	{
-		/*
-		// Pull the species list from the ElasticSearch cluster
-		Object species = fetchFieldForUser("species");
-		// Species should be a list of maps, so test that
-		if (species instanceof List<?>)
-		{
-			String json = CalliopeData.getInstance().getGson().toJson(species);
-			// Convert this HashMap to JSON, and finally from JSON into the List<Species> object. Once this is done, return!
-			if (json != null)
-			{
-				return CalliopeData.getInstance().getGson().fromJson(json, SPECIES_LIST_TYPE);
-			}
-		}
-		*/
-
-		return Collections.emptyList();
 	}
 
 	/**
@@ -1144,5 +1111,81 @@ public class ElasticSearchConnectionManager
 		{
 			CalliopeData.getInstance().getErrorDisplay().notify("Could not close ElasticSearch connection: \n" + ExceptionUtils.getStackTrace(e));
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public String[] detectNEONSites(List<ImageEntry> imageEntries)
+	{
+		String[] toReturn = new String[imageEntries.size()];
+
+		MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
+		for (Integer i = 0; i < imageEntries.size(); i++)
+		{
+			ImageEntry imageEntry = imageEntries.get(i);
+			SearchRequest searchRequest = new SearchRequest();
+			try
+			{
+				searchRequest
+						.indices(INDEX_CALLIOPE_NEON_SITES)
+						.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+						.source(new SearchSourceBuilder()
+							.fetchSource(new String[] { "site.siteCode" }, new String[] { "boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName" })
+							.size(1)
+							.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
+				multiSearchRequest.add(searchRequest);
+			}
+			catch (IOException e)
+			{
+				CalliopeData.getInstance().getErrorDisplay().notify("Error creating search request for the image " + imageEntry.getFile().getAbsolutePath() + "\n" + ExceptionUtils.getStackTrace(e));
+			}
+		}
+
+		try
+		{
+			MultiSearchResponse multiSearchResponse = this.elasticSearchClient.multiSearch(multiSearchRequest);
+			if (multiSearchResponse.getResponses().length == imageEntries.size())
+			{
+				MultiSearchResponse.Item[] responses = multiSearchResponse.getResponses();
+				for (Integer i = 0; i < responses.length; i++)
+				{
+					MultiSearchResponse.Item response = responses[i];
+					SearchHit[] hits = response.getResponse().getHits().getHits();
+					if (hits.length == 1)
+					{
+						Map<String, Object> siteMap = hits[0].getSourceAsMap();
+						if (siteMap.containsKey("site"))
+						{
+							Object siteDetailsMapObj = siteMap.get("site");
+							if (siteDetailsMapObj instanceof Map<?, ?>)
+							{
+								Map<String, Object> siteDetailsMap = (Map<String, Object>) siteDetailsMapObj;
+								if (siteDetailsMap.containsKey("siteCode"))
+								{
+									Object siteCodeObj = siteDetailsMap.get("siteCode");
+									if (siteCodeObj instanceof String)
+									{
+										toReturn[i] = (String) siteCodeObj;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						toReturn[i] = null;
+					}
+				}
+			}
+			else
+			{
+				CalliopeData.getInstance().getErrorDisplay().notify("Did not get enough responses from the multisearch, this should not be possible.");
+			}
+		}
+		catch (IOException e)
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("Error performing multisearch for NEON site codes.\n" + ExceptionUtils.getStackTrace(e));
+		}
+
+		return toReturn;
 	}
 }

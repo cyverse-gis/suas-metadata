@@ -13,17 +13,15 @@ import javafx.concurrent.Task;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
-import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.location.Location;
 import model.neon.BoundedSite;
 import model.neon.NeonData;
 import model.query.QueryEngine;
 import model.species.Species;
+import model.threading.CalliopeExecutor;
 import model.threading.ErrorService;
 import model.threading.ErrorTask;
-import model.threading.CalliopeExecutor;
 import model.util.*;
 import org.hildan.fxgson.FxGson;
 
@@ -104,6 +102,9 @@ public class CalliopeData
 
 	// NEON data api connection
 	private NeonData neonData = new NeonData();
+
+	// Class to handle metadata management
+	private MetadataManager metadataManager = new MetadataManager();
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
@@ -323,5 +324,10 @@ public class CalliopeData
 	public NeonData getNeonData()
 	{
 		return this.neonData;
+	}
+
+	public MetadataManager getMetadataManager()
+	{
+		return this.metadataManager;
 	}
 }

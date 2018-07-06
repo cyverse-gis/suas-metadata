@@ -93,5 +93,7 @@
     <orderEntry type="library" name="Maven: com.sun.xml.bind:jaxb-xjc:2.2" level="project" />
     <orderEntry type="library" name="Maven: com.github.mjeanroy:exiftool-lib:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.jai-imageio:jai-imageio-core:1.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.locationtech.spatial4j:spatial4j:0.7" level="project" />
+    <orderEntry type="library" name="Maven: org.locationtech.jts:jts-core:1.15.0" level="project" />
   </component>
 </module>

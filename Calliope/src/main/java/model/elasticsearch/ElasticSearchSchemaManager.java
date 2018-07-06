@@ -6,10 +6,7 @@ import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.ImageEntry;
-import model.location.Location;
 import model.neon.BoundedSite;
-import model.species.Species;
-import model.species.SpeciesEntry;
 import model.util.SettingsData;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -118,8 +115,42 @@ public class ElasticSearchSchemaManager
 							.startObject("dayOfWeekTaken")
 								.field("type", "integer")
 							.endObject()
-							.startObject("location")
+							.startObject("neonSiteCode")
 								.field("type", "keyword")
+							.endObject()
+							.startObject("position")
+								.field("type", "geo_point")
+							.endObject()
+							.startObject("altitude")
+								.field("type", "double")
+							.endObject()
+							.startObject("speed")
+								.field("type", "object")
+								.startObject("properties")
+									.startObject("x")
+										.field("type", "double")
+									.endObject()
+									.startObject("y")
+										.field("type", "double")
+									.endObject()
+									.startObject("z")
+										.field("type", "double")
+									.endObject()
+								.endObject()
+							.endObject()
+							.startObject("rotation")
+								.field("type", "object")
+								.startObject("properties")
+									.startObject("roll")
+										.field("type", "double")
+									.endObject()
+									.startObject("pitch")
+										.field("type", "double")
+									.endObject()
+									.startObject("yaw")
+										.field("type", "double")
+									.endObject()
+								.endObject()
 							.endObject()
 						.endObject()
 					.endObject()
@@ -392,7 +423,19 @@ public class ElasticSearchSchemaManager
 				.field("hourTaken", imageEntry.getDateTaken().getHour())
 				.field("dayOfYearTaken", imageEntry.getDateTaken().getDayOfYear())
 				.field("dayOfWeekTaken", imageEntry.getDateTaken().getDayOfWeek().getValue())
-				.field("location", "")
+				.field("neonSiteCode", imageEntry.getSiteTaken() != null ? imageEntry.getSiteTaken().getSite().getSiteCode() : null)
+				.field("position", imageEntry.getLocationTaken().getLatitude() + ", " + imageEntry.getLocationTaken().getLongitude())
+				.field("altitude", imageEntry.getLocationTaken().getElevation())
+				.startObject("speed")
+					.field("x", imageEntry.getSpeed().getX())
+					.field("y", imageEntry.getSpeed().getY())
+					.field("z", imageEntry.getSpeed().getZ())
+				.endObject()
+				.startObject("rotation")
+					.field("roll", imageEntry.getRotation().getX())
+					.field("pitch", imageEntry.getRotation().getY())
+					.field("yaw", imageEntry.getRotation().getZ())
+				.endObject()
 			.endObject()
 		.endObject();
 

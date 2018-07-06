@@ -541,7 +541,7 @@ public class CalliopeUploadController implements Initializable
 
 			/*
 			 * I have no idea why this is necessary but it won't work without
-			 * it. Shouldn't the updateItem method be enough?
+			 * it. Shouldn't the updateItems method be enough?
 			 */
 			if (index == -1)
 			{

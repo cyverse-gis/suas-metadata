@@ -16,13 +16,13 @@ import java.util.Map;
 /**
  * Class containing utils for writing & reading metadata
  */
-public class MetadataUtils
+public class MetadataManager
 {
-	private static final ExifTool EXIF_TOOL_INSTANCE;
+	private final ExifTool exifTool;
 
-	static
+	public MetadataManager()
 	{
-		EXIF_TOOL_INSTANCE = new ExifToolBuilder().enableStayOpen().withPath(Calliope.class.getClass().getResource("/files/exiftool.exe").getFile()).build();
+		this.exifTool = new ExifToolBuilder().enableStayOpen().withPath(Calliope.class.getClass().getResource("/files/exiftool.exe").getFile()).build();
 	}
 
 	public enum CustomTags implements Tag
@@ -86,10 +86,17 @@ public class MetadataUtils
 		}
 	}
 
-	public static Map<Tag, String> readImageMetadata(File imageFile) throws IOException
+	public Map<Tag, String> readImageMetadata(File imageFile) throws IOException
 	{
 		List<Tag> standardTags = new ArrayList<>(Arrays.asList(StandardTag.values()));
 		standardTags.addAll(Arrays.asList(CustomTags.values()));
-		return EXIF_TOOL_INSTANCE.getImageMeta(imageFile, standardTags);
+		return this.exifTool.getImageMeta(imageFile, standardTags);
+	}
+
+	@Override
+	protected void finalize() throws Throwable
+	{
+		super.finalize();
+		this.exifTool.close();
 	}
 }

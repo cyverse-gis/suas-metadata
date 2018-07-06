@@ -27,9 +27,7 @@ import model.CalliopeData;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
-import model.location.Location;
 import model.neon.BoundedSite;
-import model.species.Species;
 import model.threading.ErrorTask;
 import model.util.SettingsData;
 import org.controlsfx.control.HyperlinkLabel;
@@ -252,7 +250,7 @@ public class CalliopeViewController implements Initializable
 				@Override
 				protected Boolean call() throws Exception
 				{
-					Integer NUM_STEPS = 8;
+					Integer NUM_STEPS = 6;
 
 					// First login
 					this.updateMessage("Logging in...");
@@ -286,17 +284,9 @@ public class CalliopeViewController implements Initializable
 						// Set the settings data
 						Platform.runLater(() -> CalliopeData.getInstance().getSettings().loadFromOther(settingsData));
 
-						// Pull any species from the elastic index
-						this.updateMessage("Pulling species from elastic index...");
-						this.updateProgress(4, NUM_STEPS);
-						List<Species> species = esConnectionManager.pullRemoteSpecies();
-
-						// Set the species list to be these species
-						Platform.runLater(() -> CalliopeData.getInstance().getSpeciesList().addAll(species));
-
 						// Pull any locations from the elastic index
 						this.updateMessage("Pulling locations from elastic index...");
-						this.updateProgress(5, NUM_STEPS);
+						this.updateProgress(4, NUM_STEPS);
 						List<BoundedSite> sites = esConnectionManager.pullRemoteSites();
 
 						// Set the location list to be these locations
@@ -304,18 +294,13 @@ public class CalliopeViewController implements Initializable
 
 						// Pull any collections from the elastic index
 						this.updateMessage("Pulling collections from elastic index...");
-						this.updateProgress(6, NUM_STEPS);
+						this.updateProgress(5, NUM_STEPS);
 						List<ImageCollection> imageCollections = esConnectionManager.pullRemoteCollections();
 
 						// Set the image collection list to be these collections
 						Platform.runLater(() -> CalliopeData.getInstance().getCollectionList().addAll(imageCollections));
 
-						// Pull any NEON sites from the NEON API
-						this.updateMessage("Pulling NEON sites from elastic index...");
-						this.updateProgress(7, NUM_STEPS);
-						//CalliopeData.getInstance().getNeonData().pullAndStoreSites();
-
-						this.updateProgress(8, NUM_STEPS);
+						this.updateProgress(6, NUM_STEPS);
 					}
 
 					return loginSuccessful;
