@@ -83,7 +83,7 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public TreeViewAutomatic<ImageContainer> imageTree;
 
-	// The list view containg all locations
+	// The list view containing all locations
 	@FXML
 	public ListView<BoundedSite> siteListView;
 
@@ -123,31 +123,41 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public HBox hbxLocation;
 
+	// The button used to rebuild the NEON data index
 	@FXML
 	public Button btnRefreshNEONSites;
 
+	// The text field used to search the list of sites
 	@FXML
 	public TextField txtSiteSearch;
 
+	// The bottom field representing the date the image was taken
 	@FXML
 	public LocalDateTimeTextField txtDateTaken;
+	// The bottom field representing the latitude of the image
 	@FXML
 	public TextField txtLatitude;
+	// The bottom field representing the longitude of the image
 	@FXML
 	public TextField txtLongitude;
+	// The bottom field representing the elevation of the image
 	@FXML
 	public TextField txtElevation;
 
+	// The bottom field representing the drone's brand
 	@FXML
 	public TextField txtDroneBrand;
+	// The bottom field representing the drone's model
 	@FXML
 	public TextField txtCameraModel;
+	// The bottom fields representing the X, Y, and Z speed of the drone
 	@FXML
 	public TextField txtXSpeed;
 	@FXML
 	public TextField txtYSpeed;
 	@FXML
 	public TextField txtZSpeed;
+	// The bottom field representing the X, Y, and Z rotation of the drone (yaw, roll, pitch)
 	@FXML
 	public TextField txtXRotation;
 	@FXML
@@ -155,9 +165,11 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public TextField txtZRotation;
 
+	// The left tab pane which contains metadata or neon site list
 	@FXML
 	public TabPane leftTabPane;
 
+	// The propertysheet used by the left tab pane to show metadata
 	@FXML
 	public PropertySheet pstMetadata;
 
@@ -183,9 +195,16 @@ public class CalliopeImportController implements Initializable
 	// The current image being previewed
 	private ObjectProperty<Image> speciesPreviewImage = new SimpleObjectProperty<>(null);
 
+	// A list of Property<Object> that is used to store weak listeners to avoid early garbage collection. This concept is strange and difficult to
+	// understand, here's some articles on it:
+	// https://stackoverflow.com/questions/23785816/javafx-beans-binding-suddenly-stops-working
+	// https://stackoverflow.com/questions/14558266/clean-javafx-property-listeners-and-bindings-memory-leaks
+	// https://stackoverflow.com/questions/26312651/bidirectional-javafx-binding-is-destroyed-by-unrelated-code
 	private List<Property<?>> cache = new ArrayList<>();
 
+	// The stage used to hold the neon site detector content
 	private Stage neonSiteDetectorStage;
+	// The controller which controls the neon site detector stage
 	private NeonSiteDetectorController neonSiteDetectorController;
 
 	/**
@@ -407,7 +426,7 @@ public class CalliopeImportController implements Initializable
 		});
 
 		// Setup the metadata property sheet
-		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> this.pstMetadata.getItems().setAll(newValue.getRawMetadata()));
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> { if (newValue != null) this.pstMetadata.getItems().setAll(newValue.getRawMetadata()); });
 		DefaultPropertyEditorFactory defaultFactory = new DefaultPropertyEditorFactory();
 		this.pstMetadata.setPropertyEditorFactory(item ->
 		{

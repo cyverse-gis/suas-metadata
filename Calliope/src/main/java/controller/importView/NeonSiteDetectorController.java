@@ -120,14 +120,14 @@ public class NeonSiteDetectorController implements Initializable
 					for (Integer i = 0; i < siteCodes.length; i++)
 					{
 						String siteCode = siteCodes[i];
-						ImageEntry imageEntry = imageEntries.get(i);
 						if (siteCode != null)
 						{
 							Optional<BoundedSite> correctSite = sites.stream().filter(boundedSite -> boundedSite.getSite().getSiteCode().equals(siteCode)).findFirst();
-							correctSite.ifPresent(imageEntry::setSiteTaken);
+							if (correctSite.isPresent())
+								toReturn[i] = correctSite.get();
 						}
 						else
-							imageEntry.setSiteTaken(null);
+							toReturn[i] = null;
 					}
 
 					return toReturn;
