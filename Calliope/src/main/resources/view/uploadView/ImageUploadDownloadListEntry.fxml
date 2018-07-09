@@ -34,7 +34,7 @@
                     <Font size="14.0"/>
                 </font>
             </Label>
-            <Label fx:id="lblTagged" text="Tagged ???">
+            <Label fx:id="lblCount" text="Number Tagged ???">
                 <VBox.margin>
                     <Insets left="5" right="5" top="5"/>
                 </VBox.margin>
@@ -42,36 +42,6 @@
                     <Font size="14.0"/>
                 </font>
             </Label>
-            <TitledPane expanded="false" text="Edits">
-                <VBox.margin>
-                    <Insets left="5.0" right="5.0" top="5.0"/>
-                </VBox.margin>
-                <font>
-                    <Font size="14.0"/>
-                </font>
-                <content>
-                    <ListView fx:id="lstEdits" prefHeight="100"/>
-                </content>
-            </TitledPane>
-        </VBox>
-        <VBox spacing="5" alignment="CENTER_RIGHT">
-            <HBox.margin>
-                <Insets left="10" right="5"/>
-            </HBox.margin>
-            <Button fx:id="btnUpload" onAction="#uploadPressed" prefHeight="55" prefWidth="55">
-                <graphic>
-                    <ImageView fitHeight="40" fitWidth="40">
-                        <Image url="@../../images/uploadWindow/uploadIconNoBackground.png"/>
-                    </ImageView>
-                </graphic>
-            </Button>
-            <Button fx:id="btnDownload" onAction="#downloadPressed" prefHeight="55" prefWidth="55">
-                <graphic>
-                    <ImageView fitHeight="40" fitWidth="40">
-                        <Image url="@../../images/uploadWindow/downloadIconNoBackground.png"/>
-                    </ImageView>
-                </graphic>
-            </Button>
         </VBox>
     </children>
 </HBox>
