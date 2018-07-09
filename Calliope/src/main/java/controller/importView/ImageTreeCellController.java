@@ -17,7 +17,7 @@ import model.neon.BoundedSite;
 
 import java.util.Optional;
 
-import static model.constant.CalliopeDataFormats.*;
+import static model.constant.CalliopeDataFormats.SITE_CODE_FORMAT;
 
 /**
  * Controller class for the image tree cells

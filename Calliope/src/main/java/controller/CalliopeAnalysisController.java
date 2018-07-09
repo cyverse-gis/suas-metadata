@@ -1,14 +1,12 @@
 package controller;
 
 import controller.analysisView.VisCSVController;
-import controller.analysisView.VisDrSandersonController;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -16,7 +14,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import model.CalliopeData;
-import model.analysis.DataAnalyzer;
 import model.image.ImageEntry;
 import model.query.ElasticSearchQuery;
 import model.query.IQueryCondition;

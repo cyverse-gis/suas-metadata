@@ -3,7 +3,6 @@ package model.image;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import library.HierarchyData;
-import model.location.Location;
 import model.neon.BoundedSite;
 
 import java.io.File;

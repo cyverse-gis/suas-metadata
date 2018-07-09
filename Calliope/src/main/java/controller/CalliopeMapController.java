@@ -1,19 +1,16 @@
 package controller;
 
-import com.lynden.gmapsfx.GoogleMapView;
-import com.lynden.gmapsfx.javascript.event.UIEventType;
-import com.lynden.gmapsfx.javascript.object.*;
-import javafx.collections.ListChangeListener;
+import fxmapcontrol.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import model.CalliopeData;
-import model.location.Location;
-import model.neon.BoundedSite;
-import netscape.javascript.JSObject;
+import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
+import javafx.scene.web.WebView;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -26,17 +23,11 @@ public class CalliopeMapController implements Initializable
 	///
 
 	@FXML
-	public GoogleMapView googleMapView;
+	public Map map;
 
 	///
 	/// FXML bound fields end
 	///
-
-	// The map data which will be bound to the google map view
-	private GoogleMap googleMap;
-
-	// A map of location to the marker representing that location
-	private Map<BoundedSite, Marker> locationMarkers = new HashMap<>();
 
 	/**
 	 * Initialize sets up the analysis window and bindings
@@ -47,124 +38,21 @@ public class CalliopeMapController implements Initializable
 	@Override
 	public void initialize(URL location, ResourceBundle resources)
 	{
-		// Setup the google map view with the map options class
-		this.googleMapView.addMapInializedListener(() ->
-		{
-			// Create a map options class. Center it on tucson
-			LatLong tucson = new LatLong(32.2217, -110.9265);
-			MapOptions mapOptions = new MapOptions();
-			// Set use satellite map view, allow map control, scale control, rotate control, but NO street view
-			mapOptions
-					.center(tucson)
-					.mapType(MapTypeIdEnum.SATELLITE)
-					.overviewMapControl(true)
-					.panControl(true)
-					.rotateControl(true)
-					.scaleControl(true)
-					.streetViewControl(false)
-					.scrollWheel(true)
-					.zoomControl(true)
-					.zoom(12);
+		TileImageLoader.setCache(new ImageFileCache());
 
-			// Initialize the google map
-			this.googleMap = this.googleMapView.createMap(mapOptions);
+		MapTileLayer openStreetMapLayer = MapTileLayer.getOpenStreetMapLayer();
+		this.map.getChildren().add(openStreetMapLayer);
+		this.map.setTargetCenter(new Location(32.2226, -110.9747));
+		this.map.setZoomLevel(15);
 
-			// When the location list changes, we put the locations onto the map display
-			CalliopeData.getInstance().getSiteList().addListener((ListChangeListener<BoundedSite>) c -> {
-				// Iterate over changes
-				while (c.next())
-				{
-					// If the item was updated
-					if (c.wasUpdated())
-					{
-						// Loop over updated items
-						for (int i = c.getFrom(); i < c.getTo(); ++i)
-						{
-							// Get the updated location
-							BoundedSite changed = c.getList().get(i);
-							// This also removes the old marker!
-							this.addMarkerForLocation(changed);
-						}
-					}
-					// If the item was removed
-					else if (c.wasRemoved())
-					{
-						// Remove each of the removed location's markers from the map
-						c.getRemoved().forEach(removedLoc -> {
-							if (locationMarkers.containsKey(removedLoc))
-								this.googleMap.removeMarker(locationMarkers.remove(removedLoc));
-						});
-					}
-					// If the item was added
-					else if (c.wasAdded())
-					{
-						// Add a marker for each new location element
-						c.getAddedSubList().forEach(this::addMarkerForLocation);
-					}
-				}
-			});
+		MapPolygon mapPolygon = new MapPolygon();
+		mapPolygon.getLocations().add(new Location(5, 5));
+		mapPolygon.getLocations().add(new Location(-5, 5));
+		mapPolygon.getLocations().add(new Location(5, -5));
+		mapPolygon.getLocations().add(new Location(-5, -5));
+		mapPolygon.setLocation(new Location(0, 0));
+		mapPolygon.setFill(Color.RED);
 
-			///
-			/// Everything after this is temporary for exploring map capabilities
-			///
-
-			/*
-
-			// Create a test polygon
-			double startBearing = 0;
-			double endBearing = 30;
-			double radius = 30000;
-
-			MVCArray path = ArcBuilder.buildArcPoints(tucson, startBearing, endBearing, radius);
-			path.push(tucson);
-
-			Circle arc = new Circle(new CircleOptions()
-					.strokeColor("blue")
-					.fillColor("lightBlue")
-					.fillOpacity(0.3)
-					.strokeWeight(2)
-					.editable(false)
-					.draggable(true)
-					.center(tucson)
-					.radius(500));
-
-			// Add the test polygon
-			this.googleMap.addMapShape(arc);
-			this.googleMap.addUIEventHandler(arc, UIEventType.click, (JSObject obj) -> {
-				arc.setEditable(!arc.getEditable());
-			});
-
-			*/
-		});
-	}
-
-	/**
-	 * Removes the current marker for the site if it exists, and adds a new one
-	 *
-	 * @param site The site to add/update a marker for
-	 */
-	private void addMarkerForLocation(BoundedSite site)
-	{
-		// If we already have a marker for the site, remove it
-		if (locationMarkers.containsKey(site))
-			this.googleMap.removeMarker(locationMarkers.remove(site));
-		// Create the marker options which defines the title and position
-		MarkerOptions options = new MarkerOptions()
-				.title(site.getSite().getSiteName())
-				.position(new LatLong(site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude()));
-		Marker marker = new Marker(options);
-		// Add a marker to the map
-		this.googleMap.addMarker(marker);
-		// Create an info window that shows the site details when opened
-		InfoWindowOptions infoWindowOptions = new InfoWindowOptions()
-				.content(site.getSite().getSiteName())
-				.position(new LatLong(site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude()));
-		InfoWindow infoWindow = new InfoWindow(infoWindowOptions);
-		// When we click the map marker, open the info window
-		this.googleMap.addUIEventHandler(marker, UIEventType.click, (JSObject obj) -> {
-			infoWindow.open(googleMap, marker);
-		});
-		// Add the marker reference to the map
-		locationMarkers.put(site, marker);
+		this.map.getChildren().add(mapPolygon);
 	}
 }

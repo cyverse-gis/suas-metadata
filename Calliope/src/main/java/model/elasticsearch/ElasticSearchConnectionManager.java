@@ -14,7 +14,7 @@ import model.image.CloudImageEntry;
 import model.image.CloudUploadEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.location.Location;
+import model.location.Position;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.query.ElasticSearchQuery;
@@ -913,7 +913,7 @@ public class ElasticSearchConnectionManager
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
 
 			// A unique list of species and locations is used to ensure images with identical locations don't create two locations
-			List<Location> uniqueLocations = new LinkedList<>();
+			List<Position> uniquePositions = new LinkedList<>();
 			List<Species> uniqueSpecies = new LinkedList<>();
 
 			// While we have results...
@@ -925,7 +925,7 @@ public class ElasticSearchConnectionManager
 					// Grab the source for the image, and convert it into a usable format
 					Map<String, Object> sourceAsMap = searchHit.getSourceAsMap();
 					// Conver the image and store it
-					ImageEntry imageEntry = this.convertSourceToImage(sourceAsMap, uniqueSpecies, uniqueLocations);
+					ImageEntry imageEntry = this.convertSourceToImage(sourceAsMap, uniqueSpecies, uniquePositions);
 					if (imageEntry != null)
 						toReturn.add(imageEntry);
 				}
@@ -966,11 +966,11 @@ public class ElasticSearchConnectionManager
 	 *
 	 * @param source The raw metadata in key->value format
 	 * @param uniqueSpecies A list of current species to be used. This ensures we don't allocate thousands of species objects
-	 * @param uniqueLocations A list of current locations to be used. This ensures we don't allocate thousands of location objects
+	 * @param uniquePositions A list of current locations to be used. This ensures we don't allocate thousands of location objects
 	 * @return An image entry representing the source, or null if something went wrong
 	 */
 	@SuppressWarnings("unchecked")
-	private ImageEntry convertSourceToImage(Map<String, Object> source, List<Species> uniqueSpecies, List<Location> uniqueLocations)
+	private ImageEntry convertSourceToImage(Map<String, Object> source, List<Species> uniqueSpecies, List<Position> uniquePositions)
 	{
 		try
 		{
@@ -1021,7 +1021,7 @@ public class ElasticSearchConnectionManager
 
 										// Convert our hashmaps into a usable format
 										Gson gson = CalliopeData.getInstance().getGson();
-										Location tempLocation = gson.fromJson(gson.toJson(locationMap), Location.class);
+										Position tempPosition = gson.fromJson(gson.toJson(locationMap), Position.class);
 										List<SpeciesEntry> tempSpeciesEntries = gson.fromJson(gson.toJson(speciesEntryList), SPECIES_ENTRY_LIST_TYPE);
 										// Pull unique species off of the species entries list
 										List<Species> tempSpeciesList = tempSpeciesEntries.stream().map(SpeciesEntry::getSpecies).distinct().collect(Collectors.toList());
@@ -1043,7 +1043,7 @@ public class ElasticSearchConnectionManager
 										/*
 
 										// Grab the correct location for the image entry
-										Location correctLocation = uniqueLocations.stream().filter(location -> location.getId().equals(tempLocation.getId())).findFirst().get();
+										Position correctLocation = uniquePositions.stream().filter(location -> location.getId().equals(tempPosition.getId())).findFirst().get();
 										// Set the location and date taken
 										entry.setLocationTaken(correctLocation);
 										entry.setDateTaken(dateTaken);

@@ -2,9 +2,6 @@ package model.neon;
 
 import de.micromata.opengis.kml.v_2_2_0.*;
 import de.micromata.opengis.kml.v_2_2_0.gx.Tour;
-import javafx.beans.Observable;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import model.CalliopeData;
 import model.analysis.CalliopeAnalysisUtils;
 import model.neon.jsonPOJOs.Site;

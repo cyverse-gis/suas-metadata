@@ -2,8 +2,6 @@ package model.image;
 
 import model.CalliopeData;
 import model.analysis.CalliopeAnalysisUtils;
-import model.location.Location;
-import model.species.Species;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -14,7 +12,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

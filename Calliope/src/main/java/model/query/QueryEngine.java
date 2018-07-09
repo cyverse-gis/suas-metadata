@@ -29,7 +29,7 @@ public class QueryEngine
 	public enum QueryFilters
 	{
 		SPECIES_FILTER("Species Filter", SpeciesFilterCondition::new),
-		LOCATION_FILTER("Location Filter", LocationFilterCondition::new),
+		LOCATION_FILTER("Position Filter", LocationFilterCondition::new),
 		ELEVATION_FILTER("Elevation filter", ElevationCondition::new),
 		YEAR_FILTER("Year Filter", YearCondition::new),
 		MONTH_FILTER("Month Filter", MonthCondition::new),

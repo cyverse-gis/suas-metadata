@@ -5,8 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import model.CalliopeData;
-import model.location.Location;
+import model.location.Position;
 import model.query.ElasticSearchQuery;
 import model.query.IQueryCondition;
 
@@ -14,12 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Data model used by the "Location filter" query condition
+ * Data model used by the "Position filter" query condition
  */
 public class LocationFilterCondition implements IQueryCondition
 {
 	// A map of location -> if the location is selected to be filtered
-	private Map<Location, BooleanProperty> locationToSelected = new HashMap<>();
+	private Map<Position, BooleanProperty> locationToSelected = new HashMap<>();
 
 	/**
 	 * Constructor ensures that each location maps to a boolean property
@@ -27,17 +26,17 @@ public class LocationFilterCondition implements IQueryCondition
 	public LocationFilterCondition()
 	{
 		// Make sure each hour location to a boolean property, this is important for later, since our view will use this to populate checkboxes
-		for (Location location : this.getLocationList())
-			if (!this.locationToSelected.containsKey(location))
-				this.locationToSelected.put(location, new SimpleBooleanProperty(true));
+		for (Position position : this.getLocationList())
+			if (!this.locationToSelected.containsKey(position))
+				this.locationToSelected.put(position, new SimpleBooleanProperty(true));
 		// If the location list changes, we add a boolean property for the new added location
-		this.getLocationList().addListener((ListChangeListener<Location>) c ->
+		this.getLocationList().addListener((ListChangeListener<Position>) c ->
 		{
 			while (c.next())
 				if (c.wasAdded())
-					for (Location location : c.getAddedSubList())
-						if (!this.locationToSelected.containsKey(location))
-							this.locationToSelected.put(location, new SimpleBooleanProperty(true));
+					for (Position position : c.getAddedSubList())
+						if (!this.locationToSelected.containsKey(position))
+							this.locationToSelected.put(position, new SimpleBooleanProperty(true));
 		});
 	}
 
@@ -49,9 +48,9 @@ public class LocationFilterCondition implements IQueryCondition
 	@Override
 	public void appendConditionToQuery(ElasticSearchQuery query)
 	{
-		for (Location location : this.getLocationList())
-			if (locationToSelected.containsKey(location) && locationToSelected.get(location).getValue())
-				query.addLocation(location);
+		for (Position position : this.getLocationList())
+			if (locationToSelected.containsKey(position) && locationToSelected.get(position).getValue())
+				query.addLocation(position);
 	}
 
 	/**
@@ -70,22 +69,22 @@ public class LocationFilterCondition implements IQueryCondition
 	 *
 	 * @return A list of locations
 	 */
-	public ObservableList<Location> getLocationList()
+	public ObservableList<Position> getLocationList()
 	{
 		return FXCollections.emptyObservableList();//CalliopeData.getInstance().getSiteList();
 	}
 
 	/**
-	 * Gets the property defining if a location is selected
+	 * Gets the property defining if a position is selected
 	 *
-	 * @param location The location to test if it's selected
-	 * @return The property representing if the location is selected
+	 * @param position The position to test if it's selected
+	 * @return The property representing if the position is selected
 	 */
-	public BooleanProperty locationSelectedProperty(Location location)
+	public BooleanProperty locationSelectedProperty(Position position)
 	{
-		if (!this.locationToSelected.containsKey(location))
-			this.locationToSelected.put(location, new SimpleBooleanProperty(true));
-		return this.locationToSelected.get(location);
+		if (!this.locationToSelected.containsKey(position))
+			this.locationToSelected.put(position, new SimpleBooleanProperty(true));
+		return this.locationToSelected.get(position);
 	}
 
 	/**

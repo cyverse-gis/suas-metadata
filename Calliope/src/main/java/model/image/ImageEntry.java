@@ -10,7 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.image.Image;
 import model.CalliopeData;
-import model.location.Location;
+import model.location.Position;
 import model.neon.BoundedSite;
 import model.util.CustomPropertyItem;
 import model.util.MetadataCustomItem;
@@ -49,7 +49,7 @@ public class ImageEntry extends ImageContainer
 	// The NEON site closest to the image
 	private final ObjectProperty<BoundedSite> siteTaken = new SimpleObjectProperty<>(null);
 	// The lat/long/elevation of this image
-	private final ObjectProperty<Location> locationTaken = new SimpleObjectProperty<>(null);
+	private final ObjectProperty<Position> locationTaken = new SimpleObjectProperty<>(null);
 	// The name of the drone maker company
 	private final StringProperty droneMaker = new SimpleStringProperty(null);
 	// The name of the drone camera model
@@ -99,7 +99,7 @@ public class ImageEntry extends ImageContainer
 			// Starting with date taken, convert the raw date taken as a string into an object
 			this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
 			// Next convert the lat/long/altitude into a location object
-			this.locationTaken.setValue(new Location(
+			this.locationTaken.setValue(new Position(
 					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, "0")),
 					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
 					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
@@ -175,17 +175,17 @@ public class ImageEntry extends ImageContainer
 		return dateTaken;
 	}
 
-	public void setLocationTaken(Location locationTaken)
+	public void setLocationTaken(Position positionTaken)
 	{
-		this.locationTaken.setValue(locationTaken);
+		this.locationTaken.setValue(positionTaken);
 	}
 
-	public Location getLocationTaken()
+	public Position getLocationTaken()
 	{
 		return locationTaken.getValue();
 	}
 
-	public ObjectProperty<Location> locationTakenProperty()
+	public ObjectProperty<Position> locationTakenProperty()
 	{
 		return locationTaken;
 	}

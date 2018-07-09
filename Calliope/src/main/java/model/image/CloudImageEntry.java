@@ -8,8 +8,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.image.Image;
 import model.CalliopeData;
-import model.location.Location;
-import model.species.Species;
+import model.location.Position;
 import model.threading.ErrorTask;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -129,15 +128,15 @@ public class CloudImageEntry extends ImageEntry
 	}
 
 	/**
-	 * We can set the location taken without the image but don't write to disk
+	 * We can set the position taken without the image but don't write to disk
 	 *
-	 * @param location The new location the image was taken at
+	 * @param position The new position the image was taken at
 	 */
 	@Override
-	public void setLocationTaken(Location location)
+	public void setLocationTaken(Position position)
 	{
 		this.pullFromCloudIfNotPulled();
-		super.setLocationTaken(location);
+		super.setLocationTaken(position);
 	}
 
 	/**
@@ -146,7 +145,7 @@ public class CloudImageEntry extends ImageEntry
 	 * @return The location taken or null if it has not yet been determined
 	 */
 	@Override
-	public Location getLocationTaken()
+	public Position getLocationTaken()
 	{
 		this.pullFromCloudIfNotPulled();
 		return super.getLocationTaken();

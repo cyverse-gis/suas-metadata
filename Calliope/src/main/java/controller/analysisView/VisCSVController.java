@@ -7,9 +7,9 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.text.Font;
 import model.CalliopeData;
-import model.analysis.DataAnalyzer;
 import model.analysis.CalliopeAnalysisUtils;
-import model.location.Location;
+import model.analysis.DataAnalyzer;
+import model.location.Position;
 import model.location.UTMCoord;
 import model.util.RoundingUtils;
 import model.util.SettingsData;
@@ -65,12 +65,12 @@ public class VisCSVController implements VisControllerBase
 	public void visualize(DataAnalyzer dataAnalyzer)
 	{
 		// The raw CSV for each image is made up of 1 line per image in the format of:
-		// File Name,Date Taken, Species in image, Species count, Location name, Location ID, Location latitude, Location longitude, Location elevation
+		// File Name,Date Taken, Species in image, Species count, Position name, Position ID, Position latitude, Position longitude, Position elevation
 		// If multiple species are in each image, the single entry is broken into multiple lines, one per species
 		String rawCSV = dataAnalyzer.getImagesSortedByDate().stream().map(imageEntry ->
 		{
-			Location location = imageEntry.getLocationTaken();
-			// Start with location name and id
+			Position position = imageEntry.getLocationTaken();
+			// Start with position name and id
 			String locationString = "";
 
 			// If we're using Lat/Lng
@@ -78,14 +78,14 @@ public class VisCSVController implements VisControllerBase
 			{
 				// Add lat/lng
 				locationString = locationString +
-					location.getLatitude() + "," +
-					location.getLongitude() + ",";
+					position.getLatitude() + "," +
+					position.getLongitude() + ",";
 			}
 			// If we're using UTM
 			else if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.UTM)
 			{
 				// Convert to UTM, and print it
-				UTMCoord utmCoord = CalliopeAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
+				UTMCoord utmCoord = CalliopeAnalysisUtils.Deg2UTM(position.getLatitude(), position.getLongitude());
 				locationString = locationString +
 					utmCoord.getZone().toString() + utmCoord.getLetter().toString() + "," +
 					utmCoord.getEasting() + "E," +
@@ -93,7 +93,7 @@ public class VisCSVController implements VisControllerBase
 			}
 			// Add elevation
 			SettingsData.DistanceUnits distanceUnits = CalliopeData.getInstance().getSettings().getDistanceUnits();
-			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
+			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(position.getElevation()), 2) + distanceUnits.getSymbol();
 			return locationString;
 		}).collect(Collectors.joining("\n"));
 		if (rawCSV.isEmpty())
@@ -102,9 +102,9 @@ public class VisCSVController implements VisControllerBase
 
 		// The location CSV contains each location, one per line, in the form:
 		// Name, ID, Position, Elevation
-		String locationCSV = dataAnalyzer.getAllImageLocations().stream().map(location ->
+		String locationCSV = dataAnalyzer.getAllImagePositions().stream().map(location ->
 		{
-			// Location name and ID
+			// Position name and ID
 			String locationString = "";
 
 			// If we're using lat long

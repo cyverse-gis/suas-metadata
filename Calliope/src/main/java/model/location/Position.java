@@ -2,23 +2,21 @@ package model.location;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 
 /**
  * A class representing a location (latitude, longitude, and elevation)
  * 
  * @author David Slovikosky
  */
-public class Location
+public class Position
 {
-	// Properties of a location are the latitude, longitude, and elevation
+	// Properties of a position are the latitude, longitude, and elevation
 	private final DoubleProperty latitude = new SimpleDoubleProperty();
 	private final DoubleProperty longitude = new SimpleDoubleProperty();
 	private final DoubleProperty elevation = new SimpleDoubleProperty();
 
 	/**
-	 * Location constructor
+	 * Position constructor
 	 *
 	 * @param lat
 	 *            The latitude of the location
@@ -27,7 +25,7 @@ public class Location
 	 * @param elevation
 	 *            The location elevation
 	 */
-	public Location(Double lat, Double lng, Double elevation)
+	public Position(Double lat, Double lng, Double elevation)
 	{
 		this.latitude.setValue(lat);
 		this.longitude.setValue(lng);
@@ -37,7 +35,7 @@ public class Location
 	/**
 	 * Default constructor sets values to invalid values
 	 */
-	public Location()
+	public Position()
 	{
 		this.latitude.setValue(-1000);
 		this.longitude.setValue(-1000);

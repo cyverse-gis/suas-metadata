@@ -58,7 +58,7 @@ public class SettingsData
 	{
 		settingList.add(new CustomPropertyItem<>("Date Format: ", "DateTime", "The date format to be used when displaying dates", dateFormat, DateFormat.class));
 		settingList.add(new CustomPropertyItem<>("Time Format: ", "DateTime", "The time format to be used when displaying dates", timeFormat, TimeFormat.class));
-		settingList.add(new CustomPropertyItem<>("Location Format: ", "Location", "The location format to be used when displaying positional information", locationFormat, LocationFormat.class));
+		settingList.add(new CustomPropertyItem<>("Position Format: ", "Position", "The location format to be used when displaying positional information", locationFormat, LocationFormat.class));
 		settingList.add(new CustomPropertyItem<>("Distance Units: ", "Units", "The units to be used by the program", distanceUnits, DistanceUnits.class));
 		settingList.add(new CustomPropertyItem<>("Popup Hide Delay (in seconds): ", "Options", "How many seconds the popup should wait before disappearing", popupDelaySec, Double.class));
 		settingList.add(new CustomPropertyItem<>("Background Image Loading: ", "Options", "Load images in the background when selecting them, useful for slow hard drives or SD cards", backgroundImageLoading, Boolean.class));
@@ -215,7 +215,7 @@ public class SettingsData
 	}
 
 	/**
-	 * Location format used to specify UTM or Lat/Lng
+	 * Position format used to specify UTM or Lat/Lng
 	 */
 	public enum LocationFormat
 	{

@@ -2,9 +2,8 @@ package model.analysis;
 
 import library.MoonCalculator;
 import model.image.ImageEntry;
-import model.location.Location;
+import model.location.Position;
 import model.species.Species;
-import model.species.SpeciesEntry;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public class DataAnalyzer
 	// Null locations means that at least 1 image has no location tag
 	private boolean nullLocationsFound = false;
 	// List of all images, species, and years found over the image list
-	private List<Location> allImageLocations = new ArrayList<>();
+	private List<Position> allImagePositions = new ArrayList<>();
 	private List<Species> allImageSpecies = new ArrayList<>();
 	private List<Integer> allImageYears = new ArrayList<>();
 	// A list of all images but sorted by date instead of randomly
@@ -51,15 +50,15 @@ public class DataAnalyzer
 		for (ImageEntry entry : images)
 			if (entry.getLocationTaken() != null)
 			{
-				if (!allImageLocations.contains(entry.getLocationTaken()))
-					allImageLocations.add(entry.getLocationTaken());
+				if (!allImagePositions.contains(entry.getLocationTaken()))
+					allImagePositions.add(entry.getLocationTaken());
 			}
 			else
 				nullLocationsFound = true;
 
 		/*
 		// Sort the locations by name
-		allImageLocations.sort(Comparator.comparing(Location::getName));
+		allImagePositions.sort(Comparator.comparing(Position::getName));
 
 		// Find all image species 
 		for (ImageEntry imageEntry : images)
@@ -158,18 +157,18 @@ public class DataAnalyzer
 	 *            The list of images to search through
 	 * @return A list containing each location found in the image list
 	 */
-	public List<Location> locationsForImageList(List<ImageEntry> images)
+	public List<Position> locationsForImageList(List<ImageEntry> images)
 	{
-		List<Location> locations = new ArrayList<Location>();
+		List<Position> positions = new ArrayList<Position>();
 
 		for (ImageEntry image : images)
 			if (image.getLocationTaken() != null)
-				if (!locations.contains(image.getLocationTaken()))
-					locations.add(image.getLocationTaken());
+				if (!positions.contains(image.getLocationTaken()))
+					positions.add(image.getLocationTaken());
 
-		//locations.sort(Comparator.comparing(Location::getName));
+		//positions.sort(Comparator.comparing(Position::getName));
 
-		return locations;
+		return positions;
 	}
 
 	/**
@@ -277,9 +276,9 @@ public class DataAnalyzer
 	/**
 	 * @return A list containing all image locations
 	 */
-	public List<Location> getAllImageLocations()
+	public List<Position> getAllImagePositions()
 	{
-		return allImageLocations;
+		return allImagePositions;
 	}
 
 	/**

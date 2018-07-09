@@ -35,7 +35,7 @@ import library.TreeViewAutomatic;
 import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
 import model.image.*;
-import model.location.Location;
+import model.location.Position;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.threading.ErrorTask;
@@ -340,11 +340,11 @@ public class CalliopeImportController implements Initializable
 		///
 
 		this.txtLatitude.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::latitudeProperty)), numStrconverter);
+		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::latitudeProperty)), numStrconverter);
 		this.txtLongitude.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::longitudeProperty)), numStrconverter);
+		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::longitudeProperty)), numStrconverter);
 		this.txtElevation.disableProperty().bind(currentlySelectedImage.isNull());
-		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Location::elevationProperty)), numStrconverter);
+		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::elevationProperty)), numStrconverter);
 		this.txtDroneBrand.disableProperty().bind(currentlySelectedImage.isNull());
 		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::droneMakerProperty)));
 		this.txtCameraModel.disableProperty().bind(currentlySelectedImage.isNull());

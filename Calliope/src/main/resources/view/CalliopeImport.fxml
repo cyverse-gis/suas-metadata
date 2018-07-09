@@ -2,14 +2,15 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
+<?import jfxtras.scene.control.LocalDateTimeTextField?>
 <?import library.ImageViewPane?>
 <?import library.TreeViewAutomatic?>
+<?import org.controlsfx.control.PropertySheet?>
 <?import org.controlsfx.control.StatusBar?>
 <?import java.net.URL?>
-<?import jfxtras.scene.control.LocalDateTimeTextField?>
-<?import org.controlsfx.control.PropertySheet?>
 <SplitPane fx:id="mainPane" dividerPositions="0.28, 0.75" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeImportController">
     <stylesheets>
         <URL value="@CalliopeImport.css" />

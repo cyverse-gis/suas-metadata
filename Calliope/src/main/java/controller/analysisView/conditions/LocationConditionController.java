@@ -1,24 +1,19 @@
 package controller.analysisView.conditions;
 
 import controller.analysisView.IConditionController;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.CheckBoxListCell;
-import model.location.Location;
+import model.location.Position;
 import model.query.IQueryCondition;
 import model.query.conditions.LocationFilterCondition;
-import org.apache.commons.lang3.StringUtils;
 
 import java.net.URL;
-import java.util.Comparator;
 import java.util.ResourceBundle;
 
 /**
- * Class used as a controller for the "Location filter" UI component
+ * Class used as a controller for the "Position filter" UI component
  */
 public class LocationConditionController implements IConditionController
 {
@@ -28,7 +23,7 @@ public class LocationConditionController implements IConditionController
 
 	// The list view of all locations used in analysis
 	@FXML
-	public ListView<Location> locationFilterListView;
+	public ListView<Position> locationFilterListView;
 	// The location search box
 	@FXML
 	public TextField txtLocationSearch;
@@ -65,11 +60,11 @@ public class LocationConditionController implements IConditionController
 
 			/*
 			// Grab the global location list
-			SortedList<Location> locations = new SortedList<>(this.locationFilterCondition.getLocationList());
+			SortedList<Position> locations = new SortedList<>(this.locationFilterCondition.getLocationList());
 			// We set the comparator to be the name of the location
-			locations.setComparator(Comparator.comparing(Location::getName));
+			locations.setComparator(Comparator.comparing(Position::getName));
 			// We create a local wrapper of the location list to filter
-			FilteredList<Location> locationsFilteredList = new FilteredList<>(locations);
+			FilteredList<Position> locationsFilteredList = new FilteredList<>(locations);
 			// Set the filter to update whenever the location search text changes
 			this.txtLocationSearch.textProperty().addListener(observable -> {
 				locationsFilteredList.setPredicate(locationToFilter ->

@@ -53,18 +53,6 @@
             <artifactId>jfxtras-controls</artifactId>
             <version>8.0-r5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-imaging -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-imaging</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.lynden/GMapsFX -->
-        <dependency>
-            <groupId>com.lynden</groupId>
-            <artifactId>GMapsFX</artifactId>
-            <version>RELEASE</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.fxmisc.easybind/easybind -->
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -179,7 +167,23 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <!-- Removes annoying logging messages! -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.23</version>
+        </dependency>
+        <!-- Removes annoying logging messages! -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ClemensFischer</groupId>
+            <artifactId>FX-Map-Control</artifactId>
+            <version>-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -188,17 +192,6 @@
             <name>Some Maven Repository</name>
             <layout>default</layout>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>apache.snapshots</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>

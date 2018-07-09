@@ -4,7 +4,7 @@ package model.query;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.location.Location;
+import model.location.Position;
 import model.query.conditions.ElevationCondition;
 import model.species.Species;
 import org.apache.lucene.search.join.ScoreMode;
@@ -27,7 +27,7 @@ public class ElasticSearchQuery
 	// A list of species to query for
 	private Set<Species> speciesQuery = new HashSet<>();
 	// A list of locations to query for
-	private Set<Location> locationQuery = new HashSet<>();
+	private Set<Position> positionQuery = new HashSet<>();
 	// A list of collections to query for
 	private Set<ImageCollection> collectionQuery = new HashSet<>();
 	// A list of months to query for
@@ -59,13 +59,13 @@ public class ElasticSearchQuery
 	}
 
 	/**
-	 * Adds a given location to the query
+	 * Adds a given position to the query
 	 *
-	 * @param location The location to 'and' into the query
+	 * @param position The position to 'and' into the query
 	 */
-	public void addLocation(Location location)
+	public void addLocation(Position position)
 	{
-		this.locationQuery.add(location);
+		this.positionQuery.add(position);
 	}
 
 	/**
@@ -190,8 +190,8 @@ public class ElasticSearchQuery
 
 		// Make sure that we have at least one location we're looking for
 		// Locations are IDd by site code
-		//if (!locationQuery.isEmpty())
-		//	this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.location.id", this.locationQuery.stream().map(Location::getId).collect(Collectors.toList())));
+		//if (!positionQuery.isEmpty())
+		//	this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.location.id", this.positionQuery.stream().map(Position::getId).collect(Collectors.toList())));
 
 		// Make sure that we have at least one collection we're looking for
 		// Collections are IDd by UUID
