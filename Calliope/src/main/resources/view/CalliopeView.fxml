@@ -10,6 +10,8 @@
 <StackPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeViewController">
     <stylesheets>
         <URL value="@CalliopeView.css"/>
+        <!--<URL value="@../files/material-fx-v0_3.css"/>-->
+        <!--<URL value="@../files/materialfx-toggleswitch.css"/>-->
     </stylesheets>
     <children>
         <NotificationPane fx:id="notificationPane" showFromTop="false">

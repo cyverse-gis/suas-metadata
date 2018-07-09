@@ -184,6 +184,8 @@
             <artifactId>FX-Map-Control</artifactId>
             <version>-SNAPSHOT</version>
         </dependency>
+
+
     </dependencies>
 
     <repositories>
