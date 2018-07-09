@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import fxmapcontrol.Map?>
 <?import javafx.scene.layout.BorderPane?>
 <?import java.net.URL?>
-<?import fxmapcontrol.Map?>
-<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="controller.CalliopeMapController">
+<BorderPane fx:controller="controller.CalliopeMapController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@CalliopeMap.css"/>
     </stylesheets>
     <center>
-        <Map fx:id="map">
-
-        </Map>
+        <Map fx:id="map" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
     </center>
 </BorderPane>

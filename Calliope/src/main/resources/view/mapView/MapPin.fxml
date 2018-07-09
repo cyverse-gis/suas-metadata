@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Circle?>
+<StackPane fx:controller="controller.mapView.MapPinController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <children>
+        <Circle fill="yellow" radius="30"/>
+        <Label fx:id="lblImageCount"/>
+    </children>
+</StackPane>

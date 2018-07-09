@@ -39,6 +39,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.geo.builders.PointBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -49,6 +50,13 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.ParsedSingleBucketAggregation;
+import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGrid;
+import org.elasticsearch.search.aggregations.bucket.geogrid.ParsedGeoHashGrid;
+import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
@@ -500,7 +508,7 @@ public class ElasticSearchConnectionManager
 	private Boundary rawToBoundary(List<List<Double>> rawBoundary)
 	{
 		// Map the raw boundary to a list of coordinates, and then that coordinate list to a boundary
-		return new Boundary().withLinearRing(new LinearRing().withCoordinates(rawBoundary.stream().map(latLongList -> new Coordinate(latLongList.get(1), latLongList.get(0))).collect(Collectors.toList())));
+		return new Boundary().withLinearRing(new LinearRing().withCoordinates(rawBoundary.stream().map(latLongList -> new Coordinate(latLongList.get(0), latLongList.get(1))).collect(Collectors.toList())));
 	}
 
 	/**
@@ -1214,6 +1222,80 @@ public class ElasticSearchConnectionManager
 		{
 			// The query failed, print an error
 			CalliopeData.getInstance().getErrorDisplay().notify("Error performing multisearch for NEON site codes.\n" + ExceptionUtils.getStackTrace(e));
+		}
+
+		return toReturn;
+	}
+
+	public List<GeoBucket> performGeoAggregation(Double topLeftLat, Double topLeftLong, Double bottomRightLat, Double bottomRightLong, Integer depth1To12)
+	{
+		List<GeoBucket> toReturn = new ArrayList<>();
+		FilterAggregationBuilder aggregationQuery =
+			AggregationBuilders
+				.filter("filtered_cells",
+					QueryBuilders
+						.geoBoundingBoxQuery("imageMetadata.position")
+						.setCorners(new GeoPoint(topLeftLat, topLeftLong), new GeoPoint(bottomRightLat, bottomRightLong)))
+				.subAggregation(AggregationBuilders.geohashGrid("cells").field("imageMetadata.position").precision(depth1To12)
+					.subAggregation(AggregationBuilders.avg("center_lat").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lat", Collections.emptyMap())))
+					.subAggregation(AggregationBuilders.avg("center_lon").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lon", Collections.emptyMap()))));
+
+		// Create a search request, and populate the fields
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest
+				.indices(INDEX_CALLIOPE_METADATA)
+				.types(INDEX_CALLIOPE_METADATA_TYPE)
+				.source(new SearchSourceBuilder()
+						// Fetch results 10 at a time, and use a query that matches everything
+						.size(0)
+						.fetchSource(false)
+						.query(QueryBuilders.matchAllQuery())
+						.aggregation(aggregationQuery));
+
+		try
+		{
+			// Grab the search results
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			List<Aggregation> aggregationHits = searchResponse.getAggregations().asList();
+
+			for (Aggregation aggregation : aggregationHits)
+			{
+				if (aggregation instanceof ParsedSingleBucketAggregation && aggregation.getName().equals("filtered_cells"))
+				{
+					ParsedSingleBucketAggregation cellsInView = (ParsedSingleBucketAggregation) aggregation;
+					for (Aggregation subAggregation : cellsInView.getAggregations())
+					{
+						if (subAggregation instanceof ParsedGeoHashGrid && subAggregation.getName().equals("cells"))
+						{
+							ParsedGeoHashGrid geoHashGrid = (ParsedGeoHashGrid) subAggregation;
+							for (GeoHashGrid.Bucket bucket : geoHashGrid.getBuckets())
+							{
+								Long documentsInBucket = bucket.getDocCount();
+								Double centerLat = null;
+								Double centerLong = null;
+								for (Aggregation centerAgg : bucket.getAggregations())
+								{
+									if (centerAgg instanceof ParsedAvg)
+									{
+										if (centerAgg.getName().equals("center_lat"))
+											centerLat = ((ParsedAvg) centerAgg).getValue();
+										else if (centerAgg.getName().equals("center_lon"))
+											centerLong = ((ParsedAvg) centerAgg).getValue();
+									}
+								}
+
+								if (centerLat != null && centerLong != null)
+									toReturn.add(new GeoBucket(centerLat, centerLong, documentsInBucket));
+							}
+						}
+					}
+				}
+			}
+		}
+		catch (IOException e)
+		{
+			// Something went wrong, so show an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error performing geo-aggregation, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return toReturn;
