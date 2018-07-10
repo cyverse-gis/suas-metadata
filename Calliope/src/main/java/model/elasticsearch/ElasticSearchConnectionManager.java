@@ -125,6 +125,18 @@ public class ElasticSearchConnectionManager
 	{
 		// Establish a connection to the elastic search server
 		this.elasticSearchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME)));
+
+		// Test to see if the ElasticSearch index is up or not
+		try
+		{
+			if (!this.elasticSearchClient.ping())
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
+		}
+		catch (IOException e)
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("Could not establish a connection to the ElasticSearch cluster, is it down?\n" + ExceptionUtils.getStackTrace(e));
+		}
+
 		this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
 	}
 
@@ -1132,94 +1144,103 @@ public class ElasticSearchConnectionManager
 	{
 		// Create a list of buckets to return
 		List<GeoBucket> toReturn = new ArrayList<>();
-		// The aggregation is the hard part of this task, so build it first
-		FilterAggregationBuilder aggregationQuery =
-			// First we filter by bounding box
-			AggregationBuilders
-				// Call the filter 'filtered_cells'
-				.filter("filtered_cells",
-					// User query builders to create our filter
-					QueryBuilders
-						// Our query is on the position field which must be in the box created by:
-						.geoBoundingBoxQuery("imageMetadata.position")
-						// The top left corner and the bottom right corner, specified here
-						.setCorners(new GeoPoint(topLeftLat, topLeftLong), new GeoPoint(bottomRightLat, bottomRightLong)))
-				// We use a sub-aggregation to take each result from the geo box query and put it into a bucket based on its proximity to other images
-				// Here we also specify precision (how close two images need to be to be in a bucket)
-				.subAggregation(AggregationBuilders.geohashGrid("cells").field("imageMetadata.position").precision(depth1To12)
-					// Now that images are in a bucket we average their lat and longs to create a "center" position ready to return to our user.
-					.subAggregation(AggregationBuilders.avg("center_lat").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lat", Collections.emptyMap())))
-					.subAggregation(AggregationBuilders.avg("center_lon").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lon", Collections.emptyMap()))));
-
-		// Create a search request, and populate the fields
-		SearchRequest searchRequest = new SearchRequest();
-		searchRequest
-				.indices(INDEX_CALLIOPE_METADATA)
-				.types(INDEX_CALLIOPE_METADATA_TYPE)
-				.source(new SearchSourceBuilder()
-						// Fetch no results, we're only interested into aggregation portion of the query
-						.size(0)
-						// Don't fetch anything unnecessary
-						.fetchSource(false)
-						// Our query will match all documents
-						.query(QueryBuilders.matchAllQuery())
-						// Add our complex aggregation now
-						.aggregation(aggregationQuery));
 
 		try
 		{
-			// Grab the search results
-			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
-			// Grab the aggregations from those search results
-			List<Aggregation> aggregationHits = searchResponse.getAggregations().asList();
-			// Go over the aggregations (there should be just one)
-			for (Aggregation aggregation : aggregationHits)
-			{
-				// Make sure we got the right type of aggregation
-				if (aggregation instanceof ParsedSingleBucketAggregation && aggregation.getName().equals("filtered_cells"))
-				{
-					// Grab the sub-aggregations of the by bounding box filter
-					ParsedSingleBucketAggregation cellsInView = (ParsedSingleBucketAggregation) aggregation;
-					// Iterate over all sub-aggregations
-					for (Aggregation subAggregation : cellsInView.getAggregations())
-					{
-						// Each of these sub-aggregations should be a geo-hash-grid with buckets
-						if (subAggregation instanceof ParsedGeoHashGrid && subAggregation.getName().equals("cells"))
-						{
-							// Grab the hash grid
-							ParsedGeoHashGrid geoHashGrid = (ParsedGeoHashGrid) subAggregation;
-							// Iterate over all buckets inside of the hash grid
-							for (GeoHashGrid.Bucket bucket : geoHashGrid.getBuckets())
-							{
-								// The bucket will include 3 pieces of info, latitude, longitude, and the number of documents in the bucket
-								Long documentsInBucket = bucket.getDocCount();
-								Double centerLat = null;
-								Double centerLong = null;
-								// Latitude and longitude are fetched as sub-aggregations, so pull those here
-								for (Aggregation centerAgg : bucket.getAggregations())
-								{
-									if (centerAgg instanceof ParsedAvg)
-									{
-										if (centerAgg.getName().equals("center_lat"))
-											centerLat = ((ParsedAvg) centerAgg).getValue();
-										else if (centerAgg.getName().equals("center_lon"))
-											centerLong = ((ParsedAvg) centerAgg).getValue();
-									}
-								}
+			// The aggregation is the hard part of this task, so build it first
+			FilterAggregationBuilder aggregationQuery =
+					// First we filter by bounding box
+					AggregationBuilders
+							// Call the filter 'filtered_cells'
+							.filter("filtered_cells",
+									// User query builders to create our filter
+									QueryBuilders
+											// Our query is on the position field which must be in the box created by:
+											.geoBoundingBoxQuery("imageMetadata.position")
+											// The top left corner and the bottom right corner, specified here
+											.setCorners(new GeoPoint(topLeftLat, topLeftLong), new GeoPoint(bottomRightLat, bottomRightLong)))
+							// We use a sub-aggregation to take each result from the geo box query and put it into a bucket based on its proximity to other images
+							// Here we also specify precision (how close two images need to be to be in a bucket)
+							.subAggregation(AggregationBuilders.geohashGrid("cells").field("imageMetadata.position").precision(depth1To12)
+									// Now that images are in a bucket we average their lat and longs to create a "center" position ready to return to our user.
+									.subAggregation(AggregationBuilders.avg("center_lat").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lat", Collections.emptyMap())))
+									.subAggregation(AggregationBuilders.avg("center_lon").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lon", Collections.emptyMap()))));
 
-								// If we received sub-aggregation data, we're good so return the bucket
-								if (centerLat != null && centerLong != null)
-									toReturn.add(new GeoBucket(centerLat, centerLong, documentsInBucket));
+			// Create a search request, and populate the fields
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest
+					.indices(INDEX_CALLIOPE_METADATA)
+					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					.source(new SearchSourceBuilder()
+							// Fetch no results, we're only interested into aggregation portion of the query
+							.size(0)
+							// Don't fetch anything unnecessary
+							.fetchSource(false)
+							// Our query will match all documents
+							.query(QueryBuilders.matchAllQuery())
+							// Add our complex aggregation now
+							.aggregation(aggregationQuery));
+
+			try
+			{
+				// Grab the search results
+				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+				// Grab the aggregations from those search results
+				List<Aggregation> aggregationHits = searchResponse.getAggregations().asList();
+				// Go over the aggregations (there should be just one)
+				for (Aggregation aggregation : aggregationHits)
+				{
+					// Make sure we got the right type of aggregation
+					if (aggregation instanceof ParsedSingleBucketAggregation && aggregation.getName().equals("filtered_cells"))
+					{
+						// Grab the sub-aggregations of the by bounding box filter
+						ParsedSingleBucketAggregation cellsInView = (ParsedSingleBucketAggregation) aggregation;
+						// Iterate over all sub-aggregations
+						for (Aggregation subAggregation : cellsInView.getAggregations())
+						{
+							// Each of these sub-aggregations should be a geo-hash-grid with buckets
+							if (subAggregation instanceof ParsedGeoHashGrid && subAggregation.getName().equals("cells"))
+							{
+								// Grab the hash grid
+								ParsedGeoHashGrid geoHashGrid = (ParsedGeoHashGrid) subAggregation;
+								// Iterate over all buckets inside of the hash grid
+								for (GeoHashGrid.Bucket bucket : geoHashGrid.getBuckets())
+								{
+									// The bucket will include 3 pieces of info, latitude, longitude, and the number of documents in the bucket
+									Long documentsInBucket = bucket.getDocCount();
+									Double centerLat = null;
+									Double centerLong = null;
+									// Latitude and longitude are fetched as sub-aggregations, so pull those here
+									for (Aggregation centerAgg : bucket.getAggregations())
+									{
+										if (centerAgg instanceof ParsedAvg)
+										{
+											if (centerAgg.getName().equals("center_lat"))
+												centerLat = ((ParsedAvg) centerAgg).getValue();
+											else if (centerAgg.getName().equals("center_lon"))
+												centerLong = ((ParsedAvg) centerAgg).getValue();
+										}
+									}
+
+									// If we received sub-aggregation data, we're good so return the bucket
+									if (centerLat != null && centerLong != null)
+										toReturn.add(new GeoBucket(centerLat, centerLong, documentsInBucket));
+								}
 							}
 						}
 					}
 				}
 			}
+			catch (IOException e)
+			{
+				// Something went wrong, so show an error
+				CalliopeData.getInstance().getErrorDisplay().notify("Error performing geo-aggregation, error was:\n" + ExceptionUtils.getStackTrace(e));
+			}
 		}
-		catch (IOException e)
+		catch (IllegalArgumentException e)
 		{
-			// Something went wrong, so show an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error performing geo-aggregation, error was:\n" + ExceptionUtils.getStackTrace(e));
+			// The user somehow managed to pass illegal values to the aggregation by moving the map into a strange position. Print an error but recover
+			CalliopeData.getInstance().getErrorDisplay().notify("Invalid geo-aggregation, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return toReturn;

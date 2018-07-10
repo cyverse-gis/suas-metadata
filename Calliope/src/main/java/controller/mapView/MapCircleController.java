@@ -10,7 +10,7 @@ import java.util.ResourceBundle;
 /**
  * Simple controller file used to control pin behaviour when placed on the map
  */
-public class MapPinController implements Initializable
+public class MapCircleController implements Initializable
 {
 	///
 	/// FXML Bound Fields Start

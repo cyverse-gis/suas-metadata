@@ -2,6 +2,7 @@ package model.analysis;
 
 import model.location.UTMCoord;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.core.util.FileUtils;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class CalliopeAnalysisUtils
 	 */
 	public static boolean fileIsImage(File file)
 	{
-		return StringUtils.endsWithAny(file.getAbsolutePath(), ACCEPTED_EXTENSIONS);
+		return StringUtils.endsWithAny(FileUtils.getFileExtension(file), ACCEPTED_EXTENSIONS);
 	}
 
 	/**

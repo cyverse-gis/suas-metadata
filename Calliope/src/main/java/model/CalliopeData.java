@@ -9,7 +9,6 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
@@ -19,8 +18,8 @@ import model.neon.BoundedSite;
 import model.neon.NeonData;
 import model.elasticsearch.query.QueryEngine;
 import model.threading.CalliopeExecutor;
-import model.threading.ErrorService;
 import model.threading.ErrorTask;
+import model.threading.ReRunnableService;
 import model.util.*;
 import org.hildan.fxgson.FxGson;
 
@@ -46,7 +45,7 @@ public class CalliopeData
 	}
 
 	// The sensitive data configuration file so we don't put up sensitive info on Github
-	private SensitiveConfigurationManager sensitiveConfigurationManager = new SensitiveConfigurationManager();
+	private SensitiveConfigurationManager sensitiveConfigurationManager;
 
 	// A global list of neon locations
 	private final ObservableList<BoundedSite> siteList;
@@ -59,50 +58,94 @@ public class CalliopeData
 	private final ImageDirectory imageTree;
 
 	// A username property which we can bind to in the rest of the program
-	private StringProperty usernameProperty = new SimpleStringProperty("");
+	private StringProperty usernameProperty;
 	// A logged in property which we can bind to in the rest of the program, is set to true when a user is logged in
-	private BooleanProperty loggedInProperty = new SimpleBooleanProperty(false);
+	private BooleanProperty loggedInProperty;
 
 	// Executor used to thread off long tasks
-	private CalliopeExecutor calliopeExecutor = new CalliopeExecutor();
+	private CalliopeExecutor calliopeExecutor;
 
 	// GSon object used to serialize data. We register a local date time adapter to ensure dates are serialized correctly
-	private final Gson gson = FxGson.fullBuilder().setPrettyPrinting().serializeNulls().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
+	private final Gson gson;
 
 	// The connection manager used to authenticate the CyVerse user
-	private CyVerseConnectionManager cyConnectionManager = new CyVerseConnectionManager();
+	private CyVerseConnectionManager cyConnectionManager;
 
 	// The connection manager used to manage the database
-	private ElasticSearchConnectionManager esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager);
+	private ElasticSearchConnectionManager esConnectionManager;
 
 	// Preferences used to save the user's username
-	private final Preferences calliopePreferences = Preferences.userNodeForPackage(CalliopeData.class);
+	private final Preferences calliopePreferences;
 
 	// Manager of all temporary files used by the Calliope software
-	private final TempDirectoryManager tempDirectoryManager = new TempDirectoryManager();
+	private final TempDirectoryManager tempDirectoryManager;
 
 	// List of Calliope settings
-	private final SettingsData settings = new SettingsData();
-	private AtomicBoolean needSettingsSync = new AtomicBoolean(false);
-	private AtomicBoolean settingsSyncInProgress = new AtomicBoolean(false);
+	private final SettingsData settings;
+	private AtomicBoolean needSettingsSync;
+	private AtomicBoolean settingsSyncInProgress;
 
 	// Class used to display errors as popups
-	private final ErrorDisplay errorDisplay = new ErrorDisplay(this);
+	private final ErrorDisplay errorDisplay;
 
 	// Query engine used in storing the current query setup
-	private QueryEngine queryEngine = new QueryEngine();
+	private QueryEngine queryEngine;
 
 	// NEON data api connection
-	private NeonData neonData = new NeonData();
+	private NeonData neonData;
 
 	// Class to handle metadata management
-	private MetadataManager metadataManager = new MetadataManager();
+	private MetadataManager metadataManager;
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
 	 */
 	private CalliopeData()
 	{
+		// Setup our sensitive config manager
+		this.sensitiveConfigurationManager = new SensitiveConfigurationManager();
+
+		// Initialize our username and logged in properties
+		this.usernameProperty = new SimpleStringProperty("");
+		this.loggedInProperty = new SimpleBooleanProperty(false);
+
+		// Start up our thread executor
+		this.calliopeExecutor = new CalliopeExecutor();
+
+		// Initialize our JSON parser
+		this.gson = FxGson.fullBuilder().setPrettyPrinting().serializeNulls().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
+
+		// Establish a connection to the CyVerse datastore
+		this.cyConnectionManager = new CyVerseConnectionManager();
+
+		// Establish a connection to the ElasticSearch cluster
+		this.esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager);
+
+		// Setup our preferences store which stores our username
+		this.calliopePreferences = Preferences.userNodeForPackage(CalliopeData.class);
+
+		// Create a temporary directory to dump any temporary files into
+		this.tempDirectoryManager = new TempDirectoryManager();
+
+		// Load our program settings
+		this.settings = new SettingsData();
+
+		// Setup our automatic setting synchronization
+		this.needSettingsSync = new AtomicBoolean(false);
+		this.settingsSyncInProgress = new AtomicBoolean(false);
+
+		// Setup our debug/error logger
+		this.errorDisplay = new ErrorDisplay(this);
+
+		// Create the query engine which executes ES queries
+		this.queryEngine = new QueryEngine();
+
+		// Download and setup NEON data
+		this.neonData = new NeonData();
+
+		// Setup our metadata management class
+		this.metadataManager = new MetadataManager();
+
 		// Create the location list and add some default locations
 		this.siteList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(site -> new Observable[]{ site.siteProperty(), site.boundaryProperty() }));
 
@@ -121,57 +164,21 @@ public class CalliopeData
 	 */
 	private void setupAutoSettingsSync()
 	{
-		ErrorService<Void> syncService = new ErrorService<Void>()
-		{
-			@Override
-			protected Task<Void> createTask()
+		ReRunnableService reRunnableService = new ReRunnableService<>(() ->
+			new ErrorTask<Void>()
 			{
-				return new ErrorTask<Void>()
+				@Override
+				protected Void call()
 				{
-					@Override
-					protected Void call()
-					{
-						// Perform the push of the settings data
-						this.updateMessage("Syncing new settings to CyVerse...");
-						CalliopeData.getInstance().getEsConnectionManager().pushLocalSettings(CalliopeData.getInstance().getSettings());
-						return null;
-					}
-				};
-			}
-		};
-		// When we finish syncing...
-		syncService.setOnSucceeded(event -> {
-			// After finishing the sync, check if we need to sync again. If so set the flag to false and sync once again
-			if (this.needSettingsSync.get())
-			{
-				this.needSettingsSync.set(false);
-				syncService.restart();
-			}
-			// If we don't need to sync again set the sync in progress flag to false
-			else
-			{
-				this.settingsSyncInProgress.set(false);
-			}
-		});
-		this.calliopeExecutor.getQueuedExecutor().registerService(syncService);
+					// Perform the push of the settings data
+					this.updateMessage("Syncing new settings to CyVerse...");
+					CalliopeData.getInstance().getEsConnectionManager().pushLocalSettings(CalliopeData.getInstance().getSettings());
+					return null;
+				}
+			}, this.calliopeExecutor.getImmediateExecutor());
 
 		// When the settings change...
-		Runnable onSettingChange = () ->
-		{
-			// If a sync is already in progress, we set a flag telling the current sync to perform another sync right after it finishes
-			if (this.settingsSyncInProgress.get())
-			{
-				this.needSettingsSync.set(true);
-			}
-			// If a sync is not in progress, go ahead and sync
-			else
-			{
-				this.settingsSyncInProgress.set(true);
-				// Perform the task
-				syncService.restart();
-			}
-		};
-		this.settings.getSettingList().addListener((ListChangeListener<CustomPropertyItem<?>>) c -> onSettingChange.run());
+		this.settings.getSettingList().addListener((ListChangeListener<CustomPropertyItem<?>>) c -> reRunnableService.requestAnotherRun());
 	}
 
 	/**

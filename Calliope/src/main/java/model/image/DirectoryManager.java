@@ -161,10 +161,6 @@ public class DirectoryManager
 				// Create a TAR output stream to write to
 				TarArchiveOutputStream tarOut = new TarArchiveOutputStream(new FileOutputStream(tempTar));
 
-				File tempMetaCSV = CalliopeData.getInstance().getTempDirectoryManager().createTempFile("meta.csv");
-				tempMetaCSV.createNewFile();
-
-				PrintWriter metaOut = new PrintWriter(tempMetaCSV);
 				for (Integer imageIndex = tarIndex * imagesPerTar; imageIndex < (tarIndex + 1) * imagesPerTar && imageIndex < imageEntries.size(); imageIndex++)
 				{
 					ImageEntry imageEntry = imageEntries.get(imageIndex);
@@ -177,21 +173,7 @@ public class DirectoryManager
 					tarOut.write(Files.readAllBytes(imageEntry.getFile().toPath()));
 					// Finish writing the TAR entry
 					tarOut.closeArchiveEntry();
-
-					// Write a metadata entry into our meta-X.csv file
-					metaOut.write(imageToMetadata.apply(imageEntry));
 				}
-				// Close the writer to the metadata file
-				metaOut.close();
-
-				// Create an archive entry for the metaCSV file
-				ArchiveEntry archiveEntry = tarOut.createArchiveEntry(tempMetaCSV, "/meta-" + tarIndex.toString() + ".csv");
-				// Put the archive entry into the TAR file
-				tarOut.putArchiveEntry(archiveEntry);
-				// Write all the bytes in the file into the TAR file
-				tarOut.write(Files.readAllBytes(tempMetaCSV.toPath()));
-				// Finish writing the TAR entry
-				tarOut.closeArchiveEntry();
 
 				// Flush the file and close it. We delete the TAR after the program closes
 				tarOut.flush();
