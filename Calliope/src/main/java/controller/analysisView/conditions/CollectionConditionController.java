@@ -9,8 +9,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import model.cyverse.ImageCollection;
-import model.query.IQueryCondition;
-import model.query.conditions.CollectionCondition;
+import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.conditions.CollectionCondition;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URL;

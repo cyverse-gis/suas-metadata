@@ -11,7 +11,7 @@
 <?import org.controlsfx.control.PropertySheet?>
 <?import org.controlsfx.control.StatusBar?>
 <?import java.net.URL?>
-<SplitPane fx:id="mainPane" dividerPositions="0.28, 0.75" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeImportController">
+<SplitPane fx:id="mainPane" fx:controller="controller.CalliopeImportController" dividerPositions="0.2, 0.8" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@CalliopeImport.css" />
     </stylesheets>
@@ -47,7 +47,7 @@
                 </Tab>
             </tabs>
         </TabPane>
-        <SplitPane dividerPositions="0.70" orientation="VERTICAL">
+        <SplitPane dividerPositions="0.80" orientation="VERTICAL">
             <items>
                 <StackPane fx:id="imagePane" onDragDropped="#imagePaneDragDropped" onDragEntered="#imagePaneDragEntered" onDragExited="#imagePaneDragExited" onDragOver="#imagePaneDragOver" onMouseEntered="#imagePaneMouseEntered" onMouseExited="#imagePaneMouseExited">
                     <children>

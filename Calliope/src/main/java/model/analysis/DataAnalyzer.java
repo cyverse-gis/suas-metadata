@@ -3,7 +3,6 @@ package model.analysis;
 import library.MoonCalculator;
 import model.image.ImageEntry;
 import model.location.Position;
-import model.species.Species;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -21,7 +20,6 @@ public class DataAnalyzer
 	private boolean nullLocationsFound = false;
 	// List of all images, species, and years found over the image list
 	private List<Position> allImagePositions = new ArrayList<>();
-	private List<Species> allImageSpecies = new ArrayList<>();
 	private List<Integer> allImageYears = new ArrayList<>();
 	// A list of all images but sorted by date instead of randomly
 	private List<ImageEntry> imagesSortedByDate;
@@ -66,9 +64,6 @@ public class DataAnalyzer
 				if (!allImageSpecies.contains(speciesEntry.getSpecies()))
 					allImageSpecies.add(speciesEntry.getSpecies());
 					*/
-
-		// Sort species by name
-		allImageSpecies.sort(Comparator.comparing(Species::getCommonName));
 
 		// Find all image years
 		for (ImageEntry imageEntry : images)
@@ -237,11 +232,9 @@ public class DataAnalyzer
 	 * 
 	 * @param images
 	 *            The list of images to search through (must be sorted)
-	 * @param speciesFilter
-	 *            The species for which to look for. May be null for any species
 	 * @return The abundance value for "images"
 	 */
-	public Integer abundanceForImageList(List<ImageEntry> images, Species speciesFilter)
+	public Integer abundanceForImageList(List<ImageEntry> images)
 	{
 		Integer abundance = 0;
 
@@ -287,14 +280,6 @@ public class DataAnalyzer
 	public boolean nullLocationsFound()
 	{
 		return nullLocationsFound;
-	}
-
-	/**
-	 * @return A list containing all image species
-	 */
-	public List<Species> getAllImageSpecies()
-	{
-		return allImageSpecies;
 	}
 
 	/**

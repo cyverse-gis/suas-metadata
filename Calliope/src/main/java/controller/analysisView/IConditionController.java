@@ -1,7 +1,7 @@
 package controller.analysisView;
 
 import javafx.fxml.Initializable;
-import model.query.IQueryCondition;
+import model.elasticsearch.query.IQueryCondition;
 
 /**
  * Interface to be used by any filter's UI controller

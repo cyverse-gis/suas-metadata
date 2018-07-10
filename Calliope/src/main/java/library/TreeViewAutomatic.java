@@ -68,7 +68,7 @@ public class TreeViewAutomatic<T extends HierarchyData<T>> extends TreeView<T>
 			updateItems();
 		});
 
-		setItems(FXCollections.<T>observableArrayList());
+		setItems(FXCollections.observableArrayList());
 
 		// Do not use ChangeListener, because it won't trigger if old list equals new list (but in fact different references).
 		items.addListener(observable -> {

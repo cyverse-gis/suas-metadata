@@ -1,12 +1,11 @@
-package model.query;
+package model.elasticsearch.query;
 
 
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.location.Position;
-import model.query.conditions.ElevationCondition;
-import model.species.Species;
+import model.elasticsearch.query.conditions.ElevationCondition;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -24,8 +23,6 @@ import java.util.stream.Collectors;
  */
 public class ElasticSearchQuery
 {
-	// A list of species to query for
-	private Set<Species> speciesQuery = new HashSet<>();
 	// A list of locations to query for
 	private Set<Position> positionQuery = new HashSet<>();
 	// A list of collections to query for
@@ -46,16 +43,6 @@ public class ElasticSearchQuery
 	public ElasticSearchQuery()
 	{
 		this.queryBuilder = QueryBuilders.boolQuery();
-	}
-
-	/**
-	 * Adds a given species to the query
-	 *
-	 * @param species The species to 'and' into the query
-	 */
-	public void addSpecies(Species species)
-	{
-		this.speciesQuery.add(species);
 	}
 
 	/**
@@ -178,16 +165,6 @@ public class ElasticSearchQuery
 	 */
 	public QueryBuilder build()
 	{
-		// Make sure that we have at least one species we're looking for
-		// Species are IDd by scientific name
-		if (!speciesQuery.isEmpty())
-		{
-			// For this query we need to use 2 queries because speciesEntries is a nested field. The first query looks into the speciesEntries object and searches for
-			// for any inner objects that satisfy the inside query which tests scientific name.
-			TermsQueryBuilder innerQuery = QueryBuilders.termsQuery("imageMetadata.speciesEntries.species.scientificName", this.speciesQuery.stream().map(Species::getScientificName).collect(Collectors.toList()));
-			this.queryBuilder.must(QueryBuilders.nestedQuery("imageMetadata.speciesEntries", innerQuery, ScoreMode.Max));
-		}
-
 		// Make sure that we have at least one location we're looking for
 		// Locations are IDd by site code
 		//if (!positionQuery.isEmpty())

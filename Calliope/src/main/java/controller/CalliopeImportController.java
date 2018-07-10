@@ -40,6 +40,7 @@ import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
+import model.util.Vector3;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -285,11 +286,8 @@ public class CalliopeImportController implements Initializable
 		currentlySelectedImage.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageEntry) ? (ImageEntry) imageContainer : null));
 		currentlySelectedDirectory.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageDirectory) ? (ImageDirectory) imageContainer : null));
 
-		// When we select a cloud image or directory, don't allow clicking delete
-		this.btnDelete.disableProperty().bind(
-				Bindings.or(Bindings.createBooleanBinding(() -> this.currentlySelectedImage.getValue() instanceof CloudImageEntry, this.currentlySelectedImage),
-				Bindings.or(Bindings.createBooleanBinding(() -> this.currentlySelectedDirectory.getValue() instanceof CloudImageDirectory, this.currentlySelectedDirectory),
-							this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1))));
+		// Hide the delete button when nothing is selected
+		this.btnDelete.disableProperty().bind(this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1));
 
 		// Create bindings in the GUI
 
@@ -412,13 +410,8 @@ public class CalliopeImportController implements Initializable
 						// Make sure to negate because we want to hide the arrow when the above things are true
 						.not());
 
-		this.currentlySelectedImage.addListener((observable, oldValue, newValue) ->
-		{
-			// When we select a new image, reset the image viewport to center and zoomed out.
-			this.resetImageView(null);
-			// We also make sure to pull the image from online if it's a cloud based image
-			if (newValue instanceof CloudImageEntry) ((CloudImageEntry) newValue).pullFromCloudIfNotPulled();
-		});
+		// When we select a new image, reset the image viewport to center and zoomed out.
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 
 		// Setup the neon site detector stage
 
@@ -818,30 +811,19 @@ public class CalliopeImportController implements Initializable
 	 */
 	public void mouseClickedLocation(MouseEvent mouseEvent)
 	{
-		// Ensure we have a valid image selected
+		List<ImageEntry> images = null;
+
+		// If we have an image selected then we wrap that image in a list for processing
 		if (this.currentlySelectedImage.getValue() != null)
-		{
-			// If the site is already present, remove it
-			if (this.currentlySelectedImage.getValue().getSiteTaken() != null)
-			{
-				this.currentlySelectedImage.getValue().setSiteTaken(null);
-			}
-			// If the site is not present, open the neon site detector to figure out which method the user wants to use to tag the site
-			else
-			{
-				// We need to wrap our image as a singleton list
-				this.neonSiteDetectorController.updateItems(Collections.singletonList(this.currentlySelectedImage.getValue()));
-				// Make sure that this stage belongs to the main stage
-				if (this.neonSiteDetectorStage.getOwner() == null)
-					this.neonSiteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
-				this.neonSiteDetectorStage.showAndWait();
-			}
-		}
-		// If an image is not selected, test if a directory is selected
+			images = Collections.singletonList(this.currentlySelectedImage.getValue());
+		// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
 		else if (this.currentlySelectedDirectory.getValue() != null)
+			images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+
+		// If we got any images at all, process them
+		if (images != null)
 		{
 			// Pull the sub-images in the directory
-			List<ImageEntry> images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
 			this.neonSiteDetectorController.updateItems(images);
 			// Make sure that this stage belongs to the main stage
 			if (this.neonSiteDetectorStage.getOwner() == null)

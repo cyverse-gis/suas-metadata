@@ -6,8 +6,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.util.StringConverter;
-import model.query.IQueryCondition;
-import model.query.conditions.DayOfWeekCondition;
+import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.conditions.DayOfWeekCondition;
 
 import java.net.URL;
 import java.time.DayOfWeek;

@@ -17,8 +17,7 @@ import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.neon.NeonData;
-import model.query.QueryEngine;
-import model.species.Species;
+import model.elasticsearch.query.QueryEngine;
 import model.threading.CalliopeExecutor;
 import model.threading.ErrorService;
 import model.threading.ErrorTask;
@@ -49,11 +48,6 @@ public class CalliopeData
 	// The sensitive data configuration file so we don't put up sensitive info on Github
 	private SensitiveConfigurationManager sensitiveConfigurationManager = new SensitiveConfigurationManager();
 
-	// A global list of species
-	private final ObservableList<Species> speciesList;
-	private AtomicBoolean needSpeciesSync = new AtomicBoolean(false);
-	private AtomicBoolean speciesSyncInProgress = new AtomicBoolean(false);
-
 	// A global list of neon locations
 	private final ObservableList<BoundedSite> siteList;
 
@@ -63,8 +57,6 @@ public class CalliopeData
 
 	// A base directory to which we add all extra directories
 	private final ImageDirectory imageTree;
-	private static final Integer NUM_IMAGES_AT_A_TIME = 100;
-	private AtomicBoolean metadataSyncInProgress = new AtomicBoolean(false);
 
 	// A username property which we can bind to in the rest of the program
 	private StringProperty usernameProperty = new SimpleStringProperty("");
@@ -111,9 +103,6 @@ public class CalliopeData
 	 */
 	private CalliopeData()
 	{
-		// Create the species list, and add some default species
-		this.speciesList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(species -> new Observable[]{species.commonNameProperty(), species.scientificNameProperty(), species.speciesIconURLProperty(), species.keyBindingProperty()}));
-
 		// Create the location list and add some default locations
 		this.siteList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(site -> new Observable[]{ site.siteProperty(), site.boundaryProperty() }));
 
@@ -183,14 +172,6 @@ public class CalliopeData
 			}
 		};
 		this.settings.getSettingList().addListener((ListChangeListener<CustomPropertyItem<?>>) c -> onSettingChange.run());
-	}
-
-	/**
-	 * @return The global species list
-	 */
-	public ObservableList<Species> getSpeciesList()
-	{
-		return speciesList;
 	}
 
 	/**

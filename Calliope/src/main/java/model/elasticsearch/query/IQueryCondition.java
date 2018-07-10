@@ -1,4 +1,4 @@
-package model.query;
+package model.elasticsearch.query;
 
 public interface IQueryCondition
 {

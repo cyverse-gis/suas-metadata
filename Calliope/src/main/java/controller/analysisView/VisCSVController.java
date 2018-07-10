@@ -30,12 +30,6 @@ public class VisCSVController implements VisControllerBase
 	// The text area containing raw CSV with a list of image data
 	@FXML
 	public TextArea txtRawCSV;
-	// The text area containing location CSV with a location list
-	@FXML
-	public TextArea txtLocationCSV;
-	// The text area containing species CSV with a species list
-	@FXML
-	public TextArea txtSpeciesCSV;
 
 	///
 	/// FXML bound fields end
@@ -52,8 +46,6 @@ public class VisCSVController implements VisControllerBase
 	{
 		// Use a monospaced font with size 14
 		this.txtRawCSV.setFont(Font.font(java.awt.Font.MONOSPACED, 14f));
-		this.txtLocationCSV.setFont(Font.font(java.awt.Font.MONOSPACED, 14f));
-		this.txtSpeciesCSV.setFont(Font.font(java.awt.Font.MONOSPACED, 14f));
 	}
 
 	/**
@@ -99,46 +91,6 @@ public class VisCSVController implements VisControllerBase
 		if (rawCSV.isEmpty())
 			rawCSV = "No query results found.";
 		this.txtRawCSV.setText(rawCSV);
-
-		// The location CSV contains each location, one per line, in the form:
-		// Name, ID, Position, Elevation
-		String locationCSV = dataAnalyzer.getAllImagePositions().stream().map(location ->
-		{
-			// Position name and ID
-			String locationString = "";
-
-			// If we're using lat long
-			if (CalliopeData.getInstance().getSettings().getLocationFormat() == SettingsData.LocationFormat.LatLong)
-			{
-				// Use lat,lng
-				locationString = locationString +
-					location.getLatitude() + "," +
-					location.getLongitude() + ",";
-			}
-			// If we're using UTM
-			else
-			{
-				UTMCoord utmCoord = CalliopeAnalysisUtils.Deg2UTM(location.getLatitude(), location.getLongitude());
-				locationString = locationString +
-					utmCoord.getZone().toString() + utmCoord.getLetter().toString() + "," +
-					utmCoord.getEasting() + "E," +
-					utmCoord.getNorthing() + "N,";
-			}
-			// Distance units depend on feet or meters
-			SettingsData.DistanceUnits distanceUnits = CalliopeData.getInstance().getSettings().getDistanceUnits();
-			locationString = locationString + RoundingUtils.round(distanceUnits.formatToMeters(location.getElevation()), 2) + distanceUnits.getSymbol();
-			return locationString;
-		})
-		.collect(Collectors.joining("\n"));
-		this.txtLocationCSV.setText(locationCSV);
-
-		// The species CSV contains each species, one per line, in the form:
-		// Name, Scientific Name, Key bound (or null if none)
-		String speciesCSV = dataAnalyzer.getAllImageSpecies().stream().map(species ->
-			species.getCommonName() + "," +
-			species.getScientificName()
-		).collect(Collectors.joining("\n"));
-		this.txtSpeciesCSV.setText(speciesCSV);
 	}
 
 	/**
@@ -150,32 +102,6 @@ public class VisCSVController implements VisControllerBase
 	{
 		ClipboardContent content = new ClipboardContent();
 		content.putString(this.txtRawCSV.getText());
-		Clipboard.getSystemClipboard().setContent(content);
-		actionEvent.consume();
-	}
-
-	/**
-	 * If copy Locations CSV is pressed, we copy the content of the CSV clipboard
-	 *
-	 * @param actionEvent consumed
-	 */
-	public void copyLocationsCSV(ActionEvent actionEvent)
-	{
-		ClipboardContent content = new ClipboardContent();
-		content.putString(this.txtLocationCSV.getText());
-		Clipboard.getSystemClipboard().setContent(content);
-		actionEvent.consume();
-	}
-
-	/**
-	 * If copy Species CSV is pressed, we copy the content of the CSV clipboard
-	 *
-	 * @param actionEvent consumed
-	 */
-	public void copySpeciesCSV(ActionEvent actionEvent)
-	{
-		ClipboardContent content = new ClipboardContent();
-		content.putString(this.txtSpeciesCSV.getText());
 		Clipboard.getSystemClipboard().setContent(content);
 		actionEvent.consume();
 	}

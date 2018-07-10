@@ -1,11 +1,11 @@
-package model.query.conditions;
+package model.elasticsearch.query.conditions;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import model.query.ElasticSearchQuery;
-import model.query.IQueryCondition;
+import model.elasticsearch.query.ElasticSearchQuery;
+import model.elasticsearch.query.IQueryCondition;
 
 import java.time.DayOfWeek;
 import java.util.HashMap;

@@ -19,33 +19,6 @@ public class CalliopeAnalysisUtils
 	private static final String[] ACCEPTED_EXTENSIONS = { "jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO" };
 
 	/**
-	 * Turns a CSV string into a list of integers
-	 * 
-	 * @param CSV
-	 *            The string in the format int, int, int
-	 * @return A list of integers that the CSV represents
-	 */
-	public static List<Integer> csvStringToInts(String CSV)
-	{
-		String[] individualVals = StringUtils.split(CSV, ',');
-		List<Integer> ints = new LinkedList<Integer>();
-		for (String string : individualVals)
-		{
-			if (!string.isEmpty())
-			{
-				try
-				{
-					ints.add(Integer.parseInt(string));
-				}
-				catch (NumberFormatException exception)
-				{
-				}
-			}
-		}
-		return ints;
-	}
-
-	/**
 	 * Test if a file is an image
 	 * 
 	 * @param file
@@ -55,23 +28,6 @@ public class CalliopeAnalysisUtils
 	public static boolean fileIsImage(File file)
 	{
 		return StringUtils.endsWithAny(file.getAbsolutePath(), ACCEPTED_EXTENSIONS);
-	}
-
-	/**
-	 * Calculates the days inbetween two dates
-	 * 
-	 * @param date1
-	 *            The first date
-	 * @param date2
-	 *            The second date
-	 * @return The days inbetween date1 and date 2
-	 */
-	public static long daysBetween(LocalDateTime date1, LocalDateTime date2)
-	{
-		if (date1 != null && date2 != null)
-			return date1.until(date2, ChronoUnit.DAYS);
-		else
-			return 0;
 	}
 
 	/**

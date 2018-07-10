@@ -1,9 +1,9 @@
-package model.query.conditions;
+package model.elasticsearch.query.conditions;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import model.query.ElasticSearchQuery;
-import model.query.IQueryCondition;
+import model.elasticsearch.query.ElasticSearchQuery;
+import model.elasticsearch.query.IQueryCondition;
 
 import java.time.LocalDateTime;
 

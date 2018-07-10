@@ -5,8 +5,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.CheckBoxListCell;
-import model.query.IQueryCondition;
-import model.query.conditions.HourCondition;
+import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.conditions.HourCondition;
 
 import java.net.URL;
 import java.util.ResourceBundle;

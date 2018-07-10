@@ -15,6 +15,7 @@ import model.neon.BoundedSite;
 import model.util.CustomPropertyItem;
 import model.util.MetadataCustomItem;
 import model.util.MetadataManager;
+import model.util.Vector3;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;

@@ -7,7 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import model.query.IQueryCondition;
+import model.elasticsearch.query.IQueryCondition;
 import model.util.FXMLLoaderUtils;
 
 /**

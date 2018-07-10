@@ -248,7 +248,7 @@ public class CalliopeViewController implements Initializable
 			ErrorTask<Boolean> loginAttempt = new ErrorTask<Boolean>()
 			{
 				@Override
-				protected Boolean call() throws Exception
+				protected Boolean call()
 				{
 					Integer NUM_STEPS = 6;
 

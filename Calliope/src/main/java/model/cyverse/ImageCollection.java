@@ -7,7 +7,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import model.image.CloudUploadEntry;
+import model.image.UploadedEntry;
 
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public class ImageCollection
 	// We don't serialize it when converting to JSON since we want to keep this field transient (Because permissions are private!)
 	private ObservableList<Permission> permissions = FXCollections.observableArrayList(permission -> new Observable[] { permission.usernameProperty(), permission.readProperty(), permission.uploadProperty(), permission.ownerProperty()});
 	// Keep a list of uploads that is also transient so it will not be serialized. We serialize this differently because uploads should not be public
-	private ObservableList<CloudUploadEntry> uploads = FXCollections.observableArrayList(upload -> new Observable[] {});
+	private ObservableList<UploadedEntry> uploads = FXCollections.observableArrayList(upload -> new Observable[] {});
 	private transient Boolean uploadsWereSynced = false;
 
 	/**
@@ -144,7 +144,7 @@ public class ImageCollection
 		return this.permissions;
 	}
 
-	public ObservableList<CloudUploadEntry> getUploads()
+	public ObservableList<UploadedEntry> getUploads()
 	{
 		return this.uploads;
 	}

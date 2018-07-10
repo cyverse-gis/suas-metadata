@@ -6,8 +6,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import model.location.Position;
-import model.query.IQueryCondition;
-import model.query.conditions.LocationFilterCondition;
+import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.conditions.LocationFilterCondition;
 
 import java.net.URL;
 import java.util.ResourceBundle;

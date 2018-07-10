@@ -2,7 +2,6 @@ package controller;
 
 import controller.uploadView.ImageCollectionListEntryController;
 import controller.uploadView.ImageUploadDownloadListEntryController;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
@@ -34,7 +33,6 @@ import org.fxmisc.easybind.EasyBind;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 /**
  * Controller class for the upload page
@@ -61,7 +59,7 @@ public class CalliopeUploadController implements Initializable
 
 	// Upload entry on the cloud used to download...
 	@FXML
-	public ListView<CloudUploadEntry> uploadListDownloadListView;
+	public ListView<UploadedEntry> uploadListDownloadListView;
 
 	@FXML
 	public Button btnRefreshUploads;
@@ -154,23 +152,17 @@ public class CalliopeUploadController implements Initializable
 		// Set the fake invisible root
 		this.imageTree.setRoot(ROOT);
 		// Set the items of the tree to be the children of the fake invisible root
-		this.imageTree.setItems(CalliopeData.getInstance().getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry) && !(imageContainer instanceof CloudImageDirectory)));
+		this.imageTree.setItems(CalliopeData.getInstance().getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry)));
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("uploadView/UploadTreeCell.fxml").getController());
 
 		// Custom cell factory used to show upload downloads
-		this.uploadListDownloadListView.setCellFactory(list ->
-		{
-			ImageUploadDownloadListEntryController controller = FXMLLoaderUtils.loadFXML("uploadView/ImageUploadDownloadListEntry.fxml").getController();
-			controller.setOnDownload(() -> this.downloadImages(controller.getItem()));
-			controller.setOnUpload(() -> this.saveImages(controller.getItem()));
-			return controller;
-		});
+		this.uploadListDownloadListView.setCellFactory(list -> FXMLLoaderUtils.loadFXML("uploadView/ImageUploadDownloadListEntry.fxml").<ImageUploadDownloadListEntryController>getController());
 		// Bind the upload download to the current selection's uploads, Sort the uploads by date taken and filter them by the query
 		this.uploadListDownloadListView.itemsProperty().bind(EasyBind.monadic(this.selectedCollection).map(imageCollection -> {
-			ObservableList<CloudUploadEntry> uploads = imageCollection.getUploads();
-			SortedList<CloudUploadEntry> sortedUploads = uploads.sorted((entry1, entry2) -> entry2.getUploadDate().compareTo(entry1.getUploadDate()));
-			FilteredList<CloudUploadEntry> filteredSortedUploads = sortedUploads.filtered(x -> true);
+			ObservableList<UploadedEntry> uploads = imageCollection.getUploads();
+			SortedList<UploadedEntry> sortedUploads = uploads.sorted((entry1, entry2) -> entry2.getUploadDate().compareTo(entry1.getUploadDate()));
+			FilteredList<UploadedEntry> filteredSortedUploads = sortedUploads.filtered(x -> true);
 			// Set the filter to update whenever the upload search text changes
 			filteredSortedUploads.predicateProperty().bind(Bindings.createObjectBinding(() -> (cloudUploadEntry ->
 					// Allow any cloud upload entry with a username cloud upload entry search text
@@ -311,115 +303,6 @@ public class CalliopeUploadController implements Initializable
 	}
 
 	/**
-	 * Called to download images from a specific upload for editing
-	 *
-	 * @param uploadEntry The upload entry which we want to pull images from
-	 */
-	private void downloadImages(CloudUploadEntry uploadEntry)
-	{
-		// Make sure we have a collection selected
-		if (this.selectedCollection.getValue() != null)
-		{
-			// Show the loading box again and disable the download entries
-			this.mpnDownloadUploads.setVisible(true);
-			this.mpnDownloadUploads.setText(STATUS_DOWNLOADING);
-			this.mpnDownloadUploads.setProgress(-1);
-			this.vbxDownloadList.setDisable(true);
-
-			// Create a task to execute
-			ErrorTask<Void> downloadTask = new ErrorTask<Void>()
-			{
-				@Override
-				protected Void call()
-				{
-					this.updateMessage("Downloading directory for editing...");
-					// Download the directory and add it to our tree structure
-					CloudImageDirectory cloudDirectory = CalliopeData.getInstance().getCyConnectionManager().downloadUploadDirectory(uploadEntry);
-					Platform.runLater(() ->
-					{
-						uploadEntry.setCloudImageDirectory(cloudDirectory);
-						CalliopeData.getInstance().getImageTree().addChild(cloudDirectory);
-					});
-					return null;
-				}
-			};
-
-			// Once the download is done hide the download box and enable the download list again
-			downloadTask.setOnSucceeded(event ->
-			{
-				this.mpnDownloadUploads.setVisible(false);
-				this.vbxDownloadList.setDisable(false);
-				uploadEntry.setDownloaded(true);
-			});
-
-			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(downloadTask);
-		}
-	}
-
-	/**
-	 * Called to save images we edited from a downloaded upload
-	 *
-	 * @param uploadEntry The upload entry to save changes to
-	 */
-	private void saveImages(CloudUploadEntry uploadEntry)
-	{
-		// Grab the image directory
-		CloudImageDirectory imageDirectory = uploadEntry.getCloudImageDirectory();
-		// Make sure the upload has been downloaded
-		if (uploadEntry.hasBeenDownloaded() && imageDirectory != null)
-		{
-			// Make sure we've got a valid directory
-			boolean validDirectory = true;
-
-			// Each image must have a location and species tagged
-			for (CloudImageEntry imageEntry : imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CloudImageEntry).map(imageContainer -> (CloudImageEntry) imageContainer).filter(cloudImageEntry -> cloudImageEntry.hasBeenPulledFromCloud() && cloudImageEntry.isCloudDirty()).collect(Collectors.toList()))
-			{
-				if (imageEntry.getLocationTaken() == null)
-				{
-					validDirectory = false;
-					break;
-				}
-			}
-
-			// If we have a valid directory, perform the upload
-			if (validDirectory)
-			{
-				// Create an upload task
-				Task<Void> saveTask = new ErrorTask<Void>()
-				{
-					@Override
-					protected Void call()
-					{
-						// Create a string property used as a callback
-						StringProperty messageCallback = new SimpleStringProperty("");
-						this.updateMessage("Saving image directory " + imageDirectory.getCyverseDirectory().getName() + " to CyVerse.");
-						messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
-
-						// Save images to CyVerse, we give it a transfer status callback so that we can show the progress
-						CalliopeData.getInstance().getCyConnectionManager().saveImages(selectedCollection.getValue(), uploadEntry, messageCallback);
-						return null;
-					}
-				};
-				// When the upload finishes, we enable the upload button
-				saveTask.setOnSucceeded(event ->
-				{
-					imageDirectory.setUploadProgress(-1);
-					CalliopeData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
-					uploadEntry.clearLocalCopy();
-				});
-				CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(saveTask);
-			} else
-			{
-				// If an invalid directory is selected, show an alert
-				CalliopeData.getInstance().getErrorDisplay().notify("An image in the directory (" + imageDirectory.getFile().getName() + ") you selected to save does not have a location. Please ensure all images are tagged with a location!");
-			}
-		} else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("The Cloud directory has not been downloaded yet, how are you going to save it?");
-		}
-	}
-
-	/**
 	 * Called when the refresh uploads button is clicked, downloads all uploads to a collection
 	 *
 	 * @param actionEvent consumed
@@ -429,28 +312,8 @@ public class CalliopeUploadController implements Initializable
 		// Make sure we have a selected collection
 		if (this.selectedCollection.getValue() != null)
 		{
-			// If some collection has been downloaded, show a warning that all unsaved changes will be lost
-			if (selectedCollection.getValue().getUploads().stream().anyMatch(CloudUploadEntry::hasBeenDownloaded))
-			{
-				// Create the alert
-				CalliopeData.getInstance().getErrorDisplay().notify("Any unsaved changes to uploads will be lost, continue?",
-						// If they clicked OK, clear known uploads and resync
-						new Action("Continue", actionEvent1 ->
-						{
-							// Clear any known uploads
-							for (CloudUploadEntry cloudUploadEntry : this.selectedCollection.getValue().getUploads())
-								if (cloudUploadEntry.hasBeenDownloaded())
-									CalliopeData.getInstance().getImageTree().removeChildRecursive(cloudUploadEntry.getCloudImageDirectory());
-
-							// Clear the uploads and resync
-							this.selectedCollection.getValue().getUploads().clear();
-							this.syncUploadsForCollection(this.selectedCollection.getValue());
-						}));
-			} else
-			{
-				// Just resync
-				this.syncUploadsForCollection(this.selectedCollection.getValue());
-			}
+			// Just resync
+			this.syncUploadsForCollection(this.selectedCollection.getValue());
 		}
 		actionEvent.consume();
 	}

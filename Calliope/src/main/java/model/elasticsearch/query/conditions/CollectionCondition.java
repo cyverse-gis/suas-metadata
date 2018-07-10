@@ -1,4 +1,4 @@
-package model.query.conditions;
+package model.elasticsearch.query.conditions;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -6,8 +6,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
 import model.cyverse.ImageCollection;
-import model.query.ElasticSearchQuery;
-import model.query.IQueryCondition;
+import model.elasticsearch.query.ElasticSearchQuery;
+import model.elasticsearch.query.IQueryCondition;
 
 import java.util.HashMap;
 import java.util.Map;

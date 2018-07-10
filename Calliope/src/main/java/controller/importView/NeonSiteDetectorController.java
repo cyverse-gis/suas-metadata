@@ -204,4 +204,16 @@ public class NeonSiteDetectorController implements Initializable
 		}
 		actionEvent.consume();
 	}
+
+	/**
+	 * Called when the clear sites button is pressed, removes all sites off of the images
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void clearSites(ActionEvent actionEvent)
+	{
+		imageEntries.forEach(imageEntry -> imageEntry.setSiteTaken(null));
+		this.rbnByBoundary.getScene().getWindow().hide();
+		actionEvent.consume();
+	}
 }

@@ -1,9 +1,9 @@
-package model.query;
+package model.elasticsearch.query;
 
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import model.query.conditions.*;
+import model.elasticsearch.query.conditions.*;
 
 import java.util.function.Supplier;
 
@@ -28,7 +28,6 @@ public class QueryEngine
 
 	public enum QueryFilters
 	{
-		SPECIES_FILTER("Species Filter", SpeciesFilterCondition::new),
 		LOCATION_FILTER("Position Filter", LocationFilterCondition::new),
 		ELEVATION_FILTER("Elevation filter", ElevationCondition::new),
 		YEAR_FILTER("Year Filter", YearCondition::new),

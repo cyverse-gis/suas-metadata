@@ -3,8 +3,8 @@ package controller.analysisView.conditions;
 import controller.analysisView.IConditionController;
 import javafx.fxml.FXML;
 import jfxtras.scene.control.LocalDateTimePicker;
-import model.query.IQueryCondition;
-import model.query.conditions.StartDateCondition;
+import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.conditions.StartDateCondition;
 
 import java.net.URL;
 import java.util.ResourceBundle;

@@ -1,6 +1,5 @@
 package model.cyverse;
 
-import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
@@ -28,10 +27,7 @@ import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A class used to wrap the CyVerse Jargon FTP/iRODS library
@@ -338,8 +334,7 @@ public class CyVerseConnectionManager
 
 					// Create the JSON file representing the upload
 					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
-					Integer imagesWithSpecies = 0;//Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry && !((ImageEntry) imageContainer).getSpeciesPresent().isEmpty()).count());
-					CloudUploadEntry uploadEntry = new CloudUploadEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), imagesWithSpecies, imageCount, uploadDirName);
+					UploadedEntry uploadEntry = new UploadedEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), imageCount, uploadDirName);
 
 					// Create the meta.csv representing the metadata for all images in the tar file
 					String localDirAbsolutePath = directoryToWrite.getFile().getAbsolutePath();
@@ -383,172 +378,6 @@ public class CyVerseConnectionManager
 			{
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not upload the images to CyVerse!\n" + ExceptionUtils.getStackTrace(e));
 			}
-			this.sessionManager.closeSession();
-		}
-	}
-
-	/**
-	 * Save the set of images that were downloaded to CyVerse
-	 *
-	 * @param collection The collection to upload to
-	 * @param uploadEntryToSave The directory to write
-	 * @param messageCallback Message callback that will show what is currently going on
-	 */
-	public void saveImages(ImageCollection collection, CloudUploadEntry uploadEntryToSave, StringProperty messageCallback)
-	{
-		if (this.sessionManager.openSession())
-		{
-			try
-			{
-				// Grab the save folder for a given collection
-				String collectionSaveDirStr = COLLECTIONS_DIRECTORY + "/" + collection.getID().toString() + "/Uploads";
-				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
-				IRODSFile collectionSaveDir = fileFactory.instanceIRODSFile(collectionSaveDirStr);
-				// If the save directory exists and we can write to it, save
-				if (collectionSaveDir.exists() && collectionSaveDir.canWrite())
-				{
-					// Grab the image directory to save
-					ImageDirectory imageDirectory = uploadEntryToSave.getCloudImageDirectory();
-					// Grab the list of images to upload
-					List<CloudImageEntry> toUpload = imageDirectory.flattened()
-							.filter(imageContainer -> imageContainer instanceof CloudImageEntry)
-							.map(imageContainer -> (CloudImageEntry) imageContainer)
-							.filter(cloudImageEntry -> cloudImageEntry.hasBeenPulledFromCloud() && cloudImageEntry.isCloudDirty())
-							.collect(Collectors.toList());
-					Platform.runLater(() -> imageDirectory.setUploadProgress(0.0));
-
-					messageCallback.setValue("Saving " + toUpload.size() + " image(s) to CyVerse...");
-
-					Double numberOfImagesToUpload = (double) toUpload.size();
-					// Begin saving
-					for (int i = 0; i < toUpload.size(); i++)
-					{
-						// Grab the cloud image entry to upload
-						CloudImageEntry cloudImageEntry = toUpload.get(i);
-
-						// Save that specific cloud image
-						this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount).putOperation(cloudImageEntry.getFile(), cloudImageEntry.getCyverseFile(), new TransferStatusCallbackListener()
-						{
-							@Override
-							public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) { return FileStatusCallbackResponse.CONTINUE; }
-							@Override
-							public void overallStatusCallback(TransferStatus transferStatus) {}
-							@Override
-							public CallbackResponse transferAsksWhetherToForceOperation(String irodsAbsolutePath, boolean isCollection) { return CallbackResponse.YES_FOR_ALL; }
-						}, null);
-
-						// Update the progress every 20 uploads
-						if (i % 20 == 0)
-						{
-							int finalI = i;
-							Platform.runLater(() -> imageDirectory.setUploadProgress(finalI / numberOfImagesToUpload));
-						}
-					}
-
-					// Add an edit comment so users know the file was edited
-					uploadEntryToSave.getEditComments().add("Edited by " + CalliopeData.getInstance().getUsername() + " on " + FOLDER_FORMAT.format(Calendar.getInstance().getTime()));
-					uploadEntryToSave.setImagesWithSpecies(0);
-
-					// Finally we update our metadata index
-					CalliopeData.getInstance().getEsConnectionManager().updateIndexedImages(toUpload, collection.getID().toString(), uploadEntryToSave);
-				}
-				else
-				{
-					CalliopeData.getInstance().getErrorDisplay().notify("You don't have permission to save to this collection!");
-				}
-			}
-			catch (JargonException e)
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Could not save the image list to the collection on CyVerse!\n" + ExceptionUtils.getStackTrace(e));
-			}
-			this.sessionManager.closeSession();
-		}
-	}
-
-	/**
-	 * Given a collection and an upload to that collection this method returns the local cloud image directory
-	 *
-	 * @param uploadEntry The upload in the collection to download
-	 * @return A local version of the uploadEntry
-	 */
-	public CloudImageDirectory downloadUploadDirectory(CloudUploadEntry uploadEntry)
-	{
-		if (this.sessionManager.openSession())
-		{
-			try
-			{
-				// Grab the uploads folder for a given collection
-				String cloudDirectoryStr = uploadEntry.getUploadIRODSPath();
-				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
-				IRODSFile cloudDirectory = fileFactory.instanceIRODSFile(cloudDirectoryStr);
-				CloudImageDirectory cloudImageDirectory = new CloudImageDirectory(cloudDirectory);
-				this.createDirectoryAndImageTree(cloudImageDirectory);
-				// We need to make sure we remove the UploadMeta.json "image entry"
-				cloudImageDirectory.getChildren().removeIf(imageContainer -> imageContainer instanceof CloudImageEntry && ((CloudImageEntry) imageContainer).getCyverseFile().getAbsolutePath().contains("UploadMeta.json"));
-				this.sessionManager.closeSession();
-				return cloudImageDirectory;
-			}
-			catch (JargonException e)
-			{
-				e.printStackTrace();
-				CalliopeData.getInstance().getErrorDisplay().notify("Downloading uploaded collection failed!");
-			}
-			this.sessionManager.closeSession();
-		}
-
-		return null;
-	}
-
-	/**
-	 * Recursively create the directory structure
-	 *
-	 * @param current
-	 *            The current directory to work on
-	 */
-	private void createDirectoryAndImageTree(CloudImageDirectory current)
-	{
-		IRODSFile[] subFiles = (IRODSFile []) current.getCyverseDirectory().listFiles((dir, name) -> true);
-
-		if (subFiles != null)
-		{
-			// Get all files in the directory
-			for (IRODSFile file : subFiles)
-			{
-				// Add all image files to the directory
-				if (!file.isDirectory())
-				{
-					current.addImage(new CloudImageEntry(file));
-				}
-				// Add all subdirectories to the directory
-				else
-				{
-					CloudImageDirectory subDirectory = new CloudImageDirectory(file);
-					current.addChild(subDirectory);
-					this.createDirectoryAndImageTree(subDirectory);
-				}
-			}
-		}
-	}
-
-	public void indexExisitingImages(ImageCollection imageCollection, String absoluteIRODSPath)
-	{
-		if (this.sessionManager.openSession())
-		{
-			try
-			{
-				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
-				IRODSFile topLevelDirectory = fileFactory.instanceIRODSFile(absoluteIRODSPath);
-				if (topLevelDirectory.exists() && topLevelDirectory.isDirectory() && topLevelDirectory.canRead())
-				{
-					RuleProcessingAO ruleProcessingAO = this.sessionManager.getCurrentAO().getRuleProcessingAO(this.authenticatedAccount);
-
-				}
-			}
-			catch (JargonException e)
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Error indexing existing images. Error was:\n" + ExceptionUtils.getStackTrace(e));
-			}
-
 			this.sessionManager.closeSession();
 		}
 	}

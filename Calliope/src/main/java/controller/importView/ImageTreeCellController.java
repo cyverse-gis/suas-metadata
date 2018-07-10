@@ -165,8 +165,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
 		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
-			if (this.mainPane.getStyleClass().contains("draggedOver"))
-				this.mainPane.getStyleClass().remove("draggedOver");
+			this.mainPane.getStyleClass().remove("draggedOver");
 		dragEvent.consume();
 	}
 

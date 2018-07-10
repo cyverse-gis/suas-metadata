@@ -7,7 +7,7 @@
 <?import org.controlsfx.control.HyperlinkLabel?>
 <?import org.controlsfx.control.NotificationPane?>
 <?import java.net.URL?>
-<StackPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeViewController">
+<StackPane prefWidth="1920" prefHeight="1080" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeViewController">
     <stylesheets>
         <URL value="@CalliopeView.css"/>
         <!--<URL value="@../files/material-fx-v0_3.css"/>-->

@@ -1,4 +1,4 @@
-package model.image;
+package model.util;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;

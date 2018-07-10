@@ -22,7 +22,6 @@ import javafx.stage.Stage;
 import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
-import model.image.CloudImageDirectory;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.threading.ErrorTask;
@@ -227,7 +226,6 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 			// Filter our list of images by directory that has the right file path
 			Optional<ImageDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree().flattened().filter(
 					imageContainer -> imageContainer instanceof ImageDirectory &&
-					!(imageContainer instanceof CloudImageDirectory) &&
 					imageContainer.getFile().getAbsolutePath().equals(imageDirectoryFile.getAbsolutePath())).map(imageContainer -> (ImageDirectory) imageContainer).findFirst();
 
 			imageDirectoryOpt.ifPresent(imageDirectory ->

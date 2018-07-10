@@ -10,16 +10,13 @@ import javafx.application.Platform;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.image.CloudImageEntry;
-import model.image.CloudUploadEntry;
+import model.image.UploadedEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.location.Position;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
-import model.query.ElasticSearchQuery;
-import model.species.Species;
-import model.species.SpeciesEntry;
+import model.elasticsearch.query.ElasticSearchQuery;
 import model.util.SensitiveConfigurationManager;
 import model.util.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -111,11 +108,7 @@ public class ElasticSearchConnectionManager
 	private static final Integer INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT = 0;
 
 	// The type used to serialize a list of cloud uploads
-	private static final Type CLOUD_UPLOAD_ENTRY_LIST_TYPE = new TypeToken<ArrayList<CloudUploadEntry>>()
-	{
-	}.getType();
-	// The type used to serialize a list of species entries through Gson
-	private static final Type SPECIES_ENTRY_LIST_TYPE = new TypeToken<ArrayList<SpeciesEntry>>()
+	private static final Type UPLOADED_ENTRY_LIST_TYPE = new TypeToken<ArrayList<UploadedEntry>>()
 	{
 	}.getType();
 
@@ -584,9 +577,6 @@ public class ElasticSearchConnectionManager
 			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote collections, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
-		// Collections are deserialized and have null listeners, call initFromJSON to fix those listeners
-		toReturn.forEach(imageCollection -> imageCollection.getUploads().forEach(CloudUploadEntry::initFromJSON));
-
 		return toReturn;
 	}
 
@@ -682,9 +672,7 @@ public class ElasticSearchConnectionManager
 				// Grab the JSON representing the uploads list
 				String uploadJSON = CalliopeData.getInstance().getGson().toJson(uploadsForCollection.get("uploads"));
 				// Convert the JSON to a list of objects
-				List<CloudUploadEntry> uploads = CalliopeData.getInstance().getGson().fromJson(uploadJSON, CLOUD_UPLOAD_ENTRY_LIST_TYPE);
-				// Because we deserialized our list from JSON, we need to initialize any extra fields using this call
-				uploads.forEach(CloudUploadEntry::initFromJSON);
+				List<UploadedEntry> uploads = CalliopeData.getInstance().getGson().fromJson(uploadJSON, UPLOADED_ENTRY_LIST_TYPE);
 				// Update our collection's uploads
 				Platform.runLater(() -> imageCollection.getUploads().setAll(uploads));
 			}
@@ -736,7 +724,7 @@ public class ElasticSearchConnectionManager
 	 * @param uploadEntry The upload entry representing this upload, will be put into our collections index
 	 */
 	@SuppressWarnings("unchecked")
-	public void indexImages(String basePath, String collectionID, ImageDirectory directory, CloudUploadEntry uploadEntry)
+	public void indexImages(String basePath, String collectionID, ImageDirectory directory, UploadedEntry uploadEntry)
 	{
 		// List of images to be uploaded
 		List<ImageEntry> imageEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
@@ -780,9 +768,7 @@ public class ElasticSearchConnectionManager
 			args.put("upload", new HashMap<String, Object>()
 			{{
 				put("imageCount", uploadEntry.getImageCount());
-				put("imagesWithSpecies", uploadEntry.getImagesWithSpecies());
 				put("uploadDate", uploadEntry.getUploadDate().atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT));
-				put("editComments", uploadEntry.getEditComments());
 				put("uploadUser", uploadEntry.getUploadUser());
 				put("uploadIRODSPath", uploadEntry.getUploadIRODSPath());
 			}});
@@ -805,82 +791,6 @@ public class ElasticSearchConnectionManager
 		{
 			// If the update failed for some reason, print that error
 			CalliopeData.getInstance().getErrorDisplay().notify("Could not insert the upload into the collection index!\n" + ExceptionUtils.getStackTrace(e));
-		}
-	}
-
-	/**
-	 * Called to update existing images already present in the index
-	 *
-	 * @param imagesToSave The list of images that need saving
-	 * @param collectionID The ID of the collection that these images belong to
-	 * @param cloudUploadEntry An upload entry representing upload metadata
-	 */
-	@SuppressWarnings("unchecked")
-	public void updateIndexedImages(List<CloudImageEntry> imagesToSave, String collectionID, CloudUploadEntry cloudUploadEntry)
-	{
-		try
-		{
-			// Do the update in bulk
-			BulkRequest bulkUpdate = new BulkRequest();
-
-			// For each image entry, create an update request and add it to the bulk update
-			for (CloudImageEntry cloudImageEntry : imagesToSave)
-			{
-				Tuple<String, XContentBuilder> idAndJSON = this.elasticSearchSchemaManager.imageToJSONMap(cloudImageEntry, collectionID, cloudImageEntry.getCyverseFile().getAbsolutePath());
-				// The first update will update the metadata in the metadata index
-				UpdateRequest updateMetaRequest = new UpdateRequest();
-				updateMetaRequest
-						.index(INDEX_CALLIOPE_METADATA)
-						.type(INDEX_CALLIOPE_METADATA_TYPE)
-						.id(idAndJSON.v1())
-						// The new document will contain all new fields
-						.doc(idAndJSON.v2());
-
-				// The second update will update the collection upload metadata
-				UpdateRequest updateCollectionRequest = new UpdateRequest();
-				// We do this update with a script, and it needs 3 arguments. Create of map of those 3 arguments now
-				HashMap<String, Object> args = new HashMap<>();
-				args.put("pathID", cloudUploadEntry.getUploadIRODSPath());
-				args.put("comment", cloudUploadEntry.getEditComments().get(cloudUploadEntry.getEditComments().size() - 1));
-				args.put("imagesWithSpecies", cloudUploadEntry.getImagesWithSpecies());
-
-				// Setup the collection update request
-				updateCollectionRequest
-						.index(INDEX_CALLIOPE_COLLECTIONS)
-						.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
-						.id(collectionID)
-						// We use a script because we're updating nested fields. The script written out looks like:
-						/*
-						// Iterate over all uploads
-						for (upload in ctx._source.uploads)
-						{
-							// If the IDs match
-							if (upload.uploadIRODSPath == params.pathID)
-							{
-								// Add the edit comment, and update the images with species
-								upload.editComments.add(params.comment);
-								upload.imagesWithSpecies = params.imagesWithSpecies;
-							}
-						 }
-						 */
-						.script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "for (upload in ctx._source.uploads) { if (upload.uploadIRODSPath == params.pathID) { upload.editComments.add(params.comment); upload.imagesWithSpecies = params.imagesWithSpecies } }", args));
-
-				// Add the updates to the bulk request
-				bulkUpdate.add(updateMetaRequest);
-				bulkUpdate.add(updateCollectionRequest);
-			}
-
-			// Fire off the bulk request and save the response
-			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkUpdate);
-
-			// If the status was not OK, print an error
-			if (bulkResponse.status() != RestStatus.OK)
-				System.err.println("Bulk insert responded without an OK, status was: " + bulkResponse.status().toString());
-		}
-		catch (IOException e)
-		{
-			// If something went wrong while updating, print an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error updating the image index. Error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -920,10 +830,6 @@ public class ElasticSearchConnectionManager
 			// Grab a list of hits from the search
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
 
-			// A unique list of species and locations is used to ensure images with identical locations don't create two locations
-			List<Position> uniquePositions = new LinkedList<>();
-			List<Species> uniqueSpecies = new LinkedList<>();
-
 			// While we have results...
 			while (searchHits != null && searchHits.length > 0)
 			{
@@ -933,7 +839,7 @@ public class ElasticSearchConnectionManager
 					// Grab the source for the image, and convert it into a usable format
 					Map<String, Object> sourceAsMap = searchHit.getSourceAsMap();
 					// Conver the image and store it
-					ImageEntry imageEntry = this.convertSourceToImage(sourceAsMap, uniqueSpecies, uniquePositions);
+					ImageEntry imageEntry = this.convertSourceToImage(sourceAsMap);
 					if (imageEntry != null)
 						toReturn.add(imageEntry);
 				}
@@ -973,12 +879,10 @@ public class ElasticSearchConnectionManager
 	 * Utility function used to convert raw index metadata into a structured format
 	 *
 	 * @param source The raw metadata in key->value format
-	 * @param uniqueSpecies A list of current species to be used. This ensures we don't allocate thousands of species objects
-	 * @param uniquePositions A list of current locations to be used. This ensures we don't allocate thousands of location objects
 	 * @return An image entry representing the source, or null if something went wrong
 	 */
 	@SuppressWarnings("unchecked")
-	private ImageEntry convertSourceToImage(Map<String, Object> source, List<Species> uniqueSpecies, List<Position> uniquePositions)
+	private ImageEntry convertSourceToImage(Map<String, Object> source)
 	{
 		try
 		{
@@ -1029,21 +933,6 @@ public class ElasticSearchConnectionManager
 
 										// Convert our hashmaps into a usable format
 										Gson gson = CalliopeData.getInstance().getGson();
-										Position tempPosition = gson.fromJson(gson.toJson(locationMap), Position.class);
-										List<SpeciesEntry> tempSpeciesEntries = gson.fromJson(gson.toJson(speciesEntryList), SPECIES_ENTRY_LIST_TYPE);
-										// Pull unique species off of the species entries list
-										List<Species> tempSpeciesList = tempSpeciesEntries.stream().map(SpeciesEntry::getSpecies).distinct().collect(Collectors.toList());
-										// Make sure each of the species has the default icon set
-										tempSpeciesList.forEach(species -> species.setSpeciesIcon(Species.DEFAULT_ICON));
-
-										// Compute a new species (s) if we need to
-										for (Species tempSpecies : tempSpeciesList)
-										{
-											// Test if the species is present, if not add it
-											Boolean speciesForImagePresent = uniqueSpecies.stream().anyMatch(species -> species.getScientificName().equalsIgnoreCase(tempSpecies.getScientificName()));
-											if (!speciesForImagePresent)
-												uniqueSpecies.add(tempSpecies);
-										}
 
 										// Create the image entry
 										ImageEntry entry = new ImageEntry(new File(storagePath));

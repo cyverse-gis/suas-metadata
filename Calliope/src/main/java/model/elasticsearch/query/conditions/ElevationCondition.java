@@ -1,4 +1,4 @@
-package model.query.conditions;
+package model.elasticsearch.query.conditions;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -6,8 +6,8 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import model.query.ElasticSearchQuery;
-import model.query.IQueryCondition;
+import model.elasticsearch.query.ElasticSearchQuery;
+import model.elasticsearch.query.IQueryCondition;
 import model.util.SettingsData;
 
 /**
