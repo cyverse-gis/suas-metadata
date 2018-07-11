@@ -28,7 +28,7 @@ public class MetadataManager
 	{
 		ExifToolBuilder exifToolBuilder = new ExifToolBuilder().enableStayOpen();
 		if (System.getProperty("os.name").toLowerCase().contains("win"))
-			this.exifTool = exifToolBuilder.withPath(Calliope.class.getClass().getResource("/files/exiftool.exe").getFile()).build();
+			this.exifTool = exifToolBuilder.withPath(Calliope.class.getResource("/files/exiftool.exe").getFile()).build();
 		else
 			this.exifTool = exifToolBuilder.build();
 	}

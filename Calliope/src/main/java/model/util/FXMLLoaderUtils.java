@@ -21,7 +21,7 @@ public class FXMLLoaderUtils
 	public static FXMLLoader loadFXML(String FXMLFileName)
 	{
 		// Create the loader
-		FXMLLoader loader = new FXMLLoader(Calliope.class.getClass().getResource("/view/" + FXMLFileName));
+		FXMLLoader loader = new FXMLLoader(Calliope.class.getResource("/view/" + FXMLFileName));
 
 		// Attempt to load the file. If we get an error throw an exception
 		try
