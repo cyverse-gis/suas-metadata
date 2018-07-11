@@ -309,8 +309,10 @@ public class ElasticSearchConnectionManager
 	/**
 	 * Initializes the remote CALLIOPE directory which is more like the remote CALLIOPE index now. Indices are
 	 * updated with default user settings if not present
+	 *
+	 * @param username The user to initialize
 	 */
-	public void initCalliopeRemoteDirectory()
+	public void initCalliopeRemoteDirectory(String username)
 	{
 		try
 		{
@@ -320,7 +322,7 @@ public class ElasticSearchConnectionManager
 					.index(INDEX_CALLIOPE_USERS)
 					.type(INDEX_CALLIOPE_USERS_TYPE)
 					// Make sure the ID corresponds to our username
-					.id(CalliopeData.getInstance().getUsername())
+					.id(username)
 					// Ignore source to speed up the fetch
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
@@ -335,7 +337,7 @@ public class ElasticSearchConnectionManager
 						.index(INDEX_CALLIOPE_USERS)
 						.type(INDEX_CALLIOPE_USERS_TYPE)
 						// Make sure the ID is our username
-						.id(CalliopeData.getInstance().getUsername())
+						.id(username)
 						// The source will be a new
 						.source(this.elasticSearchSchemaManager.makeCreateUser(CalliopeData.getInstance().getUsername()));
 				// Perform the index request

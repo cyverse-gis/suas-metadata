@@ -260,13 +260,11 @@ public class CalliopeData
 
 	public void setUsername(String username)
 	{
-		System.out.println("Username set!\n" + ExceptionUtils.getFullStackTrace(new Throwable()));
 		this.usernameProperty.setValue(username);
 	}
 
 	public String getUsername()
 	{
-		System.out.println("Username retrieved!\n" + ExceptionUtils.getFullStackTrace(new Throwable()));
 		return this.usernameProperty.getValue();
 	}
 

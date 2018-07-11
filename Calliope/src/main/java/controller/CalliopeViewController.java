@@ -274,7 +274,7 @@ public class CalliopeViewController implements Initializable
 						// Then initialize the remove calliope directory
 						this.updateMessage("Initializing Calliope elastic index...");
 						this.updateProgress(2, NUM_STEPS);
-						esConnectionManager.initCalliopeRemoteDirectory();
+						esConnectionManager.initCalliopeRemoteDirectory(username);
 
 						// Pull Calliope settings from the elastic index
 						this.updateMessage("Pulling settings from elastic index...");
