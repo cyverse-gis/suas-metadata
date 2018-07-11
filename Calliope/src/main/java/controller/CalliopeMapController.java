@@ -5,6 +5,7 @@ import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import fxmapcontrol.Map;
+import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -19,6 +20,8 @@ import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import library.AlignedMapNode;
 import model.CalliopeData;
 import model.elasticsearch.GeoBucket;
@@ -30,6 +33,7 @@ import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.PopOver;
+import org.controlsfx.control.ToggleSwitch;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
@@ -53,7 +57,17 @@ public class CalliopeMapController implements Initializable
 	public Map map;
 
 	@FXML
+	public VBox vbxMapSettings;
+
+	@FXML
 	public ComboBox<MapProviders> cbxMapProvider;
+	@FXML
+	public ToggleSwitch tswMarkers;
+	@FXML
+	public ToggleSwitch tswBoundaries;
+	@FXML
+	public ToggleSwitch tswImageCounts;
+
 
 	///
 	/// FXML bound fields end
@@ -75,6 +89,7 @@ public class CalliopeMapController implements Initializable
 	private ObservableList<Node> sortedNodes;
 	// A cache to a listener to avoid early garbage collection
 	private Subscription subscriptionCache;
+
 
 	/**
 	 * Initialize sets up the analysis window and bindings
@@ -156,6 +171,9 @@ public class CalliopeMapController implements Initializable
 							event.consume();
 						});
 
+						mapPolygon.visibleProperty().bind(this.tswBoundaries.selectedProperty());
+						mapPin.visibleProperty().bind(this.tswMarkers.selectedProperty());
+
 						// If we're zoomed in far enough, show the polygon, otherwise show the pin
 						if (this.map.getZoomLevel() > PIN_TO_POLY_THRESHOLD)
 							this.addNodeToMap(mapPolygon, 1);
@@ -216,6 +234,7 @@ public class CalliopeMapController implements Initializable
 			while (geoBuckets.size() > currentCircles.size())
 			{
 				MapNode newCircle = this.createCircle();
+				newCircle.visibleProperty().bind(this.tswImageCounts.selectedProperty());
 				this.addNodeToMap(newCircle, 2);
 			}
 			// If we have less buckets than currently existing circles, remove circles until the two buckets have the same size. We
@@ -267,6 +286,18 @@ public class CalliopeMapController implements Initializable
 			this.updateSitePins(siteToPolygonAndPin, oldValue.doubleValue(), newValue.doubleValue());
 			circleDrawingService.requestAnotherRun();
 		});
+
+		// Create a fade transition for the settings box in the top left
+		FadeTransition fadeMapIn = new FadeTransition(Duration.millis(100), this.vbxMapSettings);
+		fadeMapIn.setFromValue(0.5);
+		fadeMapIn.setToValue(1);
+		fadeMapIn.setCycleCount(1);
+		FadeTransition fadeMapOut = new FadeTransition(Duration.millis(100), this.vbxMapSettings);
+		fadeMapOut.setFromValue(1);
+		fadeMapOut.setToValue(0.5);
+		fadeMapOut.setCycleCount(1);
+		this.vbxMapSettings.setOnMouseEntered(event -> fadeMapIn.play());
+		this.vbxMapSettings.setOnMouseExited(event -> fadeMapOut.play());
 
 		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
 		this.cbxMapProvider.getSelectionModel().select(MapProviders.OpenStreetMaps);
@@ -397,7 +428,11 @@ public class CalliopeMapController implements Initializable
 	private enum MapProviders
 	{
 		OpenStreetMaps("Open Street Map", MapTileLayer.getOpenStreetMapLayer()),
-		BingMapsAerial("Open Topo Map", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17));
+		OpenTopoMap("Open Topo Map", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17)),
+		OpenMapSurferRoads("Open Map Surfer - Roads", new MapTileLayer("OpenMapSurferRoads", "https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", 0, 20)),
+		EsriWorldStreetMap("Esri World Street Map", new MapTileLayer("EsriWorldStreetMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", 0, 20)),
+		EsriWorldTopoMap("Esri World Topo Map", new MapTileLayer("EsriWorldTopoMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 0, 20)),
+		EsriWorldImagery("Esri World Imagery", new MapTileLayer("EsriWorldImagery", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 0, 20));
 
 		private String name;
 		private MapTileLayer mapTileProvider;

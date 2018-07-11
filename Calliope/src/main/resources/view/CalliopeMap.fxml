@@ -10,13 +10,16 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.CheckBox?>
+<?import org.controlsfx.control.ToggleSwitch?>
+<?import javafx.scene.layout.VBox?>
 <StackPane fx:controller="controller.CalliopeMapController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@CalliopeMap.css"/>
     </stylesheets>
     <children>
         <Map fx:id="map" StackPane.alignment="CENTER" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
-        <HBox StackPane.alignment="TOP_LEFT" styleClass="propertiesPanel" maxWidth="200" maxHeight="200" alignment="TOP_CENTER">
+        <VBox fx:id="vbxMapSettings" StackPane.alignment="TOP_LEFT" spacing="5" styleClass="propertiesPanel" maxWidth="200" maxHeight="200" alignment="TOP_LEFT">
             <StackPane.margin>
                 <Insets top="15" left="15"/>
             </StackPane.margin>
@@ -25,7 +28,10 @@
             </padding>
             <children>
                 <ComboBox fx:id="cbxMapProvider" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswMarkers" selected="true" text="Site Markers" maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswBoundaries" selected="true" text="Site Boundaries" maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswImageCounts" selected="true" text="Site Image Counts" maxWidth="Infinity"/>
             </children>
-        </HBox>
+        </VBox>
     </children>
 </StackPane>

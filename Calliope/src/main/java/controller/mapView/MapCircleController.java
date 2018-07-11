@@ -3,6 +3,7 @@ package controller.mapView;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.shape.Circle;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -19,6 +20,8 @@ public class MapCircleController implements Initializable
 	// The label containing the number of images in the pin aggregation
 	@FXML
 	public Label lblImageCount;
+	@FXML
+	public Circle crlBackground;
 
 	///
 	/// FXML Bound Fields End
@@ -42,6 +45,7 @@ public class MapCircleController implements Initializable
 	 */
 	public void setImageCount(Long count)
 	{
+		this.crlBackground.setRadius(10 + 6 * (count.toString().length() - 1));
 		this.lblImageCount.setText(count.toString());
 	}
 }

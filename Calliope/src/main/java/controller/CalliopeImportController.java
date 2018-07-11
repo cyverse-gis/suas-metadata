@@ -25,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -95,6 +96,9 @@ public class CalliopeImportController implements Initializable
 	// The button to begin importing images
 	@FXML
 	public Button btnImportImages;
+	// The button to begin importing a directory
+	@FXML
+	public Button btnImportDirectory;
 	// The button to delete imported images
 	@FXML
 	public Button btnDelete;
@@ -535,6 +539,71 @@ public class CalliopeImportController implements Initializable
 			return;
 		}
 
+		// Create a file chooser to let the user choose which images to import
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Select Image(s)");
+		// Set the directory to be in documents
+		fileChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
+		// Show the dialog
+		List<File> files = fileChooser.showOpenMultipleDialog(this.imagePreview.getScene().getWindow());
+		// If the file chosen is a file and a directory process it
+		if (files != null && !files.isEmpty())
+		{
+			// Disable the import buttons for now
+			this.btnImportImages.setDisable(true);
+			this.btnImportDirectory.setDisable(true);
+			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
+			{
+				@Override
+				protected ImageDirectory call()
+				{
+					final Long MAX_WORK = 2L;
+
+					this.updateProgress(1, MAX_WORK);
+					this.updateMessage("Loading files...");
+
+					// Convert the files to a directory
+					ImageDirectory directory = DirectoryManager.loadFiles(files);
+
+					this.updateProgress(2, MAX_WORK);
+					this.updateMessage("Removing empty directories...");
+
+					// Remove any directories that are empty and contain no images
+					DirectoryManager.removeEmptyDirectories(directory);
+
+					return directory;
+				}
+			};
+			importTask.setOnSucceeded(event ->
+			{
+				// Add the directory to the image tree
+				CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
+				this.btnImportImages.setDisable(false);
+				this.btnImportDirectory.setDisable(false);
+			});
+
+			// Execute the task
+			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
+		}
+
+		// Consume the event
+		actionEvent.consume();
+	}
+
+	/**
+	 * Fired when the import directory button is pressed
+	 *
+	 * @param actionEvent consumed when the button is pressed
+	 */
+	public void importDirectory(ActionEvent actionEvent)
+	{
+		// If our Exiftool was not loaded successfully we can't import images, so throw an error here
+		if (!CalliopeData.getInstance().getMetadataManager().isExifToolFound())
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("ExifTool is required to read image metadata. See the bottom of the settings tab for installation instructions");
+			return;
+		}
+
 		// Create a directory chooser to let the user choose where to get the images from
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle("Select Folder with Images");
@@ -545,8 +614,9 @@ public class CalliopeImportController implements Initializable
 		// If the file chosen is a file and a directory process it
 		if (file != null && file.isDirectory())
 		{
-			// Disable the import button for now
+			// Disable the import buttons for now
 			this.btnImportImages.setDisable(true);
+			this.btnImportDirectory.setDisable(true);
 			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
 			{
 				@Override
@@ -574,6 +644,7 @@ public class CalliopeImportController implements Initializable
 				// Add the directory to the image tree
 				CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
 				this.btnImportImages.setDisable(false);
+				this.btnImportDirectory.setDisable(false);
 			});
 
 			// Execute the task

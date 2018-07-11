@@ -70,7 +70,27 @@ public class DirectoryManager
 	}
 
 	/**
-	 * Set the head directory to the given file
+	 * Reads a set of files and returns them in a usable format
+	 *
+	 * @param files
+	 *            The files to make into a directory. We assume all files are in the same directory
+	 */
+	public static ImageDirectory loadFiles(List<File> files)
+	{
+		List<File> validImages = files.stream().filter(CalliopeAnalysisUtils::fileIsImage).collect(Collectors.toList());
+		ImageDirectory imageDirectory = new ImageDirectory(files.get(0).getParentFile());
+		for (File validImage : validImages)
+		{
+			ImageEntry imageEntry = new ImageEntry(validImage);
+			imageEntry.readFileMetadataIntoImage();
+			imageEntry.initIconBindings();
+			imageDirectory.addChild(imageEntry);
+		}
+		return imageDirectory;
+	}
+
+	/**
+	 * Reads a directory recursively and returns it in a usable format
 	 * 
 	 * @param imageOrLocation
 	 *            The file to make into a directory

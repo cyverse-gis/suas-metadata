@@ -167,6 +167,7 @@
                     </padding>
                     <children>
                         <Button fx:id="btnImportImages" mnemonicParsing="false" onAction="#importImages" styleClass="importBtn" text="Import Images" />
+                        <Button fx:id="btnImportDirectory" mnemonicParsing="false" onAction="#importDirectory" styleClass="importBtn" text="Import Directory"/>
                         <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#deleteImages" styleClass="deleteBtn" text="Delete" />
                     </children>
                 </FlowPane>
