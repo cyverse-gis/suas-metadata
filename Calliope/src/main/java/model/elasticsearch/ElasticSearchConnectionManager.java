@@ -34,9 +34,11 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.geo.builders.PointBuilder;
@@ -62,6 +64,8 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -302,6 +306,49 @@ public class ElasticSearchConnectionManager
 		}
 	}
 
+	private static class EndpointBuilder {
+
+		private final StringJoiner joiner = new StringJoiner("/", "/", "");
+
+		EndpointBuilder addPathPart(String... parts) {
+			for (String part : parts) {
+				if (Strings.hasLength(part)) {
+					joiner.add(encodePart(part));
+				}
+			}
+			return this;
+		}
+
+		EndpointBuilder addCommaSeparatedPathParts(String[] parts) {
+			addPathPart(String.join(",", parts));
+			return this;
+		}
+
+		EndpointBuilder addPathPartAsIs(String part) {
+			if (Strings.hasLength(part)) {
+				joiner.add(part);
+			}
+			return this;
+		}
+
+		String build() {
+			return joiner.toString();
+		}
+
+		private static String encodePart(String pathPart) {
+			try {
+				//encode each part (e.g. index, type and id) separately before merging them into the path
+				//we prepend "/" to the path part to make this pate absolute, otherwise there can be issues with
+				//paths that start with `-` or contain `:`
+				URI uri = new URI(null, null, null, -1, "/" + pathPart, null, null);
+				//manually encode any slash that each part may contain
+				return uri.getRawPath().substring(1).replaceAll("/", "%2F");
+			} catch (URISyntaxException e) {
+				throw new IllegalArgumentException("Path part [" + pathPart + "] couldn't be encoded", e);
+			}
+		}
+	}
+
 	/**
 	 * Initializes the remote CALLIOPE directory which is more like the remote CALLIOPE index now. Indices are
 	 * updated with default user settings if not present
@@ -320,6 +367,7 @@ public class ElasticSearchConnectionManager
 					// Ignore source to speed up the fetch
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
+			System.out.println(new EndpointBuilder().addPathPart(INDEX_CALLIOPE_USERS, INDEX_CALLIOPE_USERS_TYPE, CalliopeData.getInstance().getUsername()).build());
 			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
 			// If the user is not in the db... create an index entry for him
 			if (!getResponse.isExists())
