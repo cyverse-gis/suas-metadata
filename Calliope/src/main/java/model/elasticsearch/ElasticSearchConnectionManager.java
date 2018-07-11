@@ -367,6 +367,9 @@ public class ElasticSearchConnectionManager
 					// Ignore source to speed up the fetch
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
+			System.out.println(INDEX_CALLIOPE_USERS);
+			System.out.println(INDEX_CALLIOPE_USERS_TYPE);
+			System.out.println(CalliopeData.getInstance().getUsername());
 			System.out.println(new EndpointBuilder().addPathPart(INDEX_CALLIOPE_USERS, INDEX_CALLIOPE_USERS_TYPE, CalliopeData.getInstance().getUsername()).build());
 			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
 			// If the user is not in the db... create an index entry for him
