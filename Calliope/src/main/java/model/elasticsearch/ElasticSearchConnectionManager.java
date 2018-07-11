@@ -21,6 +21,7 @@ import model.util.SensitiveConfigurationManager;
 import model.util.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
