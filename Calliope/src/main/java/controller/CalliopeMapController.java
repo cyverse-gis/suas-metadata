@@ -16,6 +16,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import library.AlignedMapNode;
@@ -36,6 +37,7 @@ import org.locationtech.jts.math.MathUtil;
 import java.io.File;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +51,9 @@ public class CalliopeMapController implements Initializable
 
 	@FXML
 	public Map map;
+
+	@FXML
+	public ComboBox<MapProviders> cbxMapProvider;
 
 	///
 	/// FXML bound fields end
@@ -92,10 +97,8 @@ public class CalliopeMapController implements Initializable
 		// garbage collected early
 		this.subscriptionCache = EasyBind.listBind(this.map.getChildren(), new SortedList<>(this.sortedNodes, Comparator.comparing(node -> zOrder.getOrDefault(node, -1))));
 
-		// Use OpenStreetMap by default
-		MapTileLayer openStreetMapLayer = MapTileLayer.getOpenStreetMapLayer();
-		// Add the tile layer to the background
-		this.addNodeToMap(openStreetMapLayer, 0);
+		// Add the tile layer to the background, use OpenStreetMap by default
+		this.addNodeToMap(MapProviders.OpenStreetMaps.getMapTileProvider(), 0);
 
 		// Add a popover that we use to display location specifics
 		PopOver popOver = new PopOver();
@@ -264,6 +267,19 @@ public class CalliopeMapController implements Initializable
 			this.updateSitePins(siteToPolygonAndPin, oldValue.doubleValue(), newValue.doubleValue());
 			circleDrawingService.requestAnotherRun();
 		});
+
+		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
+		this.cbxMapProvider.getSelectionModel().select(MapProviders.OpenStreetMaps);
+		this.cbxMapProvider.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
+		{
+			if (newValue != null && oldValue != null)
+			{
+				MapTileLayer oldMapTileProvider = oldValue.getMapTileProvider();
+				MapTileLayer newMapTileProvider = newValue.getMapTileProvider();
+				this.removeNodeFromMap(oldMapTileProvider);
+				this.addNodeToMap(newMapTileProvider, 0);
+			}
+		});
 	}
 
 	/**
@@ -376,5 +392,31 @@ public class CalliopeMapController implements Initializable
 	{
 		this.sortedNodes.remove(node);
 		this.zOrder.remove(node);
+	}
+
+	private enum MapProviders
+	{
+		OpenStreetMaps("Open Street Map", MapTileLayer.getOpenStreetMapLayer()),
+		BingMapsAerial("Open Topo Map", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17));
+
+		private String name;
+		private MapTileLayer mapTileProvider;
+
+		MapProviders(String name, MapTileLayer mapTileProvider)
+		{
+			this.name = name;
+			this.mapTileProvider = mapTileProvider;
+		}
+
+		@Override
+		public String toString()
+		{
+			return this.name;
+		}
+
+		public MapTileLayer getMapTileProvider()
+		{
+			return this.mapTileProvider;
+		}
 	}
 }

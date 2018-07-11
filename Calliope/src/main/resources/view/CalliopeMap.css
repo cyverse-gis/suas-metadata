@@ -2,3 +2,11 @@
     -fx-fill: rgba(0, 0, 255, 0.15);
     -fx-stroke: BLACK;
 }
+
+.propertiesPanel {
+    -fx-fill: white;
+    -fx-opacity: 50%;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-background-color: white;
+}
