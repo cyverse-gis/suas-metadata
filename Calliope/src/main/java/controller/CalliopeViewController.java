@@ -279,7 +279,7 @@ public class CalliopeViewController implements Initializable
 						// Pull Calliope settings from the elastic index
 						this.updateMessage("Pulling settings from elastic index...");
 						this.updateProgress(3, NUM_STEPS);
-						SettingsData settingsData = esConnectionManager.pullRemoteSettings();
+						SettingsData settingsData = esConnectionManager.pullRemoteSettings(username);
 
 						// Set the settings data
 						Platform.runLater(() -> CalliopeData.getInstance().getSettings().loadFromOther(settingsData));

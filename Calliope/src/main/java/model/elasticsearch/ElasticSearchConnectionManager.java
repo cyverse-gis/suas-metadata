@@ -326,7 +326,6 @@ public class ElasticSearchConnectionManager
 					// Ignore source to speed up the fetch
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
-			System.out.println(CalliopeData.getInstance().getUsername());
 			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
 			// If the user is not in the db... create an index entry for him
 			if (!getResponse.isExists())
@@ -339,7 +338,7 @@ public class ElasticSearchConnectionManager
 						// Make sure the ID is our username
 						.id(username)
 						// The source will be a new
-						.source(this.elasticSearchSchemaManager.makeCreateUser(CalliopeData.getInstance().getUsername()));
+						.source(this.elasticSearchSchemaManager.makeCreateUser(username));
 				// Perform the index request
 				this.elasticSearchClient.index(indexRequest);
 			}
@@ -347,7 +346,7 @@ public class ElasticSearchConnectionManager
 		catch (IOException e)
 		{
 			// Print an error if anything went wrong
-			CalliopeData.getInstance().getErrorDisplay().notify("Error initializing user '" + CalliopeData.getInstance().getUsername() + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error initializing user '" + username + "' in the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -355,8 +354,10 @@ public class ElasticSearchConnectionManager
 	 * Fetches the user's settings from the ElasticSearch index
 	 *
 	 * @return The user's settings
+	 *
+	 * @param username The user to pull settings from
 	 */
-	public SettingsData pullRemoteSettings()
+	public SettingsData pullRemoteSettings(String username)
 	{
 		// Pull the settings from the ElasticSearch cluster
 		try
@@ -367,7 +368,7 @@ public class ElasticSearchConnectionManager
 			getRequest
 					.index(INDEX_CALLIOPE_USERS)
 					.type(INDEX_CALLIOPE_USERS_TYPE)
-					.id(CalliopeData.getInstance().getUsername())
+					.id(username)
 					.fetchSourceContext(new FetchSourceContext(true));
 			// Store the response
 			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
@@ -397,7 +398,7 @@ public class ElasticSearchConnectionManager
 		catch (IOException e)
 		{
 			// Error happened when executing a GET request. Print an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling settings for the user '" + CalliopeData.getInstance().getUsername() + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling settings for the user '" + username + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return null;
