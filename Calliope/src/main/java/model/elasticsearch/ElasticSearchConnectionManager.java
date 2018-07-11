@@ -17,6 +17,7 @@ import model.location.Position;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.elasticsearch.query.ElasticSearchQuery;
+import model.util.ErrorDisplay;
 import model.util.SensitiveConfigurationManager;
 import model.util.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -127,7 +128,7 @@ public class ElasticSearchConnectionManager
 	/**
 	 * The constructor initializes the elastic search
 	 */
-	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager)
+	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager, ErrorDisplay errorDisplay)
 	{
 		// Establish a connection to the elastic search server
 		this.elasticSearchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME)));
@@ -136,11 +137,11 @@ public class ElasticSearchConnectionManager
 		try
 		{
 			if (!this.elasticSearchClient.ping())
-				CalliopeData.getInstance().getErrorDisplay().notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
+				errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
 		}
 		catch (IOException e)
 		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Could not establish a connection to the ElasticSearch cluster, is it down?\n" + ExceptionUtils.getStackTrace(e));
+			errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();

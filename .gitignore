@@ -12,6 +12,7 @@
 /Calliope/gradle/*
 /Calliope/gradlew.bat
 /Calliope/src/main/resources/calliope.properties
+/Calliope/exiftool.exe
 
 /Java Metadata Processor/.idea/*
 /Java Metadata Processor/Java Metadata Processor.iml

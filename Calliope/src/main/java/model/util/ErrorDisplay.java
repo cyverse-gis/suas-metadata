@@ -34,16 +34,16 @@ public class ErrorDisplay
 	/**
 	 * Constructor takes in a reference to the global data model
 	 *
-	 * @param calliopeData The data model
+	 * @param settingsData Thes settings data model
 	 */
-	public ErrorDisplay(CalliopeData calliopeData)
+	public ErrorDisplay(SettingsData settingsData)
 	{
 		// Load in the image
 		this.infoImage = new ImageView(new Image("images/generic/info64.png"));
 		// Set the duration of the fade to be equal to what is in the settings. If the settings update, make sure to
 		// update this value too
-		this.delay.setDuration(Duration.seconds(calliopeData.getSettings().getPopupDelaySec()));
-		calliopeData.getSettings().popupDelaySecProperty().addListener((observable, oldValue, newValue) ->
+		this.delay.setDuration(Duration.seconds(settingsData.getPopupDelaySec()));
+		settingsData.popupDelaySecProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (newValue != null)
 				this.delay.setDelay(Duration.seconds(newValue));

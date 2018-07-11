@@ -21,7 +21,7 @@ public class TempDirectoryManager
 	/**
 	 * Constructor initializes the temporary directory
 	 */
-	public TempDirectoryManager()
+	public TempDirectoryManager(ErrorDisplay errorDisplay)
 	{
 		try
 		{
@@ -31,7 +31,7 @@ public class TempDirectoryManager
 		}
 		catch (IOException e)
 		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Error creating a temporary Calliope directory!\n" + ExceptionUtils.getStackTrace(e));
+			errorDisplay.notify("Error creating a temporary Calliope directory!\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 

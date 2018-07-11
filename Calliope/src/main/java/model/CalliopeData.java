@@ -21,7 +21,6 @@ import model.threading.CalliopeExecutor;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.util.*;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.hildan.fxgson.FxGson;
 
 import java.io.File;
@@ -119,24 +118,24 @@ public class CalliopeData
 		// Establish a connection to the CyVerse datastore
 		this.cyConnectionManager = new CyVerseConnectionManager();
 
+		// Load our program settings
+		this.settings = new SettingsData();
+
+		// Setup our debug/error logger
+		this.errorDisplay = new ErrorDisplay(this.settings);
+
 		// Establish a connection to the ElasticSearch cluster
-		this.esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager);
+		this.esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager, this.errorDisplay);
 
 		// Setup our preferences store which stores our username
 		this.calliopePreferences = Preferences.userNodeForPackage(CalliopeData.class);
 
 		// Create a temporary directory to dump any temporary files into
-		this.tempDirectoryManager = new TempDirectoryManager();
-
-		// Load our program settings
-		this.settings = new SettingsData();
+		this.tempDirectoryManager = new TempDirectoryManager(this.errorDisplay);
 
 		// Setup our automatic setting synchronization
 		this.needSettingsSync = new AtomicBoolean(false);
 		this.settingsSyncInProgress = new AtomicBoolean(false);
-
-		// Setup our debug/error logger
-		this.errorDisplay = new ErrorDisplay(this);
 
 		// Create the query engine which executes ES queries
 		this.queryEngine = new QueryEngine();
@@ -145,7 +144,7 @@ public class CalliopeData
 		this.neonData = new NeonData();
 
 		// Setup our metadata management class
-		this.metadataManager = new MetadataManager();
+		this.metadataManager = new MetadataManager(this.errorDisplay);
 
 		// Create the location list and add some default locations
 		this.siteList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(site -> new Observable[]{ site.siteProperty(), site.boundaryProperty() }));

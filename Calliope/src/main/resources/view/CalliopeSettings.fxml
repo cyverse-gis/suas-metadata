@@ -4,11 +4,31 @@
 <?import javafx.scene.control.SplitPane?>
 <?import org.controlsfx.control.PropertySheet?>
 <?import java.net.URL?>
-<SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="700.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeSettingsController">
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import jfxtras.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.geometry.Insets?>
+<VBox prefHeight="700.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeSettingsController">
     <stylesheets>
         <URL value="@CalliopeSettings.css"/>
     </stylesheets>
-    <items>
-        <PropertySheet fx:id="pstSettings"/>
-    </items>
-</SplitPane>
+    <children>
+        <PropertySheet fx:id="pstSettings" VBox.vgrow="ALWAYS"/>
+        <VBox alignment="BOTTOM_CENTER" styleClass="borderVbx" spacing="5" VBox.vgrow="NEVER">
+            <padding>
+                <Insets top="5"/>
+            </padding>
+            <children>
+                <HBox spacing="5" alignment="CENTER">
+                    <children>
+                        <Label styleClass="exifToolLbl" text="ExifTool installation status:"/>
+                        <Label fx:id="lblExifToolStatus" styleClass="exifToolLbl" text="Not Found"/>
+                    </children>
+                </HBox>
+                <TextArea fx:id="txtInstallInstructions" styleClass="exifToolArea" wrapText="true"/>
+            </children>
+        </VBox>
+    </children>
+</VBox>

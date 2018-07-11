@@ -1,3 +1,16 @@
 .largeFont {
     -fx-font-size: 18;
 }
+
+.exifToolLbl {
+    -fx-font-size: 18;
+}
+
+.exifToolArea {
+    -fx-font-size: 14;
+}
+
+.borderVbx {
+    -fx-border-width: 2px;
+    -fx-border-color: #646464;
+}

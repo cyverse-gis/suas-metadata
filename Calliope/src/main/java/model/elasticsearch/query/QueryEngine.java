@@ -12,10 +12,6 @@ public class QueryEngine
 	private ObservableList<IQueryCondition> queryConditions = FXCollections.observableArrayList(condition -> new Observable[] {});
 	private ObservableList<QueryFilters> QUERY_FILTERS = FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(QueryFilters.values()));
 
-	public QueryEngine()
-	{
-	}
-
 	public ObservableList<IQueryCondition> getQueryConditions()
 	{
 		return this.queryConditions;

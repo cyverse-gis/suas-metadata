@@ -44,10 +44,7 @@ public class Calliope extends Application
             if (CalliopeData.getInstance().getExecutor().anyTaskRunning())
             {
                 CalliopeData.getInstance().getErrorDisplay().notify("Calliope is still cleaning up background tasks and exiting now may cause data corruption. Are you sure you want to exit?",
-					new Action("Exit Anyway", actionEvent ->
-					{
-						System.exit(0);
-					}));
+					new Action("Exit Anyway", actionEvent -> System.exit(0)));
 				event.consume();
             }
             else

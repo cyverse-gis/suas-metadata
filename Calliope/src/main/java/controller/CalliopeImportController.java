@@ -528,6 +528,13 @@ public class CalliopeImportController implements Initializable
 	 */
 	public void importImages(ActionEvent actionEvent)
 	{
+		// If our Exiftool was not loaded successfully we can't import images, so throw an error here
+		if (!CalliopeData.getInstance().getMetadataManager().isExifToolFound())
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("ExifTool is required to read image metadata. See the bottom of the settings tab for installation instructions");
+			return;
+		}
+
 		// Create a directory chooser to let the user choose where to get the images from
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle("Select Folder with Images");
