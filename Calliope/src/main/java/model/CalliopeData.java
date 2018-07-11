@@ -21,6 +21,7 @@ import model.threading.CalliopeExecutor;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.util.*;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.hildan.fxgson.FxGson;
 
 import java.io.File;
@@ -259,11 +260,13 @@ public class CalliopeData
 
 	public void setUsername(String username)
 	{
+		System.out.println("Username set!\n" + ExceptionUtils.getFullStackTrace(new Throwable()));
 		this.usernameProperty.setValue(username);
 	}
 
 	public String getUsername()
 	{
+		System.out.println("Username retrieved!\n" + ExceptionUtils.getFullStackTrace(new Throwable()));
 		return this.usernameProperty.getValue();
 	}
 
