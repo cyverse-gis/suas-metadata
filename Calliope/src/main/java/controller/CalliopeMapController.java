@@ -5,26 +5,38 @@ import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import fxmapcontrol.Map;
-import javafx.animation.FadeTransition;
+import javafx.animation.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import library.AlignedMapNode;
 import model.CalliopeData;
 import model.elasticsearch.GeoBucket;
+import model.elasticsearch.query.ElasticSearchQuery;
+import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryEngine;
 import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
@@ -32,6 +44,7 @@ import model.threading.ReRunnableService;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
 import org.fxmisc.easybind.EasyBind;
@@ -69,9 +82,39 @@ public class CalliopeMapController implements Initializable
 	public ToggleSwitch tswImageCounts;
 
 
+	@FXML
+	public StackPane queryPane;
+
+	// The list of query conditions
+	@FXML
+	public ListView<IQueryCondition> lvwQueryConditions;
+
+	// The list of possible filters
+	@FXML
+	public ListView<QueryEngine.QueryFilters> lvwFilters;
+
+	// The Vbox with the query parameters, used to hide the event interval
+	@FXML
+	public VBox vbxQuery;
+
+	// The imageview with the arrow divider
+	@FXML
+	public ImageView imgArrow;
+
+	// If the query is happening
+	@FXML
+	public MaskerPane mpnQuerying;
+
+	@FXML
+	public Button btnExpander;
+
+
 	///
 	/// FXML bound fields end
 	///
+
+	private Image standardArrow = new Image("/images/analysisWindow/arrowDivider.png");
+	private Image highlightedArrow = new Image("/images/analysisWindow/arrowDividerSelected.png");
 
 	// A list of current pins on the map displaying circles with an image amount inside
 	private List<MapNode> currentCircles = new ArrayList<>();
@@ -89,6 +132,8 @@ public class CalliopeMapController implements Initializable
 	private ObservableList<Node> sortedNodes;
 	// A cache to a listener to avoid early garbage collection
 	private Subscription subscriptionCache;
+
+	private Boolean expandedQuery = false;
 
 
 	/**
@@ -311,6 +356,16 @@ public class CalliopeMapController implements Initializable
 				this.addNodeToMap(newMapTileProvider, 0);
 			}
 		});
+
+		// Set the query conditions to be specified by the data model
+		this.lvwQueryConditions.setItems(CalliopeData.getInstance().getQueryEngine().getQueryConditions());
+		// Set the cell factory to be our custom query condition cell which adapts itself to the specific condition
+		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("analysisView/QueryConditionsListCell.fxml").getController());
+
+		// Set the items in the list to be the list of possible query filters
+		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
+
+		this.mpnQuerying.setVisible(false);
 	}
 
 	/**
@@ -425,6 +480,69 @@ public class CalliopeMapController implements Initializable
 		this.zOrder.remove(node);
 	}
 
+	public void expandOrRetractFilters(ActionEvent actionEvent)
+	{
+		final double TRANSITION_DURATION = 0.7;
+		if (!expandedQuery)
+		{
+			HeightTransition heightTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 400);
+			FadeTransition fadeTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
+			fadeTransition.setFromValue(0.0);
+			fadeTransition.setToValue(1.0);
+			RotateTransition rotateTransition = new RotateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+			rotateTransition.setFromAngle(0);
+			rotateTransition.setToAngle(180);
+			rotateTransition.setAxis(new Point3D(1, 0, 0));
+			TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+			translateTransition.setFromY(0);
+			translateTransition.setToY(-404);
+			ParallelTransition parallelTransition = new ParallelTransition(fadeTransition, heightTransition, rotateTransition, translateTransition);
+			this.queryPane.setVisible(true);
+			parallelTransition.play();
+		}
+		else
+		{
+			HeightTransition heightTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100);
+			FadeTransition fadeTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
+			fadeTransition.setFromValue(1.0);
+			fadeTransition.setToValue(0.0);
+			RotateTransition rotateTransition = new RotateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+			rotateTransition.setFromAngle(180);
+			rotateTransition.setToAngle(0);
+			rotateTransition.setAxis(new Point3D(1, 0, 0));
+			TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+			translateTransition.setFromY(-404);
+			translateTransition.setToY(0);
+			ParallelTransition parallelTransition = new ParallelTransition(fadeTransition, heightTransition, rotateTransition, translateTransition);
+			parallelTransition.play();
+			parallelTransition.setOnFinished(event -> this.queryPane.setVisible(false));
+		}
+		this.expandedQuery = !expandedQuery;
+	}
+
+	private class HeightTransition extends Transition
+	{
+		private Region region;
+		private double startHeight;
+		private double endHeight;
+		private double heightDiff;
+
+		HeightTransition(Duration duration, Region region, double endHeight)
+		{
+			this.setCycleDuration(duration);
+			this.region = region;
+			this.endHeight = endHeight;
+			this.startHeight = this.region.getHeight();
+			this.heightDiff = this.endHeight - this.startHeight;
+		}
+
+		@Override
+		protected void interpolate(double fraction)
+		{
+			this.region.setMaxHeight(this.startHeight + (this.heightDiff * fraction));
+		}
+	}
+
 	private enum MapProviders
 	{
 		OpenStreetMaps("Open Street Map", MapTileLayer.getOpenStreetMapLayer()),
@@ -453,5 +571,92 @@ public class CalliopeMapController implements Initializable
 		{
 			return this.mapTileProvider;
 		}
+	}
+
+	/**
+	 * Called when the refresh button is pressed
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void query(ActionEvent actionEvent)
+	{
+		this.mpnQuerying.setVisible(true);
+
+		// Create a query
+		ElasticSearchQuery query = new ElasticSearchQuery();
+		// For each condition listed in the listview, apply that to the overall query
+		for (IQueryCondition queryCondition : CalliopeData.getInstance().getQueryEngine().getQueryConditions())
+			queryCondition.appendConditionToQuery(query);
+
+		Task<List<ImageEntry>> queryTask = new ErrorTask<List<ImageEntry>>()
+		{
+			@Override
+			protected List<ImageEntry> call()
+			{
+				this.updateMessage("Performing query...");
+				// Grab the result of the query
+				return CalliopeData.getInstance().getEsConnectionManager().performQuery(query);
+			}
+		};
+
+		// Once finished with the task, we test if the user wants to continue
+		queryTask.setOnSucceeded(event ->
+		{
+			this.mpnQuerying.setVisible(false);
+
+			// Analyze the result of the query
+			List<ImageEntry> imagesOut = queryTask.getValue();
+		});
+		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(queryTask);
+
+		actionEvent.consume();
+	}
+
+	/**
+	 * Called to add athe current filter to the analysis
+	 *
+	 * @param mouseEvent consumed
+	 */
+	public void clickedAdd(MouseEvent mouseEvent)
+	{
+		// If a filter was clicked, we instantiate it and append it to the end of the list (-1 so that the + is at the end)
+		ObservableList<IQueryCondition> queryConditions = CalliopeData.getInstance().getQueryEngine().getQueryConditions();
+		if (this.lvwFilters.getSelectionModel().selectedItemProperty().getValue() != null)
+			queryConditions.add(this.lvwFilters.getSelectionModel().selectedItemProperty().getValue().createInstance());
+		mouseEvent.consume();
+	}
+
+	/**
+	 * Called when the mouse enters the arrow image
+	 *
+	 * @param mouseEvent consumed
+	 */
+	public void mouseEnteredArrow(MouseEvent mouseEvent)
+	{
+		imgArrow.setImage(highlightedArrow);
+		mouseEvent.consume();
+	}
+
+	/**
+	 * Called when the mouse exits the arrow image
+	 *
+	 * @param mouseEvent consumed
+	 */
+	public void mouseExitedArrow(MouseEvent mouseEvent)
+	{
+		imgArrow.setImage(standardArrow);
+		mouseEvent.consume();
+	}
+
+	/**
+	 * Called whenever a filter is clicked on the filters list view
+	 *
+	 * @param mouseEvent consumed
+	 */
+	public void clickedFilters(MouseEvent mouseEvent)
+	{
+		if (mouseEvent.getClickCount() == 2)
+			this.clickedAdd(mouseEvent);
+		mouseEvent.consume();
 	}
 }

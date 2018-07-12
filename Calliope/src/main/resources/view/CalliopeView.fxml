@@ -42,14 +42,6 @@
                             </graphic>
                             <fx:include source="CalliopeUpload.fxml"/>
                         </Tab>
-                        <Tab text="Analyze/Query" closable="false">
-                            <graphic>
-                                <ImageView fitWidth="25" fitHeight="25">
-                                    <Image url="@../images/mainMenu/analyze.png"/>
-                                </ImageView>
-                            </graphic>
-                            <fx:include source="CalliopeAnalysis.fxml"/>
-                        </Tab>
                         <Tab text="Map" closable="false">
                             <graphic>
                                 <ImageView fitWidth="25" fitHeight="25">
