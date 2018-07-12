@@ -4,13 +4,10 @@ package model.elasticsearch.query;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.location.Position;
 import model.elasticsearch.query.conditions.ElevationCondition;
-import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermsQueryBuilder;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,8 +20,6 @@ import java.util.stream.Collectors;
  */
 public class ElasticSearchQuery
 {
-	// A list of locations to query for
-	private Set<Position> positionQuery = new HashSet<>();
 	// A list of collections to query for
 	private Set<ImageCollection> collectionQuery = new HashSet<>();
 	// A list of months to query for
@@ -43,16 +38,6 @@ public class ElasticSearchQuery
 	public ElasticSearchQuery()
 	{
 		this.queryBuilder = QueryBuilders.boolQuery();
-	}
-
-	/**
-	 * Adds a given position to the query
-	 *
-	 * @param position The position to 'and' into the query
-	 */
-	public void addLocation(Position position)
-	{
-		this.positionQuery.add(position);
 	}
 
 	/**

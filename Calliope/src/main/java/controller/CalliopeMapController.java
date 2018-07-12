@@ -5,7 +5,10 @@ import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import fxmapcontrol.Map;
-import javafx.animation.*;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.RotateTransition;
+import javafx.animation.TranslateTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -23,16 +26,15 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import library.AlignedMapNode;
 import model.CalliopeData;
+import model.constant.MapProviders;
 import model.elasticsearch.GeoBucket;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.IQueryCondition;
@@ -41,6 +43,7 @@ import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
+import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -54,7 +57,6 @@ import org.locationtech.jts.math.MathUtil;
 import java.io.File;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -360,7 +362,7 @@ public class CalliopeMapController implements Initializable
 		// Set the query conditions to be specified by the data model
 		this.lvwQueryConditions.setItems(CalliopeData.getInstance().getQueryEngine().getQueryConditions());
 		// Set the cell factory to be our custom query condition cell which adapts itself to the specific condition
-		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("analysisView/QueryConditionsListCell.fxml").getController());
+		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("mapView/QueryConditionsListCell.fxml").getController());
 
 		// Set the items in the list to be the list of possible query filters
 		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
@@ -518,59 +520,6 @@ public class CalliopeMapController implements Initializable
 			parallelTransition.setOnFinished(event -> this.queryPane.setVisible(false));
 		}
 		this.expandedQuery = !expandedQuery;
-	}
-
-	private class HeightTransition extends Transition
-	{
-		private Region region;
-		private double startHeight;
-		private double endHeight;
-		private double heightDiff;
-
-		HeightTransition(Duration duration, Region region, double endHeight)
-		{
-			this.setCycleDuration(duration);
-			this.region = region;
-			this.endHeight = endHeight;
-			this.startHeight = this.region.getHeight();
-			this.heightDiff = this.endHeight - this.startHeight;
-		}
-
-		@Override
-		protected void interpolate(double fraction)
-		{
-			this.region.setMaxHeight(this.startHeight + (this.heightDiff * fraction));
-		}
-	}
-
-	private enum MapProviders
-	{
-		OpenStreetMaps("Open Street Map", MapTileLayer.getOpenStreetMapLayer()),
-		OpenTopoMap("Open Topo Map", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17)),
-		OpenMapSurferRoads("Open Map Surfer - Roads", new MapTileLayer("OpenMapSurferRoads", "https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", 0, 20)),
-		EsriWorldStreetMap("Esri World Street Map", new MapTileLayer("EsriWorldStreetMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", 0, 20)),
-		EsriWorldTopoMap("Esri World Topo Map", new MapTileLayer("EsriWorldTopoMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 0, 20)),
-		EsriWorldImagery("Esri World Imagery", new MapTileLayer("EsriWorldImagery", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 0, 20));
-
-		private String name;
-		private MapTileLayer mapTileProvider;
-
-		MapProviders(String name, MapTileLayer mapTileProvider)
-		{
-			this.name = name;
-			this.mapTileProvider = mapTileProvider;
-		}
-
-		@Override
-		public String toString()
-		{
-			return this.name;
-		}
-
-		public MapTileLayer getMapTileProvider()
-		{
-			return this.mapTileProvider;
-		}
 	}
 
 	/**

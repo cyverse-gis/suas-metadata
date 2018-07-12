@@ -24,7 +24,6 @@ public class QueryEngine
 
 	public enum QueryFilters
 	{
-		LOCATION_FILTER("Position Filter", LocationFilterCondition::new),
 		ELEVATION_FILTER("Elevation filter", ElevationCondition::new),
 		YEAR_FILTER("Year Filter", YearCondition::new),
 		MONTH_FILTER("Month Filter", MonthCondition::new),

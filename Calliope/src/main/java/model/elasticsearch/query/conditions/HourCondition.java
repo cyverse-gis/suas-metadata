@@ -50,7 +50,7 @@ public class HourCondition implements IQueryCondition
 	/**
 	 * Returns a string representing the FXML document to visualize this model file
 	 *
-	 * @return A string to a FXML document in view/analysisView/conditions
+	 * @return A string to a FXML document in view/mapView/conditions
 	 */
 	@Override
 	public String getFXMLConditionEditor()
