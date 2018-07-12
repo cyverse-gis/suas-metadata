@@ -20,6 +20,7 @@ public class MapCircleController implements Initializable
 	// The label containing the number of images in the pin aggregation
 	@FXML
 	public Label lblImageCount;
+	// The background circle that will dynamically change its size
 	@FXML
 	public Circle crlBackground;
 

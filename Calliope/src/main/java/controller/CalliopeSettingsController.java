@@ -27,8 +27,10 @@ public class CalliopeSettingsController implements Initializable
 	@FXML
 	public PropertySheet pstSettings;
 
+	// Bottom label telling us if ExifTool loaded successfully
 	@FXML
 	public Label lblExifToolStatus;
+	// Bottom text box giving us install instructions if ExifTool was not found on a user's system
 	@FXML
 	public TextArea txtInstallInstructions;
 

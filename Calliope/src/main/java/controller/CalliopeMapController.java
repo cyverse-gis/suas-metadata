@@ -5,15 +5,13 @@ import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import fxmapcontrol.Map;
-import javafx.animation.FadeTransition;
-import javafx.animation.ParallelTransition;
-import javafx.animation.RotateTransition;
-import javafx.animation.TranslateTransition;
+import javafx.animation.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -47,9 +45,10 @@ import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
@@ -68,55 +67,55 @@ public class CalliopeMapController implements Initializable
 	/// FXML bound fields start
 	///
 
+	// The primary map object to display sites and images on
 	@FXML
 	public Map map;
 
+	// A box containing any map specific settings (not query filters)
 	@FXML
 	public VBox vbxMapSettings;
 
+	// A combo-box of possible map providers like OSM or Esri
 	@FXML
 	public ComboBox<MapProviders> cbxMapProvider;
+	// A toggle switch to enable or disable NEON site markers
 	@FXML
 	public ToggleSwitch tswMarkers;
+	// A toggle switch to enable or disable NEON site boundaries
 	@FXML
 	public ToggleSwitch tswBoundaries;
+	// A toggle switch to enable or disable image count circles
 	@FXML
 	public ToggleSwitch tswImageCounts;
 
-
+	// Bottom pane which holds the query specifics
 	@FXML
 	public StackPane queryPane;
 
 	// The list of query conditions
 	@FXML
 	public ListView<IQueryCondition> lvwQueryConditions;
-
 	// The list of possible filters
 	@FXML
 	public ListView<QueryEngine.QueryFilters> lvwFilters;
-
 	// The Vbox with the query parameters, used to hide the event interval
 	@FXML
 	public VBox vbxQuery;
-
 	// The imageview with the arrow divider
 	@FXML
 	public ImageView imgArrow;
 
-	// If the query is happening
-	@FXML
-	public MaskerPane mpnQuerying;
-
+	// A button to expand or contract the query
 	@FXML
 	public Button btnExpander;
-
 
 	///
 	/// FXML bound fields end
 	///
 
-	private Image standardArrow = new Image("/images/analysisWindow/arrowDivider.png");
-	private Image highlightedArrow = new Image("/images/analysisWindow/arrowDividerSelected.png");
+	// Two image textures used for the arrow divider button
+	private static final Image STANDARD_ARROW = new Image("/images/analysisWindow/arrowDivider.png");
+	private static final Image HIGHLIGHTED_ARROW = new Image("/images/analysisWindow/arrowDividerSelected.png");
 
 	// A list of current pins on the map displaying circles with an image amount inside
 	private List<MapNode> currentCircles = new ArrayList<>();
@@ -135,8 +134,14 @@ public class CalliopeMapController implements Initializable
 	// A cache to a listener to avoid early garbage collection
 	private Subscription subscriptionCache;
 
+	// Flag telling us if the query box is currently expanded or contracted
 	private Boolean expandedQuery = false;
+	// The currently 'in-use' query used to filter showing images on the map
+	private ObjectProperty<QueryBuilder> currentQuery = new SimpleObjectProperty<>(QueryBuilders.matchAllQuery());
 
+	// Two transitions used to fade the query tab in and out
+	private Transition fadeQueryIn;
+	private Transition fadeQueryOut;
 
 	/**
 	 * Initialize sets up the analysis window and bindings
@@ -218,6 +223,7 @@ public class CalliopeMapController implements Initializable
 							event.consume();
 						});
 
+						// Hide/Show polygons or pins when the toggle switches are toggled
 						mapPolygon.visibleProperty().bind(this.tswBoundaries.selectedProperty());
 						mapPin.visibleProperty().bind(this.tswMarkers.selectedProperty());
 
@@ -268,7 +274,8 @@ public class CalliopeMapController implements Initializable
 							MathUtil.clamp(topLeft.getLongitude(), -180.0, 180.0),
 							MathUtil.clamp(bottomRight.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(bottomRight.getLongitude(), -180.0, 180.0),
-							CalliopeMapController.this.depthForCurrentZoom());
+							CalliopeMapController.this.depthForCurrentZoom(),
+							CalliopeMapController.this.currentQuery.getValue());
 				}
 			};
 		});
@@ -334,6 +341,8 @@ public class CalliopeMapController implements Initializable
 			circleDrawingService.requestAnotherRun();
 		});
 
+		this.currentQuery.addListener((observable, oldValue, newValue) -> circleDrawingService.requestAnotherRun());
+
 		// Create a fade transition for the settings box in the top left
 		FadeTransition fadeMapIn = new FadeTransition(Duration.millis(100), this.vbxMapSettings);
 		fadeMapIn.setFromValue(0.5);
@@ -346,14 +355,64 @@ public class CalliopeMapController implements Initializable
 		this.vbxMapSettings.setOnMouseEntered(event -> fadeMapIn.play());
 		this.vbxMapSettings.setOnMouseExited(event -> fadeMapOut.play());
 
+		final double TRANSITION_DURATION = 0.7;
+
+		// Setup the transition to fade the query tab out
+
+		// Reduce the height of the pane
+		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 400, 100);
+		// Reduce the opacity of the pane
+		FadeTransition fadeOutTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
+		fadeOutTransition.setFromValue(1.0);
+		fadeOutTransition.setToValue(0.0);
+		// Rotate the expander button 180 degrees across the X axis
+		RotateTransition rotateUpTransition = new RotateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+		rotateUpTransition.setFromAngle(180);
+		rotateUpTransition.setToAngle(0);
+		rotateUpTransition.setAxis(new Point3D(1, 0, 0));
+		// Move the expander button to the bottom
+		TranslateTransition translateDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+		translateDownTransition.setFromY(-404);
+		translateDownTransition.setToY(0);
+		// Setup the parallel transition
+		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition);
+		// Once finished, hide the query pane
+		this.fadeQueryOut.setOnFinished(event -> this.queryPane.setVisible(false));
+
+		// Setup the transition to fade the query tab in
+
+		// Increase the height of the pane
+		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100, 400);
+		// Increase the opacity of the pane
+		FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
+		fadeInTransition.setFromValue(0.0);
+		fadeInTransition.setToValue(1.0);
+		// Rotate the expander button 180 degrees across the X axis
+		RotateTransition rotateDownTransition = new RotateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+		rotateDownTransition.setFromAngle(0);
+		rotateDownTransition.setToAngle(180);
+		rotateDownTransition.setAxis(new Point3D(1, 0, 0));
+		// Move the expander button to the top
+		TranslateTransition translateUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
+		translateUpTransition.setFromY(0);
+		translateUpTransition.setToY(-404);
+		// Setup the parallel transition
+		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition);
+
+		// Setup our map provider combobox, first set the items to be an unmodifiable list of enums
 		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
+		// Select OSM as the default map provider
 		this.cbxMapProvider.getSelectionModel().select(MapProviders.OpenStreetMaps);
+		// When we select a new map provider, swap tile providers
 		this.cbxMapProvider.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
 		{
+			// This should always be true...
 			if (newValue != null && oldValue != null)
 			{
+				// Grab the old and new tile providers
 				MapTileLayer oldMapTileProvider = oldValue.getMapTileProvider();
 				MapTileLayer newMapTileProvider = newValue.getMapTileProvider();
+				// Remove the old provider, add the new one
 				this.removeNodeFromMap(oldMapTileProvider);
 				this.addNodeToMap(newMapTileProvider, 0);
 			}
@@ -366,8 +425,6 @@ public class CalliopeMapController implements Initializable
 
 		// Set the items in the list to be the list of possible query filters
 		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
-
-		this.mpnQuerying.setVisible(false);
 	}
 
 	/**
@@ -482,44 +539,25 @@ public class CalliopeMapController implements Initializable
 		this.zOrder.remove(node);
 	}
 
+	/**
+	 * Called to expand or retract the query filters box on the bottom
+	 *
+	 * @param actionEvent consumed
+	 */
 	public void expandOrRetractFilters(ActionEvent actionEvent)
 	{
-		final double TRANSITION_DURATION = 0.7;
 		if (!expandedQuery)
 		{
-			HeightTransition heightTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 400);
-			FadeTransition fadeTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
-			fadeTransition.setFromValue(0.0);
-			fadeTransition.setToValue(1.0);
-			RotateTransition rotateTransition = new RotateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-			rotateTransition.setFromAngle(0);
-			rotateTransition.setToAngle(180);
-			rotateTransition.setAxis(new Point3D(1, 0, 0));
-			TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-			translateTransition.setFromY(0);
-			translateTransition.setToY(-404);
-			ParallelTransition parallelTransition = new ParallelTransition(fadeTransition, heightTransition, rotateTransition, translateTransition);
+			this.fadeQueryIn.play();
 			this.queryPane.setVisible(true);
-			parallelTransition.play();
 		}
 		else
 		{
-			HeightTransition heightTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100);
-			FadeTransition fadeTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
-			fadeTransition.setFromValue(1.0);
-			fadeTransition.setToValue(0.0);
-			RotateTransition rotateTransition = new RotateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-			rotateTransition.setFromAngle(180);
-			rotateTransition.setToAngle(0);
-			rotateTransition.setAxis(new Point3D(1, 0, 0));
-			TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-			translateTransition.setFromY(-404);
-			translateTransition.setToY(0);
-			ParallelTransition parallelTransition = new ParallelTransition(fadeTransition, heightTransition, rotateTransition, translateTransition);
-			parallelTransition.play();
-			parallelTransition.setOnFinished(event -> this.queryPane.setVisible(false));
+			this.fadeQueryOut.play();
 		}
 		this.expandedQuery = !expandedQuery;
+
+		actionEvent.consume();
 	}
 
 	/**
@@ -529,40 +567,19 @@ public class CalliopeMapController implements Initializable
 	 */
 	public void query(ActionEvent actionEvent)
 	{
-		this.mpnQuerying.setVisible(true);
-
 		// Create a query
 		ElasticSearchQuery query = new ElasticSearchQuery();
 		// For each condition listed in the listview, apply that to the overall query
 		for (IQueryCondition queryCondition : CalliopeData.getInstance().getQueryEngine().getQueryConditions())
 			queryCondition.appendConditionToQuery(query);
 
-		Task<List<ImageEntry>> queryTask = new ErrorTask<List<ImageEntry>>()
-		{
-			@Override
-			protected List<ImageEntry> call()
-			{
-				this.updateMessage("Performing query...");
-				// Grab the result of the query
-				return CalliopeData.getInstance().getEsConnectionManager().performQuery(query);
-			}
-		};
-
-		// Once finished with the task, we test if the user wants to continue
-		queryTask.setOnSucceeded(event ->
-		{
-			this.mpnQuerying.setVisible(false);
-
-			// Analyze the result of the query
-			List<ImageEntry> imagesOut = queryTask.getValue();
-		});
-		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(queryTask);
+		this.currentQuery.setValue(query.build());
 
 		actionEvent.consume();
 	}
 
 	/**
-	 * Called to add athe current filter to the analysis
+	 * Called to add the current filter to the analysis
 	 *
 	 * @param mouseEvent consumed
 	 */
@@ -582,7 +599,7 @@ public class CalliopeMapController implements Initializable
 	 */
 	public void mouseEnteredArrow(MouseEvent mouseEvent)
 	{
-		imgArrow.setImage(highlightedArrow);
+		imgArrow.setImage(HIGHLIGHTED_ARROW);
 		mouseEvent.consume();
 	}
 
@@ -593,7 +610,7 @@ public class CalliopeMapController implements Initializable
 	 */
 	public void mouseExitedArrow(MouseEvent mouseEvent)
 	{
-		imgArrow.setImage(standardArrow);
+		imgArrow.setImage(STANDARD_ARROW);
 		mouseEvent.consume();
 	}
 

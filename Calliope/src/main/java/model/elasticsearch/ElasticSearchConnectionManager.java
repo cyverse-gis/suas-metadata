@@ -10,19 +10,17 @@ import javafx.application.Platform;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.image.UploadedEntry;
+import model.elasticsearch.query.ElasticSearchQuery;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.location.Position;
+import model.image.UploadedEntry;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
-import model.elasticsearch.query.ElasticSearchQuery;
 import model.util.ErrorDisplay;
 import model.util.SensitiveConfigurationManager;
 import model.util.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -35,17 +33,15 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.geo.builders.PointBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
@@ -65,8 +61,6 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -1149,9 +1143,10 @@ public class ElasticSearchConnectionManager
 	 * @param depth1To12 A depth value in the range of 1-12 that specifies how tightly aggregated buckets should be. 12 means
 	 *                   buckets are less than a meter across, and 1 means buckets are hundreds of KM across. A larger depth
 	 *                   requires more time to receive results
+	 * @param query The actual query to filter images by before aggregating
 	 * @return A list of buckets containing a center point and a list of images inside
 	 */
-	public List<GeoBucket> performGeoAggregation(Double topLeftLat, Double topLeftLong, Double bottomRightLat, Double bottomRightLong, Integer depth1To12)
+	public List<GeoBucket> performGeoAggregation(Double topLeftLat, Double topLeftLong, Double bottomRightLat, Double bottomRightLong, Integer depth1To12, QueryBuilder query)
 	{
 		// Create a list of buckets to return
 		List<GeoBucket> toReturn = new ArrayList<>();
@@ -1187,8 +1182,8 @@ public class ElasticSearchConnectionManager
 							.size(0)
 							// Don't fetch anything unnecessary
 							.fetchSource(false)
-							// Our query will match all documents
-							.query(QueryBuilders.matchAllQuery())
+							// Our query will match all documents if no query was provided
+							.query(query == null ? QueryBuilders.matchAllQuery() : query)
 							// Add our complex aggregation now
 							.aggregation(aggregationQuery));
 

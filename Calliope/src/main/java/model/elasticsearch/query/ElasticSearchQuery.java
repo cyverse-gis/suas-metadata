@@ -4,7 +4,8 @@ package model.elasticsearch.query;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.elasticsearch.query.conditions.ElevationCondition;
+import model.elasticsearch.query.conditions.AltitudeCondition;
+import model.neon.BoundedSite;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -28,6 +29,7 @@ public class ElasticSearchQuery
 	private Set<Integer> hourQuery = new HashSet<>();
 	// A list of days of week to query for
 	private Set<Integer> dayOfWeekQuery = new HashSet<>();
+	private Set<String> neonSiteQuery = new HashSet<>();
 
 	// Query builder used to make queries that we will send out
 	private final BoolQueryBuilder queryBuilder;
@@ -92,6 +94,16 @@ public class ElasticSearchQuery
 	}
 
 	/**
+	 * Adds a given site to the query
+	 *
+	 * @param boundedSite The site to 'and' into the query
+	 */
+	public void addNeonSite(BoundedSite boundedSite)
+	{
+		this.neonSiteQuery.add(boundedSite.getSite().getSiteCode());
+	}
+
+	/**
 	 * Sets the start date that all images must be taken after
 	 *
 	 * @param startDate The start date
@@ -112,33 +124,33 @@ public class ElasticSearchQuery
 	}
 
 	/**
-	 * Adds a condition on which elevation can be filtered with an operator argument
+	 * Adds a condition on which altitude can be filtered with an operator argument
 	 *
-	 * @param elevation The elevation value to filter on
-	 * @param operator The operator with which to test the given elevation, can be <, <=, >, >=, or =
+	 * @param altitude The altitude value to filter on
+	 * @param operator The operator with which to test the given altitude, can be <, <=, >, >=, or =
 	 */
-	public void addElevationCondition(Double elevation, ElevationCondition.ElevationComparisonOperators operator)
+	public void addAltitudeCondition(Double altitude, AltitudeCondition.AltitudeComparisonOperators operator)
 	{
 		switch (operator)
 		{
 			// Depending on the operator we pick a query to be used
 			case Equal:
-				this.queryBuilder.must().add(QueryBuilders.termQuery("imageMetadata.location.elevation", elevation));
+				this.queryBuilder.must().add(QueryBuilders.termQuery("imageMetadata.altitude", altitude));
 				break;
 			case GreaterThan:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.location.elevation").gt(elevation));
+				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").gt(altitude));
 				break;
 			case GreaterThanOrEqual:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.location.elevation").gte(elevation));
+				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").gte(altitude));
 				break;
 			case LessThan:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.location.elevation").lt(elevation));
+				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").lt(altitude));
 				break;
 			case LessThanOrEqual:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.location.elevation").lte(elevation));
+				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").lte(altitude));
 				break;
 			default:
-				CalliopeData.getInstance().getErrorDisplay().printError("Got an impossible elevation condition");
+				CalliopeData.getInstance().getErrorDisplay().printError("Got an impossible altitude condition");
 				break;
 		}
 	}
@@ -150,11 +162,6 @@ public class ElasticSearchQuery
 	 */
 	public QueryBuilder build()
 	{
-		// Make sure that we have at least one location we're looking for
-		// Locations are IDd by site code
-		//if (!positionQuery.isEmpty())
-		//	this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.location.id", this.positionQuery.stream().map(Position::getId).collect(Collectors.toList())));
-
 		// Make sure that we have at least one collection we're looking for
 		// Collections are IDd by UUID
 		if (!collectionQuery.isEmpty())
@@ -174,6 +181,11 @@ public class ElasticSearchQuery
 		// Days of week are IDd by ordinal value (1-7)
 		if (!dayOfWeekQuery.isEmpty())
 			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.dayOfWeekTaken", this.dayOfWeekQuery));
+
+		// Make sure that we have at least one neon site we're looking for
+		// Neon sites are IDd by code
+		if (!neonSiteQuery.isEmpty())
+			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.neonSiteCode", this.neonSiteQuery));
 
 		return this.queryBuilder;
 	}

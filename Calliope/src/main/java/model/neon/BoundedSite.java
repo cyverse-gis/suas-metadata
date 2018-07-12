@@ -58,4 +58,13 @@ public class BoundedSite
 	{
 		return this.boundary.getValue();
 	}
+
+	/**
+	 * @return We include a toString() for use in the NeonCondition filter
+	 */
+	@Override
+	public String toString()
+	{
+		return this.getSite().getSiteName() + " (" + this.getSite().getSiteCode() + ")";
+	}
 }

@@ -24,10 +24,11 @@ public class QueryEngine
 
 	public enum QueryFilters
 	{
-		ELEVATION_FILTER("Elevation filter", ElevationCondition::new),
+		ALTITUDE_FILTER("Altitude filter", AltitudeCondition::new),
 		YEAR_FILTER("Year Filter", YearCondition::new),
 		MONTH_FILTER("Month Filter", MonthCondition::new),
 		HOUR_FILTER("Hour Filter", HourCondition::new),
+		NEON_SITE_FILTER("Neon Site Filter", NeonCondition::new),
 		DAY_OF_WEEK_FILTER("Day of Week Filter", DayOfWeekCondition::new),
 		START_TIME_FILTER("Start Date Filter", StartDateCondition::new),
 		END_TIME_FILTER("End Date Filter", EndDateCondition::new),

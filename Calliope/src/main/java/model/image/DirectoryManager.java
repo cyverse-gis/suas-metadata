@@ -9,7 +9,6 @@ import org.apache.commons.lang.StringUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.function.Function;
@@ -22,26 +21,6 @@ import java.util.stream.Collectors;
  */
 public class DirectoryManager
 {
-	/**
-	 * Given a directory this function validates that each file exists and if they don't adds them to the invalid containers list
-	 *
-	 * @param directory The directory to validate
-	 * @param invalidContainers The invalid containers in this directory
-	 */
-	public static void performDirectoryValidation(ImageContainer directory, List<ImageContainer> invalidContainers)
-	{
-		if (invalidContainers == null)
-			return;
-
-		// Ensure that the file exists, otherwise add it to the invalid containers list
-		if (!directory.getFile().exists())
-			invalidContainers.add(directory);
-
-		// Go through each of the children and validate them
-		for (ImageContainer container : directory.getChildren())
-			DirectoryManager.performDirectoryValidation(container, invalidContainers);
-	}
-
 	/**
 	 * Wipe out any empty sub-directories
 	 *
@@ -77,16 +56,26 @@ public class DirectoryManager
 	 */
 	public static ImageDirectory loadFiles(List<File> files)
 	{
+		// Map our input to a list of images only
 		List<File> validImages = files.stream().filter(CalliopeAnalysisUtils::fileIsImage).collect(Collectors.toList());
-		ImageDirectory imageDirectory = new ImageDirectory(files.get(0).getParentFile());
-		for (File validImage : validImages)
+		// Make sure we have at least one image file
+		if (!validImages.isEmpty())
 		{
-			ImageEntry imageEntry = new ImageEntry(validImage);
-			imageEntry.readFileMetadataIntoImage();
-			imageEntry.initIconBindings();
-			imageDirectory.addChild(imageEntry);
+			// All files are in the same directory, so grab the first file's parent directory
+			ImageDirectory imageDirectory = new ImageDirectory(files.get(0).getParentFile());
+			// Iterate over the images
+			for (File validImage : validImages)
+			{
+				// Load the image file and metadata and add it to the directory
+				ImageEntry imageEntry = new ImageEntry(validImage);
+				imageEntry.readFileMetadataIntoImage();
+				imageEntry.initIconBindings();
+				imageDirectory.addChild(imageEntry);
+			}
+			// Return the directory
+			return imageDirectory;
 		}
-		return imageDirectory;
+		return null;
 	}
 
 	/**

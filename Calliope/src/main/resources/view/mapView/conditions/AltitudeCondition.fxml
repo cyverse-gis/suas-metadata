@@ -3,9 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane prefHeight="-Infinity" fx:controller="controller.mapView.conditions.ElevationConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+<BorderPane prefHeight="-Infinity" fx:controller="controller.mapView.conditions.AltitudeConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <top>
-        <Label text="Elevation Filter" BorderPane.alignment="CENTER">
+        <Label text="Altitude Filter" BorderPane.alignment="CENTER">
             <BorderPane.margin>
                 <Insets top="5" bottom="10"/>
             </BorderPane.margin>
@@ -13,10 +13,10 @@
     </top>
     <center>
         <VBox spacing="5" alignment="TOP_CENTER">
-            <Label text="Return all elevations which are"/>
+            <Label text="Images taken at altitudes"/>
             <ComboBox maxWidth="Infinity" fx:id="cbxOperators"/>
             <HBox spacing="5" alignment="CENTER">
-                <TextField fx:id="txtElevation"/>
+                <TextField fx:id="txtAltitude"/>
                 <ComboBox fx:id="cbxUnit"/>
             </HBox>
         </VBox>

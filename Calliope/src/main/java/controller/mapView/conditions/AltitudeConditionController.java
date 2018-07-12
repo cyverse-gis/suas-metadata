@@ -5,7 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import model.elasticsearch.query.IQueryCondition;
-import model.elasticsearch.query.conditions.ElevationCondition;
+import model.elasticsearch.query.conditions.AltitudeCondition;
 import model.util.SettingsData;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
@@ -15,18 +15,18 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
- * Class used as a controller for the "Elevation filter" UI component
+ * Class used as a controller for the "Altitude filter" UI component
  */
-public class ElevationConditionController implements IConditionController
+public class AltitudeConditionController implements IConditionController
 {
 	///
 	/// FXML Bound Fields Start
 	///
 
 	@FXML
-	public ComboBox<ElevationCondition.ElevationComparisonOperators> cbxOperators;
+	public ComboBox<AltitudeCondition.AltitudeComparisonOperators> cbxOperators;
 	@FXML
-	public TextField txtElevation;
+	public TextField txtAltitude;
 	@FXML
 	public ComboBox<SettingsData.DistanceUnits> cbxUnit;
 
@@ -44,33 +44,33 @@ public class ElevationConditionController implements IConditionController
 	public void initialize(URL location, ResourceBundle resources)
 	{
 		ValidationSupport fieldValidator = new ValidationSupport();
-		// The elevation must be a double!
-		fieldValidator.registerValidator(this.txtElevation, true, Validator.createPredicateValidator(this::validDouble, "Elevation must be a decimal value!"));
+		// The altitude must be a double!
+		fieldValidator.registerValidator(this.txtAltitude, true, Validator.createPredicateValidator(this::validDouble, "Altitude must be a decimal value!"));
 	}
 
 	/**
 	 * Initializes the controller with a data model to bind to
 	 *
-	 * @param iQueryCondition The data model which should be an elevation filter condition
+	 * @param iQueryCondition The data model which should be an altitude filter condition
 	 */
 	@Override
 	public void initializeData(IQueryCondition iQueryCondition)
 	{
-		if (iQueryCondition instanceof ElevationCondition)
+		if (iQueryCondition instanceof AltitudeCondition)
 		{
-			ElevationCondition elevationCondition = (ElevationCondition) iQueryCondition;
+			AltitudeCondition altitudeCondition = (AltitudeCondition) iQueryCondition;
 
 			// Initialize our fields
-			this.txtElevation.setText(elevationCondition.elevationProperty().getValue().toString());
-			this.cbxOperators.setItems(elevationCondition.getOperatorList());
-			this.cbxOperators.getSelectionModel().select(elevationCondition.comparisonOperatorProperty().getValue());
-			this.cbxUnit.setItems(elevationCondition.getUnitList());
-			this.cbxUnit.getSelectionModel().select(elevationCondition.unitsProperty().getValue());
+			this.txtAltitude.setText(altitudeCondition.altitudeProperty().getValue().toString());
+			this.cbxOperators.setItems(altitudeCondition.getOperatorList());
+			this.cbxOperators.getSelectionModel().select(altitudeCondition.comparisonOperatorProperty().getValue());
+			this.cbxUnit.setItems(altitudeCondition.getUnitList());
+			this.cbxUnit.getSelectionModel().select(altitudeCondition.unitsProperty().getValue());
 
 			// Bind the new values to our model
-			elevationCondition.elevationProperty().bind(EasyBind.map(this.txtElevation.textProperty(), elevation -> parseOrDefault(elevation, 0.0)));
-			elevationCondition.comparisonOperatorProperty().bind(this.cbxOperators.getSelectionModel().selectedItemProperty());
-			elevationCondition.unitsProperty().bind(this.cbxUnit.getSelectionModel().selectedItemProperty());
+			altitudeCondition.altitudeProperty().bind(EasyBind.map(this.txtAltitude.textProperty(), altitude -> parseOrDefault(altitude, 0.0)));
+			altitudeCondition.comparisonOperatorProperty().bind(this.cbxOperators.getSelectionModel().selectedItemProperty());
+			altitudeCondition.unitsProperty().bind(this.cbxUnit.getSelectionModel().selectedItemProperty());
 		}
 	}
 

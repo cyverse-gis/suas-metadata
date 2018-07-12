@@ -1,30 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+
 <?import fxmapcontrol.Map?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import library.ImageViewPane?>
 <?import org.controlsfx.control.ToggleSwitch?>
 <?import java.net.URL?>
-
-
-<?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.control.Button?>
-<?import org.controlsfx.control.MaskerPane?>
-<?import javafx.scene.control.SplitPane?>
-<?import library.ImageViewPane?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.text.Font?>
 <StackPane fx:controller="controller.CalliopeMapController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@CalliopeMap.css"/>
     </stylesheets>
     <children>
         <Map fx:id="map" StackPane.alignment="CENTER" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
-        <VBox fx:id="vbxMapSettings" StackPane.alignment="TOP_LEFT" spacing="5" styleClass="propertiesPanel" maxWidth="200" maxHeight="120" alignment="TOP_LEFT">
+        <VBox fx:id="vbxMapSettings" StackPane.alignment="TOP_LEFT" spacing="5" styleClass="propertiesPanel" maxWidth="250" maxHeight="120">
             <StackPane.margin>
                 <Insets top="15" left="15"/>
             </StackPane.margin>
@@ -82,7 +74,6 @@
                     </HBox>
                 </items>
             </SplitPane>
-            <MaskerPane fx:id="mpnQuerying" text="Performing Query..." progressVisible="true"/>
         </StackPane>
         <Button fx:id="btnExpander" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER" minWidth="64" maxWidth="64" minHeight="64" maxHeight="64">
             <graphic>

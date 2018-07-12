@@ -11,19 +11,19 @@ import model.elasticsearch.query.IQueryCondition;
 import model.util.SettingsData;
 
 /**
- * Data model used by the "Elevation filter" query condition
+ * Data model used by the "Altitude filter" query condition
  */
-public class ElevationCondition implements IQueryCondition
+public class AltitudeCondition implements IQueryCondition
 {
-	// The elevation to compute on
-	private DoubleProperty elevation = new SimpleDoubleProperty(0);
-	// The units to interpret elevation as
+	// The altitude to compute on
+	private DoubleProperty altitude = new SimpleDoubleProperty(0);
+	// The units to interpret altitude as
 	private ObjectProperty<SettingsData.DistanceUnits> units = new SimpleObjectProperty<>(SettingsData.DistanceUnits.Meters);
 	// The comparison operator
-	private ObjectProperty<ElevationComparisonOperators> comparisonOperator = new SimpleObjectProperty<>(ElevationComparisonOperators.Equal);
+	private ObjectProperty<AltitudeComparisonOperators> comparisonOperator = new SimpleObjectProperty<>(AltitudeComparisonOperators.Equal);
 
 	// A list of possible comparison operators to filter
-	private ObservableList<ElevationComparisonOperators> operatorList = FXCollections.observableArrayList(ElevationComparisonOperators.values());
+	private ObservableList<AltitudeComparisonOperators> operatorList = FXCollections.observableArrayList(AltitudeComparisonOperators.values());
 	// A list of possible units to filter
 	private ObservableList<SettingsData.DistanceUnits> unitList = FXCollections.observableArrayList(SettingsData.DistanceUnits.values());
 
@@ -37,8 +37,8 @@ public class ElevationCondition implements IQueryCondition
 	{
 		if (this.comparisonOperator.getValue() != null)
 		{
-			Double distanceInMeters = this.units.getValue().formatToMeters(this.elevation.getValue());
-			query.addElevationCondition(distanceInMeters, this.comparisonOperator.getValue());
+			Double distanceInMeters = this.units.getValue().formatToMeters(this.altitude.getValue());
+			query.addAltitudeCondition(distanceInMeters, this.comparisonOperator.getValue());
 		}
 	}
 
@@ -50,23 +50,23 @@ public class ElevationCondition implements IQueryCondition
 	@Override
 	public String getFXMLConditionEditor()
 	{
-		return "ElevationCondition.fxml";
+		return "AltitudeCondition.fxml";
 	}
 
 	/**
-	 * The elevation property as an integer
+	 * The altitude property as an integer
 	 *
-	 * @return Elevation to query
+	 * @return Altitude to query
 	 */
-	public DoubleProperty elevationProperty()
+	public DoubleProperty altitudeProperty()
 	{
-		return this.elevation;
+		return this.altitude;
 	}
 
 	/**
-	 * The units used by elevation
+	 * The units used by altitude
 	 *
-	 * @return The units of elevation
+	 * @return The units of altitude
 	 */
 	public ObjectProperty<SettingsData.DistanceUnits> unitsProperty()
 	{
@@ -74,11 +74,11 @@ public class ElevationCondition implements IQueryCondition
 	}
 
 	/**
-	 * The operator used to compare the current elevation and the one on cyverse
+	 * The operator used to compare the current altitude and the one on cyverse
 	 *
 	 * @return The comparison operator
 	 */
-	public ObjectProperty<ElevationComparisonOperators> comparisonOperatorProperty()
+	public ObjectProperty<AltitudeComparisonOperators> comparisonOperatorProperty()
 	{
 		return this.comparisonOperator;
 	}
@@ -98,15 +98,15 @@ public class ElevationCondition implements IQueryCondition
 	 *
 	 * @return A list of possible operators
 	 */
-	public ObservableList<ElevationComparisonOperators> getOperatorList()
+	public ObservableList<AltitudeComparisonOperators> getOperatorList()
 	{
 		return this.operatorList;
 	}
 
 	/**
-	 * Enum of elevation comparison operators
+	 * Enum of altitude comparison operators
 	 */
-	public enum ElevationComparisonOperators
+	public enum AltitudeComparisonOperators
 	{
 		Equal("Equal To"),
 		GreaterThan("Greater Than"),
@@ -121,13 +121,13 @@ public class ElevationCondition implements IQueryCondition
 		 *
 		 * @param displayName The name to visually display
 		 */
-		ElevationComparisonOperators(String displayName)
+		AltitudeComparisonOperators(String displayName)
 		{
 			this.displayName = displayName;
 		}
 
 		/**
-		 * Returns the display name as the elevation condition toString
+		 * Returns the display name as the altitude condition toString
 		 *
 		 * @return The display name
 		 */

@@ -25,7 +25,7 @@ public class CollectionCondition implements IQueryCondition
 	 */
 	public CollectionCondition()
 	{
-		// Make sure each hour maps to a boolean property, this is important for later, since our view will use this to populate checkboxes
+		// Make sure each collection maps to a boolean property, this is important for later, since our view will use this to populate checkboxes
 		for (ImageCollection imageCollection : this.getImageCollections())
 			if (!this.imageCollectionToSelected.containsKey(imageCollection))
 				this.imageCollectionToSelected.put(imageCollection, new SimpleBooleanProperty(true));

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+<BorderPane prefHeight="-Infinity" fx:controller="controller.mapView.conditions.NeonConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <GridPane.margin>
+        <Insets left="5" right="5"/>
+    </GridPane.margin>
+    <stylesheets>
+        <URL value="@NeonCondition.css"/>
+    </stylesheets>
+    <top>
+        <Label text="Neon Site Filter" BorderPane.alignment="CENTER">
+            <BorderPane.margin>
+                <Insets top="5" bottom="10"/>
+            </BorderPane.margin>
+        </Label>
+    </top>
+    <center>
+        <ListView fx:id="siteFilterListView"/>
+    </center>
+    <bottom>
+        <VBox>
+            <children>
+                <HBox spacing="5">
+                    <VBox.margin>
+                        <Insets left="5" right="5" top="10"/>
+                    </VBox.margin>
+                    <children>
+                        <TextField fx:id="txtSiteSearch" promptText="Search Neon Sites" HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#clearBoundedSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER"/>
+                    </children>
+                </HBox>
+                <FlowPane alignment="CENTER" hgap="5" vgap="10">
+                    <padding>
+                        <Insets bottom="10" left="5" right="5" top="10"/>
+                    </padding>
+                    <children>
+                        <Button onAction="#selectAllSites" mnemonicParsing="false" text="Select All"/>
+                        <Button onAction="#selectNoSites" mnemonicParsing="false" text="Select None"/>
+                    </children>
+                </FlowPane>
+            </children>
+        </VBox>
+    </bottom>
+</BorderPane>
