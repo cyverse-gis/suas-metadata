@@ -5,7 +5,7 @@ import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.image.ImageEntry;
+import model.dataSources.ImageEntry;
 import model.neon.BoundedSite;
 import model.util.SettingsData;
 import org.apache.commons.lang.StringUtils;

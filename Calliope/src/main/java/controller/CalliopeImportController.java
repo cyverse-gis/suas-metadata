@@ -7,7 +7,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
@@ -36,14 +35,16 @@ import library.ImageViewPane;
 import library.TreeViewAutomatic;
 import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
-import model.image.*;
+import model.dataSources.IDataSource;
+import model.dataSources.ImageContainer;
+import model.dataSources.ImageDirectory;
+import model.dataSources.ImageEntry;
 import model.location.Position;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.threading.ErrorService;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
-import model.util.ImportableDataSources;
 import model.util.Vector3;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -182,7 +183,7 @@ public class CalliopeImportController implements Initializable
 
 	// A list of possible import options when adding data to the program
 	@FXML
-	public ComboBox<ImportableDataSources> cbxImport;
+	public ComboBox<IDataSource> cbxImport;
 
 	///
 	/// FXML bound fields end
@@ -485,9 +486,23 @@ public class CalliopeImportController implements Initializable
 		// Setup the import combo-box
 
 		// Set the items to be the enum possible values
-		this.cbxImport.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(ImportableDataSources.values())));
+		this.cbxImport.setItems(CalliopeData.getInstance().getDataSources());
 		// Set our cell factory to be our custom cell
 		this.cbxImport.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImportableFormatEntry.fxml").getController());
+		// Make sure that new cells use the 'getName' function to get the combo-box value instead of 'toString()'
+		this.cbxImport.setConverter(new StringConverter<IDataSource>()
+		{
+			@Override
+			public String toString(IDataSource dataSource)
+			{
+				return dataSource.getName();
+			}
+			@Override
+			public IDataSource fromString(String dataSourceName)
+			{
+				return CalliopeData.getInstance().getDataSources().stream().filter(dataSource -> dataSource.getName().equals(dataSourceName)).findFirst().orElse(null);
+			}
+		});
 		// When we select a new item in the list cell, execute the task and don't forget to disable the button while it's running
 		EasyBind.subscribe(this.cbxImport.getSelectionModel().selectedItemProperty(), newValue ->
 		{

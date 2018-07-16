@@ -11,12 +11,16 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
+import model.dataSources.IDataSource;
+import model.dataSources.ImageDirectory;
+import model.dataSources.ImageEntry;
+import model.dataSources.cyverseDataStore.CyVerseDSDataSource;
+import model.dataSources.localPC.directory.LocalPCDirectoryDataSource;
+import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.elasticsearch.ElasticSearchConnectionManager;
-import model.image.ImageDirectory;
-import model.image.ImageEntry;
+import model.elasticsearch.query.QueryEngine;
 import model.neon.BoundedSite;
 import model.neon.NeonData;
-import model.elasticsearch.query.QueryEngine;
 import model.threading.CalliopeExecutor;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
@@ -26,7 +30,6 @@ import org.hildan.fxgson.FxGson;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
@@ -82,8 +85,6 @@ public class CalliopeData
 
 	// List of Calliope settings
 	private final SettingsData settings;
-	private AtomicBoolean needSettingsSync;
-	private AtomicBoolean settingsSyncInProgress;
 
 	// Class used to display errors as popups
 	private final ErrorDisplay errorDisplay;
@@ -96,6 +97,8 @@ public class CalliopeData
 
 	// Class to handle metadata management
 	private MetadataManager metadataManager;
+
+	private ObservableList<IDataSource> dataSources;
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
@@ -133,10 +136,6 @@ public class CalliopeData
 		// Create a temporary directory to dump any temporary files into
 		this.tempDirectoryManager = new TempDirectoryManager(this.errorDisplay);
 
-		// Setup our automatic setting synchronization
-		this.needSettingsSync = new AtomicBoolean(false);
-		this.settingsSyncInProgress = new AtomicBoolean(false);
-
 		// Create the query engine which executes ES queries
 		this.queryEngine = new QueryEngine();
 
@@ -157,6 +156,12 @@ public class CalliopeData
 
 		// When the settings change, we sync them
 		this.setupAutoSettingsSync();
+
+		// Setup our list of data sources
+		this.dataSources = FXCollections.observableArrayList(dataSource -> new Observable[] {dataSource.descriptionProperty(), dataSource.iconProperty(), dataSource.nameProperty() });
+
+		// Add all default data sources to the list
+		this.addDefaultDataSources();
 	}
 
 	/**
@@ -182,6 +187,16 @@ public class CalliopeData
 	}
 
 	/**
+	 * Adds all default data sources to our list of sources
+	 */
+	private void addDefaultDataSources()
+	{
+		this.dataSources.add(new CyVerseDSDataSource());
+		this.dataSources.add(new LocalPCImageDataSource());
+		this.dataSources.add(new LocalPCDirectoryDataSource());
+	}
+
+	/**
 	 * @return The global site list
 	 */
 	public ObservableList<BoundedSite> getSiteList()
@@ -203,18 +218,6 @@ public class CalliopeData
 	public ImageDirectory getImageTree()
 	{
 		return imageTree;
-	}
-
-	/**
-	 * @return The tree of images as a list
-	 */
-	public List<ImageEntry> getAllImages()
-	{
-		return this.getImageTree()
-				.flattened()
-				.filter(container -> container instanceof ImageEntry)
-				.map(imageEntry -> (ImageEntry) imageEntry)
-				.collect(Collectors.toList());
 	}
 
 	/**
@@ -317,5 +320,10 @@ public class CalliopeData
 	public MetadataManager getMetadataManager()
 	{
 		return this.metadataManager;
+	}
+
+	public ObservableList<IDataSource> getDataSources()
+	{
+		return dataSources;
 	}
 }

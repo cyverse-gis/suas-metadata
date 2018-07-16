@@ -1,4 +1,4 @@
-package model.image;
+package model.dataSources;
 
 import model.CalliopeData;
 import model.analysis.CalliopeAnalysisUtils;
@@ -26,24 +26,20 @@ public class DirectoryManager
 	 *
 	 * @param directory The directory to remove empty sub-directories from
 	 */
-	public static void removeEmptyDirectories(ImageDirectory directory)
+	public static void removeEmptyDirectories(ImageContainer directory)
 	{
 		// Go through each child
 		for (int i = 0; i < directory.getChildren().size(); i++)
 		{
 			// Grab the current image container
 			ImageContainer imageContainer = directory.getChildren().get(i);
-			// If it's a directory, recursively remove image directories from it
-			if (imageContainer instanceof ImageDirectory)
+			// Remove empty directories from this directory
+			DirectoryManager.removeEmptyDirectories(imageContainer);
+			// If it's empty, remove this directory and reduce I since we don't want to get an index out of bounds exception
+			if (imageContainer.getChildren().isEmpty())
 			{
-				// Remove empty directories from this directory
-				DirectoryManager.removeEmptyDirectories((ImageDirectory) imageContainer);
-				// If it's empty, remove this directory and reduce I since we don't want to get an index out of bounds exception
-				if (imageContainer.getChildren().isEmpty())
-				{
-					directory.getChildren().remove(i);
-					i--;
-				}
+				directory.getChildren().remove(i);
+				i--;
 			}
 		}
 	}
@@ -94,7 +90,7 @@ public class DirectoryManager
 			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
 			imageEntry.readFileMetadataIntoImage();
 			imageEntry.initIconBindings();
-			toReturn.addImage(imageEntry);
+			toReturn.addChild(imageEntry);
 		}
 		else
 		{
@@ -126,7 +122,7 @@ public class DirectoryManager
 					ImageEntry imageEntry = new ImageEntry(file);
 					imageEntry.readFileMetadataIntoImage();
 					imageEntry.initIconBindings();
-					current.addImage(imageEntry);
+					current.addChild(imageEntry);
 				}
 				// Add all subdirectories to the directory
 				else if (file.isDirectory())

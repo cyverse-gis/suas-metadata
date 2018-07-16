@@ -11,8 +11,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import model.constant.CalliopeDataFormats;
-import model.image.ImageContainer;
-import model.image.ImageDirectory;
+import model.dataSources.ImageContainer;
+import model.dataSources.ImageDirectory;
 
 /**
  * Class used as the controller for an upload entry in the treeview

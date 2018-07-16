@@ -1,6 +1,5 @@
 package model.elasticsearch;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import de.micromata.opengis.kml.v_2_2_0.Boundary;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
@@ -10,10 +9,9 @@ import javafx.application.Platform;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.elasticsearch.query.ElasticSearchQuery;
-import model.image.ImageDirectory;
-import model.image.ImageEntry;
-import model.image.UploadedEntry;
+import model.dataSources.ImageDirectory;
+import model.dataSources.ImageEntry;
+import model.cyverse.UploadedEntry;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.util.ErrorDisplay;
@@ -58,12 +56,9 @@ import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 

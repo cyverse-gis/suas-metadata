@@ -5,9 +5,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import model.util.ImportableDataSources;
+import model.dataSources.IDataSource;
 
-public class ImportableFormatEntryController extends ListCell<ImportableDataSources>
+public class ImportableFormatEntryController extends ListCell<IDataSource>
 {
 	///
 	/// FXML Bound Fields Start
@@ -38,7 +38,7 @@ public class ImportableFormatEntryController extends ListCell<ImportableDataSour
 	 * @param empty If the cell should be empty
 	 */
 	@Override
-	protected void updateItem(ImportableDataSources importableDataFormat, boolean empty)
+	protected void updateItem(IDataSource importableDataFormat, boolean empty)
 	{
 		// Update the cell first
 		super.updateItem(importableDataFormat, empty);

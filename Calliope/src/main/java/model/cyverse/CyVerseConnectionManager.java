@@ -4,7 +4,11 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
 import model.analysis.CalliopeAnalysisUtils;
-import model.image.*;
+import model.dataSources.DirectoryManager;
+import model.dataSources.ImageDirectory;
+import model.dataSources.ImageEntry;
+import model.dataSources.cyverseDataStore.CyVerseDSImageDirectory;
+import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -488,7 +492,7 @@ public class CyVerseConnectionManager
 				// If the file is not a directory add it as a new image entry
 				if (!file.isDirectory())
 					if (CalliopeAnalysisUtils.fileIsImage(file))
-						currentDirectory.addImage(new CyVerseDSImageEntry(file));
+						currentDirectory.addChild(new CyVerseDSImageEntry(file));
 				else
 				{
 					// Grab the sub-directory

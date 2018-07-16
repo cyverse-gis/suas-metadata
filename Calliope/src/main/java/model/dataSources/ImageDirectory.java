@@ -1,4 +1,4 @@
-package model.image;
+package model.dataSources;
 
 import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
@@ -22,7 +22,8 @@ public class ImageDirectory extends ImageContainer
 {
 	// The icon to use for all images at the moment
 	private static final Image DEFAULT_DIR_IMAGE = new Image(ImageEntry.class.getResource("/images/importWindow/directoryIcon.png").toString());
-	final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_DIR_IMAGE);
+	// The icon that is currently selected to be displayed
+	private final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_DIR_IMAGE);
 	// List of sub-files and directories
 	private ObservableList<ImageContainer> children = FXCollections.observableArrayList(imageContainer ->
 	{
@@ -52,12 +53,10 @@ public class ImageDirectory extends ImageContainer
 		else
 			return new Observable[0];
 	});
-
 	// The file representing the directory
 	private ObjectProperty<File> directoryProperty = new SimpleObjectProperty<File>();
-
-	// The progress of the directory upload to CyVerse
-	private transient DoubleProperty uploadProgress = new SimpleDoubleProperty(-1);
+	// The progress of the directory upload
+	private DoubleProperty uploadProgress = new SimpleDoubleProperty(-1);
 
 	/**
 	 * Construct an image directoryProperty
@@ -105,23 +104,22 @@ public class ImageDirectory extends ImageContainer
 	public Stream<ImageContainer> flattened()
 	{
 		return Stream.concat(
-				Stream.of(this),
-				Stream.concat(
-						this.getChildren()
-								.stream()
-								.filter(child -> !(child instanceof ImageDirectory)),
-						this.getChildren()
-								.stream()
-								.filter(child -> child instanceof ImageDirectory)
-								.map(child -> (ImageDirectory) child)
-								.flatMap(ImageDirectory::flattened)));
+			Stream.of(this),
+			Stream.concat(
+				this.getChildren()
+					.stream()
+					.filter(child -> !(child instanceof ImageDirectory)),
+				this.getChildren()
+					.stream()
+					.filter(child -> child instanceof ImageDirectory)
+					.map(child -> (ImageDirectory) child)
+					.flatMap(ImageDirectory::flattened)));
 	}
 
 	/**
 	 * Add a new child to this directory
 	 *
-	 * @param container
-	 *            The container to add
+	 * @param container The container to add
 	 */
 	public void addChild(ImageContainer container)
 	{
@@ -129,43 +127,21 @@ public class ImageDirectory extends ImageContainer
 	}
 
 	/**
-	 * Remove the given container from the directory
-	 * @param container The container to remove from this directory
-	 * @return If the removal was successful
-	 */
-	public Boolean removeChild(ImageContainer container)
-	{
-		return this.children.remove(container);
-	}
-
-	/**
 	 * Remove the container from the directory and all sub-directories
+	 *
 	 * @param container The container to remove
 	 * @return True if the removal was successful
 	 */
 	public Boolean removeChildRecursive(ImageContainer container)
 	{
-		if (this.removeChild(container))
+		// If the children list successfully removes the item we return
+		if (this.children.remove(container))
 			return true;
 
-		for (int i = 0; i < this.children.size(); i++)
-		{
-			ImageContainer containerInList = this.children.get(i);
+		for (ImageContainer containerInList : this.children)
 			if (containerInList instanceof ImageDirectory && ((ImageDirectory) containerInList).removeChildRecursive(container))
 				return true;
-		}
 		return false;
-	}
-
-	/**
-	 * Add an image to this directoryProperty
-	 * 
-	 * @param imageEntry
-	 *            The image to add
-	 */
-	public void addImage(ImageEntry imageEntry)
-	{
-		this.children.add(imageEntry);
 	}
 
 	/**

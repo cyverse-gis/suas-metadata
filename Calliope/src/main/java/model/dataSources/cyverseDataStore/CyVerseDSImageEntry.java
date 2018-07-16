@@ -1,11 +1,13 @@
-package model.image;
+package model.dataSources.cyverseDataStore;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
+import model.dataSources.ImageEntry;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Class representing a CyVerse datastore image entry

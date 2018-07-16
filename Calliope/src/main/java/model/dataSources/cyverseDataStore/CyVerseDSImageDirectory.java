@@ -1,6 +1,8 @@
-package model.image;
+package model.dataSources.cyverseDataStore;
 
 import javafx.scene.image.Image;
+import model.dataSources.ImageDirectory;
+import model.dataSources.ImageEntry;
 import org.irods.jargon.core.pub.io.IRODSFile;
 
 import java.io.File;
@@ -21,7 +23,7 @@ public class CyVerseDSImageDirectory extends ImageDirectory
 	public CyVerseDSImageDirectory(File directory)
 	{
 		super(directory);
-		this.selectedImage.setValue(DEFAULT_CLOUD_DIR_IMAGE);
+		this.treeIconProperty().setValue(DEFAULT_CLOUD_DIR_IMAGE);
 	}
 
 	/**

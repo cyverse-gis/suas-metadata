@@ -1,7 +1,7 @@
 package model.analysis;
 
 import library.MoonCalculator;
-import model.image.ImageEntry;
+import model.dataSources.ImageEntry;
 import model.location.Position;
 
 import java.time.Instant;

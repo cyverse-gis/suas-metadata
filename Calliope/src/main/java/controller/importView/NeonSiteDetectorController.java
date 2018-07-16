@@ -10,7 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
 import model.analysis.CalliopeAnalysisUtils;
-import model.image.ImageEntry;
+import model.dataSources.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
 import org.apache.commons.lang.math.NumberUtils;

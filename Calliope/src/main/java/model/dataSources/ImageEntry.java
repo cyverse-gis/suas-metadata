@@ -1,4 +1,4 @@
-package model.image;
+package model.dataSources;
 
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
