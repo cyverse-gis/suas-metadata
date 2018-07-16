@@ -8,6 +8,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
 import model.location.Position;
@@ -18,7 +19,9 @@ import model.util.MetadataManager;
 import model.util.Vector3;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
+import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -139,6 +142,26 @@ public class ImageEntry extends ImageContainer
 			return DEFAULT_IMAGE_ICON;
 		}, this.siteTaken);
 		selectedImage.bind(imageBinding);
+	}
+
+	/**
+	 * Creates a displayable image from a local file by reading it off the disk
+	 *
+	 * @return An image in memory representing the file on disk
+	 */
+	public Image buildDisplayableImage()
+	{
+		try
+		{
+			// Can't use 'new Image(file.toURI().toString())' because it doesn't support tiffs, sad day
+			return SwingFXUtils.toFXImage(ImageIO.read(this.getFile()), null);
+		}
+		catch (IOException e)
+		{
+			// If an error occurs, print it out
+			CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file '" + this.getFile().getAbsolutePath() + "'\n" + ExceptionUtils.getStackTrace(e));
+		}
+		return null;
 	}
 
 	///

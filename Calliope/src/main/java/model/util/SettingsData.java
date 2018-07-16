@@ -24,7 +24,6 @@ public class SettingsData
 	private ObjectProperty<LocationFormat> locationFormat = new SimpleObjectProperty<>(LocationFormat.LatLong);
 	private ObjectProperty<DistanceUnits> distanceUnits = new SimpleObjectProperty<>(DistanceUnits.Meters);
 	private ObjectProperty<Double> popupDelaySec = new SimpleDoubleProperty(10).asObject();
-	private BooleanProperty backgroundImageLoading = new SimpleBooleanProperty(false);
 	private BooleanProperty disablePopups = new SimpleBooleanProperty(false);
 
 	/**
@@ -47,7 +46,6 @@ public class SettingsData
 		this.locationFormat.setValue(otherSettings.getLocationFormat());
 		this.distanceUnits.setValue(otherSettings.getDistanceUnits());
 		this.popupDelaySec.setValue(otherSettings.getPopupDelaySec());
-		this.backgroundImageLoading.setValue(otherSettings.getBackgroundImageLoading());
 		this.disablePopups.setValue(otherSettings.getDisablePopups());
 	}
 
@@ -61,7 +59,6 @@ public class SettingsData
 		settingList.add(new CustomPropertyItem<>("Position Format: ", "Position", "The location format to be used when displaying positional information", locationFormat, LocationFormat.class));
 		settingList.add(new CustomPropertyItem<>("Distance Units: ", "Units", "The units to be used by the program", distanceUnits, DistanceUnits.class));
 		settingList.add(new CustomPropertyItem<>("Popup Hide Delay (in seconds): ", "Options", "How many seconds the popup should wait before disappearing", popupDelaySec, Double.class));
-		settingList.add(new CustomPropertyItem<>("Background Image Loading: ", "Options", "Load images in the background when selecting them, useful for slow hard drives or SD cards", backgroundImageLoading, Boolean.class));
 		settingList.add(new CustomPropertyItem<>("Disable Popups: ", "Options", "Lose some program functionality to avoid popups at all costs", disablePopups, Boolean.class));
 	}
 
@@ -373,21 +370,6 @@ public class SettingsData
 	public ObjectProperty<DistanceUnits> distanceUnitsProperty()
 	{
 		return distanceUnits;
-	}
-
-	public void setBackgroundImageLoading(boolean backgroundImageLoading)
-	{
-		this.backgroundImageLoading.set(backgroundImageLoading);
-	}
-
-	public boolean getBackgroundImageLoading()
-	{
-		return backgroundImageLoading.get();
-	}
-
-	public BooleanProperty backgroundImageLoadingProperty()
-	{
-		return backgroundImageLoading;
 	}
 
 	public void setPopupDelaySec(Double popupDelaySec)

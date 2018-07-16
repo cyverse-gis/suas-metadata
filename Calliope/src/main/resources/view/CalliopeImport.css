@@ -10,7 +10,7 @@
     -fx-graphic: url("../images/importWindow/delete16.png");
 }
 
-.importBtn {
+.importCbx {
     -fx-graphic: url("../images/importWindow/import16.png");
 }
 

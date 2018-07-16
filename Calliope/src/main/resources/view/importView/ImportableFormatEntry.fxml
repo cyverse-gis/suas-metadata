@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<BorderPane fx:id="mainPane" prefWidth="300" styleClass="backgroundBorder" fx:controller="controller.importView.ImportableFormatEntryController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <stylesheets>
+        <URL value="@ImportableFormatEntry.css"/>
+    </stylesheets>
+    <padding>
+        <Insets right="10"/>
+    </padding>
+    <top>
+        <Label BorderPane.alignment="CENTER" fx:id="lblTitle" styleClass="titleLbl" text="Title test"/>
+    </top>
+    <center>
+        <HBox spacing="5" BorderPane.alignment="CENTER_LEFT" alignment="CENTER_LEFT">
+            <children>
+                <ImageView fx:id="imgIcon" fitHeight="64" fitWidth="64"/>
+                <Label fx:id="lblDescription" text="Description test" wrapText="true"/>
+            </children>
+        </HBox>
+    </center>
+</BorderPane>

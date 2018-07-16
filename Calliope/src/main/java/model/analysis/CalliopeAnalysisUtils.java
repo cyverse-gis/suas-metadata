@@ -28,7 +28,19 @@ public class CalliopeAnalysisUtils
 	 */
 	public static boolean fileIsImage(File file)
 	{
-		return StringUtils.endsWithAny(FileUtils.getFileExtension(file), ACCEPTED_EXTENSIONS);
+		return fileIsImage(FileUtils.getFileExtension(file));
+	}
+
+	/**
+	 * Test if a file is an image
+	 *
+	 * @param fileExtension
+	 *            The file extension to test
+	 * @return True if the file is an image, false if not
+	 */
+	private static boolean fileIsImage(String fileExtension)
+	{
+		return StringUtils.endsWithAny(fileExtension, ACCEPTED_EXTENSIONS);
 	}
 
 	/**

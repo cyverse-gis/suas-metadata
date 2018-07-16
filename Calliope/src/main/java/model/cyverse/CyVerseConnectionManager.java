@@ -3,6 +3,7 @@ package model.cyverse;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
+import model.analysis.CalliopeAnalysisUtils;
 import model.image.*;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
@@ -20,11 +21,16 @@ import org.irods.jargon.core.pub.*;
 import org.irods.jargon.core.pub.domain.User;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.pub.io.IRODSFileFactory;
+import org.irods.jargon.core.pub.io.IRODSFileImpl;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
 import org.irods.jargon.core.transfer.TransferStatus;
 import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -420,6 +426,116 @@ public class CyVerseConnectionManager
 			this.sessionManager.closeSession();
 		}
 
+		return null;
+	}
+
+	/**
+	 * Called to download the folder as an image directory from a CyVerse absolute path
+	 *
+	 * @param absolutePathToFiles The absolute path to the files to index
+	 * @return An image directory representing the CyVerse datastore absolute path
+	 */
+	public ImageDirectory prepareExistingImagesForIndexing(String absolutePathToFiles)
+	{
+		// Open a session as usual
+		if (this.sessionManager.openSession())
+		{
+			try
+			{
+				// Create a file factory object
+				IRODSFileFactory irodsFileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
+				// Create an instance of an iRODS file using the file factory
+				IRODSFileImpl topLevelDirectory = (IRODSFileImpl) irodsFileFactory.instanceIRODSFile(absolutePathToFiles);
+				// Make sure that the directory exists, and can be read, and is a directory
+				if (topLevelDirectory.exists() && topLevelDirectory.canRead() && topLevelDirectory.isDirectory())
+				{
+					// Create a new CyVerse datastore image directory representing the image
+					CyVerseDSImageDirectory imageDirectory = new CyVerseDSImageDirectory(topLevelDirectory);
+					// Download the image directory for editing using a recursive call
+					this.createDirectoryAndImageTree(imageDirectory);
+					// Return the directory
+					return imageDirectory;
+				}
+			}
+			catch (JargonException e)
+			{
+				// If something goes wrong, display an error
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not download existing image data for indexing!\n" + ExceptionUtils.getStackTrace(e));
+			}
+
+			// Close the session
+			this.sessionManager.closeSession();
+		}
+		return null;
+	}
+
+	/**
+	 * Recursively adds all sub-directories and images to a directory
+	 *
+	 * @param currentDirectory The directory to recursively add sub-directories and images to
+	 */
+	private void createDirectoryAndImageTree(CyVerseDSImageDirectory currentDirectory)
+	{
+		// Get all directory sub-files
+		IRODSFileImpl[] subFiles = (IRODSFileImpl[]) currentDirectory.getCyverseFile().listFiles();
+
+		// Make sure it's not null
+		if (subFiles != null)
+		{
+			// Iterate over all sub-files
+			for (IRODSFileImpl file : subFiles)
+			{
+				// If the file is not a directory add it as a new image entry
+				if (!file.isDirectory())
+					if (CalliopeAnalysisUtils.fileIsImage(file))
+						currentDirectory.addImage(new CyVerseDSImageEntry(file));
+				else
+				{
+					// Grab the sub-directory
+					CyVerseDSImageDirectory subDirectory = new CyVerseDSImageDirectory(file);
+					// Store the sub-directory
+					currentDirectory.addChild(subDirectory);
+					// Recursively read the sub-directory
+					this.createDirectoryAndImageTree(subDirectory);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Reads the image from an iRODS absolute path into local memory
+	 *
+	 * @param irodsFileAbsolutePath The iRODS path to read from
+	 * @return The image to return
+	 */
+	public BufferedImage readIRODSImage(String irodsFileAbsolutePath)
+	{
+		// Open the session as usual
+		if (this.sessionManager.openSession())
+		{
+			try
+			{
+				// We need to duplicate the iRODS file. The IRODSInputStream does not correctly close the file if an exception occurs so we need to take
+				// care of that manually by creating a new iRODS file every time this method is called
+				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
+				IRODSFile irodsFile = fileFactory.instanceIRODSFile(irodsFileAbsolutePath);
+				// Create an inputstream to the file
+				try (InputStream fileInputStream = fileFactory.instanceIRODSFileInputStream(irodsFile))
+				{
+					// Read the stream as an image file
+					return ImageIO.read(fileInputStream);
+				}
+			}
+			catch (JargonException | IOException ignored)
+			{
+				// Ignore loading errors, just display a blank image then
+			}
+			finally
+			{
+				// Close the session
+				this.sessionManager.closeSession();
+			}
+		}
 		return null;
 	}
 }

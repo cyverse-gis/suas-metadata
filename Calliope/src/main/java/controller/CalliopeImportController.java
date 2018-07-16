@@ -2,15 +2,18 @@ package controller;
 
 import controller.importView.NeonSiteDetectorController;
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
-import javafx.embed.swing.SwingFXUtils;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -24,8 +27,6 @@ import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -39,10 +40,11 @@ import model.image.*;
 import model.location.Position;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
+import model.threading.ErrorService;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
+import model.util.ImportableDataSources;
 import model.util.Vector3;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.controlsfx.control.PropertySheet;
@@ -52,10 +54,6 @@ import org.controlsfx.property.editor.PropertyEditor;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
-import javax.imageio.ImageIO;
-import javax.swing.filechooser.FileSystemView;
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,11 +92,11 @@ public class CalliopeImportController implements Initializable
 	public Button btnResetImage;
 
 	// The button to begin importing images
-	@FXML
-	public Button btnImportImages;
+	//@FXML
+	//public Button btnImportImages;
 	// The button to begin importing a directory
-	@FXML
-	public Button btnImportDirectory;
+	//@FXML
+	//public Button btnImportDirectory;
 	// The button to delete imported images
 	@FXML
 	public Button btnDelete;
@@ -116,6 +114,10 @@ public class CalliopeImportController implements Initializable
 	public Button btnLeftArrow;
 	@FXML
 	public Button btnRightArrow;
+
+	// The progress indicator showing that an image is being loaded
+	@FXML
+	public ProgressIndicator pidImageLoading;
 
 	// The main pane holding everything
 	@FXML
@@ -177,6 +179,10 @@ public class CalliopeImportController implements Initializable
 	// The propertysheet used by the left tab pane to show metadata
 	@FXML
 	public PropertySheet pstMetadata;
+
+	// A list of possible import options when adding data to the program
+	@FXML
+	public ComboBox<ImportableDataSources> cbxImport;
 
 	///
 	/// FXML bound fields end
@@ -363,23 +369,39 @@ public class CalliopeImportController implements Initializable
 		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::yProperty)), numStrconverter);
 		this.txtZRotation.disableProperty().bind(currentlySelectedImage.isNull());
 		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::zProperty)), numStrconverter);
-		// Bind the image preview to the selected image from the right side tree view
-		// Can't use 'new Image(file.toURI().toString()));'
-		// because it doesn't support tiffs. Sad day.
-		this.imagePreview.imageProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::getFileProperty).map(file ->
+		// Service used to retrieve the currently selected image pixel data
+		ErrorService<Image> imageRetrievalService = new ErrorService<Image>()
 		{
-			try
+			@Override
+			protected Task<Image> createTask()
 			{
-				// ImageIO can read tiffs with the library
-				return SwingFXUtils.toFXImage(ImageIO.read(file), null);
+				ImageEntry value = currentlySelectedImage.getValue();
+				return new ErrorTask<Image>()
+				{
+					@Override
+					protected Image call()
+					{
+						// Passing in null returns null
+						if (value == null)
+							return null;
+						// Perform the hard computation
+						return value.buildDisplayableImage();
+					}
+				};
 			}
-			catch (IOException e)
-			{
-				// We couldn't read the image, so return null
-				CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file\n" + ExceptionUtils.getStackTrace(e));
-			}
-			return null;
-		}));
+		};
+		// When the service finishes we update the displayed image and hide the loading gif
+		imageRetrievalService.setOnSucceeded(event ->
+		{
+			this.imagePreview.setImage(imageRetrievalService.getValue());
+			this.pidImageLoading.setVisible(false);
+		});
+		// When we select a new image we retrieve the pixel data to display on screen
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) ->
+		{
+			this.pidImageLoading.setVisible(true);
+			imageRetrievalService.restart();
+		});
 		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the species entry location name to the selected image's location
@@ -420,9 +442,9 @@ public class CalliopeImportController implements Initializable
 		// Setup the neon site detector stage
 
 		// Load the FXML file of the editor window
-		FXMLLoader timeShiftLoader = FXMLLoaderUtils.loadFXML("importView/NeonSiteDetector.fxml");
+		FXMLLoader neonSiteDetectorLoader = FXMLLoaderUtils.loadFXML("importView/NeonSiteDetector.fxml");
 		// Grab the controller
-		this.neonSiteDetectorController = timeShiftLoader.getController();
+		this.neonSiteDetectorController = neonSiteDetectorLoader.getController();
 
 		// Create the stage that will have the neon site detector
 		this.neonSiteDetectorStage = new Stage();
@@ -433,9 +455,9 @@ public class CalliopeImportController implements Initializable
 		// Make sure the window is the right size and can't be resized
 		this.neonSiteDetectorStage.setResizable(false);
 		// Set the scene to the root of the FXML file
-		Scene timeShiftScene = new Scene(timeShiftLoader.getRoot());
+		Scene neonSiteDetectorScene = new Scene(neonSiteDetectorLoader.getRoot());
 		// Set the scene of the stage, and show it!
-		this.neonSiteDetectorStage.setScene(timeShiftScene);
+		this.neonSiteDetectorStage.setScene(neonSiteDetectorScene);
 		// When we close the stage don't close it, just hide it
 		this.neonSiteDetectorStage.setOnCloseRequest(event ->
 		{
@@ -444,6 +466,7 @@ public class CalliopeImportController implements Initializable
 		});
 
 		// Setup the metadata property sheet
+
 		// When we click a new image then load new metadata
 		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> { if (newValue != null) this.pstMetadata.getItems().setAll(newValue.getRawMetadata()); });
 		// Create a default factory
@@ -457,6 +480,47 @@ public class CalliopeImportController implements Initializable
 			if (toReturn.getEditor() instanceof TextField)
 				((TextField) toReturn.getEditor()).setEditable(false);
 			return toReturn;
+		});
+
+		// Setup the import combo-box
+
+		// Set the items to be the enum possible values
+		this.cbxImport.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(ImportableDataSources.values())));
+		// Set our cell factory to be our custom cell
+		this.cbxImport.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImportableFormatEntry.fxml").getController());
+		// When we select a new item in the list cell, execute the task and don't forget to disable the button while it's running
+		EasyBind.subscribe(this.cbxImport.getSelectionModel().selectedItemProperty(), newValue ->
+		{
+			// If we got a valid new value
+			if (newValue != null)
+			{
+				// Create the import task from the enum
+				Task<ImageDirectory> importTask = newValue.makeImportTask(this.imageTree.getScene().getWindow());
+				// Make sure the task is not null
+				if (importTask != null)
+				{
+					// Hide the import button for now
+					this.cbxImport.setDisable(true);
+					// Grab the original on succeeded handler
+					EventHandler<WorkerStateEvent> onSucceeded = importTask.getOnSucceeded();
+					// Update our on succeeded handler to re-enable the import button
+					importTask.setOnSucceeded(event ->
+					{
+						onSucceeded.handle(event);
+						// Also clear the selection since we're using this combo-box as more of an item list than anything
+						// Because we're in a listener we can't actually modify the combobox in here, so use Platform.runLater to put it into a queue
+						Platform.runLater(() -> this.cbxImport.getSelectionModel().clearSelection());
+						this.cbxImport.setDisable(false);
+					});
+					// Execute the task
+					CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
+				}
+				else
+				{
+					// Because we're in a listener we can't actually modify the combobox in here, so use Platform.runLater to put it into a queue
+					Platform.runLater(() -> this.cbxImport.getSelectionModel().clearSelection());
+				}
+			}
 		});
 
 		// Initialize the fade transitions
@@ -523,136 +587,6 @@ public class CalliopeImportController implements Initializable
 	{
 		this.cache.add(reference);
 		return reference;
-	}
-
-	/**
-	 * Fired when the import images button is pressed
-	 *
-	 * @param actionEvent consumed when the button is pressed
-	 */
-	public void importImages(ActionEvent actionEvent)
-	{
-		// If our Exiftool was not loaded successfully we can't import images, so throw an error here
-		if (!CalliopeData.getInstance().getMetadataManager().isExifToolFound())
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("ExifTool is required to read image metadata. See the bottom of the settings tab for installation instructions");
-			return;
-		}
-
-		// Create a file chooser to let the user choose which images to import
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Select Image(s)");
-		// Set the directory to be in documents
-		fileChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
-		// Show the dialog
-		List<File> files = fileChooser.showOpenMultipleDialog(this.imagePreview.getScene().getWindow());
-		// If the file chosen is a file and a directory process it
-		if (files != null && !files.isEmpty())
-		{
-			// Disable the import buttons for now
-			this.btnImportImages.setDisable(true);
-			this.btnImportDirectory.setDisable(true);
-			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
-			{
-				@Override
-				protected ImageDirectory call()
-				{
-					final Long MAX_WORK = 2L;
-
-					this.updateProgress(1, MAX_WORK);
-					this.updateMessage("Loading files...");
-
-					// Convert the files to a directory
-					ImageDirectory directory = DirectoryManager.loadFiles(files);
-
-					this.updateProgress(2, MAX_WORK);
-					this.updateMessage("Removing empty directories...");
-
-					// Remove any directories that are empty and contain no images
-					DirectoryManager.removeEmptyDirectories(directory);
-
-					return directory;
-				}
-			};
-			importTask.setOnSucceeded(event ->
-			{
-				// Add the directory to the image tree
-				CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
-				this.btnImportImages.setDisable(false);
-				this.btnImportDirectory.setDisable(false);
-			});
-
-			// Execute the task
-			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
-		}
-
-		// Consume the event
-		actionEvent.consume();
-	}
-
-	/**
-	 * Fired when the import directory button is pressed
-	 *
-	 * @param actionEvent consumed when the button is pressed
-	 */
-	public void importDirectory(ActionEvent actionEvent)
-	{
-		// If our Exiftool was not loaded successfully we can't import images, so throw an error here
-		if (!CalliopeData.getInstance().getMetadataManager().isExifToolFound())
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("ExifTool is required to read image metadata. See the bottom of the settings tab for installation instructions");
-			return;
-		}
-
-		// Create a directory chooser to let the user choose where to get the images from
-		DirectoryChooser directoryChooser = new DirectoryChooser();
-		directoryChooser.setTitle("Select Folder with Images");
-		// Set the directory to be in documents
-		directoryChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
-		// Show the dialog
-		File file = directoryChooser.showDialog(this.imagePreview.getScene().getWindow());
-		// If the file chosen is a file and a directory process it
-		if (file != null && file.isDirectory())
-		{
-			// Disable the import buttons for now
-			this.btnImportImages.setDisable(true);
-			this.btnImportDirectory.setDisable(true);
-			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
-			{
-				@Override
-				protected ImageDirectory call()
-				{
-					final Long MAX_WORK = 2L;
-
-					this.updateProgress(1, MAX_WORK);
-					this.updateMessage("Loading directory...");
-
-					// Convert the file to a recursive image directory data structure
-					ImageDirectory directory = DirectoryManager.loadDirectory(file);
-
-					this.updateProgress(2, MAX_WORK);
-					this.updateMessage("Removing empty directories...");
-
-					// Remove any directories that are empty and contain no images
-					DirectoryManager.removeEmptyDirectories(directory);
-
-					return directory;
-				}
-			};
-			importTask.setOnSucceeded(event ->
-			{
-				// Add the directory to the image tree
-				CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
-				this.btnImportImages.setDisable(false);
-				this.btnImportDirectory.setDisable(false);
-			});
-
-			// Execute the task
-			CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
-		}
-
-		// Consume the event
-		actionEvent.consume();
 	}
 
 	/**

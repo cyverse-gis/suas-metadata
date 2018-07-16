@@ -90,9 +90,6 @@ public class CalliopeUploadController implements Initializable
 	@FXML
 	public Button btnResetSearch;
 
-	@FXML
-	public Button btnIndexExisting;
-
 	///
 	/// FXML Bound Fields End
 	///
@@ -140,7 +137,6 @@ public class CalliopeUploadController implements Initializable
 		}).orElse(nothingSelected));
 
 		this.btnRefreshUploads.disableProperty().bind(nothingSelected);
-		this.btnIndexExisting.disableProperty().bind(nothingSelected);
 
 		// Initialize root of the right side directory/image tree and make the root invisible
 		// This is because a treeview must have ONE root.
@@ -326,34 +322,6 @@ public class CalliopeUploadController implements Initializable
 	public void resetUploadSearch(ActionEvent actionEvent)
 	{
 		this.txtUploadSearch.clear();
-		actionEvent.consume();
-	}
-
-	/**
-	 * Indexes existing images on the CyVerse datastore
-	 *
-	 * @param actionEvent consumed
-	 */
-	public void indexExisting(ActionEvent actionEvent)
-	{
-		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
-		{
-			TextInputDialog dialog = new TextInputDialog();
-			dialog.setContentText(null);
-			dialog.setHeaderText("Enter the path to the top level CyVerse datastore directory to recursively index\nEx: /iplant/home/dslovikosky/myUploads/myImages/");
-			dialog.setTitle("Index Existing Images");
-
-			dialog.showAndWait().ifPresent(result ->
-			{
-				CalliopeData.getInstance().getEsConnectionManager().refreshNeonSiteCache();
-				//if (this.selectedCollection.getValue() != null)
-				//	CalliopeData.getInstance().getCyConnectionManager().indexExisitingImages(this.selectedCollection.getValue(), result);
-			});
-		}
-		else
-		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
-		}
 		actionEvent.consume();
 	}
 

@@ -4,6 +4,5 @@
   "locationFormat": "LatLong",
   "distanceUnits": "Meters",
   "popupDelaySec": 10.0,
-  "backgroundImageLoading": false,
   "noPopups": false
 }

@@ -11,6 +11,7 @@
 <?import org.controlsfx.control.PropertySheet?>
 <?import org.controlsfx.control.StatusBar?>
 <?import java.net.URL?>
+<?import java.lang.String?>
 <SplitPane fx:id="mainPane" fx:controller="controller.CalliopeImportController" dividerPositions="0.2, 0.8" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@CalliopeImport.css" />
@@ -75,6 +76,11 @@
                                 <Button fx:id="btnRightArrow" mnemonicParsing="false" onAction="#onRightArrowClicked" pickOnBounds="false" styleClass="rightBtn" BorderPane.alignment="CENTER" />
                             </right>
                         </BorderPane>
+                        <ProgressIndicator fx:id="pidImageLoading" StackPane.alignment="TOP_LEFT" maxWidth="64" maxHeight="64" visible="false">
+                            <StackPane.margin>
+                                <Insets top="10" left="10"/>
+                            </StackPane.margin>
+                        </ProgressIndicator>
                         <Region fx:id="imageAddOverlay" pickOnBounds="false" styleClass="importPane" />
                         <StatusBar fx:id="sbrTaskProgress" maxHeight="30" minHeight="30" pickOnBounds="false" styleClass="sbrTaskProgress" text="" StackPane.alignment="BOTTOM_RIGHT">
                             <StackPane.margin>
@@ -166,8 +172,7 @@
                         <Insets bottom="20" left="5" right="5" top="20" />
                     </padding>
                     <children>
-                        <Button fx:id="btnImportImages" mnemonicParsing="false" onAction="#importImages" styleClass="importBtn" text="Import Images" />
-                        <Button fx:id="btnImportDirectory" mnemonicParsing="false" onAction="#importDirectory" styleClass="importBtn" text="Import Directory"/>
+                        <ComboBox fx:id="cbxImport" prefWidth="150" styleClass="importCbx" promptText="Import Images"/>
                         <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#deleteImages" styleClass="deleteBtn" text="Delete" />
                     </children>
                 </FlowPane>
