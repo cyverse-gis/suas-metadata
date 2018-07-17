@@ -3,25 +3,22 @@ package controller.importView;
 import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
-import model.util.AnalysisUtils;
 import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
+import model.util.AnalysisUtils;
 import org.apache.commons.lang.math.NumberUtils;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.ResourceBundle;
 
-public class NeonSiteDetectorController implements Initializable
+public class NeonSiteDetectorController
 {
 	///
 	/// FXML bound fields start
@@ -55,12 +52,9 @@ public class NeonSiteDetectorController implements Initializable
 
 	/**
 	 * Initializes this NEON site detector form
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// We disable the detect sites button if we have the distance radio button selected and the text is an invalid double
 		this.btnDetectSites.disableProperty().bind(this.rbnByBoundary.selectedProperty().not().and(Bindings.createBooleanBinding(() -> !NumberUtils.isNumber(this.txtDistance.getText()), this.txtDistance.textProperty())));

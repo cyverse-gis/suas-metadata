@@ -1,7 +1,6 @@
 package controller;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.paint.Color;
@@ -11,13 +10,10 @@ import org.controlsfx.control.PropertySheet;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicObservableValue;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 /**
  * Controller for the settings tab
  */
-public class CalliopeSettingsController implements Initializable
+public class CalliopeSettingsController
 {
 	///
 	/// FXML bound fields start
@@ -40,13 +36,9 @@ public class CalliopeSettingsController implements Initializable
 
 	/**
 	 * Initialize sets up the analysis window and bindings
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// Bind the Calliope settings list to the property sheet settings because we cant bind the list property...
 		EasyBind.listBind(this.pstSettings.getItems(), CalliopeData.getInstance().getSettings().getSettingList());

@@ -5,7 +5,6 @@ import javafx.beans.property.*;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.stage.Stage;
@@ -19,17 +18,15 @@ import model.threading.ErrorTask;
 import org.controlsfx.control.action.Action;
 import org.fxmisc.easybind.EasyBind;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 /**
  * Controller for the settings user interface
  */
-public class ImageCollectionSettingsController implements Initializable
+public class ImageCollectionSettingsController
 {
 	///
 	/// FXML Bound fields start
@@ -85,8 +82,8 @@ public class ImageCollectionSettingsController implements Initializable
 	// The original image collection that we are editing
 	private ImageCollection originalCollection;
 
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// TODO: We probably do not need bidirectional binds here
 

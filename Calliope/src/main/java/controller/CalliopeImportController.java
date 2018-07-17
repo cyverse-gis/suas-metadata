@@ -15,7 +15,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -37,16 +36,12 @@ import library.TreeViewAutomatic;
 import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
 import model.dataSources.IDataSource;
-import model.image.ImageContainer;
-import model.image.ImageDirectory;
-import model.image.ImageEntry;
-import model.image.Position;
+import model.image.*;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.threading.ErrorService;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
-import model.image.Vector3;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.controlsfx.control.PropertySheet;
@@ -56,14 +51,13 @@ import org.controlsfx.property.editor.PropertyEditor;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Controller class for the main import window
  */
-public class CalliopeImportController implements Initializable
+public class CalliopeImportController
 {
 	///
 	/// FXML bound fields start
@@ -220,12 +214,9 @@ public class CalliopeImportController implements Initializable
 
 	/**
 	 * Initialize the Calliope import view and data bindings
-	 *
-	 * @param ignored   ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL ignored, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// Setup the tab pane on the left to have uniformly sized tabs
 		leftTabPane.tabMinWidthProperty().bind(leftTabPane.widthProperty().divide(leftTabPane.getTabs().size()).subtract(30));

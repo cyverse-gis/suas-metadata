@@ -1,17 +1,13 @@
 package controller.mapView;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Circle;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Simple controller file used to control pin behaviour when placed on the map
  */
-public class MapCircleController implements Initializable
+public class MapCircleController
 {
 	///
 	/// FXML Bound Fields Start
@@ -30,12 +26,9 @@ public class MapCircleController implements Initializable
 
 	/**
 	 * Initialize doesn't do anything here
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 	}
 

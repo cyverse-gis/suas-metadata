@@ -4,7 +4,6 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -21,13 +20,11 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Controller class for the main program
  */
-public class CalliopeHomeController implements Initializable
+public class CalliopeHomeController
 {
 	///
 	/// FXML bound fields start
@@ -61,12 +58,9 @@ public class CalliopeHomeController implements Initializable
 
 	/**
 	 * Initialize sets up the analysis window and bindings
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// If we're logged in show the logged in person's username
 		this.lblUsername.textProperty().bind(EasyBind.monadic(CalliopeData.getInstance().usernameProperty()).map(username -> "Welcome " + username + "!").orElse(""));

@@ -4,7 +4,6 @@ import controller.importView.SitePopOverController;
 import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
-import fxmapcontrol.Map;
 import javafx.animation.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -15,7 +14,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
@@ -54,14 +52,16 @@ import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
 
 import java.io.File;
-import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Controller class for the map page
  */
-public class CalliopeMapController implements Initializable
+public class CalliopeMapController
 {
 	///
 	/// FXML bound fields start
@@ -145,12 +145,9 @@ public class CalliopeMapController implements Initializable
 
 	/**
 	 * Initialize sets up the analysis window and bindings
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));

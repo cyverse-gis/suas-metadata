@@ -1,17 +1,13 @@
 package controller.importView;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import model.neon.jsonPOJOs.Site;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Simple class for displaying site information as a pop-over
  */
-public class SitePopOverController implements Initializable
+public class SitePopOverController
 {
 	///
 	/// FXML Bound Fields Start
@@ -54,12 +50,9 @@ public class SitePopOverController implements Initializable
 
 	/**
 	 * Nothing to initialize
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 	}
 

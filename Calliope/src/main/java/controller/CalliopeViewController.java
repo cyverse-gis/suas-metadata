@@ -7,7 +7,6 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
@@ -28,8 +27,8 @@ import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
 import model.neon.BoundedSite;
-import model.threading.ErrorTask;
 import model.settings.SettingsData;
+import model.threading.ErrorTask;
 import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.validation.ValidationSupport;
@@ -39,14 +38,12 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
-import java.util.ResourceBundle;
 
 /**
  * Controller class for the program main view
  */
-public class CalliopeViewController implements Initializable
+public class CalliopeViewController
 {
 	///
 	/// FXML Bound fields start
@@ -106,8 +103,8 @@ public class CalliopeViewController implements Initializable
 	// Property used to detect if we are logging in or not
 	private BooleanProperty loggingIn = new SimpleBooleanProperty(false);
 
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// Whenever we get a new notification, make sure the buttons are scaled correctly
 		this.notificationPane.setOnShowing(event ->

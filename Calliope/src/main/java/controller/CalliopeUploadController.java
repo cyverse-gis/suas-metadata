@@ -4,7 +4,10 @@ import controller.uploadView.ImageCollectionListEntryController;
 import controller.uploadView.ImageUploadDownloadListEntryController;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -12,7 +15,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -32,14 +34,12 @@ import org.controlsfx.control.TaskProgressView;
 import org.controlsfx.control.action.Action;
 import org.fxmisc.easybind.EasyBind;
 
-import java.net.URL;
 import java.util.Comparator;
-import java.util.ResourceBundle;
 
 /**
  * Controller class for the upload page
  */
-public class CalliopeUploadController implements Initializable
+public class CalliopeUploadController
 {
 	///
 	/// FXML Bound Fields Start
@@ -98,14 +98,13 @@ public class CalliopeUploadController implements Initializable
 
 	// Constant strings used to display status
 	private static final String STATUS_LOADING = "Loading collection uploads...";
-	private static final String STATUS_DOWNLOADING = "Downloading collection uploads to edit...";
 
 
 	// The currently selected image collection
 	private ObjectProperty<ImageCollection> selectedCollection = new SimpleObjectProperty<>();
 
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// First setup the collection list
 
