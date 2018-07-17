@@ -1,10 +1,11 @@
-package model.dataSources;
+package model.image;
 
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
+import model.dataSources.IDataSource;
 import model.neon.BoundedSite;
 
 import java.io.File;

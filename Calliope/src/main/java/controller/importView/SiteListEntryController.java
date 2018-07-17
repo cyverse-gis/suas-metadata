@@ -5,10 +5,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 import model.CalliopeData;
-import model.analysis.CalliopeAnalysisUtils;
-import model.location.UTMCoord;
+import model.util.AnalysisUtils;
+import model.image.UTMCoord;
 import model.neon.BoundedSite;
-import model.util.SettingsData;
+import model.settings.SettingsData;
 
 /**
  * Controller class for the location list cell
@@ -116,7 +116,7 @@ public class SiteListEntryController extends ListCell<BoundedSite>
         else if (format == SettingsData.LocationFormat.UTM)
         {
             // Convert to UTM
-            UTMCoord utmEquiv = CalliopeAnalysisUtils.Deg2UTM(location.getSite().getSiteLatitude(), location.getSite().getSiteLongitude());
+            UTMCoord utmEquiv = AnalysisUtils.Deg2UTM(location.getSite().getSiteLatitude(), location.getSite().getSiteLongitude());
             // Update the labels
             this.lblLocationFirst.setText(utmEquiv.getEasting().intValue() + "E");
             this.lblLocationSecond.setText(utmEquiv.getNorthing().intValue() + "N");

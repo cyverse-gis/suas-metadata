@@ -1,4 +1,4 @@
-package model.dataSources;
+package model.image;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

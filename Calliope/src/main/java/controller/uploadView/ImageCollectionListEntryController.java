@@ -1,8 +1,5 @@
 package controller.uploadView;
 
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -23,17 +20,12 @@ import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.dataSources.IDataSource;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
-import model.threading.ErrorTask;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.action.Action;
-import org.irods.jargon.core.transfer.TransferStatus;
-import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
 
-import java.io.File;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static model.constant.CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT;
 

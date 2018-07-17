@@ -9,8 +9,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
-import model.analysis.CalliopeAnalysisUtils;
-import model.dataSources.ImageEntry;
+import model.util.AnalysisUtils;
+import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
 import org.apache.commons.lang.math.NumberUtils;
@@ -132,7 +132,7 @@ public class NeonSiteDetectorController implements Initializable
 						// Find the closest site to the image
 						BoundedSite closest = CalliopeData.getInstance().getNeonData().closestBoundedSiteTo(rawSites, toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
 						// Compute the distance to that site
-						Double distance = CalliopeAnalysisUtils.distanceBetween(closest.getSite().getSiteLatitude(), closest.getSite().getSiteLongitude(), toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
+						Double distance = AnalysisUtils.distanceBetween(closest.getSite().getSiteLatitude(), closest.getSite().getSiteLongitude(), toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
 						// If the distance is less than the one required, we found the right spot
 						if (distance <= maxDistance)
 							toReturn[i] = closest;

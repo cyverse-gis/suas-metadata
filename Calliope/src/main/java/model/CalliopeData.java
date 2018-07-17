@@ -12,15 +12,17 @@ import javafx.collections.ObservableList;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.dataSources.IDataSource;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSDataSource;
 import model.dataSources.localPC.directory.LocalPCDirectoryDataSource;
 import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.elasticsearch.ElasticSearchConnectionManager;
 import model.elasticsearch.query.QueryEngine;
+import model.image.MetadataManager;
 import model.neon.BoundedSite;
 import model.neon.NeonData;
+import model.settings.SensitiveConfigurationManager;
+import model.settings.SettingsData;
 import model.threading.CalliopeExecutor;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
@@ -29,9 +31,7 @@ import org.hildan.fxgson.FxGson;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 
 /**
  * A singleton class containing all data Calliope needs

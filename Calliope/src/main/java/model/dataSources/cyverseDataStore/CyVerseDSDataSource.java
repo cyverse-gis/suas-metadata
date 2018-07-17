@@ -7,11 +7,11 @@ import javafx.scene.image.Image;
 import javafx.stage.Window;
 import model.CalliopeData;
 import model.cyverse.ImageCollection;
-import model.cyverse.UploadedEntry;
+import model.dataSources.UploadedEntry;
 import model.dataSources.DirectoryManager;
 import model.dataSources.IDataSource;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import model.threading.ErrorTask;
 
 import java.time.LocalDateTime;
@@ -132,7 +132,12 @@ public class CyVerseDSDataSource implements IDataSource
 					StringProperty messageCallback = new SimpleStringProperty("");
 					this.updateMessage("Uploading image directory " + directoryToIndex.getFile().getName() + " to CyVerse.");
 					messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
-					UploadedEntry uploadedEntry = new UploadedEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count()), directoryToIndex.getFile().getAbsolutePath());
+					UploadedEntry uploadedEntry = new UploadedEntry(
+							CalliopeData.getInstance().getUsername(),
+							LocalDateTime.now(),
+							Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count()),
+							directoryToIndex.getFile().getAbsolutePath(),
+							"CyVerse Data Store");
 					// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress
 					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToIndex, uploadedEntry, imageCollection.getID().toString(), imageEntry -> imageEntry.getFile().getAbsolutePath());
 					return null;

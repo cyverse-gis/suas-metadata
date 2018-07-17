@@ -1,21 +1,17 @@
-package model.analysis;
+package model.util;
 
-import model.location.UTMCoord;
+import model.image.UTMCoord;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.util.FileUtils;
 
 import java.io.File;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Utility class for Calliope analysis
  * 
  * @author David Slovikosky
  */
-public class CalliopeAnalysisUtils
+public class AnalysisUtils
 {
 	private static final String[] ACCEPTED_EXTENSIONS = { "jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO" };
 
@@ -65,6 +61,21 @@ public class CalliopeAnalysisUtils
 		double delta = Math.toRadians(lng2 - lng1);
 		double R = 6371.000;
 		return Math.acos(Math.sin(lat1Rad) * Math.sin(lat2Rad) + Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.cos(delta)) * R;
+	}
+
+	/**
+	 * Rounds a number to a given number of decimal places
+	 *
+	 * @param number The number to round
+	 * @param decimalPlaces The number of decimal places to round to
+	 * @return The rounded double
+	 */
+	public static double round(double number, int decimalPlaces)
+	{
+		// Get the factor to multiply the number by to begin rounding. Just multiply 10 by itself decimalPlaces amount of times
+		double factor = Math.pow(10, decimalPlaces);
+		// Return the rounded value. We do this by multiplying the number by the factor and then dividing truncating the decimal place
+		return Math.round(number * factor) / factor;
 	}
 
 	/**

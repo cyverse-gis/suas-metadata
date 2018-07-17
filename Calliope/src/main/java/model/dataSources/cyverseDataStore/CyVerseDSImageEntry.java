@@ -9,7 +9,7 @@ import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
-import model.dataSources.ImageEntry;
+import model.image.ImageEntry;
 import model.threading.ErrorTask;
 import org.irods.jargon.core.pub.io.IRODSFile;
 

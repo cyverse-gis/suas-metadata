@@ -1,4 +1,4 @@
-package model.dataSources;
+package model.image;
 
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
@@ -8,12 +8,9 @@ import javafx.beans.property.*;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
-import model.location.Position;
 import model.neon.BoundedSite;
 import model.util.CustomPropertyItem;
-import model.util.MetadataCustomItem;
-import model.util.MetadataManager;
-import model.util.Vector3;
+import model.settings.MetadataCustomItem;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import javax.imageio.ImageIO;

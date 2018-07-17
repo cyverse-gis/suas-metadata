@@ -3,7 +3,7 @@ package model.neon;
 import de.micromata.opengis.kml.v_2_2_0.*;
 import de.micromata.opengis.kml.v_2_2_0.gx.Tour;
 import model.CalliopeData;
-import model.analysis.CalliopeAnalysisUtils;
+import model.util.AnalysisUtils;
 import model.neon.jsonPOJOs.Site;
 import model.neon.jsonPOJOs.Sites;
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -187,7 +187,7 @@ public class NeonData
 		for (Site site : sites)
 		{
 			// Compute the distance between the site and the lat/long point
-			Double distanceToSite = CalliopeAnalysisUtils.distanceBetween(latitude, longitude, site.getSiteLatitude(), site.getSiteLongitude());
+			Double distanceToSite = AnalysisUtils.distanceBetween(latitude, longitude, site.getSiteLatitude(), site.getSiteLongitude());
 			// If this site is the closest so far, store it
 			if (distanceToSite < shortestDistance)
 			{
@@ -296,7 +296,7 @@ public class NeonData
 		for (BoundedSite site : sites)
 		{
 			// Compute the distance between the site and the lat/long point
-			Double distanceToSite = CalliopeAnalysisUtils.distanceBetween(latitude, longitude, site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude());
+			Double distanceToSite = AnalysisUtils.distanceBetween(latitude, longitude, site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude());
 			// If this site is the closest so far, store it
 			if (distanceToSite < shortestDistance)
 			{

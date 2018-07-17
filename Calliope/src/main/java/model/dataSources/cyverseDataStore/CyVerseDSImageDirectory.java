@@ -1,8 +1,8 @@
 package model.dataSources.cyverseDataStore;
 
 import javafx.scene.image.Image;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import org.irods.jargon.core.pub.io.IRODSFile;
 
 import java.io.File;

@@ -6,8 +6,7 @@ import javafx.concurrent.Task;
 import javafx.scene.image.Image;
 import javafx.stage.Window;
 import model.cyverse.ImageCollection;
-
-import java.util.List;
+import model.image.ImageDirectory;
 
 /**
  * Interface used by any data source providing images to Calliope

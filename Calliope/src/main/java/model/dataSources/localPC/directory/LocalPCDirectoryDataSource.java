@@ -6,10 +6,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import model.dataSources.localPC.LocalPCDataSource;
-import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.threading.ErrorTask;
 
 import javax.swing.filechooser.FileSystemView;
@@ -25,7 +24,7 @@ public class LocalPCDirectoryDataSource extends LocalPCDataSource
 	 */
 	public LocalPCDirectoryDataSource()
 	{
-		super("Local PC Directory", "Select a directory to recursively import images from into the program from your computer", new Image(ImageEntry.class.getResource("/images/importWindow/importDirectoryIcon.png").toString()));
+		super("Local PC Directory", "Select a directory to recursively import images from on your computer", new Image(ImageEntry.class.getResource("/images/importWindow/importDirectoryIcon.png").toString()));
 	}
 
 	/**

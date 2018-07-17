@@ -10,9 +10,9 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
-import model.dataSources.ImageContainer;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageContainer;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import model.neon.BoundedSite;
 
 import java.util.Optional;

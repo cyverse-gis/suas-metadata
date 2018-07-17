@@ -5,10 +5,9 @@ import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.dataSources.ImageEntry;
+import model.image.ImageEntry;
 import model.neon.BoundedSite;
-import model.util.SettingsData;
-import org.apache.commons.lang.StringUtils;
+import model.settings.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.xcontent.*;
@@ -59,9 +58,6 @@ public class ElasticSearchSchemaManager
 							.startObject("popupDisplaySec")
 								.field("type", "double")
 							.endObject()
-							.startObject("backgroundImageLoading")
-								.field("type", "boolean")
-							.endObject()
 							.startObject("noPopups")
 								.field("type", "boolean")
 							.endObject()
@@ -84,9 +80,6 @@ public class ElasticSearchSchemaManager
 		.startObject()
 			.startObject(indexType)
 				.startObject("properties")
-					.startObject("storageType")
-						.field("type", "keyword")
-					.endObject()
 					.startObject("storagePath")
 						.field("type", "keyword")
 					.endObject()
@@ -222,7 +215,10 @@ public class ElasticSearchSchemaManager
 							.startObject("imageCount")
 								.field("type", "integer")
 							.endObject()
-							.startObject("uploadIRODSPath")
+							.startObject("uploadPath")
+								.field("type", "keyword")
+							.endObject()
+							.startObject("storageMethod")
 								.field("type", "keyword")
 							.endObject()
 						.endObject()
@@ -397,7 +393,6 @@ public class ElasticSearchSchemaManager
 		// Start the image metadata JSON with basic fields
 		XContentBuilder imageJSON = XContentFactory.jsonBuilder()
 		.startObject()
-			.field("storageType", "CyVerse Datastore")
 			.field("storagePath", fixedAbsolutePath)
 			.field("collectionID", collectionID)
 			.startObject("imageMetadata")

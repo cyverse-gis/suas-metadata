@@ -3,10 +3,11 @@ package model.cyverse;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
-import model.analysis.CalliopeAnalysisUtils;
+import model.util.AnalysisUtils;
 import model.dataSources.DirectoryManager;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
+import model.dataSources.UploadedEntry;
 import model.dataSources.cyverseDataStore.CyVerseDSImageDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
 import org.apache.commons.io.FilenameUtils;
@@ -343,7 +344,12 @@ public class CyVerseConnectionManager
 
 					// Create the JSON file representing the upload
 					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
-					UploadedEntry uploadEntry = new UploadedEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), imageCount, uploadDirName);
+					UploadedEntry uploadEntry = new UploadedEntry(
+							CalliopeData.getInstance().getUsername(),
+							LocalDateTime.now(),
+							imageCount,
+							uploadDirName,
+							"CyVerse Data Store");
 
 					// Create the meta.csv representing the metadata for all images in the tar file
 					String localDirAbsolutePath = directoryToWrite.getFile().getAbsolutePath();
@@ -375,7 +381,7 @@ public class CyVerseConnectionManager
 					// Finally we actually index the image metadata using elasticsearch
 					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToWrite, uploadEntry, collection.getID().toString(), imageEntry -> uploadDirName + "/" + localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), directoryToWrite.getFile().getAbsolutePath()));
 
-					// Let rules do the rest!
+					// Let rules do the un-tar processing!
 				}
 				else
 				{
@@ -493,7 +499,7 @@ public class CyVerseConnectionManager
 			{
 				// If the file is not a directory add it as a new image entry
 				if (!file.isDirectory())
-					if (CalliopeAnalysisUtils.fileIsImage(file))
+					if (AnalysisUtils.fileIsImage(file))
 					{
 						ImageEntry imageEntry = new CyVerseDSImageEntry(file);
 						imageEntry.initIconBindings();

@@ -1,4 +1,4 @@
-package model.cyverse;
+package model.dataSources;
 
 import java.time.LocalDateTime;
 
@@ -13,8 +13,10 @@ public class UploadedEntry
 	private LocalDateTime uploadDate;
 	// The number of images in this upload
 	private Integer imageCount;
-	// A path to the upload on CyVerse
-	private String uploadIRODSPath;
+	// A path to the upload
+	private String uploadPath;
+	// The storage method for the upload
+	private String storageMethod;
 
 	/**
 	 * Constructor initializes all fields
@@ -22,14 +24,17 @@ public class UploadedEntry
 	 *
 	 * @param uploadUser The user that uploaded the images
 	 * @param uploadDate The date the upload happened on
-	 * @param uploadIRODSPath The path to the file on CyVerse
+	 * @param imageCount The number of images in the upload
+	 * @param uploadPath The path to the file
+	 * @param storageMethod How the image is stored on the system
 	 */
-	public UploadedEntry(String uploadUser, LocalDateTime uploadDate, Integer imageCount, String uploadIRODSPath)
+	public UploadedEntry(String uploadUser, LocalDateTime uploadDate, Integer imageCount, String uploadPath, String storageMethod)
 	{
 		this.uploadUser = uploadUser;
 		this.uploadDate = uploadDate;
 		this.imageCount = imageCount;
-		this.uploadIRODSPath = uploadIRODSPath;
+		this.uploadPath = uploadPath;
+		this.storageMethod = storageMethod;
 	}
 
 	///
@@ -51,8 +56,13 @@ public class UploadedEntry
 		return imageCount;
 	}
 
-	public String getUploadIRODSPath()
+	public String getUploadPath()
 	{
-		return uploadIRODSPath;
+		return uploadPath;
+	}
+
+	public String getStorageMethod()
+	{
+		return storageMethod;
 	}
 }

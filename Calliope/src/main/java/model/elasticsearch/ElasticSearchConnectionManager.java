@@ -9,14 +9,14 @@ import javafx.application.Platform;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
-import model.cyverse.UploadedEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
+import model.dataSources.UploadedEntry;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
 import model.util.ErrorDisplay;
-import model.util.SensitiveConfigurationManager;
-import model.util.SettingsData;
+import model.settings.SensitiveConfigurationManager;
+import model.settings.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -780,7 +780,8 @@ public class ElasticSearchConnectionManager
 				put("imageCount", uploadEntry.getImageCount());
 				put("uploadDate", uploadEntry.getUploadDate().atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT));
 				put("uploadUser", uploadEntry.getUploadUser());
-				put("uploadIRODSPath", uploadEntry.getUploadIRODSPath());
+				put("uploadPath", uploadEntry.getUploadPath());
+				put("storageMethod", uploadEntry.getStorageMethod());
 			}});
 			updateRequest
 				.index(INDEX_CALLIOPE_COLLECTIONS)

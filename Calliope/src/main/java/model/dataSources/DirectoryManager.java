@@ -1,7 +1,10 @@
 package model.dataSources;
 
 import model.CalliopeData;
-import model.analysis.CalliopeAnalysisUtils;
+import model.util.AnalysisUtils;
+import model.image.ImageContainer;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -57,7 +60,7 @@ public class DirectoryManager
 	public static ImageDirectory loadFiles(List<File> files)
 	{
 		// Map our input to a list of images only
-		List<File> validImages = files.stream().filter(CalliopeAnalysisUtils::fileIsImage).collect(Collectors.toList());
+		List<File> validImages = files.stream().filter(AnalysisUtils::fileIsImage).collect(Collectors.toList());
 		// Make sure we have at least one image file
 		if (!validImages.isEmpty())
 		{
@@ -121,7 +124,7 @@ public class DirectoryManager
 			for (File file : subFiles)
 			{
 				// Add all image files to the directory
-				if (CalliopeAnalysisUtils.fileIsImage(file))
+				if (AnalysisUtils.fileIsImage(file))
 				{
 					ImageEntry imageEntry = new ImageEntry(file);
 					imageEntry.initIconBindings();

@@ -29,7 +29,7 @@ import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
-import model.util.SettingsData;
+import model.settings.SettingsData;
 import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.validation.ValidationSupport;

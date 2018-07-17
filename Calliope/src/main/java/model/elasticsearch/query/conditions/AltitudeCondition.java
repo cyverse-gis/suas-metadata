@@ -8,7 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.IQueryCondition;
-import model.util.SettingsData;
+import model.settings.SettingsData;
 
 /**
  * Data model used by the "Altitude filter" query condition

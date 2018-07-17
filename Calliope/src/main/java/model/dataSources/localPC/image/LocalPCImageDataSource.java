@@ -6,8 +6,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
-import model.dataSources.ImageDirectory;
-import model.dataSources.ImageEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
 import model.dataSources.localPC.LocalPCDataSource;
 import model.threading.ErrorTask;
 
@@ -25,7 +25,7 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 	 */
 	public LocalPCImageDataSource()
 	{
-		super("Local PC File", "Select specific image(s) to import into the program from your computer", new Image(ImageEntry.class.getResource("/images/importWindow/importImageIcon.png").toString()));
+		super("Local PC File", "Select specific image(s) to import on your computer", new Image(ImageEntry.class.getResource("/images/importWindow/importImageIcon.png").toString()));
 	}
 
 	/**

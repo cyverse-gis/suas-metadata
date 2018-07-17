@@ -1,9 +1,10 @@
-package model.util;
+package model.settings;
 
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import model.util.CustomPropertyItem;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -6,7 +6,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import model.elasticsearch.query.IQueryCondition;
 import model.elasticsearch.query.conditions.AltitudeCondition;
-import model.util.SettingsData;
+import model.settings.SettingsData;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 import org.fxmisc.easybind.EasyBind;

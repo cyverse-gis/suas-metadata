@@ -1,6 +1,7 @@
-package model.util;
+package model.settings;
 
 import javafx.beans.value.ObservableValue;
+import model.util.CustomPropertyItem;
 
 import java.util.Optional;
 

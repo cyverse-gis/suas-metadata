@@ -37,7 +37,7 @@ import model.elasticsearch.GeoBucket;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.IQueryCondition;
 import model.elasticsearch.query.QueryEngine;
-import model.dataSources.ImageEntry;
+import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;

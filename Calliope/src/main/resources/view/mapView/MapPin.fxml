@@ -11,7 +11,7 @@
             <fill>
                 <RadialGradient centerX="0.5" centerY="0.5">
                     <stops>
-                        <Stop offset="0" color="orange"/>
+                        <Stop offset="0.0" color="orange"/>
                         <Stop offset="0.5" color="wheat"/>
                     </stops>
                 </RadialGradient>

@@ -5,7 +5,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
-import model.cyverse.UploadedEntry;
+import model.dataSources.UploadedEntry;
 
 /**
  * Controller for the download entry which allows downloading/saving of image files

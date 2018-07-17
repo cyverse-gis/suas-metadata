@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 import model.CalliopeData;
+import model.settings.SettingsData;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
 
