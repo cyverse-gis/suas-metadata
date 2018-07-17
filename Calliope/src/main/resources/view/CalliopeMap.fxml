@@ -16,65 +16,93 @@
     </stylesheets>
     <children>
         <Map fx:id="map" StackPane.alignment="CENTER" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
-        <VBox fx:id="vbxMapSettings" StackPane.alignment="TOP_LEFT" spacing="5" styleClass="propertiesPanel" maxWidth="250" maxHeight="120">
+        <GridPane fx:id="gpnMapSettings" StackPane.alignment="TOP_LEFT" vgap="5" hgap="5" styleClass="propertiesPanel" maxWidth="-Infinity" maxHeight="-Infinity">
             <StackPane.margin>
-                <Insets top="15" left="15"/>
+                <Insets top="15" left="15" bottom="15"/>
             </StackPane.margin>
             <padding>
-                <Insets top="10" bottom="10" left="10" right="10"/>
+                <Insets top="10" left="10" bottom="10" right="10"/>
             </padding>
+            <rowConstraints>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+            </rowConstraints>
+            <columnConstraints>
+                <ColumnConstraints/>
+                <ColumnConstraints/>
+            </columnConstraints>
             <children>
-                <ComboBox fx:id="cbxMapProvider" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                <ToggleSwitch fx:id="tswMarkers" selected="true" text="Site Markers" maxWidth="Infinity"/>
-                <ToggleSwitch fx:id="tswBoundaries" selected="true" text="Site Boundaries" maxWidth="Infinity"/>
-                <ToggleSwitch fx:id="tswImageCounts" selected="true" text="Site Image Counts" maxWidth="Infinity"/>
+                <ComboBox fx:id="cbxMapProvider"                            GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" maxWidth="Infinity" />
+                <ToggleSwitch fx:id="tswMarkers" selected="true"            GridPane.columnIndex="0" GridPane.rowIndex="1" text="Site Markers" maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswBoundaries" selected="true"         GridPane.columnIndex="1" GridPane.rowIndex="1" text="Site Boundaries" maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswImageCounts" selected="true"        GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts" maxWidth="Infinity"/>
+                <HBox alignment="CENTER_LEFT"                               GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity">
+                    <Label text="Max images:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" amountToStepBy="5" HBox.hgrow="NEVER" />
+                </HBox>
+                <TitledPane fx:id="tpnCircleMetadata" text="Selected Image Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
+                    <content>
+                        <TableView fx:id="tbvImageMetadata">
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                            <columns>
+                                <TableColumn editable="false" text="File" fx:id="clmName"/>
+                                <TableColumn editable="false" text="Collection" fx:id="clmCollection"/>
+                                <TableColumn editable="false" text="Altitude" fx:id="clmAltitude"/>
+                                <TableColumn editable="false" text="Camera Model" fx:id="clmCameraModel"/>
+                                <TableColumn editable="false" text="Date Taken" fx:id="clmDate"/>
+                            </columns>
+                        </TableView>
+                    </content>
+                </TitledPane>
             </children>
-        </VBox>
-        <StackPane fx:id="queryPane" StackPane.alignment="BOTTOM_CENTER" maxHeight="100" pickOnBounds="false" opacity="0">
-            <SplitPane dividerPositions="0.5" orientation="VERTICAL">
-                <padding>
-                    <Insets bottom="5" left="5" right="5" top="5"/>
-                </padding>
-                <items>
-                    <HBox alignment="CENTER_LEFT">
-                        <VBox fx:id="vbxQuery" spacing="5" alignment="TOP_CENTER">
-                            <Label text="Create a Query" VBox.vgrow="NEVER">
-                                <font>
-                                    <Font size="16"/>
-                                </font>
-                            </Label>
-                            <Label text="Select filters and add them to the query">
-                                <font>
-                                    <Font size="12"/>
-                                </font>
-                            </Label>
-                            <ListView fx:id="lvwFilters" VBox.vgrow="ALWAYS" onMouseClicked="#clickedFilters"/>
-                            <Button onAction="#query" VBox.vgrow="NEVER" text="Perform Query">
-                                <font>
-                                    <Font size="16"/>
-                                </font>
-                                <graphic>
-                                    <ImageView fitWidth="32" fitHeight="32">
-                                        <Image url="@../images/analysisWindow/queryIcon.png"/>
-                                    </ImageView>
-                                </graphic>
-                                <VBox.margin>
-                                    <Insets bottom="5"/>
-                                </VBox.margin>
-                            </Button>
-                        </VBox>
-                        <ImageViewPane onMouseClicked="#clickedAdd" onMouseEntered="#mouseEnteredArrow" onMouseExited="#mouseExitedArrow">
-                            <imageView>
-                                <ImageView fx:id="imgArrow" preserveRatio="true">
-                                    <Image url="@../images/analysisWindow/arrowDivider.png"/>
+        </GridPane>
+        <SplitPane fx:id="queryPane" dividerPositions="0.5" orientation="VERTICAL" StackPane.alignment="BOTTOM_CENTER" maxHeight="100" pickOnBounds="false" opacity="0">
+            <padding>
+                <Insets bottom="5" left="5" right="5" top="5"/>
+            </padding>
+            <items>
+                <HBox alignment="CENTER_LEFT">
+                    <VBox fx:id="vbxQuery" spacing="5" alignment="TOP_CENTER">
+                        <Label text="Create a Query" VBox.vgrow="NEVER">
+                            <font>
+                                <Font size="16"/>
+                            </font>
+                        </Label>
+                        <Label text="Select filters and add them to the query">
+                            <font>
+                                <Font size="12"/>
+                            </font>
+                        </Label>
+                        <ListView fx:id="lvwFilters" VBox.vgrow="ALWAYS" onMouseClicked="#clickedFilters"/>
+                        <Button onAction="#query" VBox.vgrow="NEVER" text="Perform Query">
+                            <font>
+                                <Font size="16"/>
+                            </font>
+                            <graphic>
+                                <ImageView fitWidth="32" fitHeight="32">
+                                    <Image url="@../images/analysisWindow/queryIcon.png"/>
                                 </ImageView>
-                            </imageView>
-                        </ImageViewPane>
-                        <ListView styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" fx:id="lvwQueryConditions" orientation="HORIZONTAL"/>
-                    </HBox>
-                </items>
-            </SplitPane>
-        </StackPane>
+                            </graphic>
+                            <VBox.margin>
+                                <Insets bottom="5"/>
+                            </VBox.margin>
+                        </Button>
+                    </VBox>
+                    <ImageViewPane onMouseClicked="#clickedAdd" onMouseEntered="#mouseEnteredArrow" onMouseExited="#mouseExitedArrow">
+                        <imageView>
+                            <ImageView fx:id="imgArrow" preserveRatio="true">
+                                <Image url="@../images/analysisWindow/arrowDivider.png"/>
+                            </ImageView>
+                        </imageView>
+                    </ImageViewPane>
+                    <ListView styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" fx:id="lvwQueryConditions" orientation="HORIZONTAL"/>
+                </HBox>
+            </items>
+        </SplitPane>
         <Button fx:id="btnExpander" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER" minWidth="64" maxWidth="64" minHeight="64" maxHeight="64">
             <graphic>
                 <ImageView>

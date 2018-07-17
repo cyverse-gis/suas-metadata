@@ -182,7 +182,7 @@ public class ImageEntry extends ImageContainer
 		return this.imageFile.getValue();
 	}
 
-	public ObjectProperty<File> getFileProperty()
+	public ObjectProperty<File> fileProperty()
 	{
 		return this.imageFile;
 	}

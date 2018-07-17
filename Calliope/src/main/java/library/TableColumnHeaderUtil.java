@@ -21,7 +21,7 @@ public class TableColumnHeaderUtil
 	public static void makeHeaderWrappable(TableColumn col)
 	{
 		Label label = new Label(col.getText());
-		label.setStyle("-fx-padding: 8px;");
+		label.setStyle("-fx-padding: 2px;");
 		label.setWrapText(true);
 		label.setAlignment(Pos.CENTER);
 		label.setTextAlignment(TextAlignment.CENTER);

@@ -19,19 +19,19 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import library.AlignedMapNode;
+import library.TableColumnHeaderUtil;
 import model.CalliopeData;
 import model.constant.MapProviders;
 import model.elasticsearch.GeoBucket;
+import model.elasticsearch.GeoImageResult;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.IQueryCondition;
 import model.elasticsearch.query.QueryEngine;
@@ -52,6 +52,7 @@ import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -73,7 +74,7 @@ public class CalliopeMapController
 
 	// A box containing any map specific settings (not query filters)
 	@FXML
-	public VBox vbxMapSettings;
+	public GridPane gpnMapSettings;
 
 	// A combo-box of possible map providers like OSM or Esri
 	@FXML
@@ -90,7 +91,7 @@ public class CalliopeMapController
 
 	// Bottom pane which holds the query specifics
 	@FXML
-	public StackPane queryPane;
+	public SplitPane queryPane;
 
 	// The list of query conditions
 	@FXML
@@ -108,6 +109,29 @@ public class CalliopeMapController
 	// A button to expand or contract the query
 	@FXML
 	public Button btnExpander;
+
+	// A titled pane which can hide our metadata entries
+	@FXML
+	public TitledPane tpnCircleMetadata;
+
+	// A spinner that lets us pick the max images per bucket
+	@FXML
+	public Spinner<Integer> spnMaxImagesPerBucket;
+
+	// The table view with metadata columns
+	@FXML
+	public TableView<GeoImageResult> tbvImageMetadata;
+	// 5 Columns of metadata, the image file name, collection name, altitude taken, camera model, and date taken
+	@FXML
+	public TableColumn<GeoImageResult, String> clmName;
+	@FXML
+	public TableColumn<GeoImageResult, String> clmCollection;
+	@FXML
+	public TableColumn<GeoImageResult, Double> clmAltitude;
+	@FXML
+	public TableColumn<GeoImageResult, String> clmCameraModel;
+	@FXML
+	public TableColumn<GeoImageResult, LocalDateTime> clmDate;
 
 	///
 	/// FXML bound fields end
@@ -142,6 +166,9 @@ public class CalliopeMapController
 	// Two transitions used to fade the query tab in and out
 	private Transition fadeQueryIn;
 	private Transition fadeQueryOut;
+
+	// The currently selected circle
+	private ObjectProperty<MapCircleController> selectedCircle = new SimpleObjectProperty<>();
 
 	/**
 	 * Initialize sets up the analysis window and bindings
@@ -272,7 +299,8 @@ public class CalliopeMapController
 							MathUtil.clamp(bottomRight.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(bottomRight.getLongitude(), -180.0, 180.0),
 							CalliopeMapController.this.depthForCurrentZoom(),
-							CalliopeMapController.this.currentQuery.getValue());
+							CalliopeMapController.this.currentQuery.getValue(),
+							CalliopeMapController.this.spnMaxImagesPerBucket.getValue());
 				}
 			};
 		});
@@ -311,7 +339,7 @@ public class CalliopeMapController
 					MapCircleController mapCircleController = currentCircleControllers.get(i);
 					// Update the pin and the controller for that pin
 					mapNode.setLocation(new Location(geoBucket.getCenterLatitude(), geoBucket.getCenterLongitude()));
-					mapCircleController.setImageCount(geoBucket.getDocumentCount());
+					mapCircleController.updateItem(geoBucket);
 				}
 			}
 			else
@@ -338,26 +366,26 @@ public class CalliopeMapController
 			circleDrawingService.requestAnotherRun();
 		});
 
+		// When our query changes we request another circle drawing run which updates the mini circles containing images
 		this.currentQuery.addListener((observable, oldValue, newValue) -> circleDrawingService.requestAnotherRun());
 
 		// Create a fade transition for the settings box in the top left
-		FadeTransition fadeMapIn = new FadeTransition(Duration.millis(100), this.vbxMapSettings);
+		FadeTransition fadeMapIn = new FadeTransition(Duration.millis(100), this.gpnMapSettings);
 		fadeMapIn.setFromValue(0.5);
 		fadeMapIn.setToValue(1);
 		fadeMapIn.setCycleCount(1);
-		FadeTransition fadeMapOut = new FadeTransition(Duration.millis(100), this.vbxMapSettings);
+		FadeTransition fadeMapOut = new FadeTransition(Duration.millis(100), this.gpnMapSettings);
 		fadeMapOut.setFromValue(1);
 		fadeMapOut.setToValue(0.5);
 		fadeMapOut.setCycleCount(1);
-		this.vbxMapSettings.setOnMouseEntered(event -> fadeMapIn.play());
-		this.vbxMapSettings.setOnMouseExited(event -> fadeMapOut.play());
-
-		final double TRANSITION_DURATION = 0.7;
+		this.gpnMapSettings.setOnMouseEntered(event -> fadeMapIn.play());
+		this.gpnMapSettings.setOnMouseExited(event -> fadeMapOut.play());
 
 		// Setup the transition to fade the query tab out
 
+		final double TRANSITION_DURATION = 0.7;
 		// Reduce the height of the pane
-		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 400, 100);
+		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 330, 100);
 		// Reduce the opacity of the pane
 		FadeTransition fadeOutTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
 		fadeOutTransition.setFromValue(1.0);
@@ -369,7 +397,7 @@ public class CalliopeMapController
 		rotateUpTransition.setAxis(new Point3D(1, 0, 0));
 		// Move the expander button to the bottom
 		TranslateTransition translateDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-		translateDownTransition.setFromY(-404);
+		translateDownTransition.setFromY(-330);
 		translateDownTransition.setToY(0);
 		// Setup the parallel transition
 		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition);
@@ -379,7 +407,7 @@ public class CalliopeMapController
 		// Setup the transition to fade the query tab in
 
 		// Increase the height of the pane
-		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100, 400);
+		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100, 330);
 		// Increase the opacity of the pane
 		FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
 		fadeInTransition.setFromValue(0.0);
@@ -392,7 +420,7 @@ public class CalliopeMapController
 		// Move the expander button to the top
 		TranslateTransition translateUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateUpTransition.setFromY(0);
-		translateUpTransition.setToY(-404);
+		translateUpTransition.setToY(-330);
 		// Setup the parallel transition
 		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition);
 
@@ -422,6 +450,48 @@ public class CalliopeMapController
 
 		// Set the items in the list to be the list of possible query filters
 		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
+
+		// Make the 5 column's header's wrappable
+		TableColumnHeaderUtil.makeHeaderWrappable(this.clmName);
+		TableColumnHeaderUtil.makeHeaderWrappable(this.clmCollection);
+		TableColumnHeaderUtil.makeHeaderWrappable(this.clmAltitude);
+		TableColumnHeaderUtil.makeHeaderWrappable(this.clmCameraModel);
+		TableColumnHeaderUtil.makeHeaderWrappable(this.clmDate);
+
+		// Each column is bound to a different permission
+		this.clmName.setCellValueFactory(param -> param.getValue().nameProperty());
+		this.clmCollection.setCellValueFactory(param -> param.getValue().collectionNameProperty());
+		this.clmAltitude.setCellValueFactory(param -> param.getValue().altitudeProperty().asObject());
+		this.clmCameraModel.setCellValueFactory(param -> param.getValue().cameraModelProperty());
+		this.clmDate.setCellValueFactory(param -> param.getValue().dateProperty());
+		// Sort the date column by the date comparator
+		this.clmDate.setComparator(Comparator.naturalOrder());
+
+		// A service that can download a selected circle's metadata
+		ReRunnableService<List<GeoImageResult>> circleImageDownloader = new ReRunnableService<>(() ->
+			new ErrorTask<List<GeoImageResult>>()
+			{
+				@Override
+				protected List<GeoImageResult> call()
+				{
+					// Test if our input is non-null (it should never be null)
+					if (selectedCircle.getValue() != null)
+						// If it's not null, perform our DB access and return the result
+						return CalliopeData.getInstance().getEsConnectionManager().performCircleLookup(selectedCircle.getValue().getGeoBucket());
+					else
+						return null;
+				}
+			}, CalliopeData.getInstance().getExecutor().getImmediateExecutor());
+		// Once the service finishes we update our tableview with the new items
+		circleImageDownloader.addFinishListener(geoImageResults ->
+		{
+			// Update the items
+			this.tbvImageMetadata.getItems().setAll(geoImageResults);
+			// Make sure our title pane is expanded too
+			this.tpnCircleMetadata.setExpanded(true);
+		});
+		// Whenever we select a new circle we ask our circle thread to perform another run
+		this.selectedCircle.addListener((observable, oldValue, newValue) -> { if (newValue != null) circleImageDownloader.requestAnotherRun(); });
 	}
 
 	/**
@@ -470,19 +540,20 @@ public class CalliopeMapController
 	 */
 	private MapNode createCircle()
 	{
-		// Create a new pin object, call our custom class that ensures the node remains centered on the geo-location
-		MapNode pin = new AlignedMapNode();
-		// Load the FXML document representing this pin
+		// Create a new circle object, call our custom class that ensures the node remains centered on the geo-location
+		MapNode circle = new AlignedMapNode();
+		// Load the FXML document representing this circle
 		FXMLLoader fxmlLoader = FXMLLoaderUtils.loadFXML("mapView/MapPin.fxml");
-		// Add FXML document to this pin
-		pin.getChildren().add(fxmlLoader.getRoot());
-		// Store the pin and its controller into the parallel lists
-		this.currentCircles.add(pin);
-		this.currentCircleControllers.add(fxmlLoader.getController());
-		// Make sure we can drag & drop through the pin
-		pin.setMouseTransparent(true);
-		// Return the pin
-		return pin;
+		// Add FXML document to this circle
+		circle.getChildren().add(fxmlLoader.getRoot());
+		// Store the circle and its controller into the parallel lists
+		this.currentCircles.add(circle);
+		MapCircleController circleController = fxmlLoader.getController();
+		this.currentCircleControllers.add(circleController);
+		// When we click the circle attempt to retrieve details about that circle
+		circle.setOnMouseClicked(event -> selectedCircle.setValue(circleController));
+		// Return the circle
+		return circle;
 	}
 
 	/**

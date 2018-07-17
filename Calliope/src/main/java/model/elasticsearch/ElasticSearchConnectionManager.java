@@ -9,15 +9,17 @@ import javafx.application.Platform;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
+import model.dataSources.UploadedEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.dataSources.UploadedEntry;
 import model.neon.BoundedSite;
 import model.neon.jsonPOJOs.Site;
-import model.util.ErrorDisplay;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
+import model.util.ErrorDisplay;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -25,15 +27,13 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.geo.builders.PointBuilder;
 import org.elasticsearch.common.settings.Settings;
@@ -50,8 +50,10 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.ParsedSingleBucketAggregation;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.geogrid.GeoGridAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.ParsedGeoHashGrid;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -59,6 +61,7 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -751,12 +754,11 @@ public class ElasticSearchConnectionManager
 			for (ImageEntry imageEntry : imageEntries)
 			{
 				// Our image to JSON map will return 2 items, one is the ID of the document and one is the JSON request
-				Tuple<String, XContentBuilder> idAndJSON = this.elasticSearchSchemaManager.imageToJSON(imageEntry, collectionID, absolutePathCreator.apply(imageEntry));
+				XContentBuilder json = this.elasticSearchSchemaManager.imageToJSON(imageEntry, collectionID, absolutePathCreator.apply(imageEntry));
 				IndexRequest request = new IndexRequest()
 						.index(INDEX_CALLIOPE_METADATA)
 						.type(INDEX_CALLIOPE_METADATA_TYPE)
-						.id(idAndJSON.v1())
-						.source(idAndJSON.v2());
+						.source(json);
 				bulkRequest.add(request);
 			}
 
@@ -964,48 +966,54 @@ public class ElasticSearchConnectionManager
 	 *                   buckets are less than a meter across, and 1 means buckets are hundreds of KM across. A larger depth
 	 *                   requires more time to receive results
 	 * @param query The actual query to filter images by before aggregating
+	 * @param numDocIDSPerBucket The number of document IDs we are supposed to retrieve per bucket. This takes time but yields better map analysis
 	 * @return A list of buckets containing a center point and a list of images inside
 	 */
-	public List<GeoBucket> performGeoAggregation(Double topLeftLat, Double topLeftLong, Double bottomRightLat, Double bottomRightLong, Integer depth1To12, QueryBuilder query)
+	public List<GeoBucket> performGeoAggregation(Double topLeftLat, Double topLeftLong, Double bottomRightLat, Double bottomRightLong, Integer depth1To12, QueryBuilder query, Integer numDocIDSPerBucket)
 	{
 		// Create a list of buckets to return
 		List<GeoBucket> toReturn = new ArrayList<>();
 
 		try
 		{
+			// We use a sub-aggregation to take each result from the geo box query and put it into a bucket based on its proximity to other images
+			// Here we also specify precision (how close two images need to be to be in a bucket)
+			GeoGridAggregationBuilder geoHashAggregation =
+			AggregationBuilders.geohashGrid("cells").field("imageMetadata.position").precision(depth1To12)
+				// Now that images are in a bucket we average their lat and longs to create a "center" position ready to return to our user.
+				.subAggregation(AggregationBuilders.avg("center_lat").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lat", Collections.emptyMap())))
+				.subAggregation(AggregationBuilders.avg("center_lon").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lon", Collections.emptyMap())))
+				// This will be a list of documents that are inside of the cell bucket
+				.subAggregation(AggregationBuilders.terms("document_ids").field("_id").size(numDocIDSPerBucket));
+
 			// The aggregation is the hard part of this task, so build it first
 			FilterAggregationBuilder aggregationQuery =
-					// First we filter by bounding box
-					AggregationBuilders
-							// Call the filter 'filtered_cells'
-							.filter("filtered_cells",
-									// User query builders to create our filter
-									QueryBuilders
-											// Our query is on the position field which must be in the box created by:
-											.geoBoundingBoxQuery("imageMetadata.position")
-											// The top left corner and the bottom right corner, specified here
-											.setCorners(new GeoPoint(topLeftLat, topLeftLong), new GeoPoint(bottomRightLat, bottomRightLong)))
-							// We use a sub-aggregation to take each result from the geo box query and put it into a bucket based on its proximity to other images
-							// Here we also specify precision (how close two images need to be to be in a bucket)
-							.subAggregation(AggregationBuilders.geohashGrid("cells").field("imageMetadata.position").precision(depth1To12)
-									// Now that images are in a bucket we average their lat and longs to create a "center" position ready to return to our user.
-									.subAggregation(AggregationBuilders.avg("center_lat").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lat", Collections.emptyMap())))
-									.subAggregation(AggregationBuilders.avg("center_lon").script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "doc['imageMetadata.position'].lon", Collections.emptyMap()))));
+				// First we filter by bounding box
+				AggregationBuilders
+					// Call the filter 'filtered_cells'
+					.filter("filtered_cells",
+						// User query builders to create our filter
+						QueryBuilders
+							// Our query is on the position field which must be in the box created by:
+							.geoBoundingBoxQuery("imageMetadata.position")
+							// The top left corner and the bottom right corner, specified here
+							.setCorners(new GeoPoint(topLeftLat, topLeftLong), new GeoPoint(bottomRightLat, bottomRightLong)))
+					.subAggregation(geoHashAggregation);
 
 			// Create a search request, and populate the fields
 			SearchRequest searchRequest = new SearchRequest();
 			searchRequest
-					.indices(INDEX_CALLIOPE_METADATA)
-					.types(INDEX_CALLIOPE_METADATA_TYPE)
-					.source(new SearchSourceBuilder()
-							// Fetch no results, we're only interested into aggregation portion of the query
-							.size(0)
-							// Don't fetch anything unnecessary
-							.fetchSource(false)
-							// Our query will match all documents if no query was provided
-							.query(query == null ? QueryBuilders.matchAllQuery() : query)
-							// Add our complex aggregation now
-							.aggregation(aggregationQuery));
+				.indices(INDEX_CALLIOPE_METADATA)
+				.types(INDEX_CALLIOPE_METADATA_TYPE)
+				.source(new SearchSourceBuilder()
+					// Fetch no results, we're only interested into aggregation portion of the query
+					.size(0)
+					// Don't fetch anything unnecessary
+					.fetchSource(false)
+					// Our query will match all documents if no query was provided
+					.query(query == null ? QueryBuilders.matchAllQuery() : query)
+					// Add our complex aggregation now
+					.aggregation(aggregationQuery));
 
 			try
 			{
@@ -1034,23 +1042,32 @@ public class ElasticSearchConnectionManager
 								{
 									// The bucket will include 3 pieces of info, latitude, longitude, and the number of documents in the bucket
 									Long documentsInBucket = bucket.getDocCount();
+									List<String> knownDocumentIDs = new ArrayList<>();
 									Double centerLat = null;
 									Double centerLong = null;
 									// Latitude and longitude are fetched as sub-aggregations, so pull those here
-									for (Aggregation centerAgg : bucket.getAggregations())
+									// We also pull off the unique IDs of all the documents which all should have their own bucket
+									for (Aggregation cellAggregation : bucket.getAggregations())
 									{
-										if (centerAgg instanceof ParsedAvg)
+										// If it's a ParsedAvg aggregation it's either the lat or long aggregation, figure that out and update the corresponding value
+										if (cellAggregation instanceof ParsedAvg)
 										{
-											if (centerAgg.getName().equals("center_lat"))
-												centerLat = ((ParsedAvg) centerAgg).getValue();
-											else if (centerAgg.getName().equals("center_lon"))
-												centerLong = ((ParsedAvg) centerAgg).getValue();
+											if (cellAggregation.getName().equals("center_lat"))
+												centerLat = ((ParsedAvg) cellAggregation).getValue();
+											else if (cellAggregation.getName().equals("center_lon"))
+												centerLong = ((ParsedAvg) cellAggregation).getValue();
+										}
+										// If it's a ParsedStringTerm aggregation we got a list of document IDs. Read the IDs and store them
+										else if (cellAggregation instanceof ParsedStringTerms && cellAggregation.getName().equals("document_ids"))
+										{
+											ParsedStringTerms docIDTerms = (ParsedStringTerms) cellAggregation;
+											docIDTerms.getBuckets().forEach(documentBucket -> knownDocumentIDs.add(documentBucket.getKeyAsString()));
 										}
 									}
 
 									// If we received sub-aggregation data, we're good so return the bucket
 									if (centerLat != null && centerLong != null)
-										toReturn.add(new GeoBucket(centerLat, centerLong, documentsInBucket));
+										toReturn.add(new GeoBucket(centerLat, centerLong, documentsInBucket, knownDocumentIDs));
 								}
 							}
 						}
@@ -1067,6 +1084,85 @@ public class ElasticSearchConnectionManager
 		{
 			// The user somehow managed to pass illegal values to the aggregation by moving the map into a strange position. Print an error but recover
 			CalliopeData.getInstance().getErrorDisplay().notify("Invalid geo-aggregation, error was:\n" + ExceptionUtils.getStackTrace(e));
+		}
+
+		return toReturn;
+	}
+
+	/**
+	 * Given a geo-bucket we look up that bucket's documents and retrieve more interesting metadata about them which is returned in a list. This is used to
+	 * view specifics about a "geo-aggregation" dot found on the map tab
+	 *
+	 * @param geoBucket The bucket to pull data from
+	 * @return A list of GeoImageResults that contain advanced metadata about simple lat/long points or "dots" found on the map tab
+	 */
+	@SuppressWarnings("unchecked")
+	public List<GeoImageResult> performCircleLookup(GeoBucket geoBucket)
+	{
+		// Create a list of results to return
+		List<GeoImageResult> toReturn = new ArrayList<>();
+
+		// If the geo-bucket is not null and non-empty, we perform a multi-get for each document ID
+		if (geoBucket != null && !geoBucket.getKnownDocumentIDs().isEmpty())
+		{
+			// A multi-get request that gets metadata about each document
+			MultiGetRequest multiGetRequest = new MultiGetRequest();
+			// We only want specific fields which reduces the bandwidth uses, list those here
+			FetchSourceContext fieldsWeWant = new FetchSourceContext(true,
+					new String[] { "storagePath", "collectionID", "imageMetadata.altitude", "imageMetadata.cameraModel", "imageMetadata.dateTaken" },
+					new String[] { "imageMetadata.dayOfWeekTaken", "imageMetadata.dayOfYearTaken", "imageMetadata.droneMaker", "imageMetadata.hourTaken", "imageMetadata.monthTaken", "imageMetadata.neonSiteCode", "imageMetadata.position", "imageMetadata.rotation", "imageMetadata.speed", "imageMetadata.yearTaken" });
+			// Iterate over all document IDs and add one get request for each one
+			geoBucket.getKnownDocumentIDs().forEach(documentID ->
+					multiGetRequest.add(new MultiGetRequest.Item(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, documentID).fetchSourceContext(fieldsWeWant)));
+
+			// Perform the get
+			try
+			{
+				MultiGetResponse multiGetItemResponse = this.elasticSearchClient.multiGet(multiGetRequest);
+				// Iterate over all results
+				for (MultiGetItemResponse itemResponse : multiGetItemResponse.getResponses())
+				{
+					// Make sure the result was successful
+					if (!itemResponse.isFailed())
+					{
+						// Grab the JSON response as a hash map
+						Map<String, Object> sourceAsMap = itemResponse.getResponse().getSourceAsMap();
+						// Ensure the JSON contains 3 keys
+						if (sourceAsMap.containsKey("collectionID") && sourceAsMap.containsKey("storagePath") && sourceAsMap.containsKey("imageMetadata"))
+						{
+							// The imageMetadata object should be a map
+							Object metadataMapObj = sourceAsMap.get("imageMetadata");
+							// Double check if it's a map
+							if (metadataMapObj instanceof Map<?, ?>)
+							{
+								// Cast the object to a map
+								Map<String, Object> metadataMap = (Map<String, Object>) metadataMapObj;
+								// This new map should have 3 fields, test that
+								if (metadataMap.containsKey("altitude") && metadataMap.containsKey("cameraModel") && metadataMap.containsKey("dateTaken"))
+								{
+									// Convert the storage path to just a file name by taking the absolute path and taking the file name
+									String fileName = FilenameUtils.getName(sourceAsMap.get("storagePath").toString());
+									// Grab the collection ID
+									String collectionID = sourceAsMap.get("collectionID").toString();
+									// Add a new GeoImageResult to return. We convert date, collection, and altitude strings into a usable format
+									toReturn.add(new GeoImageResult(
+										fileName,
+										CalliopeData.getInstance().getCollectionList().stream().filter(collection -> collection.getID().toString().equals(collectionID)).findFirst().map(ImageCollection::getName).orElse("Not Found"),
+										NumberUtils.toDouble(metadataMap.get("altitude").toString(), Double.NaN),
+										metadataMap.get("cameraModel").toString(),
+										ZonedDateTime.parse(metadataMap.get("dateTaken").toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime()
+									));
+								}
+							}
+						}
+					}
+				}
+			}
+			catch (IOException e)
+			{
+				// Something went wrong, so show an error
+				CalliopeData.getInstance().getErrorDisplay().notify("Error performing multi-get document get, error was:\n" + ExceptionUtils.getStackTrace(e));
+			}
 		}
 
 		return toReturn;

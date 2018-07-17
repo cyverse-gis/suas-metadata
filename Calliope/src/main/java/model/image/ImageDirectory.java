@@ -31,7 +31,7 @@ public class ImageDirectory extends ImageContainer
 			return new Observable[]
 			{
 				image.dateTakenProperty(),
-				image.getFileProperty(),
+				image.fileProperty(),
 				image.locationTakenProperty(),
 				image.treeIconProperty(),
 				image.droneMakerProperty(),

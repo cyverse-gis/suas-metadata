@@ -9,7 +9,6 @@ import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.settings.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.xcontent.*;
 
 import java.io.BufferedReader;
@@ -381,17 +380,18 @@ public class ElasticSearchSchemaManager
 	/**
 	 * Utility function used to convert an image entry to its JSON representation
 	 *
-	 * @param imageEntry The image to conver to its JSON representation
+	 * @param imageEntry The image to convert to its JSON representation
 	 * @param collectionID The ID of the collection that the image belongs to
 	 * @param fileAbsolutePath The absolute path of the file on CyVerse
 	 * @return A map of key->value pairs used later in creating JSON
 	 */
-	Tuple<String, XContentBuilder> imageToJSON(ImageEntry imageEntry, String collectionID, String fileAbsolutePath) throws IOException
+	XContentBuilder imageToJSON(ImageEntry imageEntry, String collectionID, String fileAbsolutePath) throws IOException
 	{
 		// On windows paths have \ as a path separator vs unix /. Make sure that we always use /
 		String fixedAbsolutePath = fileAbsolutePath.replace('\\', '/');
-		// Start the image metadata JSON with basic fields
-		XContentBuilder imageJSON = XContentFactory.jsonBuilder()
+
+		// We return the JSON representing the image metadata
+		return XContentFactory.jsonBuilder()
 		.startObject()
 			.field("storagePath", fixedAbsolutePath)
 			.field("collectionID", collectionID)
@@ -419,9 +419,6 @@ public class ElasticSearchSchemaManager
 				.endObject()
 			.endObject()
 		.endObject();
-
-		// We return two fields, one is the absolute path of the image file, and the other is the JSON representing the image metadata
-		return Tuple.tuple(fixedAbsolutePath, imageJSON);
 	}
 
 	/**
@@ -431,7 +428,7 @@ public class ElasticSearchSchemaManager
 	 * @return A JSON creator used by ES to create a request
 	 * @throws IOException IO Exception if the JSON is invalid, this shouldn't happen
 	 */
-	public XContentBuilder makeCreateNEONSite(BoundedSite boundedSite) throws IOException
+	XContentBuilder makeCreateNEONSite(BoundedSite boundedSite) throws IOException
 	{
 		// Grab the bounded site's outer boundary which is the real polygon that makes up the boundary
 		Boundary outerBoundary = boundedSite.getBoundary().getOuterBoundaryIs();
