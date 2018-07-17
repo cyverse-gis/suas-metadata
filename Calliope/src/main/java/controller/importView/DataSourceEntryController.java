@@ -7,7 +7,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import model.dataSources.IDataSource;
 
-public class ImportableFormatEntryController extends ListCell<IDataSource>
+public class DataSourceEntryController extends ListCell<IDataSource>
 {
 	///
 	/// FXML Bound Fields Start

@@ -34,7 +34,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -319,7 +318,7 @@ public class CyVerseConnectionManager
 	 * @param transferCallback The callback that will receive callbacks if the transfer is in progress
 	 * @param messageCallback Optional message callback that will show what is currently going on
 	 */
-	public void uploadImages(ImageCollection collection, ImageDirectory directoryToWrite, TransferStatusCallbackListener transferCallback, StringProperty messageCallback)
+	public void uploadAndIndexImages(ImageCollection collection, ImageDirectory directoryToWrite, TransferStatusCallbackListener transferCallback, StringProperty messageCallback)
 	{
 		if (this.sessionManager.openSession())
 		{
@@ -373,9 +372,8 @@ public class CyVerseConnectionManager
 
 						localToUpload.delete();
 					}
-
 					// Finally we actually index the image metadata using elasticsearch
-					CalliopeData.getInstance().getEsConnectionManager().indexImages(uploadDirName + "/" + localDirName, collection.getID().toString(), directoryToWrite, uploadEntry);
+					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToWrite, uploadEntry, collection.getID().toString(), imageEntry -> uploadDirName + "/" + localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), directoryToWrite.getFile().getAbsolutePath()));
 
 					// Let rules do the rest!
 				}
@@ -420,14 +418,16 @@ public class CyVerseConnectionManager
 					public CallbackResponse transferAsksWhetherToForceOperation(String irodsAbsolutePath, boolean isCollection) { return CallbackResponse.YES_FOR_ALL; }
 				}, null);
 
-				this.sessionManager.closeSession();
 				return localImageFile;
 			}
 			catch (JargonException e)
 			{
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not pull the remote file (" + cyverseFile.getName() + ")!\n" + ExceptionUtils.getStackTrace(e));
 			}
-			this.sessionManager.closeSession();
+			finally
+			{
+				this.sessionManager.closeSession();
+			}
 		}
 
 		return null;
@@ -439,7 +439,7 @@ public class CyVerseConnectionManager
 	 * @param absolutePathToFiles The absolute path to the files to index
 	 * @return An image directory representing the CyVerse datastore absolute path
 	 */
-	public ImageDirectory prepareExistingImagesForIndexing(String absolutePathToFiles)
+	public CyVerseDSImageDirectory prepareExistingImagesForIndexing(String absolutePathToFiles)
 	{
 		// Open a session as usual
 		if (this.sessionManager.openSession())
@@ -466,9 +466,11 @@ public class CyVerseConnectionManager
 				// If something goes wrong, display an error
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not download existing image data for indexing!\n" + ExceptionUtils.getStackTrace(e));
 			}
-
-			// Close the session
-			this.sessionManager.closeSession();
+			finally
+			{
+				// Close the session
+				this.sessionManager.closeSession();
+			}
 		}
 		return null;
 	}
@@ -492,7 +494,11 @@ public class CyVerseConnectionManager
 				// If the file is not a directory add it as a new image entry
 				if (!file.isDirectory())
 					if (CalliopeAnalysisUtils.fileIsImage(file))
-						currentDirectory.addChild(new CyVerseDSImageEntry(file));
+					{
+						ImageEntry imageEntry = new CyVerseDSImageEntry(file);
+						imageEntry.initIconBindings();
+						currentDirectory.addChild(imageEntry);
+					}
 				else
 				{
 					// Grab the sub-directory
@@ -519,16 +525,13 @@ public class CyVerseConnectionManager
 		{
 			try
 			{
-				// We need to duplicate the iRODS file. The IRODSInputStream does not correctly close the file if an exception occurs so we need to take
-				// care of that manually by creating a new iRODS file every time this method is called
 				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 				IRODSFile irodsFile = fileFactory.instanceIRODSFile(irodsFileAbsolutePath);
-				// Create an inputstream to the file
-				try (InputStream fileInputStream = fileFactory.instanceIRODSFileInputStream(irodsFile))
-				{
-					// Read the stream as an image file
-					return ImageIO.read(fileInputStream);
-				}
+				File file = this.remoteToLocalImageFile(irodsFile);
+				// Read the stream as an image file
+				BufferedImage image = ImageIO.read(file);
+				file.delete();
+				return image;
 			}
 			catch (JargonException | IOException ignored)
 			{

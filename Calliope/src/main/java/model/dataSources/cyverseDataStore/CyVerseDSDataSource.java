@@ -6,13 +6,17 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.stage.Window;
 import model.CalliopeData;
+import model.cyverse.ImageCollection;
+import model.cyverse.UploadedEntry;
 import model.dataSources.DirectoryManager;
 import model.dataSources.IDataSource;
 import model.dataSources.ImageDirectory;
 import model.dataSources.ImageEntry;
 import model.threading.ErrorTask;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Data source used by the CyVerse datastore
@@ -62,9 +66,12 @@ public class CyVerseDSDataSource implements IDataSource
 						// Update the message used by the task to display progress
 						this.updateMessage("Parsing existing images in preparation to index...");
 						// Ask our CyVerse connection manager to read the directory
-						ImageDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
+						CyVerseDSImageDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
 						// Remove any empty directories
 						DirectoryManager.removeEmptyDirectories(imageDirectory);
+						// Go over each image entry and queue its download
+						imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer -> ((CyVerseDSImageEntry) imageContainer).pullMetadataFromCyVerse());
+						imageDirectory.setDataSource(CyVerseDSDataSource.this);
 						return imageDirectory;
 					}
 				};
@@ -81,6 +88,70 @@ public class CyVerseDSDataSource implements IDataSource
 		{
 			// Print out an error if popups are not enabled
 			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
+		}
+		return null;
+	}
+
+	/**
+	 * Very important method in the interface. It accepts a directory as a parameter and
+	 * returns a task which when executed will upload the directory to the data source and index it
+	 *
+	 * @param imageCollection The image collection to upload the directory to
+	 * @param directoryToIndex The directory to save/index
+	 * @return A task that when executed saves the image directory to the data source and indexes its images into ES
+	 */
+	@Override
+	public Task<Void> makeIndexTask(ImageCollection imageCollection, ImageDirectory directoryToIndex)
+	{
+		// Make sure we've got a valid directory
+		boolean validDirectory = true;
+		// Each image must have a location tagged
+		for (CyVerseDSImageEntry imageEntry : directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).map(imageContainer -> (CyVerseDSImageEntry) imageContainer).collect(Collectors.toList()))
+			// All images must a) be downloaded and b) have a valid location taken
+			if (!imageEntry.wasMetadataRetrieved() || imageEntry.getLocationTaken() == null)
+			{
+				validDirectory = false;
+				break;
+			}
+
+		// If we have a valid directory, perform the upload
+		if (validDirectory)
+		{
+			// Set the upload to 0% so that we don't edit it anymore
+			directoryToIndex.setUploadProgress(0.0);
+			// Create an upload task
+			Task<Void> uploadTask = new ErrorTask<Void>()
+			{
+				@Override
+				protected Void call()
+				{
+					// Update the progress
+					this.updateProgress(0, 1);
+
+					// Create a string property used as a callback
+					StringProperty messageCallback = new SimpleStringProperty("");
+					this.updateMessage("Uploading image directory " + directoryToIndex.getFile().getName() + " to CyVerse.");
+					messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
+					UploadedEntry uploadedEntry = new UploadedEntry(CalliopeData.getInstance().getUsername(), LocalDateTime.now(), Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count()), directoryToIndex.getFile().getAbsolutePath());
+					// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress
+					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToIndex, uploadedEntry, imageCollection.getID().toString(), imageEntry -> imageEntry.getFile().getAbsolutePath());
+					return null;
+				}
+			};
+			// When the upload finishes, we enable the upload button
+			uploadTask.setOnSucceeded(event ->
+			{
+				directoryToIndex.setUploadProgress(-1);
+				// Remove the directory because it's uploaded now
+				CalliopeData.getInstance().getImageTree().removeChildRecursive(directoryToIndex);
+			});
+			uploadTask.setOnCancelled(event -> directoryToIndex.setUploadProgress(-1));
+			return uploadTask;
+		}
+		else
+		{
+			// If an invalid directory is selected, show an alert
+			CalliopeData.getInstance().getErrorDisplay().notify("An image in the directory (" + directoryToIndex.getFile().getName() + ") you selected does not have a location. Please ensure all images are tagged with a location!");
 		}
 		return null;
 	}

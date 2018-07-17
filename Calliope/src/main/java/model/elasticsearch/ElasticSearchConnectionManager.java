@@ -60,6 +60,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ElasticSearchConnectionManager
@@ -730,19 +731,16 @@ public class ElasticSearchConnectionManager
 	/**
 	 * Given a path, a collection ID, and a directory of images, this function indexes the directory of images into the ElasticSearch
 	 * index.
-	 * @param basePath The base path all images will be placed to on the datastore. Often will look like /iplant/home/user/uploads/
-	 * @param collectionID The ID of the collection that these images will be uploaded to
 	 * @param directory The directory containing all images awaiting upload
 	 * @param uploadEntry The upload entry representing this upload, will be put into our collections index
+	 * @param collectionID The ID of the collection that these images will be uploaded to
+	 * @param absolutePathCreator A function that accepts an image file as input and returns the absolute path (on the storage medium) of the image file as output
 	 */
 	@SuppressWarnings("unchecked")
-	public void indexImages(String basePath, String collectionID, ImageDirectory directory, UploadedEntry uploadEntry)
+	public void indexImages(ImageDirectory directory, UploadedEntry uploadEntry, String collectionID, Function<ImageEntry, String> absolutePathCreator)
 	{
 		// List of images to be uploaded
 		List<ImageEntry> imageEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
-
-		// Compute the absolute path of the image directory
-		String localDirAbsolutePath = directory.getFile().getAbsolutePath();
 
 		try
 		{
@@ -753,7 +751,7 @@ public class ElasticSearchConnectionManager
 			for (ImageEntry imageEntry : imageEntries)
 			{
 				// Our image to JSON map will return 2 items, one is the ID of the document and one is the JSON request
-				Tuple<String, XContentBuilder> idAndJSON = this.elasticSearchSchemaManager.imageToJSONMap(imageEntry, collectionID, basePath, localDirAbsolutePath);
+				Tuple<String, XContentBuilder> idAndJSON = this.elasticSearchSchemaManager.imageToJSON(imageEntry, collectionID, absolutePathCreator.apply(imageEntry));
 				IndexRequest request = new IndexRequest()
 						.index(INDEX_CALLIOPE_METADATA)
 						.type(INDEX_CALLIOPE_METADATA_TYPE)
@@ -868,15 +866,15 @@ public class ElasticSearchConnectionManager
 			{
 				// Initialize the search request
 				searchRequest
-						.indices(INDEX_CALLIOPE_NEON_SITES)
-						.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
-						.source(new SearchSourceBuilder()
-								// We only care about site code
-								.fetchSource(new String[] { "site.siteCode" }, new String[] { "boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName" })
-								// We only care about a single result
-								.size(1)
-								// We want to search where the polygon intersects our image's location (as a point)
-								.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
+					.indices(INDEX_CALLIOPE_NEON_SITES)
+					.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+					.source(new SearchSourceBuilder()
+						// We only care about site code
+						.fetchSource(new String[] { "site.siteCode" }, new String[] { "boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName" })
+						// We only care about a single result
+						.size(1)
+						// We want to search where the polygon intersects our image's location (as a point)
+						.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
 				// Store the search request
 				multiSearchRequest.add(searchRequest);
 			}

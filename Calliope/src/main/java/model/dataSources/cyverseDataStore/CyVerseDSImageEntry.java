@@ -1,19 +1,40 @@
 package model.dataSources.cyverseDataStore;
 
+import com.thebuzzmedia.exiftool.Tag;
+import javafx.beans.binding.Binding;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
 import model.dataSources.ImageEntry;
+import model.threading.ErrorTask;
+import org.irods.jargon.core.pub.io.IRODSFile;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * Class representing a CyVerse datastore image entry
  */
 public class CyVerseDSImageEntry extends ImageEntry
 {
+	// The icon to use for all downloaded untagged images
+	private static final Image DEFAULT_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIcon.png").toString());
+	// The icon to use for all downloaded NEON tagged images
+	private static final Image NEON_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNeon.png").toString());
+	// The icon to use for an undownloaded images
+	private static final Image NO_DOWNLOAD_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNotDownloaded.png").toString());
+
+	// Flag telling us if the metadata on this image was retrieved or not
+	private ReadOnlyBooleanWrapper wasMetadataRetrieved = new ReadOnlyBooleanWrapper(false);
+	// Flag telling us if the metadata retrieval is currently in progress or not
+	private Boolean metadataRetrievalInProgress = false;
+
 	/**
 	 * Create a new image entry with an image file
 	 *
@@ -22,6 +43,8 @@ public class CyVerseDSImageEntry extends ImageEntry
 	public CyVerseDSImageEntry(File file)
 	{
 		super(file);
+		// The metadata is editable if it has been retrieved
+		this.metadataEditable.bind(this.wasMetadataRetrieved);
 	}
 
 	/**
@@ -39,5 +62,100 @@ public class CyVerseDSImageEntry extends ImageEntry
 			return SwingFXUtils.toFXImage(bufferedImage, null);
 		else
 			return null;
+	}
+
+	/**
+	 * Reading this file's metadata just causes it to pull the metadata from the cloud
+	 */
+	@Override
+	public void readFileMetadataFromImage()
+	{
+		this.pullMetadataFromCyVerse();
+	}
+
+	/**
+	 * Overwrite the icon bindings to support custom icons for this image entry
+	 */
+	@Override
+	public void initIconBindings()
+	{
+		// Bind the image property to a conditional expression.
+		// The image is checked if the NEON site is tagged or no
+		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
+		{
+			if (super.getSiteTaken() != null)
+				return NEON_CLOUD_IMAGE_ICON;
+			else if (!this.wasMetadataRetrieved.getValue())
+				return NO_DOWNLOAD_CLOUD_IMAGE_ICON;
+			return DEFAULT_CLOUD_IMAGE_ICON;
+		}, super.siteTakenProperty(), this.wasMetadataRetrieved);
+		this.treeIconProperty().bind(imageBinding);
+	}
+
+	/**
+	 * Called to pull the metadata for this image file from the cloud
+	 */
+	void pullMetadataFromCyVerse()
+	{
+		// If we have already retrieved metadata or are currently retrieving metadata we just return
+		if (this.wasMetadataRetrieved.getValue() || this.metadataRetrievalInProgress)
+			return;
+
+		// We are retrieving metadata so set the flag to true
+		metadataRetrievalInProgress = true;
+
+		// Create a task that is used to pull the image metadata
+		ErrorTask<Map<Tag, String>> metadataPullTask = new ErrorTask<Map<Tag, String>>()
+		{
+			@Override
+			protected Map<Tag, String> call() throws IOException
+			{
+				// Convert the iRODS file to a local image file
+				File localFile = CalliopeData.getInstance().getCyConnectionManager().remoteToLocalImageFile((IRODSFile) CyVerseDSImageEntry.this.getFile());
+				// Read this image's metadata
+				Map<Tag, String> metadata = CalliopeData.getInstance().getMetadataManager().readImageMetadata(localFile);
+				// Delete our local file now that we've read the metadata
+				localFile.delete();
+				// Return the data
+				return metadata;
+			}
+		};
+		// When the task succeeds...
+		metadataPullTask.setOnSucceeded(event ->
+		{
+			// Read the metadata map returned from the task and store it
+			this.readFileMetadataFromMap(metadataPullTask.getValue());
+			// Update our flags
+			this.wasMetadataRetrieved.setValue(true);
+			metadataRetrievalInProgress = false;
+		});
+		// If the task fails, we set our flag to false so we can attempt the metadata retrieval again
+		metadataPullTask.setOnFailed(event -> metadataRetrievalInProgress = false);
+		// Perform immediate execution of this task
+		CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(metadataPullTask);
+	}
+
+	///
+	/// Getters/Setters
+	///
+
+	public boolean isMetadataEditable()
+	{
+		return metadataEditable.getValue();
+	}
+
+	public BooleanProperty metadataEditableProperty()
+	{
+		return this.metadataEditable;
+	}
+
+	public ReadOnlyBooleanProperty metadataWasRetrieved()
+	{
+		return this.wasMetadataRetrieved.getReadOnlyProperty();
+	}
+
+	public boolean wasMetadataRetrieved()
+	{
+		return this.wasMetadataRetrieved.getValue();
 	}
 }

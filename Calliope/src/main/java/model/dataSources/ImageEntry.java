@@ -4,10 +4,7 @@ import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
@@ -24,10 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -45,7 +39,7 @@ public class ImageEntry extends ImageContainer
 	private static final Image NEON_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIconNeon.png").toString());
 
 	// A property to wrap the currently selected image property. Must not be static!
-	transient final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
+	private transient final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
 	// The actual file 
 	private final ObjectProperty<File> imageFile = new SimpleObjectProperty<File>();
 	// The date that the image was taken
@@ -66,6 +60,9 @@ public class ImageEntry extends ImageContainer
 	// The raw metadata entries without any modifications
 	private transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
 
+	// If the image entry's metadata is currently ready to be edited
+	protected transient final SimpleBooleanProperty metadataEditable = new SimpleBooleanProperty(true);
+
 	/**
 	 * Create a new image entry with an image file
 	 * 
@@ -80,16 +77,30 @@ public class ImageEntry extends ImageContainer
 	/**
 	 * Reads the file metadata and initializes fields
 	 */
-	public void readFileMetadataIntoImage()
+	public void readFileMetadataFromImage()
 	{
 		try
 		{
-			// Constant meaning that the metadata attribute was not given in the metadata
-			final String UNSPECIFIED = "Unspecified";
-
 			// Read the metadata off of the image
 			Map<Tag, String> imageMetadataMap = CalliopeData.getInstance().getMetadataManager().readImageMetadata(this.getFile());
+			this.readFileMetadataFromMap(imageMetadataMap);
+		}
+		catch (Exception e)
+		{
+			// If reading the metadata fails in any way, print an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error reading image metadata for file " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
+		}
+	}
 
+	/**
+	 * Given a map of Tag -> String metadata, this method stores the given metadata into the image
+	 *
+	 * @param imageMetadataMap A mapping of tag -> string with the image's metadata
+	 */
+	protected void readFileMetadataFromMap(Map<Tag, String> imageMetadataMap)
+	{
+			// Constant meaning that the metadata attribute was not given in the metadata
+			final String UNSPECIFIED = "Unspecified";
 			// Clear the list of raw metadata
 			this.rawMetadata.clear();
 			// For each metadata tag, add an item to the list
@@ -120,12 +131,6 @@ public class ImageEntry extends ImageContainer
 					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ROLL, "0")),
 					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.PITCH, "0")),
 					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.YAW, "0"))));
-		}
-		catch (Exception e)
-		{
-			// If reading the metadata fails in any way, print an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error reading image metadata for file " + this.getFile().getName() + "!\n" + ExceptionUtils.getStackTrace(e));
-		}
 	}
 
 	/**
@@ -174,6 +179,7 @@ public class ImageEntry extends ImageContainer
 		return this.selectedImage;
 	}
 
+	@Override
 	public File getFile()
 	{
 		return this.imageFile.getValue();
@@ -293,5 +299,15 @@ public class ImageEntry extends ImageContainer
 	public List<MetadataCustomItem> getRawMetadata()
 	{
 		return rawMetadata;
+	}
+
+	public boolean isMetadataEditable()
+	{
+		return metadataEditable.getValue();
+	}
+
+	public BooleanProperty metadataEditableProperty()
+	{
+		return this.metadataEditable;
 	}
 }

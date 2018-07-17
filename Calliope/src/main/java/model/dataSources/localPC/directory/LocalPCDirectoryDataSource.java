@@ -9,6 +9,7 @@ import model.dataSources.DirectoryManager;
 import model.dataSources.ImageDirectory;
 import model.dataSources.ImageEntry;
 import model.dataSources.localPC.LocalPCDataSource;
+import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.threading.ErrorTask;
 
 import javax.swing.filechooser.FileSystemView;
@@ -67,6 +68,7 @@ public class LocalPCDirectoryDataSource extends LocalPCDataSource
 
 					// Convert the file to a recursive image directory data structure
 					ImageDirectory directory = DirectoryManager.loadDirectory(file);
+					directory.setDataSource(LocalPCDirectoryDataSource.this);
 
 					this.updateProgress(2, MAX_WORK);
 					this.updateMessage("Removing empty directories...");

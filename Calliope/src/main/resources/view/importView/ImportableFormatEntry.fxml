@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
-<BorderPane fx:id="mainPane" prefWidth="300" styleClass="backgroundBorder" fx:controller="controller.importView.ImportableFormatEntryController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+<BorderPane fx:id="mainPane" prefWidth="300" styleClass="backgroundBorder" fx:controller="controller.importView.DataSourceEntryController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@ImportableFormatEntry.css"/>
     </stylesheets>

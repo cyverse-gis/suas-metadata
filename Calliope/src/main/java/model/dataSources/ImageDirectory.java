@@ -1,10 +1,7 @@
 package model.dataSources;
 
 import javafx.beans.Observable;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
@@ -30,24 +27,26 @@ public class ImageDirectory extends ImageContainer
 		if (imageContainer instanceof ImageEntry)
 		{
 			ImageEntry image = (ImageEntry) imageContainer;
-			return new Observable[] {
-					image.dateTakenProperty(),
-					image.getFileProperty(),
-					image.locationTakenProperty(),
-					image.treeIconProperty(),
-					image.droneMakerProperty(),
-					image.cameraModelProperty(),
-					image.speedProperty(),
-					image.rotationProperty()
+			return new Observable[]
+			{
+				image.dateTakenProperty(),
+				image.getFileProperty(),
+				image.locationTakenProperty(),
+				image.treeIconProperty(),
+				image.droneMakerProperty(),
+				image.cameraModelProperty(),
+				image.speedProperty(),
+				image.rotationProperty()
 			};
 		}
 		else if (imageContainer instanceof ImageDirectory)
 		{
 			ImageDirectory directory = (ImageDirectory) imageContainer;
-			return new Observable[] {
-					directory.getFileProperty(),
-					// Do we need a ListProperty?
-					directory.getChildren()
+			return new Observable[]
+			{
+				directory.getFileProperty(),
+				// Do we need a ListProperty?
+				directory.getChildren()
 			};
 		}
 		else
@@ -57,6 +56,8 @@ public class ImageDirectory extends ImageContainer
 	private ObjectProperty<File> directoryProperty = new SimpleObjectProperty<File>();
 	// The progress of the directory upload
 	private DoubleProperty uploadProgress = new SimpleDoubleProperty(-1);
+	// The source that provided this data
+	private ObjectProperty<IDataSource> dataSource = new SimpleObjectProperty<>(null);
 
 	/**
 	 * Construct an image directoryProperty
@@ -201,6 +202,21 @@ public class ImageDirectory extends ImageContainer
 	public void setSiteTaken(BoundedSite site)
 	{
 		this.getChildren().forEach(child -> child.setSiteTaken(site));
+	}
+
+	public void setDataSource(IDataSource dataSource)
+	{
+		this.dataSource.setValue(dataSource);
+	}
+
+	public IDataSource getDataSource()
+	{
+		return this.dataSource.getValue();
+	}
+
+	public ObjectProperty<IDataSource> dataSourceProperty()
+	{
+		return this.dataSource;
 	}
 
 	/**

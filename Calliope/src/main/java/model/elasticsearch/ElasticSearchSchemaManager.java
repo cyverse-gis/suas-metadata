@@ -124,6 +124,12 @@ public class ElasticSearchSchemaManager
 							.startObject("altitude")
 								.field("type", "double")
 							.endObject()
+							.startObject("droneMaker")
+								.field("type", "keyword")
+							.endObject()
+							.startObject("cameraModel")
+								.field("type", "keyword")
+							.endObject()
 							.startObject("speed")
 								.field("type", "object")
 								.startObject("properties")
@@ -381,26 +387,10 @@ public class ElasticSearchSchemaManager
 	 *
 	 * @param imageEntry The image to conver to its JSON representation
 	 * @param collectionID The ID of the collection that the image belongs to
-	 * @param basePath The base path on CyVerse that the image belongs to
-	 * @param localDirAbsolutePath The local directory absolute path of the image
-	 * @return A map of key->value pairs used later in creating JSON
-	 */
-	Tuple<String, XContentBuilder> imageToJSONMap(ImageEntry imageEntry, String collectionID, String basePath, String localDirAbsolutePath) throws IOException
-	{
-		// Compute the final path the image will have once uploaded on the datastore. It should look something like:
-		// /iplant/home/user/.../Uploads/imgxyz.jpg
-		return this.imageToJSONMap(imageEntry, collectionID, basePath + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), localDirAbsolutePath));
-	}
-
-	/**
-	 * Utility function used to convert an image entry to its JSON representation
-	 *
-	 * @param imageEntry The image to conver to its JSON representation
-	 * @param collectionID The ID of the collection that the image belongs to
 	 * @param fileAbsolutePath The absolute path of the file on CyVerse
 	 * @return A map of key->value pairs used later in creating JSON
 	 */
-	Tuple<String, XContentBuilder> imageToJSONMap(ImageEntry imageEntry, String collectionID, String fileAbsolutePath) throws IOException
+	Tuple<String, XContentBuilder> imageToJSON(ImageEntry imageEntry, String collectionID, String fileAbsolutePath) throws IOException
 	{
 		// On windows paths have \ as a path separator vs unix /. Make sure that we always use /
 		String fixedAbsolutePath = fileAbsolutePath.replace('\\', '/');
@@ -420,6 +410,8 @@ public class ElasticSearchSchemaManager
 				.field("neonSiteCode", imageEntry.getSiteTaken() != null ? imageEntry.getSiteTaken().getSite().getSiteCode() : null)
 				.field("position", imageEntry.getLocationTaken().getLatitude() + ", " + imageEntry.getLocationTaken().getLongitude())
 				.field("altitude", imageEntry.getLocationTaken().getElevation())
+				.field("droneMaker", imageEntry.getDroneMaker())
+				.field("cameraModel", imageEntry.getCameraModel())
 				.startObject("speed")
 					.field("x", imageEntry.getSpeed().getX())
 					.field("y", imageEntry.getSpeed().getY())

@@ -91,7 +91,7 @@
                 </StackPane>
                 <VBox styleClass="lightBorder" GridPane.columnSpan="1" GridPane.rowSpan="6" SplitPane.resizableWithParent="false">
                     <children>
-                        <GridPane SplitPane.resizableWithParent="false" VBox.vgrow="ALWAYS">
+                        <GridPane fx:id="gpnEditableMetadata" SplitPane.resizableWithParent="false" VBox.vgrow="ALWAYS">
                             <padding>
                                 <Insets left="5" right="5" top="5" />
                             </padding>
@@ -172,7 +172,7 @@
                         <Insets bottom="20" left="5" right="5" top="20" />
                     </padding>
                     <children>
-                        <ComboBox fx:id="cbxImport" prefWidth="150" styleClass="importCbx" promptText="Import Images"/>
+                        <ComboBox fx:id="cbxImport" prefWidth="120" styleClass="importCbx" promptText="Import Images"/>
                         <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#deleteImages" styleClass="deleteBtn" text="Delete" />
                     </children>
                 </FlowPane>

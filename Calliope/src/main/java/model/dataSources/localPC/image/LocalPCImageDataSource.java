@@ -68,6 +68,7 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 
 					// Convert the files to a directory
 					ImageDirectory directory = DirectoryManager.loadFiles(files);
+					directory.setDataSource(LocalPCImageDataSource.this);
 
 					this.updateProgress(2, MAX_WORK);
 					this.updateMessage("Removing empty directories...");

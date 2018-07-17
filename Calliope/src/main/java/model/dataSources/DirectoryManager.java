@@ -33,13 +33,17 @@ public class DirectoryManager
 		{
 			// Grab the current image container
 			ImageContainer imageContainer = directory.getChildren().get(i);
-			// Remove empty directories from this directory
-			DirectoryManager.removeEmptyDirectories(imageContainer);
-			// If it's empty, remove this directory and reduce I since we don't want to get an index out of bounds exception
-			if (imageContainer.getChildren().isEmpty())
+			// If the container is a directory, check if it's empty
+			if (imageContainer instanceof ImageDirectory)
 			{
-				directory.getChildren().remove(i);
-				i--;
+				// Remove empty directories from this directory
+				DirectoryManager.removeEmptyDirectories(imageContainer);
+				// If it's empty, remove this directory and reduce I since we don't want to get an index out of bounds exception
+				if (imageContainer.getChildren().isEmpty())
+				{
+					directory.getChildren().remove(i);
+					i--;
+				}
 			}
 		}
 	}
@@ -64,8 +68,8 @@ public class DirectoryManager
 			{
 				// Load the image file and metadata and add it to the directory
 				ImageEntry imageEntry = new ImageEntry(validImage);
-				imageEntry.readFileMetadataIntoImage();
 				imageEntry.initIconBindings();
+				imageEntry.readFileMetadataFromImage();
 				imageDirectory.addChild(imageEntry);
 			}
 			// Return the directory
@@ -88,8 +92,8 @@ public class DirectoryManager
 			// If it's not a directory, then just add the image
 			toReturn = new ImageDirectory(imageOrLocation.getParentFile());
 			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
-			imageEntry.readFileMetadataIntoImage();
 			imageEntry.initIconBindings();
+			imageEntry.readFileMetadataFromImage();
 			toReturn.addChild(imageEntry);
 		}
 		else
@@ -120,8 +124,8 @@ public class DirectoryManager
 				if (CalliopeAnalysisUtils.fileIsImage(file))
 				{
 					ImageEntry imageEntry = new ImageEntry(file);
-					imageEntry.readFileMetadataIntoImage();
 					imageEntry.initIconBindings();
+					imageEntry.readFileMetadataFromImage();
 					current.addChild(imageEntry);
 				}
 				// Add all subdirectories to the directory

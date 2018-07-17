@@ -23,6 +23,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -54,6 +55,7 @@ import org.controlsfx.property.editor.DefaultPropertyEditorFactory;
 import org.controlsfx.property.editor.PropertyEditor;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
+import org.fxmisc.easybind.monadic.PropertyBinding;
 
 import java.net.URL;
 import java.util.*;
@@ -92,12 +94,6 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public Button btnResetImage;
 
-	// The button to begin importing images
-	//@FXML
-	//public Button btnImportImages;
-	// The button to begin importing a directory
-	//@FXML
-	//public Button btnImportDirectory;
 	// The button to delete imported images
 	@FXML
 	public Button btnDelete;
@@ -139,6 +135,9 @@ public class CalliopeImportController implements Initializable
 	@FXML
 	public TextField txtSiteSearch;
 
+	// A grid pane of editable metadata attributes
+	@FXML
+	public GridPane gpnEditableMetadata;
 	// The bottom field representing the date the image was taken
 	@FXML
 	public LocalDateTimeTextField txtDateTaken;
@@ -184,6 +183,7 @@ public class CalliopeImportController implements Initializable
 	// A list of possible import options when adding data to the program
 	@FXML
 	public ComboBox<IDataSource> cbxImport;
+
 
 	///
 	/// FXML bound fields end
@@ -302,13 +302,6 @@ public class CalliopeImportController implements Initializable
 
 		// Create bindings in the GUI
 
-		// Also bind the date taken text field's disable property if an image is selected
-		this.txtDateTaken.disableProperty().bind(currentlySelectedImage.isNull());
-		// Also bind the disable button's disable property if an adjustable image is selected
-		this.btnResetImage.disableProperty().bind(currentlySelectedImage.isNull());
-		// Finally bind the date taken's disable property if an adjustable image is selected
-		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty)));
-
 		// A converter used to convert from strings to numbers and back
 		StringConverter<Number> numStrconverter = new StringConverter<Number>()
 		{
@@ -343,32 +336,39 @@ public class CalliopeImportController implements Initializable
 			}
 		};
 
+		// Hide the reset button when we do not have an image selected
+		this.btnResetImage.disableProperty().bind(currentlySelectedImage.isNull());
+
 		///
 		/// The next properties are bound image fields. If no image is selected the text fields are disabled. We use bi-directional bindings so that
 		/// if we change the text field the model updates, and if the model is updated internally the text fields update.
 		///
 
-		this.txtLatitude.disableProperty().bind(currentlySelectedImage.isNull());
+		MonadicBinding<Boolean> metadataEnabled = EasyBind.monadic(this.currentlySelectedImage).selectProperty(ImageEntry::metadataEditableProperty).map(x -> !x).orElse(true);
+
+		this.txtDateTaken.disableProperty().bind(metadataEnabled);
+		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty)));
+		this.txtLatitude.disableProperty().bind(metadataEnabled);
 		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::latitudeProperty)), numStrconverter);
-		this.txtLongitude.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtLongitude.disableProperty().bind(metadataEnabled);
 		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::longitudeProperty)), numStrconverter);
-		this.txtElevation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtElevation.disableProperty().bind(metadataEnabled);
 		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::elevationProperty)), numStrconverter);
-		this.txtDroneBrand.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtDroneBrand.disableProperty().bind(metadataEnabled);
 		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::droneMakerProperty)));
-		this.txtCameraModel.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtCameraModel.disableProperty().bind(metadataEnabled);
 		this.txtCameraModel.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::cameraModelProperty)));
-		this.txtXSpeed.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtXSpeed.disableProperty().bind(metadataEnabled);
 		this.txtXSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::xProperty)), numStrconverter);
-		this.txtYSpeed.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtYSpeed.disableProperty().bind(metadataEnabled);
 		this.txtYSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::yProperty)), numStrconverter);
-		this.txtZSpeed.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtZSpeed.disableProperty().bind(metadataEnabled);
 		this.txtZSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::zProperty)), numStrconverter);
-		this.txtXRotation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtXRotation.disableProperty().bind(metadataEnabled);
 		this.txtXRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::xProperty)), numStrconverter);
-		this.txtYRotation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtYRotation.disableProperty().bind(metadataEnabled);
 		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::yProperty)), numStrconverter);
-		this.txtZRotation.disableProperty().bind(currentlySelectedImage.isNull());
+		this.txtZRotation.disableProperty().bind(metadataEnabled);
 		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::zProperty)), numStrconverter);
 		// Service used to retrieve the currently selected image pixel data
 		ErrorService<Image> imageRetrievalService = new ErrorService<Image>()
@@ -405,7 +405,7 @@ public class CalliopeImportController implements Initializable
 		});
 		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
-		// Bind the species entry location name to the selected image's location
+		// Bind the site name to the selected image's location
 		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(currentlySelectedImage.isNotNull().or(currentlySelectedDirectory.isNotNull()));
@@ -522,6 +522,8 @@ public class CalliopeImportController implements Initializable
 					importTask.setOnSucceeded(event ->
 					{
 						onSucceeded.handle(event);
+						ImageDirectory value = importTask.getValue();
+
 						// Also clear the selection since we're using this combo-box as more of an item list than anything
 						// Because we're in a listener we can't actually modify the combobox in here, so use Platform.runLater to put it into a queue
 						Platform.runLater(() -> this.cbxImport.getSelectionModel().clearSelection());
@@ -845,10 +847,10 @@ public class CalliopeImportController implements Initializable
 			images = Collections.singletonList(this.currentlySelectedImage.getValue());
 		// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
 		else if (this.currentlySelectedDirectory.getValue() != null)
-			images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+			images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getLocationTaken() != null).collect(Collectors.toList());
 
 		// If we got any images at all, process them
-		if (images != null)
+		if (images != null && !images.isEmpty())
 		{
 			// Pull the sub-images in the directory
 			this.neonSiteDetectorController.updateItems(images);

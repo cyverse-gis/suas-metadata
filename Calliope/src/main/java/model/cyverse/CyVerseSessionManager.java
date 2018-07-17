@@ -17,10 +17,12 @@ import java.util.Map;
 /**
  * Class that maintains connections to cyverse
  */
-public class CyVerseSessionManager
+class CyVerseSessionManager
 {
 	// A map of thread -> session objects, used to keep 1 session per thread
-	private Map<Thread, Pair<IRODSSession, IRODSAccessObjectFactory>> sessions = Collections.synchronizedMap(new HashMap<>());
+	private Map<Thread, IRODSSession> sessions = Collections.synchronizedMap(new HashMap<>());
+	private Map<Thread, IRODSAccessObjectFactory> accessObjects = Collections.synchronizedMap(new HashMap<>());
+	private Map<Thread, Integer> accessCounts = Collections.synchronizedMap(new HashMap<>());
 
 	// A reference to the authenticated irods account
 	private IRODSAccount authenticatedAccount;
@@ -30,7 +32,7 @@ public class CyVerseSessionManager
 	 *
 	 * @param authenticatedAccount The account that has been authenticated
 	 */
-	public CyVerseSessionManager(IRODSAccount authenticatedAccount)
+	CyVerseSessionManager(IRODSAccount authenticatedAccount)
 	{
 		this.authenticatedAccount = authenticatedAccount;
 	}
@@ -40,22 +42,29 @@ public class CyVerseSessionManager
 	 *
 	 * @return True if the session was opened successfully
 	 */
-	public boolean openSession()
+	boolean openSession()
 	{
 		// Grab the current thread
 		Thread current = Thread.currentThread();
 		// Test if this thread already has a session object
 		if (this.sessions.containsKey(current))
-			return false;
+		{
+			// If it does, we increment our session counter by one
+			this.accessCounts.put(current, this.accessCounts.get(current) + 1);
+			return true;
+		}
 		else
 		{
-			// Create a session
+			// If it doesn't, create a session
 			try
 			{
 				// Create the session and store it
 				IRODSSession newSession = IRODSSession.instance(IRODSSimpleProtocolManager.instance());
 				IRODSAccessObjectFactory newAccessFactory = IRODSAccessObjectFactoryImpl.instance(newSession);
-				this.sessions.put(current, new Pair<>(newSession, newAccessFactory));
+				// Store our session, access object factory, and access count (1 to start)
+				this.sessions.put(current, newSession);
+				this.accessObjects.put(current, newAccessFactory);
+				this.accessCounts.put(current, 1);
 				return true;
 			}
 			// Print an error and return false
@@ -70,39 +79,39 @@ public class CyVerseSessionManager
 	/**
 	 * Closes the session for the current thread if there is one open at the moment
 	 */
-	public void closeSession()
+	void closeSession()
 	{
 		// Grab the current thread, and see if a session is associated with the thread
 		Thread current = Thread.currentThread();
-		if (this.sessions.containsKey(current))
+		// If we know about this thread, begin processing it
+		if (this.accessCounts.containsKey(current))
 		{
-			// If so, grab the session and close it
-			Pair<IRODSSession, IRODSAccessObjectFactory> session = this.sessions.get(current);
-			try
+			// Grab the number of times we've tried to open this session
+			Integer sessionCount = this.accessCounts.get(current);
+			// If it's just 1, this session can be closed and removed
+			if (sessionCount == 1)
 			{
-				// Close the session
-				session.getKey().closeSession(this.authenticatedAccount);
+				// Remove any mappings associated with this thread
+				this.accessCounts.remove(current);
+				this.accessObjects.remove(current);
+				IRODSSession session = this.sessions.remove(current);
+				try
+				{
+					// Close the session
+					session.closeSession(this.authenticatedAccount);
+				}
+				// An error occured, ignore it
+				catch (JargonException e)
+				{
+					CalliopeData.getInstance().getErrorDisplay().notify("Error closing a session!\n" + ExceptionUtils.getStackTrace(e));
+				}
 			}
-			// An error occured, ignore it
-			catch (JargonException e)
+			else
 			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Error closing a session!\n" + org.apache.commons.lang.exception.ExceptionUtils.getStackTrace(e));
+				// If there's more than one function using this session, decrement the counter
+				this.accessCounts.put(current, sessionCount - 1);
 			}
-			this.sessions.remove(current);
 		}
-	}
-
-	/**
-	 * Getter for the current session this thread is operating on
-	 *
-	 * @return A session object or null if no session object is present for this thread
-	 */
-	public IRODSSession getCurrentSession()
-	{
-		Pair<IRODSSession, IRODSAccessObjectFactory> sessionPair = this.sessions.get(Thread.currentThread());
-		if (sessionPair == null)
-			return null;
-		return sessionPair.getKey();
 	}
 
 	/**
@@ -110,11 +119,8 @@ public class CyVerseSessionManager
 	 *
 	 * @return An access object or null if no access object object is present for this thread
 	 */
-	public IRODSAccessObjectFactory getCurrentAO()
+	IRODSAccessObjectFactory getCurrentAO()
 	{
-		Pair<IRODSSession, IRODSAccessObjectFactory> sessionPair = this.sessions.get(Thread.currentThread());
-		if (sessionPair == null)
-			return null;
-		return sessionPair.getValue();
+		return this.accessObjects.get(Thread.currentThread());
 	}
 }

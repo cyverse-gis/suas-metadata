@@ -22,6 +22,7 @@ import javafx.stage.Stage;
 import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
+import model.dataSources.IDataSource;
 import model.dataSources.ImageDirectory;
 import model.dataSources.ImageEntry;
 import model.threading.ErrorTask;
@@ -222,94 +223,31 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		// If our dragboard has a string we have data which we need
 		if (dragboard.hasContent(IMAGE_DIRECTORY_FILE_FORMAT))
 		{
-			File imageDirectoryFile = (File) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
+			String imageDirectoryAbsolutePath = (String) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
 			// Filter our list of images by directory that has the right file path
-			Optional<ImageDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree().flattened().filter(
-					imageContainer -> imageContainer instanceof ImageDirectory &&
-					imageContainer.getFile().getAbsolutePath().equals(imageDirectoryFile.getAbsolutePath())).map(imageContainer -> (ImageDirectory) imageContainer).findFirst();
+			Optional<ImageDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree()
+					.flattened()
+					.filter(imageContainer -> imageContainer instanceof ImageDirectory &&
+							imageContainer.getFile().getAbsolutePath().equals(imageDirectoryAbsolutePath))
+					.map(imageContainer -> (ImageDirectory) imageContainer)
+					.findFirst();
 
+			// If we found the correct image directory to upload to, prompt the user
 			imageDirectoryOpt.ifPresent(imageDirectory ->
-			{
-				// Make sure we've got a valid directory
-				boolean validDirectory = true;
-				// Each image must have a location and species tagged
-				for (ImageEntry imageEntry : imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList()))
-				{
-					if (imageEntry.getLocationTaken() == null)
+				// Ask the user if they want to upload these images
+				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images to the collection " + this.getItem().getName() + "?",
+					// If "Yes" is pressed, perform the action
+					new Action("Yes", actionEvent ->
 					{
-						validDirectory = false;
-						break;
-					}
-				}
-
-				// If we have a valid directory, perform the upload
-				if (validDirectory)
-				{
-					CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images to the collection " + this.getItem().getName() + "?",
-						new Action("Yes", actionEvent ->
-						{
-							// Set the upload to 0% so that we don't edit it anymore
-							imageDirectory.setUploadProgress(0.0);
-							// Create an upload task
-							Task<Void> uploadTask = new ErrorTask<Void>()
-							{
-								@Override
-								protected Void call()
-								{
-									// Update the progress
-									this.updateProgress(0, 1);
-
-									// Create a string property used as a callback
-									StringProperty messageCallback = new SimpleStringProperty("");
-									this.updateMessage("Uploading image directory " + imageDirectory.getFile().getName() + " to CyVerse.");
-									messageCallback.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
-									// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress
-									CalliopeData.getInstance().getCyConnectionManager().uploadImages(ImageCollectionListEntryController.this.getItem(), imageDirectory, new TransferStatusCallbackListener()
-									{
-										@Override
-										public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus)
-										{
-											// Set the upload progress in the directory we get a callback
-											Platform.runLater(() -> imageDirectory.setUploadProgress(transferStatus.getBytesTransfered() / (double) transferStatus.getTotalSize()));
-											// Set the upload progress whenever we get a callback
-											updateProgress((double) transferStatus.getBytesTransfered(), (double) transferStatus.getTotalSize());
-											return FileStatusCallbackResponse.CONTINUE;
-										}
-
-										// Ignore this status callback
-										@Override
-										public void overallStatusCallback(TransferStatus transferStatus)
-										{
-										}
-
-										// Ignore this as well
-										@Override
-										public CallbackResponse transferAsksWhetherToForceOperation(String irodsAbsolutePath, boolean isCollection)
-										{
-											return CallbackResponse.YES_FOR_ALL;
-										}
-									}, messageCallback);
-									return null;
-								}
-							};
-							// When the upload finishes, we enable the upload button
-							uploadTask.setOnSucceeded(event ->
-							{
-								imageDirectory.setUploadProgress(-1);
-								// Remove the directory because it's uploaded now
-								CalliopeData.getInstance().getImageTree().removeChildRecursive(imageDirectory);
-							});
-							uploadTask.setOnCancelled(event -> imageDirectory.setUploadProgress(-1));
-							dragEvent.setDropCompleted(true);
-							CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(uploadTask);
-						}));
-				}
-				else
-				{
-					// If an invalid directory is selected, show an alert
-					CalliopeData.getInstance().getErrorDisplay().notify("An image in the directory (" + imageDirectory.getFile().getName() + ") you selected does not have a location. Please ensure all images are tagged with a location!");
-				}
-			});
+						// Grab the source of the data
+						IDataSource dataSource = imageDirectory.getDataSource();
+						// Make an index task for this directory
+						Task<Void> indexTask = dataSource.makeIndexTask(ImageCollectionListEntryController.this.getItem(), imageDirectory);
+						// Execute this index task
+						if (indexTask != null)
+							CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(indexTask);
+						dragEvent.setDropCompleted(true);
+					})));
 		}
 		dragEvent.consume();
 	}

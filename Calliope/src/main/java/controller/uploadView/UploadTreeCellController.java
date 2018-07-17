@@ -141,7 +141,7 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 
 					// Create a clipboard and put the location unique ID into that clipboard
 					ClipboardContent content = new ClipboardContent();
-					content.put(CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT, selectedDirectory.getFile());
+					content.put(CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT, selectedDirectory.getFile().getAbsolutePath());
 					// Set the dragboard's context, and then consume the event
 					dragboard.setContent(content);
 
