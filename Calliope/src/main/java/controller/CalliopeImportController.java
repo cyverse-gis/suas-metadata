@@ -475,8 +475,6 @@ public class CalliopeImportController
 
 		// Setup the import combo-box
 
-		// Set the items to be the enum possible values
-		this.cbxImport.setItems(CalliopeData.getInstance().getDataSources());
 		// Set our cell factory to be our custom cell
 		this.cbxImport.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImportableFormatEntry.fxml").getController());
 		// Make sure that new cells use the 'getName' function to get the combo-box value instead of 'toString()'
@@ -493,6 +491,8 @@ public class CalliopeImportController
 				return CalliopeData.getInstance().getDataSources().stream().filter(dataSource -> dataSource.getName().equals(dataSourceName)).findFirst().orElse(null);
 			}
 		});
+		// Set the items to be the enum possible values
+		this.cbxImport.setItems(CalliopeData.getInstance().getDataSources());
 		// When we select a new item in the list cell, execute the task and don't forget to disable the button while it's running
 		EasyBind.subscribe(this.cbxImport.getSelectionModel().selectedItemProperty(), newValue ->
 		{
@@ -512,8 +512,6 @@ public class CalliopeImportController
 					importTask.setOnSucceeded(event ->
 					{
 						onSucceeded.handle(event);
-						ImageDirectory value = importTask.getValue();
-
 						// Also clear the selection since we're using this combo-box as more of an item list than anything
 						// Because we're in a listener we can't actually modify the combobox in here, so use Platform.runLater to put it into a queue
 						Platform.runLater(() -> this.cbxImport.getSelectionModel().clearSelection());

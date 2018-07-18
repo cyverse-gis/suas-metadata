@@ -137,7 +137,7 @@ public class CyVerseDSDataSource implements IDataSource
 							LocalDateTime.now(),
 							Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count()),
 							directoryToIndex.getFile().getAbsolutePath(),
-							"CyVerse Data Store");
+							CyVerseDSDataSource.this.getName());
 					// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress
 					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToIndex, uploadedEntry, imageCollection.getID().toString(), imageEntry -> imageEntry.getFile().getAbsolutePath());
 					return null;

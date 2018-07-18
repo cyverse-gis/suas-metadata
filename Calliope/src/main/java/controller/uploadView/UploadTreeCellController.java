@@ -14,6 +14,8 @@ import model.constant.CalliopeDataFormats;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 
+import java.util.Objects;
+
 /**
  * Class used as the controller for an upload entry in the treeview
  */
@@ -141,7 +143,7 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 
 					// Create a clipboard and put the location unique ID into that clipboard
 					ClipboardContent content = new ClipboardContent();
-					content.put(CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT, selectedDirectory.getFile().getAbsolutePath());
+					content.put(CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT, Objects.hash(selectedDirectory));
 					// Set the dragboard's context, and then consume the event
 					dragboard.setContent(content);
 

@@ -1,7 +1,10 @@
 package model.image;
 
 import javafx.beans.Observable;
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
@@ -23,7 +26,7 @@ public class ImageDirectory extends ImageContainer
 	// The icon that is currently selected to be displayed
 	private final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_DIR_IMAGE);
 	// List of sub-files and directories
-	private ObservableList<ImageContainer> children = FXCollections.observableArrayList(imageContainer ->
+	private final ObservableList<ImageContainer> children = FXCollections.observableArrayList(imageContainer ->
 	{
 		if (imageContainer instanceof ImageEntry)
 		{

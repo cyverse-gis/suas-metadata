@@ -1,6 +1,5 @@
 package model.cyverse;
 
-import javafx.util.Pair;
 import model.CalliopeData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.irods.jargon.core.connection.IRODSAccount;
@@ -123,4 +122,11 @@ class CyVerseSessionManager
 	{
 		return this.accessObjects.get(Thread.currentThread());
 	}
+
+	/**
+	 * Getter for the current session object this thread is operating on
+	 *
+	 * @return A session object or null if no session object object is present for this thread
+	 */
+	IRODSSession getCurrentSession() { return this.sessions.get(Thread.currentThread()); }
 }

@@ -25,6 +25,7 @@ import model.image.ImageEntry;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.action.Action;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static model.constant.CalliopeDataFormats.IMAGE_DIRECTORY_FILE_FORMAT;
@@ -215,12 +216,12 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		// If our dragboard has a string we have data which we need
 		if (dragboard.hasContent(IMAGE_DIRECTORY_FILE_FORMAT))
 		{
-			String imageDirectoryAbsolutePath = (String) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
+			Integer imageDirectoryHash = (int) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
 			// Filter our list of images by directory that has the right file path
 			Optional<ImageDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree()
 					.flattened()
 					.filter(imageContainer -> imageContainer instanceof ImageDirectory &&
-							imageContainer.getFile().getAbsolutePath().equals(imageDirectoryAbsolutePath))
+							Objects.hash(imageContainer) == imageDirectoryHash)
 					.map(imageContainer -> (ImageDirectory) imageContainer)
 					.findFirst();
 

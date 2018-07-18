@@ -27,7 +27,7 @@
                         <Label fx:id="lblExifToolStatus" styleClass="exifToolLbl" text="Not Found"/>
                     </children>
                 </HBox>
-                <TextArea fx:id="txtInstallInstructions" styleClass="exifToolArea" wrapText="true"/>
+                <TextArea fx:id="txtInstallInstructions" prefHeight="-Infinity" styleClass="exifToolArea"/>
             </children>
         </VBox>
     </children>

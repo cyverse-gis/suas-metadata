@@ -5,7 +5,9 @@ import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import javafx.animation.*;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -25,6 +27,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import library.AlignedMapNode;
 import library.TableColumnHeaderUtil;
@@ -51,6 +54,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -132,6 +136,10 @@ public class CalliopeMapController
 	public TableColumn<GeoImageResult, String> clmCameraModel;
 	@FXML
 	public TableColumn<GeoImageResult, LocalDateTime> clmDate;
+
+	// Disable the download query button if the query is invalid
+	@FXML
+	public Button btnDownloadQuery;
 
 	///
 	/// FXML bound fields end
@@ -369,18 +377,6 @@ public class CalliopeMapController
 		// When our query changes we request another circle drawing run which updates the mini circles containing images
 		this.currentQuery.addListener((observable, oldValue, newValue) -> circleDrawingService.requestAnotherRun());
 
-		// Create a fade transition for the settings box in the top left
-		FadeTransition fadeMapIn = new FadeTransition(Duration.millis(100), this.gpnMapSettings);
-		fadeMapIn.setFromValue(0.5);
-		fadeMapIn.setToValue(1);
-		fadeMapIn.setCycleCount(1);
-		FadeTransition fadeMapOut = new FadeTransition(Duration.millis(100), this.gpnMapSettings);
-		fadeMapOut.setFromValue(1);
-		fadeMapOut.setToValue(0.5);
-		fadeMapOut.setCycleCount(1);
-		this.gpnMapSettings.setOnMouseEntered(event -> fadeMapIn.play());
-		this.gpnMapSettings.setOnMouseExited(event -> fadeMapOut.play());
-
 		// Setup the transition to fade the query tab out
 
 		final double TRANSITION_DURATION = 0.7;
@@ -466,6 +462,29 @@ public class CalliopeMapController
 		this.clmDate.setCellValueFactory(param -> param.getValue().dateProperty());
 		// Sort the date column by the date comparator
 		this.clmDate.setComparator(Comparator.naturalOrder());
+		// Set the date format. This code is taken from DEFAULT_CELL_FACTORY in TableColumn.class
+		this.clmDate.setCellFactory(param -> new TableCell<GeoImageResult, LocalDateTime>()
+		{
+			@Override
+			protected void updateItem(LocalDateTime localDateTime, boolean empty)
+			{
+				if (localDateTime == getItem())
+					return;
+
+				super.updateItem(localDateTime, empty);
+
+				if (localDateTime == null)
+				{
+					super.setText(null);
+					super.setGraphic(null);
+				}
+				else
+				{
+					super.setText(CalliopeData.getInstance().getSettings().formatDateTime(localDateTime, " "));
+					super.setGraphic(null);
+				}
+			}
+		});
 
 		// A service that can download a selected circle's metadata
 		ReRunnableService<List<GeoImageResult>> circleImageDownloader = new ReRunnableService<>(() ->
@@ -491,7 +510,23 @@ public class CalliopeMapController
 			this.tpnCircleMetadata.setExpanded(true);
 		});
 		// Whenever we select a new circle we ask our circle thread to perform another run
-		this.selectedCircle.addListener((observable, oldValue, newValue) -> { if (newValue != null) circleImageDownloader.requestAnotherRun(); });
+		this.selectedCircle.addListener((observable, oldValue, newValue) ->
+		{
+			if (newValue != null)
+			{
+				// Highlight the new circle
+				newValue.setHighlighted(true);
+				circleImageDownloader.requestAnotherRun();
+			}
+			if (oldValue != null)
+			{
+				// Remove the circle highlight
+				oldValue.setHighlighted(false);
+			}
+		});
+
+		// If there isn't a query available, hide the download button
+		this.btnDownloadQuery.disableProperty().bind(this.currentQuery.isNull());
 	}
 
 	/**
@@ -567,19 +602,23 @@ public class CalliopeMapController
 		// Get the map's current zoom level
 		Double zoom = this.map.getZoomLevel();
 		// Based on that zoom level, return an appropriate amount of aggregation
-		if (zoom < 5)
+		if (zoom <= 5)
 			return 1;
-		else if (zoom < 10)
+		else if (zoom <= 8)
+			return 2;
+		else if (zoom <= 10)
 			return 3;
-		else if (zoom < 12)
+		else if (zoom <= 12)
 			return 4;
-		else if (zoom < 14)
+		else if (zoom <= 14)
 			return 5;
-		else if (zoom < 16)
+		else if (zoom <= 16)
 			return 6;
-		else if (zoom < 18)
+		else if (zoom <= 18)
 			return 7;
-		else return 8;
+		else if (zoom <= 19)
+			return 8;
+		else return 9;
 	}
 
 	/**
@@ -642,6 +681,76 @@ public class CalliopeMapController
 			queryCondition.appendConditionToQuery(query);
 
 		this.currentQuery.setValue(query.build());
+
+		actionEvent.consume();
+	}
+
+	/**
+	 * Clicked to download the current query's images as a tar file
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void downloadQuery(ActionEvent actionEvent)
+	{
+		// Make sure that popups are enabled
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
+		{
+			// Create a directory chooser to pick which directory to download to
+			DirectoryChooser directoryChooser = new DirectoryChooser();
+			// Set the title of the window
+			directoryChooser.setTitle("Pick a directory to download to");
+			// Set the initial directory to just be documents folder
+			directoryChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
+			// Grab the directory to save to
+			File dirToSaveTo = directoryChooser.showDialog(this.map.getScene().getWindow());
+
+			// Make sure we got a directory to save to
+			if (dirToSaveTo != null)
+			{
+				// Make sure the directory is a directory, exists, and can be written to
+				if (dirToSaveTo.exists() && dirToSaveTo.isDirectory() && dirToSaveTo.canWrite())
+				{
+					// Grab the current query
+					QueryBuilder currentQuery = this.currentQuery.getValue();
+					// Make sure it's valid
+					if (currentQuery != null)
+					{
+						// Create a new task to perform the computation
+						ErrorTask<Void> errorTask = new ErrorTask<Void>()
+						{
+							@Override
+							protected Void call()
+							{
+								// Update the users on what the query is doing
+								this.updateMessage("Performing query to figure out which images to download...");
+								// Perform the query
+								List<String> absoluteImagePaths = CalliopeData.getInstance().getEsConnectionManager().getImagePathsMatching(currentQuery);
+								// Update the users again
+								this.updateMessage("Downloading images into '" + dirToSaveTo.getAbsolutePath() + "'...");
+								// Create a callback so we can easily update our task progress
+								DoubleProperty progressCallback = new SimpleDoubleProperty(0);
+								progressCallback.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
+								// Call the final function to download data to disk
+								CalliopeData.getInstance().getCyConnectionManager().downloadImages(absoluteImagePaths, dirToSaveTo, progressCallback);
+								return null;
+							}
+						};
+						// Execute the task
+						CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(errorTask);
+					}
+				}
+				else
+				{
+					// If the directory is invalid, show an error
+					CalliopeData.getInstance().getErrorDisplay().notify("The directory chosen must exist and be writable!");
+				}
+			}
+		}
+		else
+		{
+			// If popups are disabled show an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to download a query!");
+		}
 
 		actionEvent.consume();
 	}

@@ -1,16 +1,18 @@
 package model.cyverse;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
-import model.util.AnalysisUtils;
 import model.dataSources.DirectoryManager;
-import model.image.ImageDirectory;
-import model.image.ImageEntry;
 import model.dataSources.UploadedEntry;
 import model.dataSources.cyverseDataStore.CyVerseDSImageDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
+import model.image.ImageDirectory;
+import model.image.ImageEntry;
+import model.util.AnalysisUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.irods.jargon.core.connection.AuthScheme;
@@ -38,6 +40,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A class used to wrap the CyVerse Jargon FTP/iRODS library
@@ -391,6 +395,69 @@ public class CyVerseConnectionManager
 			catch (JargonException e)
 			{
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not upload the images to CyVerse!\n" + ExceptionUtils.getStackTrace(e));
+			}
+			this.sessionManager.closeSession();
+		}
+	}
+
+	/**
+	 * Function used to download a list of iRODS images into a directory specified. Also takes a progress callback as an argument that that can be updated to
+	 * show task progress
+	 *
+	 * @param absoluteIRODSImagePaths A list of absolute iRODS paths to download
+	 * @param dirToSaveTo The directory to download into
+	 * @param progressCallback A callback that can be updated to show download progress
+	 */
+	public void downloadImages(List<String> absoluteIRODSImagePaths, File dirToSaveTo, DoubleProperty progressCallback)
+	{
+		// Open a session as usual
+		if (this.sessionManager.openSession())
+		{
+			try
+			{
+				// Create the required data transfer operation object ot perform get requests
+				DataTransferOperations dataTransferOperations = this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount);
+				// Absolute path of the directory
+				String dirToSaveToAbsolutePath = dirToSaveTo.getAbsolutePath();
+				// Create a file factory used to create IRODSFiles
+				IRODSFileFactory irodsFileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
+
+				long time = System.currentTimeMillis();
+				// Map the iRODS file paths to local file paths based on the directory to download into. We later abuse the fact that this list is parallel to
+				// the input list of IRODS paths
+				List<String> absoluteLocalFilePaths = absoluteIRODSImagePaths.stream().map(absoluteImagePath -> dirToSaveToAbsolutePath + File.separator + FilenameUtils.getName(absoluteImagePath)).collect(Collectors.toList());
+				// Iterate over the parallel lists
+				for (Integer i = 0; i < absoluteIRODSImagePaths.size() && i < absoluteLocalFilePaths.size(); i++)
+				{
+					// Every 5 uploads update the progress
+					if (i % 5 == 0)
+						progressCallback.setValue(i / (double) absoluteIRODSImagePaths.size());
+
+					// Read both parallel lists and grab one element from both
+					String irodsAbsolutePath = absoluteIRODSImagePaths.get(i);
+					String localAbsolutePath = absoluteLocalFilePaths.get(i);
+
+					// Convert both paths into files
+					IRODSFile irodsFile = irodsFileFactory.instanceIRODSFile(irodsAbsolutePath);
+					File localFile = new File(localAbsolutePath);
+
+					// While the file exists, we update the path to have a new file name, and then re-create the local file
+					while (localFile.exists())
+					{
+						// Use a random alphabetic character at the end of the file name to make sure the file name is unique
+						localAbsolutePath = localAbsolutePath.replace(".", RandomStringUtils.randomAlphabetic(1) + ".");
+						localFile = new File(localAbsolutePath);
+					}
+
+					// Perform the get operation
+					dataTransferOperations.getOperation(irodsFile, localFile, null, null);
+				}
+				System.out.println((System.currentTimeMillis() - time) / 1000.0D);
+			}
+			catch (JargonException e)
+			{
+				// Print out an error message if something goes wrong
+				CalliopeData.getInstance().getErrorDisplay().notify("Error downloading images from CyVerse\n" + ExceptionUtils.getStackTrace(e));
 			}
 			this.sessionManager.closeSession();
 		}

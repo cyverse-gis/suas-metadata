@@ -48,11 +48,13 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.ParsedSingleBucketAggregation;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoGridAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.ParsedGeoHashGrid;
+import org.elasticsearch.search.aggregations.bucket.terms.IncludeExclude;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -1164,6 +1166,74 @@ public class ElasticSearchConnectionManager
 				CalliopeData.getInstance().getErrorDisplay().notify("Error performing multi-get document get, error was:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
+
+		return toReturn;
+	}
+
+	/**
+	 * Given a query this method returns a list of image file paths that match the query
+	 *
+	 * @param currentQuery The query to apply and get metadata from
+	 * @return A list of absolute iRODS paths to pull from the ES index
+	 */
+	public List<String> getImagePathsMatching(QueryBuilder currentQuery)
+	{
+		List<String> toReturn = new ArrayList<>();
+
+		try
+		{
+			// Perform a search request to count the number of results
+			SearchRequest countSearchRequest = new SearchRequest();
+			countSearchRequest
+					.indices(INDEX_CALLIOPE_METADATA)
+					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					.source(new SearchSourceBuilder()
+						// Use size==0 to count the number of documents matching the query
+						.size(0)
+						.query(currentQuery));
+
+			// Perform the count search
+			SearchResponse countSearchResponse = this.elasticSearchClient.search(countSearchRequest);
+			// Store the number of hits
+			Long totalHits = countSearchResponse.getHits().totalHits;
+			// Every aggregation we fire off will have a max of 1000 results
+			final Integer MAX_AGGS_PER_SEARCH = 1000;
+			// Compute how many queries we need to perform to get all results
+			Integer partitionsRequired = Math.toIntExact(totalHits / MAX_AGGS_PER_SEARCH + 1);
+
+			// Iterate once partition
+			for (Integer partitionNumber = 0; partitionNumber < partitionsRequired; partitionNumber++)
+			{
+				// Create a search request, and populate the fields
+				SearchRequest searchRequest = new SearchRequest();
+				searchRequest
+					.indices(INDEX_CALLIOPE_METADATA)
+					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					.source(new SearchSourceBuilder()
+						.fetchSource(false)
+						.query(currentQuery)
+						// Aggregate on the storage path list so we get all unique paths. We do it in partitions to ensure we don't get more than 1000 results at once
+						.aggregation(AggregationBuilders.terms("paths").field("storagePath").includeExclude(new IncludeExclude(partitionNumber, partitionsRequired)).size(MAX_AGGS_PER_SEARCH)));
+
+				// Grab the search results
+				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+				// Get a list of paths (hits)
+				Aggregations aggregations = searchResponse.getAggregations();
+
+				// Iterate over all aggregations, there should only be 1
+				for (Aggregation aggregation : aggregations.asList())
+					// The one aggregation should be a parsed string terms aggregation
+					if (aggregation instanceof ParsedStringTerms)
+						// There should be #buckets == #images. Grab each bucket's key (which is the path) and add it to be returned
+						((ParsedStringTerms) aggregation).getBuckets().forEach(bucket ->  toReturn.add(bucket.getKeyAsString()));
+			}
+		}
+		catch (IOException e)
+		{
+			// Something went wrong, so show an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote image file paths, error was:\n" + ExceptionUtils.getStackTrace(e));
+		}
+
 
 		return toReturn;
 	}

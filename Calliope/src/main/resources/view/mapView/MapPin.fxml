@@ -3,20 +3,10 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Circle?>
-<?import javafx.scene.paint.RadialGradient?>
-<?import javafx.scene.paint.Stop?>
+
 <StackPane fx:controller="controller.mapView.MapCircleController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <children>
-        <Circle fx:id="crlBackground" radius="20">
-            <fill>
-                <RadialGradient centerX="0.5" centerY="0.5">
-                    <stops>
-                        <Stop offset="0.0" color="orange"/>
-                        <Stop offset="0.5" color="wheat"/>
-                    </stops>
-                </RadialGradient>
-            </fill>
-        </Circle>
+        <Circle fx:id="crlBackground" radius="20"/>
         <Label fx:id="lblImageCount"/>
     </children>
 </StackPane>

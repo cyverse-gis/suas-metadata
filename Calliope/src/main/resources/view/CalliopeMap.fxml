@@ -27,6 +27,7 @@
                 <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="NEVER"/>
+                <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="SOMETIMES"/>
             </rowConstraints>
             <columnConstraints>
@@ -38,11 +39,18 @@
                 <ToggleSwitch fx:id="tswMarkers" selected="true"            GridPane.columnIndex="0" GridPane.rowIndex="1" text="Site Markers" maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswBoundaries" selected="true"         GridPane.columnIndex="1" GridPane.rowIndex="1" text="Site Boundaries" maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswImageCounts" selected="true"        GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts" maxWidth="Infinity"/>
-                <HBox alignment="CENTER_LEFT"                               GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity">
-                    <Label text="Max images:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" amountToStepBy="5" HBox.hgrow="NEVER" />
+                <HBox alignment="CENTER_LEFT" spacing="5"                   GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity">
+                    <Label text="Max Circle Images:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" initialValue="25" amountToStepBy="5" HBox.hgrow="NEVER" />
                 </HBox>
-                <TitledPane fx:id="tpnCircleMetadata" text="Selected Image Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
+                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
+                    <graphic>
+                        <ImageView>
+                            <Image url="@../images/mapWindow/downloadIcon16.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
                     <content>
                         <TableView fx:id="tbvImageMetadata">
                             <columnResizePolicy>
