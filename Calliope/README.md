@@ -29,3 +29,9 @@ Run the program:
 ```shell
 java -jar '<directory>/Calliope/target/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar'
 ```
+
+## Usage and Documentation
+
+### Logging In
+The CyVerse infrastructure is heavily used by Calliope to both store data and authenticate users. In order to use Calliope, you will need a CyVerse account. Please make a free account here: https://user.cyverse.org/register. After registering you can open Calliope where you should be prompted with a login screen.
+![](/Calliope/screenshots/login.PNG)
