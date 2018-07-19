@@ -6,7 +6,7 @@
 
 <StackPane fx:controller="controller.mapView.MapCircleController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <children>
-        <Circle fx:id="crlBackground" radius="20"/>
-        <Label fx:id="lblImageCount"/>
+        <Circle fx:id="crlBackground" stroke="darkgrey" strokeWidth="2" radius="20"/>
+        <Label fx:id="lblImageCount" mouseTransparent="true"/>
     </children>
 </StackPane>

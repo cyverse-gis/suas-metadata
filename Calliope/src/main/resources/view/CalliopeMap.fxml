@@ -44,7 +44,7 @@
                     <content>
                         <VBox spacing="5">
                             <HBox alignment="CENTER_LEFT" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4" maxWidth="Infinity">
-                                <Label text="Maximum Image Results:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Label text="Maximum Selection Results:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                 <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" initialValue="25" amountToStepBy="5" HBox.hgrow="NEVER" />
                             </HBox>
                             <TableView fx:id="tbvImageMetadata">

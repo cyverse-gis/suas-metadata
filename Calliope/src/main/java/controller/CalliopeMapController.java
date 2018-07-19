@@ -422,6 +422,8 @@ public class CalliopeMapController
 				// If the buckets are not the same size something went wrong, throw an error
 				CalliopeData.getInstance().getErrorDisplay().notify("Pin bucket and geo bucket were not the same size after normalization, this is an error!");
 			}
+			// Make sure that the selected circle is cleared because it's no longer invalid
+			this.selectedCircle.setValue(null);
 		});
 		// When the mouse gets dragged and released we update our pins
 		this.map.mouseDraggingProperty().addListener((observable, oldValue, newValue) ->
@@ -618,13 +620,13 @@ public class CalliopeMapController
 			if (newValue != null)
 			{
 				// Highlight the new circle
-				newValue.setHighlighted(true);
+				newValue.setSelected(true);
 				circleMetadataDownloader.requestAnotherRun();
 			}
 			if (oldValue != null)
 			{
 				// Remove the circle highlight
-				oldValue.setHighlighted(false);
+				oldValue.setSelected(false);
 			}
 		});
 	}
@@ -678,7 +680,7 @@ public class CalliopeMapController
 		// Create a new circle object, call our custom class that ensures the node remains centered on the geo-location
 		MapNode circle = new AlignedMapNode();
 		// Load the FXML document representing this circle
-		FXMLLoader fxmlLoader = FXMLLoaderUtils.loadFXML("mapView/MapPin.fxml");
+		FXMLLoader fxmlLoader = FXMLLoaderUtils.loadFXML("mapView/MapCircle.fxml");
 		// Add FXML document to this circle
 		circle.getChildren().add(fxmlLoader.getRoot());
 		// Store the circle and its controller into the parallel lists
