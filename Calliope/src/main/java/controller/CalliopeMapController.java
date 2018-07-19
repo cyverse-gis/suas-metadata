@@ -38,7 +38,7 @@ import model.constant.MapProviders;
 import model.elasticsearch.GeoBucket;
 import model.elasticsearch.GeoImageResult;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.QueryEngine;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
 import model.image.ImageEntry;
@@ -95,6 +95,9 @@ public class CalliopeMapController
 	// A toggle switch to enable or disable image count circles
 	@FXML
 	public ToggleSwitch tswImageCounts;
+	// A toggle switch to enable or disable query polygons
+	@FXML
+	public ToggleSwitch tswQueryPolygons;
 
 	// Bottom pane which holds the query specifics
 	@FXML
@@ -102,7 +105,7 @@ public class CalliopeMapController
 
 	// The list of query conditions
 	@FXML
-	public ListView<IQueryCondition> lvwQueryConditions;
+	public ListView<QueryCondition> lvwQueryConditions;
 	// The list of possible filters
 	@FXML
 	public ListView<QueryEngine.QueryFilters> lvwFilters;
@@ -443,7 +446,7 @@ public class CalliopeMapController
 		///
 
 		// How many seconds the transition will take
-		final double TRANSITION_DURATION = 0.7;
+		final double TRANSITION_DURATION = 0.6;
 		// Reduce the height of the pane
 		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 330, 100);
 		// Reduce the opacity of the pane
@@ -500,14 +503,14 @@ public class CalliopeMapController
 		// A mapping of map polygon condition -> map polygon visual
 		java.util.Map<MapPolygonCondition, MapPolygon> modelToVisual = new HashMap<>();
 		// Add a special interaction for our MapPolygonCondition that allows us to draw on the map
-		CalliopeData.getInstance().getQueryEngine().getQueryConditions().addListener((ListChangeListener<IQueryCondition>) change ->
+		CalliopeData.getInstance().getQueryEngine().getQueryConditions().addListener((ListChangeListener<QueryCondition>) change ->
 		{
 			while (change.next())
 				// If we added a new query condition, test if we need to add a map polygon
 				if (change.wasAdded())
 				{
 					// Iterate over all new conditions and see if they're map polygon conditions
-					for (IQueryCondition addedQueryCondition : change.getAddedSubList())
+					for (QueryCondition addedQueryCondition : change.getAddedSubList())
 						if (addedQueryCondition instanceof MapPolygonCondition)
 						{
 							// Grab the query condition as a map polygon condition
@@ -522,6 +525,8 @@ public class CalliopeMapController
 							mapPolygon.getStyleClass().add("geo-query-boundary");
 							// Make sure we can drag & drop through the polygon
 							mapPolygon.setMouseTransparent(true);
+							// Hide the map polygon if the toggle switch is off
+							mapPolygon.visibleProperty().bind(this.tswQueryPolygons.selectedProperty());
 							// Store the mapping that we can use for removal later
 							modelToVisual.put(mapPolygonCondition, mapPolygon);
 							// Add the polygon at the query boundary layer
@@ -531,7 +536,7 @@ public class CalliopeMapController
 				// If we remove a query condition, test if we need to remove a map polygon
 				else if (change.wasRemoved())
 					// Iterate over all new conditions and see if they're map polygon conditions
-					for (IQueryCondition removedQueryCondition : change.getRemoved())
+					for (QueryCondition removedQueryCondition : change.getRemoved())
 						if (removedQueryCondition instanceof MapPolygonCondition)
 							// If it is, grab the visual element from our map and remove it
 							this.removeNodeFromMap(modelToVisual.remove(removedQueryCondition));
@@ -772,8 +777,9 @@ public class CalliopeMapController
 		// Create a query
 		ElasticSearchQuery query = new ElasticSearchQuery();
 		// For each condition listed in the listview, apply that to the overall query
-		for (IQueryCondition queryCondition : CalliopeData.getInstance().getQueryEngine().getQueryConditions())
-			queryCondition.appendConditionToQuery(query);
+		for (QueryCondition queryCondition : CalliopeData.getInstance().getQueryEngine().getQueryConditions())
+			if (queryCondition.isEnabled())
+				queryCondition.appendConditionToQuery(query);
 
 		this.currentQuery.setValue(query.build());
 
@@ -860,7 +866,7 @@ public class CalliopeMapController
 	public void clickedAdd(MouseEvent mouseEvent)
 	{
 		// If a filter was clicked, we instantiate it and append it to the end of the list (-1 so that the + is at the end)
-		ObservableList<IQueryCondition> queryConditions = CalliopeData.getInstance().getQueryEngine().getQueryConditions();
+		ObservableList<QueryCondition> queryConditions = CalliopeData.getInstance().getQueryEngine().getQueryConditions();
 		if (this.lvwFilters.getSelectionModel().selectedItemProperty().getValue() != null)
 			queryConditions.add(this.lvwFilters.getSelectionModel().selectedItemProperty().getValue().createInstance());
 		mouseEvent.consume();

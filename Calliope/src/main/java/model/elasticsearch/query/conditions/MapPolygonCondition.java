@@ -4,12 +4,12 @@ import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 /**
  * Data model used by the "Map Polygon filter" query condition
  */
-public class MapPolygonCondition implements IQueryCondition
+public class MapPolygonCondition extends QueryCondition
 {
 	// A list of polygon points that listens to lat/long changes
 	private ObservableList<ObservableLocation> points = FXCollections.observableArrayList(point -> new Observable[] { point.latitudeProperty(), point.longitudeProperty() });

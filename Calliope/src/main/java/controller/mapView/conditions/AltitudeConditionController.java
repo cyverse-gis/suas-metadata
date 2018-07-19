@@ -4,15 +4,12 @@ import controller.mapView.IConditionController;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.AltitudeCondition;
 import model.settings.SettingsData;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 import org.fxmisc.easybind.EasyBind;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "Altitude filter" UI component
@@ -36,12 +33,9 @@ public class AltitudeConditionController implements IConditionController
 
 	/**
 	 * Initialize sets up validators to ensure that start and end year are valid numbers
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		ValidationSupport fieldValidator = new ValidationSupport();
 		// The altitude must be a double!
@@ -51,14 +45,14 @@ public class AltitudeConditionController implements IConditionController
 	/**
 	 * Initializes the controller with a data model to bind to
 	 *
-	 * @param iQueryCondition The data model which should be an altitude filter condition
+	 * @param queryCondition The data model which should be an altitude filter condition
 	 */
 	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
-		if (iQueryCondition instanceof AltitudeCondition)
+		if (queryCondition instanceof AltitudeCondition)
 		{
-			AltitudeCondition altitudeCondition = (AltitudeCondition) iQueryCondition;
+			AltitudeCondition altitudeCondition = (AltitudeCondition) queryCondition;
 
 			// Initialize our fields
 			this.txtAltitude.setText(altitudeCondition.altitudeProperty().getValue().toString());

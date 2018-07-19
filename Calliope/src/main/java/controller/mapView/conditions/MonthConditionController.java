@@ -6,14 +6,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.util.StringConverter;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.MonthCondition;
 
-import java.net.URL;
 import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "Month filter" UI component
@@ -36,27 +34,16 @@ public class MonthConditionController implements IConditionController
 	private MonthCondition monthCondition;
 
 	/**
-	 * Initialize does nothing for this specific filter
-	 *
-	 * @param location ignored
-	 * @param resources ignored
-	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
-	{
-	}
-
-	/**
 	 * Initializes the controller with a data model to bind to
 	 *
-	 * @param iQueryCondition The data model which should be a month filter condition
+	 * @param queryCondition The data model which should be a month filter condition
 	 */
 	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
-		if (iQueryCondition instanceof MonthCondition)
+		if (queryCondition instanceof MonthCondition)
 		{
-			this.monthCondition = (MonthCondition) iQueryCondition;
+			this.monthCondition = (MonthCondition) queryCondition;
 			// Set the items of the hour list view to the months specified by the condition
 			this.monthFilterListView.setItems(this.monthCondition.getMonthList());
 			this.monthFilterListView.setCellFactory(CheckBoxListCell.forListView(this.monthCondition::monthSelectedProperty, new StringConverter<Month>()

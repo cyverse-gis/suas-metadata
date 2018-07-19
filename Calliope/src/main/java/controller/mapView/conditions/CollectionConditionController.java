@@ -9,13 +9,11 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import model.cyverse.ImageCollection;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.CollectionCondition;
 import org.apache.commons.lang3.StringUtils;
 
-import java.net.URL;
 import java.util.Comparator;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "Collection filter" UI component
@@ -40,24 +38,13 @@ public class CollectionConditionController implements IConditionController
 	// The data model reference
 	private CollectionCondition collectionCondition;
 
-	/**
-	 * Initializes the UI, does nothing
-	 *
-	 * @param location ignored
-	 * @param resources ignored
-	 */
 	@Override
-	public void initialize(URL location, ResourceBundle resources)
-	{
-	}
-
-	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
 		// Make sure the data model we received matches our type
-		if (iQueryCondition instanceof CollectionCondition)
+		if (queryCondition instanceof CollectionCondition)
 		{
-			this.collectionCondition = (CollectionCondition) iQueryCondition;
+			this.collectionCondition = (CollectionCondition) queryCondition;
 
 			// Grab the image collection list from our data model item
 			SortedList<ImageCollection> imageCollections = new SortedList<>(this.collectionCondition.getImageCollections());

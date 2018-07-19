@@ -4,13 +4,10 @@ import controller.mapView.IConditionController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
 import model.elasticsearch.query.conditions.ObservableLocation;
 import model.util.FXMLLoaderUtils;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Controller class for the map polygon condition containing a list of points that make up a polygon
@@ -34,12 +31,9 @@ public class MapPolygonConditionController implements IConditionController
 
 	/**
 	 * Initialize just sets up our point list view
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		// Use a custom cell factory for the polygon list view
 		this.lvwPoints.setCellFactory(x -> FXMLLoaderUtils.loadFXML("mapView/conditions/PolygonPointListEntry.fxml").getController());
@@ -48,16 +42,16 @@ public class MapPolygonConditionController implements IConditionController
 	/**
 	 * Initializes this condition with data
 	 *
-	 * @param iQueryCondition The iQueryCondition controller
+	 * @param queryCondition The queryCondition controller
 	 */
 	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
 		// Test if the condition is of the right type
-		if (iQueryCondition instanceof MapPolygonCondition)
+		if (queryCondition instanceof MapPolygonCondition)
 		{
 			// Store the data
-			this.mapPolygonCondition = (MapPolygonCondition) iQueryCondition;
+			this.mapPolygonCondition = (MapPolygonCondition) queryCondition;
 			// Set the list view items to our model's items
 			this.lvwPoints.setItems(mapPolygonCondition.getPoints());
 		}

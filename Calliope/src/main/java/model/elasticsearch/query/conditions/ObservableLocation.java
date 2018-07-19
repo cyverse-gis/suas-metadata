@@ -9,8 +9,8 @@ import javafx.beans.property.SimpleDoubleProperty;
 public class ObservableLocation
 {
 	// Latitude and longitude properties (so they're observable)
-	private DoubleProperty latitude = new SimpleDoubleProperty(0.0);
-	private DoubleProperty longitude = new SimpleDoubleProperty(0.0);
+	private DoubleProperty latitude = new SimpleDoubleProperty(Math.random() - 0.5);
+	private DoubleProperty longitude = new SimpleDoubleProperty(Math.random() - 0.5);
 
 	/**
 	 * Constructor just initializes fields

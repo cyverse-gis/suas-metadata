@@ -3,14 +3,14 @@ package model.elasticsearch.query.conditions;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.time.LocalDateTime;
 
 /**
  * Data model used by the "End Date filter" query condition
  */
-public class EndDateCondition implements IQueryCondition
+public class EndDateCondition extends QueryCondition
 {
 	// Stores the local date time of the current end date
 	private ObjectProperty<LocalDateTime> endDate = new SimpleObjectProperty<>(LocalDateTime.now());

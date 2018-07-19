@@ -3,11 +3,8 @@ package controller.mapView.conditions;
 import controller.mapView.IConditionController;
 import javafx.fxml.FXML;
 import jfxtras.scene.control.LocalDateTimePicker;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.StartDateCondition;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "Start date filter" UI component
@@ -28,12 +25,9 @@ public class StartDateConditionController implements IConditionController
 
 	/**
 	 * Does nothing for the start date condition controller
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 	}
 
@@ -42,7 +36,7 @@ public class StartDateConditionController implements IConditionController
 	 *
 	 * @param startDateCondition The data model for this start date condition
 	 */
-	public void initializeData(IQueryCondition startDateCondition)
+	public void initializeData(QueryCondition startDateCondition)
 	{
 		if (startDateCondition instanceof StartDateCondition)
 		{

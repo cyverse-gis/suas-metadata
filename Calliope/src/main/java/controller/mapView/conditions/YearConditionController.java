@@ -3,15 +3,13 @@ package controller.mapView.conditions;
 import controller.mapView.IConditionController;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.YearCondition;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 import org.fxmisc.easybind.EasyBind;
 
-import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "Year filter" UI component
@@ -35,12 +33,9 @@ public class YearConditionController implements IConditionController
 
 	/**
 	 * Initialize sets up validators to ensure that start and end year are valid numbers
-	 *
-	 * @param location ignored
-	 * @param resources ignored
 	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
+	@FXML
+	public void initialize()
 	{
 		ValidationSupport fieldValidator = new ValidationSupport();
 		fieldValidator.registerValidator(this.txtStartYear, true, Validator.createPredicateValidator(this::validInteger, "Start year must be an integer!"));
@@ -50,14 +45,14 @@ public class YearConditionController implements IConditionController
 	/**
 	 * Initializes the controller with a data model to bind to
 	 *
-	 * @param iQueryCondition The data model which should be a year filter condition
+	 * @param queryCondition The data model which should be a year filter condition
 	 */
 	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
-		if (iQueryCondition instanceof YearCondition)
+		if (queryCondition instanceof YearCondition)
 		{
-			YearCondition yearCondition = (YearCondition) iQueryCondition;
+			YearCondition yearCondition = (YearCondition) queryCondition;
 			this.txtStartYear.setText(yearCondition.startYearProperty().getValue().toString());
 			this.txtEndYear.setText(yearCondition.endYearProperty().getValue().toString());
 			// Bind the year start and end properties to the text parsed to an integer

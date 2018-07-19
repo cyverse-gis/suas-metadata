@@ -31,35 +31,38 @@
                 <RowConstraints vgrow="NEVER"/>
             </rowConstraints>
             <columnConstraints>
-                <ColumnConstraints/>
-                <ColumnConstraints/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
             <children>
-                <ComboBox fx:id="cbxMapProvider"                            GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" maxWidth="Infinity" />
-                <ToggleSwitch fx:id="tswMarkers" selected="true"            GridPane.columnIndex="0" GridPane.rowIndex="1" text="Site Markers" maxWidth="Infinity"/>
-                <ToggleSwitch fx:id="tswBoundaries" selected="true"         GridPane.columnIndex="1" GridPane.rowIndex="1" text="Site Boundaries" maxWidth="Infinity"/>
-                <ToggleSwitch fx:id="tswImageCounts" selected="true"        GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts" maxWidth="Infinity"/>
-                <HBox alignment="CENTER_LEFT" spacing="5"                   GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity">
-                    <Label text="Max Circle Images:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" initialValue="25" amountToStepBy="5" HBox.hgrow="NEVER" />
-                </HBox>
+                <ComboBox fx:id="cbxMapProvider" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" maxWidth="Infinity" />
+                <ToggleSwitch fx:id="tswMarkers" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="1" text="Site Markers: " maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswBoundaries" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="1" text="Site Boundaries: " maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswImageCounts" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts: " maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswQueryPolygons" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="2" text="Query Filter Polygons: " maxWidth="Infinity"/>
                 <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
                     <content>
-                        <TableView fx:id="tbvImageMetadata">
-                            <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                            </columnResizePolicy>
-                            <columns>
-                                <TableColumn editable="false" text="File" fx:id="clmName"/>
-                                <TableColumn editable="false" text="Collection" fx:id="clmCollection"/>
-                                <TableColumn editable="false" text="Altitude" fx:id="clmAltitude"/>
-                                <TableColumn editable="false" text="Camera Model" fx:id="clmCameraModel"/>
-                                <TableColumn editable="false" text="Date Taken" fx:id="clmDate"/>
-                            </columns>
-                        </TableView>
+                        <VBox spacing="5">
+                            <HBox alignment="CENTER_LEFT" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4" maxWidth="Infinity">
+                                <Label text="Maximum Image Results:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" initialValue="25" amountToStepBy="5" HBox.hgrow="NEVER" />
+                            </HBox>
+                            <TableView fx:id="tbvImageMetadata">
+                                <columnResizePolicy>
+                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                </columnResizePolicy>
+                                <columns>
+                                    <TableColumn editable="false" text="File" fx:id="clmName"/>
+                                    <TableColumn editable="false" text="Collection" fx:id="clmCollection"/>
+                                    <TableColumn editable="false" text="Altitude" fx:id="clmAltitude"/>
+                                    <TableColumn editable="false" text="Camera Model" fx:id="clmCameraModel"/>
+                                    <TableColumn editable="false" text="Date Taken" fx:id="clmDate"/>
+                                </columns>
+                            </TableView>
+                        </VBox>
                     </content>
                 </TitledPane>
-                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
+                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images to Hard Disk" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
                     <graphic>
                         <ImageView>
                             <Image url="@../images/mapWindow/downloadIcon16.png"/>
@@ -86,7 +89,7 @@
                             </font>
                         </Label>
                         <ListView fx:id="lvwFilters" VBox.vgrow="ALWAYS" onMouseClicked="#clickedFilters"/>
-                        <Button onAction="#query" VBox.vgrow="NEVER" text="Perform Query">
+                        <Button onAction="#query" VBox.vgrow="NEVER" text="Refresh Query">
                             <font>
                                 <Font size="16"/>
                             </font>

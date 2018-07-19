@@ -7,13 +7,13 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.settings.SettingsData;
 
 /**
  * Data model used by the "Altitude filter" query condition
  */
-public class AltitudeCondition implements IQueryCondition
+public class AltitudeCondition extends QueryCondition
 {
 	// The altitude to compute on
 	private DoubleProperty altitude = new SimpleDoubleProperty(0);

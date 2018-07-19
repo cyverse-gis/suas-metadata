@@ -3,7 +3,7 @@ package model.elasticsearch.query.conditions;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -11,7 +11,7 @@ import java.time.Month;
 /**
  * Data model used by the "Start date filter" query condition
  */
-public class StartDateCondition implements IQueryCondition
+public class StartDateCondition extends QueryCondition
 {
 	// The current start date
 	private ObjectProperty<LocalDateTime> startDate = new SimpleObjectProperty<>(LocalDateTime.of(2000, Month.JANUARY, 1, 0, 0));

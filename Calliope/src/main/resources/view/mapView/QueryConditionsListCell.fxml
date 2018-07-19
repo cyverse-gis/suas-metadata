@@ -5,6 +5,8 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import java.net.URL?>
+<?import org.controlsfx.control.ToggleSwitch?>
+<?import javafx.geometry.Insets?>
 <StackPane fx:id="mainPane" styleClass="queryConditionPne" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="controller.mapView.QueryConditionsListCellController">
     <stylesheets>
         <URL value="@QueryConditionsListCell.css"/>
@@ -14,5 +16,10 @@
             <Label text="LOL"/>
         </center>
     </BorderPane>
+    <ToggleSwitch fx:id="tswEnabled" translateX="-15" selected="true" StackPane.alignment="TOP_LEFT">
+        <StackPane.margin>
+            <Insets top="5"/>
+        </StackPane.margin>
+    </ToggleSwitch>
     <Button fx:id="btnRemoveCondition" onAction="#clearCondition" StackPane.alignment="TOP_RIGHT" styleClass="removeBtn"/>
 </StackPane>

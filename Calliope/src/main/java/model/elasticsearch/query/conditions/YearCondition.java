@@ -3,14 +3,14 @@ package model.elasticsearch.query.conditions;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.time.LocalDateTime;
 
 /**
  * Data model used by the "Year filter" query condition
  */
-public class YearCondition implements IQueryCondition
+public class YearCondition extends QueryCondition
 {
 	// The starting year to include
 	private IntegerProperty startYear = new SimpleIntegerProperty(LocalDateTime.now().getYear());

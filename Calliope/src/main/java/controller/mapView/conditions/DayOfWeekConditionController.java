@@ -6,14 +6,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.util.StringConverter;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.DayOfWeekCondition;
 
-import java.net.URL;
 import java.time.DayOfWeek;
 import java.time.format.TextStyle;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "Day of Week filter" UI component
@@ -36,27 +34,16 @@ public class DayOfWeekConditionController implements IConditionController
 	private DayOfWeekCondition dayOfWeekCondition;
 
 	/**
-	 * Initializes the controller, does nothing in this specific controller
-	 *
-	 * @param location ignored
-	 * @param resources ignored
-	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
-	{
-	}
-
-	/**
 	 * Initializes the data model for this given condition
 	 *
-	 * @param iQueryCondition The data model which should be a day of week condition
+	 * @param queryCondition The data model which should be a day of week condition
 	 */
 	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
-		if (iQueryCondition instanceof DayOfWeekCondition)
+		if (queryCondition instanceof DayOfWeekCondition)
 		{
-			this.dayOfWeekCondition = (DayOfWeekCondition) iQueryCondition;
+			this.dayOfWeekCondition = (DayOfWeekCondition) queryCondition;
 			// Set the items to be the list specified in the controller
 			this.dayOfWeekFilterListView.setItems(this.dayOfWeekCondition.getDayOfWeekList());
 			// Use checkbox cells to hold the data

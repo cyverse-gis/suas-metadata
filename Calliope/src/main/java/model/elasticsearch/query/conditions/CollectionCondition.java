@@ -7,7 +7,7 @@ import javafx.collections.ObservableList;
 import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Data model used by the "Collection filter" query condition
  */
-public class CollectionCondition implements IQueryCondition
+public class CollectionCondition extends QueryCondition
 {
 	// A map of collection -> if the collection is selected to be filtered
 	private Map<ImageCollection, BooleanProperty> imageCollectionToSelected = new HashMap<>();

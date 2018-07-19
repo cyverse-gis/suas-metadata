@@ -8,14 +8,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.NeonCondition;
 import model.neon.BoundedSite;
 import org.apache.commons.lang3.StringUtils;
 
-import java.net.URL;
 import java.util.Comparator;
-import java.util.ResourceBundle;
 
 /**
  * Controller class for the NEON condition filter
@@ -40,24 +38,13 @@ public class NeonConditionController implements IConditionController
 	// The data model reference
 	private NeonCondition siteCondition;
 
-	/**
-	 * Initializes the UI, does nothing
-	 *
-	 * @param location  ignored
-	 * @param resources ignored
-	 */
 	@Override
-	public void initialize(URL location, ResourceBundle resources)
-	{
-	}
-
-	@Override
-	public void initializeData(IQueryCondition iQueryCondition)
+	public void initializeData(QueryCondition queryCondition)
 	{
 		// Make sure the data model we received matches our type
-		if (iQueryCondition instanceof NeonCondition)
+		if (queryCondition instanceof NeonCondition)
 		{
-			this.siteCondition = (NeonCondition) iQueryCondition;
+			this.siteCondition = (NeonCondition) queryCondition;
 
 			// Grab the site list from our data model item
 			SortedList<BoundedSite> boundedSitesSorted = new SortedList<>(this.siteCondition.getBoundedSites());

@@ -5,7 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.time.Month;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Data model used by the "Month filter" query condition
  */
-public class MonthCondition implements IQueryCondition
+public class MonthCondition extends QueryCondition
 {
 	// A map of month -> if the month is selected to be filtered
 	private Map<Month, BooleanProperty> monthToSelected = new HashMap<>();

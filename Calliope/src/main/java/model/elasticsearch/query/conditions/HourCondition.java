@@ -5,7 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 /**
  * Data model used by the "Hour filter" query condition
  */
-public class HourCondition implements IQueryCondition
+public class HourCondition extends QueryCondition
 {
 	// A map of hour -> if the hour is selected to be filtered
 	private Map<Integer, BooleanProperty> hourToSelected = new HashMap<>();

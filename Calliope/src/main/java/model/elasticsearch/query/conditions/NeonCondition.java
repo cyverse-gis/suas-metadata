@@ -6,7 +6,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import model.CalliopeData;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.neon.BoundedSite;
 
 import java.util.HashMap;
@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Data model class for the neon condition filter
  */
-public class NeonCondition implements IQueryCondition
+public class NeonCondition extends QueryCondition
 {
 	// A map of site -> if the site is selected to be filtered
 	private Map<BoundedSite, BooleanProperty> boundedSiteToSelected = new HashMap<>();

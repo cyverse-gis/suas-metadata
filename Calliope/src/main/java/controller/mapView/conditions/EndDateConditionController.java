@@ -3,11 +3,8 @@ package controller.mapView.conditions;
 import controller.mapView.IConditionController;
 import javafx.fxml.FXML;
 import jfxtras.scene.control.LocalDateTimePicker;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.EndDateCondition;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 /**
  * Class used as a controller for the "End date filter" UI component
@@ -27,23 +24,12 @@ public class EndDateConditionController implements IConditionController
 	///
 
 	/**
-	 * Does nothing for the end date condition controller
-	 *
-	 * @param location ignored
-	 * @param resources ignored
-	 */
-	@Override
-	public void initialize(URL location, ResourceBundle resources)
-	{
-	}
-
-	/**
 	 * Initializes this controller with data
 	 *
 	 * @param endDateCondition The data model for this end date condition
 	 */
 	@Override
-	public void initializeData(IQueryCondition endDateCondition)
+	public void initializeData(QueryCondition endDateCondition)
 	{
 		if (endDateCondition instanceof EndDateCondition)
 			// Bind the date to the end condition's end date property

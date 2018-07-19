@@ -5,7 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.IQueryCondition;
+import model.elasticsearch.query.QueryCondition;
 
 import java.time.DayOfWeek;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Data model used by the "Day of Week filter" query condition
  */
-public class DayOfWeekCondition implements IQueryCondition
+public class DayOfWeekCondition extends QueryCondition
 {
 	// A map of day of week -> if the day of week is selected to be filtered
 	private Map<DayOfWeek, BooleanProperty> dayOfWeekToSelected = new HashMap<>();

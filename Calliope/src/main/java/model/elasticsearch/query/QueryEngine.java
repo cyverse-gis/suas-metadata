@@ -9,10 +9,10 @@ import java.util.function.Supplier;
 
 public class QueryEngine
 {
-	private ObservableList<IQueryCondition> queryConditions = FXCollections.observableArrayList(condition -> new Observable[] {});
+	private ObservableList<QueryCondition> queryConditions = FXCollections.observableArrayList(condition -> new Observable[] {});
 	private ObservableList<QueryFilters> QUERY_FILTERS = FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(QueryFilters.values()));
 
-	public ObservableList<IQueryCondition> getQueryConditions()
+	public ObservableList<QueryCondition> getQueryConditions()
 	{
 		return this.queryConditions;
 	}
@@ -36,15 +36,15 @@ public class QueryEngine
 		MAP_POLYGON_FILTER("Map Polygon Filter", MapPolygonCondition::new);
 
 		private String displayName;
-		private Supplier<IQueryCondition> instanceCreator;
+		private Supplier<QueryCondition> instanceCreator;
 
-		QueryFilters(String displayName, Supplier<IQueryCondition> instanceCreator)
+		QueryFilters(String displayName, Supplier<QueryCondition> instanceCreator)
 		{
 			this.displayName = displayName;
 			this.instanceCreator = instanceCreator;
 		}
 
-		public IQueryCondition createInstance()
+		public QueryCondition createInstance()
 		{
 			return instanceCreator.get();
 		}
