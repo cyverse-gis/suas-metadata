@@ -32,7 +32,8 @@ public class QueryEngine
 		DAY_OF_WEEK_FILTER("Day of Week Filter", DayOfWeekCondition::new),
 		START_TIME_FILTER("Start Date Filter", StartDateCondition::new),
 		END_TIME_FILTER("End Date Filter", EndDateCondition::new),
-		COLLECTION_FILTER("Collection Filter", CollectionCondition::new);
+		COLLECTION_FILTER("Collection Filter", CollectionCondition::new),
+		MAP_POLYGON_FILTER("Map Polygon Filter", MapPolygonCondition::new);
 
 		private String displayName;
 		private Supplier<IQueryCondition> instanceCreator;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<GridPane fx:id="mainPane" fx:controller="controller.mapView.conditions.PolygonPointListEntryController" vgap="5" hgap="5" alignment="CENTER" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <rowConstraints>
+        <RowConstraints/>
+        <RowConstraints/>
+    </rowConstraints>
+    <columnConstraints>
+        <ColumnConstraints hgrow="NEVER"/>
+        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints hgrow="NEVER"/>
+    </columnConstraints>
+    <children>
+        <Label text="Latitude:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Label text="Longitude:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <Label fx:id="lblLatitude" text="0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <Label fx:id="lblLongitude" text="0" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <Button fx:id="btnLocationDragger" style="-fx-background-radius: 50px" maxWidth="50" maxHeight="50" minWidth="50" minHeight="50" onDragDetected="#dragPolygonPoint" onDragDone="#dragFinished" GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.rowSpan="2" GridPane.valignment="CENTER">
+            <graphic>
+                <ImageView fitHeight="30" fitWidth="30">
+                    <Image url="@../../../images/mapWindow/pin.png"/>
+                </ImageView>
+            </graphic>
+        </Button>
+    </children>
+</GridPane>

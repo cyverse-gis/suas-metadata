@@ -3,6 +3,11 @@
     -fx-stroke: BLACK;
 }
 
+.geo-query-boundary {
+    -fx-fill: rgba(255, 0, 0, 0.15);
+    -fx-stroke: BLACK;
+}
+
 .propertiesPanel {
     -fx-fill: white;
     -fx-border-radius: 10px;

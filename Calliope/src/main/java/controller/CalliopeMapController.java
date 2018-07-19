@@ -5,6 +5,7 @@ import controller.mapView.MapCircleController;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import javafx.animation.*;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -24,7 +25,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -32,12 +33,14 @@ import javafx.util.Duration;
 import library.AlignedMapNode;
 import library.TableColumnHeaderUtil;
 import model.CalliopeData;
+import model.constant.CalliopeDataFormats;
 import model.constant.MapProviders;
 import model.elasticsearch.GeoBucket;
 import model.elasticsearch.GeoImageResult;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.IQueryCondition;
 import model.elasticsearch.query.QueryEngine;
+import model.elasticsearch.query.conditions.MapPolygonCondition;
 import model.image.ImageEntry;
 import model.neon.BoundedSite;
 import model.threading.ErrorTask;
@@ -178,6 +181,30 @@ public class CalliopeMapController
 	// The currently selected circle
 	private ObjectProperty<MapCircleController> selectedCircle = new SimpleObjectProperty<>();
 
+	// An enum with a set of map layers and their respective Z-layer
+	private enum MapLayers
+	{
+		TILE_PROVIDER(0),
+		BORDER_POLYGON(1),
+		CIRCLES(2),
+		QUERY_BOUNDARY(3),
+		QUERY_CORNER(4),
+		SITE_PINS(5);
+
+		// The z-layer
+		private Integer zLayer;
+
+		/**
+		 * Constructor just sets the z-layer field
+		 *
+		 * @param zLayer The map z-layer
+		 */
+		MapLayers(Integer zLayer)
+		{
+			this.zLayer = zLayer;
+		}
+	}
+
 	/**
 	 * Initialize sets up the analysis window and bindings
 	 */
@@ -186,6 +213,10 @@ public class CalliopeMapController
 	{
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
+
+		///
+		/// Setup the Z-Layer ordering system
+		///
 
 		// Initialize our z-order cache
 		this.zOrder = new HashMap<>();
@@ -196,8 +227,34 @@ public class CalliopeMapController
 		// garbage collected early
 		this.subscriptionCache = EasyBind.listBind(this.map.getChildren(), new SortedList<>(this.sortedNodes, Comparator.comparing(node -> zOrder.getOrDefault(node, -1))));
 
-		// Add the tile layer to the background, use OpenStreetMap by default
-		this.addNodeToMap(MapProviders.OpenStreetMaps.getMapTileProvider(), 0);
+		///
+		/// Setup the tile providers
+		///
+
+		// Add the default tile layer to the background, use OpenStreetMap by default
+		this.addNodeToMap(MapProviders.OpenStreetMaps.getMapTileProvider(), MapLayers.TILE_PROVIDER);
+		// Setup our map provider combobox, first set the items to be an unmodifiable list of enums
+		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
+		// Select OSM as the default map provider
+		this.cbxMapProvider.getSelectionModel().select(MapProviders.OpenStreetMaps);
+		// When we select a new map provider, swap tile providers
+		this.cbxMapProvider.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
+		{
+			// This should always be true...
+			if (newValue != null && oldValue != null)
+			{
+				// Grab the old and new tile providers
+				MapTileLayer oldMapTileProvider = oldValue.getMapTileProvider();
+				MapTileLayer newMapTileProvider = newValue.getMapTileProvider();
+				// Remove the old provider, add the new one
+				this.removeNodeFromMap(oldMapTileProvider);
+				this.addNodeToMap(newMapTileProvider, MapLayers.TILE_PROVIDER);
+			}
+		});
+
+		///
+		/// Setup the pop-over which is shown if a site pin is clicked
+		///
 
 		// Add a popover that we use to display location specifics
 		PopOver popOver = new PopOver();
@@ -211,6 +268,10 @@ public class CalliopeMapController
 		SitePopOverController sitePopOverController = fxmlLoader.getController();
 		// Store the content into the popover
 		popOver.setContentNode(fxmlLoader.getRoot());
+
+		///
+		/// Setup our sites on the map. When a new site gets added we add a polygon & pin, when it gets removed we clear the polygon & pin
+		///
 
 		// Create a map of bounded sites to polygons for quick lookup later
 		java.util.Map<BoundedSite, Pair<MapPolygon, MapNode>> siteToPolygonAndPin = new HashMap<>();
@@ -261,9 +322,9 @@ public class CalliopeMapController
 
 						// If we're zoomed in far enough, show the polygon, otherwise show the pin
 						if (this.map.getZoomLevel() > PIN_TO_POLY_THRESHOLD)
-							this.addNodeToMap(mapPolygon, 1);
+							this.addNodeToMap(mapPolygon, MapLayers.BORDER_POLYGON);
 						else
-							this.addNodeToMap(mapPin, 3);
+							this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
 
 						// Store a reference to the polygon in our hashmap to ensure we can retrieve it later in remove
 						siteToPolygonAndPin.put(boundedSite, MutablePair.of(mapPolygon, mapPin));
@@ -283,6 +344,10 @@ public class CalliopeMapController
 						}
 				}
 		});
+
+		///
+		/// Setup the circles that aggregate images into bucket. Use a service to thread this work off
+		///
 
 		// Service that runs in the background drawing new circles every time the user zooms in and out
 		ReRunnableService<List<GeoBucket>> circleDrawingService = new ReRunnableService<>(() ->
@@ -312,7 +377,6 @@ public class CalliopeMapController
 				}
 			};
 		});
-
 		// Once the service is done with its thread, take the results and process them
 		circleDrawingService.addFinishListener(geoBuckets ->
 		{
@@ -322,7 +386,7 @@ public class CalliopeMapController
 			{
 				MapNode newCircle = this.createCircle();
 				newCircle.visibleProperty().bind(this.tswImageCounts.selectedProperty());
-				this.addNodeToMap(newCircle, 2);
+				this.addNodeToMap(newCircle, MapLayers.CIRCLES);
 			}
 			// If we have less buckets than currently existing circles, remove circles until the two buckets have the same size. We
 			// do this to avoid having to allocate any memory at all
@@ -356,7 +420,6 @@ public class CalliopeMapController
 				CalliopeData.getInstance().getErrorDisplay().notify("Pin bucket and geo bucket were not the same size after normalization, this is an error!");
 			}
 		});
-
 		// When the mouse gets dragged and released we update our pins
 		this.map.mouseDraggingProperty().addListener((observable, oldValue, newValue) ->
 		{
@@ -366,19 +429,20 @@ public class CalliopeMapController
 			// Redraw all the pin circles with new values because we moved our map
 			circleDrawingService.requestAnotherRun();
 		});
-
 		// When the mouse scroll is touched and the zoom is changed we update our circles too
 		this.map.zoomLevelProperty().addListener((observable, oldValue, newValue) ->
 		{
 			this.updateSitePins(siteToPolygonAndPin, oldValue.doubleValue(), newValue.doubleValue());
 			circleDrawingService.requestAnotherRun();
 		});
-
 		// When our query changes we request another circle drawing run which updates the mini circles containing images
 		this.currentQuery.addListener((observable, oldValue, newValue) -> circleDrawingService.requestAnotherRun());
 
-		// Setup the transition to fade the query tab out
+		///
+		/// Setup the transition to fade the query tab in and out from the bottom of the screen
+		///
 
+		// How many seconds the transition will take
 		final double TRANSITION_DURATION = 0.7;
 		// Reduce the height of the pane
 		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 330, 100);
@@ -400,8 +464,6 @@ public class CalliopeMapController
 		// Once finished, hide the query pane
 		this.fadeQueryOut.setOnFinished(event -> this.queryPane.setVisible(false));
 
-		// Setup the transition to fade the query tab in
-
 		// Increase the height of the pane
 		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100, 330);
 		// Increase the opacity of the pane
@@ -420,32 +482,64 @@ public class CalliopeMapController
 		// Setup the parallel transition
 		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition);
 
-		// Setup our map provider combobox, first set the items to be an unmodifiable list of enums
-		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
-		// Select OSM as the default map provider
-		this.cbxMapProvider.getSelectionModel().select(MapProviders.OpenStreetMaps);
-		// When we select a new map provider, swap tile providers
-		this.cbxMapProvider.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
-		{
-			// This should always be true...
-			if (newValue != null && oldValue != null)
-			{
-				// Grab the old and new tile providers
-				MapTileLayer oldMapTileProvider = oldValue.getMapTileProvider();
-				MapTileLayer newMapTileProvider = newValue.getMapTileProvider();
-				// Remove the old provider, add the new one
-				this.removeNodeFromMap(oldMapTileProvider);
-				this.addNodeToMap(newMapTileProvider, 0);
-			}
-		});
+		///
+		/// Setup the query panel on the bottom of the screen
+		///
 
 		// Set the query conditions to be specified by the data model
 		this.lvwQueryConditions.setItems(CalliopeData.getInstance().getQueryEngine().getQueryConditions());
 		// Set the cell factory to be our custom query condition cell which adapts itself to the specific condition
 		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("mapView/QueryConditionsListCell.fxml").getController());
-
 		// Set the items in the list to be the list of possible query filters
 		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
+
+		///
+		/// Create a mapping of polygon condition to the visual polygon on the map. This will update the map if a polygon condition is created and populated
+		///
+
+		// A mapping of map polygon condition -> map polygon visual
+		java.util.Map<MapPolygonCondition, MapPolygon> modelToVisual = new HashMap<>();
+		// Add a special interaction for our MapPolygonCondition that allows us to draw on the map
+		CalliopeData.getInstance().getQueryEngine().getQueryConditions().addListener((ListChangeListener<IQueryCondition>) change ->
+		{
+			while (change.next())
+				// If we added a new query condition, test if we need to add a map polygon
+				if (change.wasAdded())
+				{
+					// Iterate over all new conditions and see if they're map polygon conditions
+					for (IQueryCondition addedQueryCondition : change.getAddedSubList())
+						if (addedQueryCondition instanceof MapPolygonCondition)
+						{
+							// Grab the query condition as a map polygon condition
+							MapPolygonCondition mapPolygonCondition = (MapPolygonCondition) addedQueryCondition;
+							// Create a new map polygon
+							MapPolygon mapPolygon = new MapPolygon();
+							// Hide the polygon if there's less than 3 points
+							mapPolygon.visibleProperty().bind(Bindings.size(mapPolygonCondition.getPoints()).greaterThan(2));
+							// Map the model polygon's points to the map polygon's points
+							mapPolygon.setLocations(EasyBind.map(mapPolygonCondition.getPoints(), polygonPoint -> new Location(polygonPoint.getLatitude(), polygonPoint.getLongitude())));
+							// Add a CSS attribute to all polygons so that we can style them later
+							mapPolygon.getStyleClass().add("geo-query-boundary");
+							// Make sure we can drag & drop through the polygon
+							mapPolygon.setMouseTransparent(true);
+							// Store the mapping that we can use for removal later
+							modelToVisual.put(mapPolygonCondition, mapPolygon);
+							// Add the polygon at the query boundary layer
+							this.addNodeToMap(mapPolygon, MapLayers.QUERY_BOUNDARY);
+						}
+				}
+				// If we remove a query condition, test if we need to remove a map polygon
+				else if (change.wasRemoved())
+					// Iterate over all new conditions and see if they're map polygon conditions
+					for (IQueryCondition removedQueryCondition : change.getRemoved())
+						if (removedQueryCondition instanceof MapPolygonCondition)
+							// If it is, grab the visual element from our map and remove it
+							this.removeNodeFromMap(modelToVisual.remove(removedQueryCondition));
+		});
+
+		///
+		/// Setup the top left box of settings
+		///
 
 		// Make the 5 column's header's wrappable
 		TableColumnHeaderUtil.makeHeaderWrappable(this.clmName);
@@ -486,8 +580,12 @@ public class CalliopeMapController
 			}
 		});
 
+		///
+		/// Setup the service used to download a specific circle's image metadata
+		///
+
 		// A service that can download a selected circle's metadata
-		ReRunnableService<List<GeoImageResult>> circleImageDownloader = new ReRunnableService<>(() ->
+		ReRunnableService<List<GeoImageResult>> circleMetadataDownloader = new ReRunnableService<>(() ->
 			new ErrorTask<List<GeoImageResult>>()
 			{
 				@Override
@@ -502,7 +600,7 @@ public class CalliopeMapController
 				}
 			}, CalliopeData.getInstance().getExecutor().getImmediateExecutor());
 		// Once the service finishes we update our tableview with the new items
-		circleImageDownloader.addFinishListener(geoImageResults ->
+		circleMetadataDownloader.addFinishListener(geoImageResults ->
 		{
 			// Update the items
 			this.tbvImageMetadata.getItems().setAll(geoImageResults);
@@ -516,7 +614,7 @@ public class CalliopeMapController
 			{
 				// Highlight the new circle
 				newValue.setHighlighted(true);
-				circleImageDownloader.requestAnotherRun();
+				circleMetadataDownloader.requestAnotherRun();
 			}
 			if (oldValue != null)
 			{
@@ -524,9 +622,6 @@ public class CalliopeMapController
 				oldValue.setHighlighted(false);
 			}
 		});
-
-		// If there isn't a query available, hide the download button
-		this.btnDownloadQuery.disableProperty().bind(this.currentQuery.isNull());
 	}
 
 	/**
@@ -549,7 +644,7 @@ public class CalliopeMapController
 				// Remove the pin, and add the polygon
 				this.removeNodeFromMap(mapPin);
 				if (!this.map.getChildren().contains(mapPolygon))
-					this.addNodeToMap(mapPolygon, 1);
+					this.addNodeToMap(mapPolygon, MapLayers.BORDER_POLYGON);
 			});
 		}
 		// We went from above to below the threshold
@@ -563,7 +658,7 @@ public class CalliopeMapController
 				// Remove the polygon, and add the pin
 				this.removeNodeFromMap(mapPolygon);
 				if (!this.map.getChildren().contains(mapPin))
-					this.addNodeToMap(mapPin, 3);
+					this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
 			});
 		}
 	}
@@ -629,9 +724,9 @@ public class CalliopeMapController
 	 * @param node The node to add to the list
 	 * @param zOrder The z-order to assign to the node
 	 */
-	private void addNodeToMap(Node node, Integer zOrder)
+	private void addNodeToMap(Node node, MapLayers zOrder)
 	{
-		this.zOrder.put(node, zOrder);
+		this.zOrder.put(node, zOrder.zLayer);
 		this.sortedNodes.add(node);
 	}
 
@@ -715,6 +810,7 @@ public class CalliopeMapController
 					// Make sure it's valid
 					if (currentQuery != null)
 					{
+						this.btnDownloadQuery.setDisable(true);
 						// Create a new task to perform the computation
 						ErrorTask<Void> errorTask = new ErrorTask<Void>()
 						{
@@ -735,6 +831,7 @@ public class CalliopeMapController
 								return null;
 							}
 						};
+						errorTask.setOnSucceeded(event -> this.btnDownloadQuery.setDisable(false));
 						// Execute the task
 						CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(errorTask);
 					}
@@ -801,5 +898,56 @@ public class CalliopeMapController
 		if (mouseEvent.getClickCount() == 2)
 			this.clickedAdd(mouseEvent);
 		mouseEvent.consume();
+	}
+
+	/**
+	 * If we drag over the map we test if the drag came from a polygon point list entry which means we are dropping a point on the map
+	 *
+	 * @param dragEvent accepted if the drag came from the polygon point list entry
+	 */
+	public void dragOver(DragEvent dragEvent)
+	{
+		Dragboard dragboard = dragEvent.getDragboard();
+		// We can test if the polygon point list entry was the origin if it has the right content
+		if (dragboard.hasContent(CalliopeDataFormats.AWAITING_POLYGON))
+		{
+			// Accept this drag
+			dragEvent.acceptTransferModes(TransferMode.COPY);
+			dragEvent.consume();
+		}
+	}
+
+	/**
+	 * If we drop the location icon on the map, figure out where it was placed and add a new clipboard content to the dragboard to return
+	 *
+	 * @param dragEvent Updated with a new dragboard content to contain the latitude and longitude of the drop point
+	 */
+	public void dragDropped(DragEvent dragEvent)
+	{
+		Dragboard dragboard = dragEvent.getDragboard();
+		// Test if the dragboard came from the right place (ie, it's awaiting lat/long coords)
+		if (dragboard.hasContent(CalliopeDataFormats.AWAITING_POLYGON))
+		{
+			ClipboardContent newContent = new ClipboardContent();
+
+			// Grab the drop location's mouse x and mouse y
+			double mouseX = dragEvent.getX();
+			double mouseY = dragEvent.getY();
+			// Compute the latitude and longitude of the mouse x/y position
+			Location location = this.map.getProjection().viewportPointToLocation(new Point2D(mouseX, mouseY));
+			// Store the latitude and longitude into the dragboard content
+			newContent.put(CalliopeDataFormats.POLYGON_LATITUDE_FORMAT, location.getLatitude());
+			newContent.put(CalliopeDataFormats.POLYGON_LONGITUDE_FORMAT, location.getLongitude());
+			dragboard.setContent(newContent);
+			// Drop is done
+			dragEvent.setDropCompleted(true);
+		}
+		else
+		{
+			// Drop is not done because we got the incorrect content
+			dragEvent.setDropCompleted(false);
+		}
+		// Consume the drag
+		dragEvent.consume();
 	}
 }

@@ -5,14 +5,18 @@ import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.query.conditions.AltitudeCondition;
+import model.elasticsearch.query.conditions.ObservableLocation;
 import model.neon.BoundedSite;
+import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.GeoValidationMethod;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -153,6 +157,17 @@ public class ElasticSearchQuery
 				CalliopeData.getInstance().getErrorDisplay().printError("Got an impossible altitude condition");
 				break;
 		}
+	}
+
+	/**
+	 * Adds a polygon given a list of positions that each image must be inside of
+	 *
+	 * @param observableLocations List of locations that can be used to make a polygon
+	 */
+	public void addPolygonCondition(List<ObservableLocation> observableLocations)
+	{
+		// Query on the image metadata's position. We need to map the ObservableLocations to GeoPoints
+		this.queryBuilder.must().add(QueryBuilders.geoPolygonQuery("imageMetadata.position", observableLocations.stream().map(observableLocation -> new GeoPoint(observableLocation.getLatitude(), observableLocation.getLongitude())).collect(Collectors.toList())).setValidationMethod(GeoValidationMethod.IGNORE_MALFORMED));
 	}
 
 	/**

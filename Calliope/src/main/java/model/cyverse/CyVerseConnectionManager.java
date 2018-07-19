@@ -382,6 +382,7 @@ public class CyVerseConnectionManager
 
 						localToUpload.delete();
 					}
+
 					// Finally we actually index the image metadata using elasticsearch
 					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToWrite, uploadEntry, collection.getID().toString(), imageEntry -> uploadDirName + "/" + localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), directoryToWrite.getFile().getAbsolutePath()));
 

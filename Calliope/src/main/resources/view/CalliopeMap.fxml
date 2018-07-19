@@ -15,7 +15,7 @@
         <URL value="@CalliopeMap.css"/>
     </stylesheets>
     <children>
-        <Map fx:id="map" StackPane.alignment="CENTER" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
+        <Map fx:id="map" StackPane.alignment="CENTER" onDragDropped="#dragDropped" onDragOver="#dragOver" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
         <GridPane fx:id="gpnMapSettings" StackPane.alignment="TOP_LEFT" vgap="5" hgap="5" styleClass="propertiesPanel" maxWidth="-Infinity" maxHeight="-Infinity">
             <StackPane.margin>
                 <Insets top="15" left="15" bottom="15"/>
@@ -27,8 +27,8 @@
                 <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="NEVER"/>
-                <RowConstraints vgrow="NEVER"/>
                 <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="NEVER"/>
             </rowConstraints>
             <columnConstraints>
                 <ColumnConstraints/>
@@ -43,14 +43,7 @@
                     <Label text="Max Circle Images:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                     <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="1000" initialValue="25" amountToStepBy="5" HBox.hgrow="NEVER" />
                 </HBox>
-                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
-                    <graphic>
-                        <ImageView>
-                            <Image url="@../images/mapWindow/downloadIcon16.png"/>
-                        </ImageView>
-                    </graphic>
-                </Button>
-                <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
+                <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
                     <content>
                         <TableView fx:id="tbvImageMetadata">
                             <columnResizePolicy>
@@ -66,6 +59,13 @@
                         </TableView>
                     </content>
                 </TitledPane>
+                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
+                    <graphic>
+                        <ImageView>
+                            <Image url="@../images/mapWindow/downloadIcon16.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
             </children>
         </GridPane>
         <SplitPane fx:id="queryPane" dividerPositions="0.5" orientation="VERTICAL" StackPane.alignment="BOTTOM_CENTER" maxHeight="100" pickOnBounds="false" opacity="0">
@@ -107,7 +107,7 @@
                             </ImageView>
                         </imageView>
                     </ImageViewPane>
-                    <ListView styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" fx:id="lvwQueryConditions" orientation="HORIZONTAL"/>
+                    <ListView fx:id="lvwQueryConditions" styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" orientation="HORIZONTAL"/>
                 </HBox>
             </items>
         </SplitPane>
