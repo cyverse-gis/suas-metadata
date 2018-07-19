@@ -127,10 +127,10 @@
                                     <Insets fx:id="colPadding" left="5"/>
                                 </fx:define>
 
-                                <Label text="Drone brand:" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.margin="$colPadding"/>
+                                <Label text="Drone Brand:" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.margin="$colPadding"/>
                                 <TextField fx:id="txtDroneBrand" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
 
-                                <Label text="Camera model:" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.margin="$colPadding"/>
+                                <Label text="Camera Model:" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.margin="$colPadding"/>
                                 <TextField fx:id="txtCameraModel" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
                                 <Label text="Drone Speed:" GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.margin="$colPadding"/>
@@ -145,9 +145,9 @@
                                 <Label text="Drone Rotation:" GridPane.columnIndex="2" GridPane.rowIndex="3" GridPane.margin="$colPadding"/>
                                 <HBox spacing="5" GridPane.columnIndex="3" GridPane.rowIndex="3" alignment="CENTER">
                                     <children>
-                                        <TextField fx:id="txtXRotation" promptText="x" HBox.hgrow="ALWAYS"/>
-                                        <TextField fx:id="txtYRotation" promptText="y" HBox.hgrow="ALWAYS"/>
-                                        <TextField fx:id="txtZRotation" promptText="z" HBox.hgrow="ALWAYS"/>
+                                        <TextField fx:id="txtXRotation" promptText="roll" HBox.hgrow="ALWAYS"/>
+                                        <TextField fx:id="txtYRotation" promptText="pitch" HBox.hgrow="ALWAYS"/>
+                                        <TextField fx:id="txtZRotation" promptText="yaw" HBox.hgrow="ALWAYS"/>
                                     </children>
                                 </HBox>
                             </children>
