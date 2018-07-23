@@ -1,4 +1,4 @@
-#Collections Tab
+# Collections Tab
 ![Collections Tab](./screenshots/collections.PNG)
 
 The collections tab is where you create and manage collections of images, as well as upload imported/tagged images. A collection is defined as a repository of images which may be shared with other users for analysis/callaboration. If you would like to start your own project see [Creating a Collection](#creating-a-collection), and if you would like to upload your images to someone else's project see [Uploading to a Collection](#uploading-to-a-collection). If you want to see what images have been uploaded to a collection, click it and uploads are displayed on the right panel.

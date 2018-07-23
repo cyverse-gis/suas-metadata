@@ -1,4 +1,4 @@
-#Settings Tab
+# Settings Tab
 ![Settings Tab](./screenshots/settings.PNG)
 
 The settings tab lets you customize Calliope's look and feel. The customizable settings are:

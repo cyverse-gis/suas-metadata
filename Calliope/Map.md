@@ -1,4 +1,4 @@
-#Map Tab
+# Map Tab
 ![Map Tab](./screenshots/map.PNG)
 
 The map tab allows you to analyze, query, visualize, and download any uploaded images on a map. 
