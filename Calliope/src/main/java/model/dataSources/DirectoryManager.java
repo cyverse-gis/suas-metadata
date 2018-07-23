@@ -73,6 +73,7 @@ public class DirectoryManager
 				ImageEntry imageEntry = new ImageEntry(validImage);
 				imageEntry.initIconBindings();
 				imageEntry.readFileMetadataFromImage();
+				imageEntry.buildAndStoreIcon();
 				imageDirectory.addChild(imageEntry);
 			}
 			// Return the directory
@@ -97,6 +98,7 @@ public class DirectoryManager
 			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
 			imageEntry.initIconBindings();
 			imageEntry.readFileMetadataFromImage();
+			imageEntry.buildAndStoreIcon();
 			toReturn.addChild(imageEntry);
 		}
 		else
@@ -129,6 +131,7 @@ public class DirectoryManager
 					ImageEntry imageEntry = new ImageEntry(file);
 					imageEntry.initIconBindings();
 					imageEntry.readFileMetadataFromImage();
+					imageEntry.buildAndStoreIcon();
 					current.addChild(imageEntry);
 				}
 				// Add all subdirectories to the directory

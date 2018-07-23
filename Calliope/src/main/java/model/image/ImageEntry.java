@@ -5,20 +5,27 @@ import com.thebuzzmedia.exiftool.core.StandardTag;
 import javafx.beans.binding.Binding;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
+import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
 import model.neon.BoundedSite;
-import model.util.CustomPropertyItem;
 import model.settings.MetadataCustomItem;
+import model.threading.ErrorTask;
+import model.util.CustomPropertyItem;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -32,8 +39,6 @@ public class ImageEntry extends ImageContainer
 
 	// The icon to use for all images at the moment
 	private static final Image DEFAULT_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
-	// The icon to use for all location only tagged images at the moment
-	private static final Image NEON_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIconNeon.png").toString());
 
 	// A property to wrap the currently selected image property. Must not be static!
 	private transient final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
@@ -59,6 +64,9 @@ public class ImageEntry extends ImageContainer
 
 	// If the image entry's metadata is currently ready to be edited
 	protected transient final SimpleBooleanProperty metadataEditable = new SimpleBooleanProperty(true);
+
+	// The Image's ICON
+	protected transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>();
 
 	/**
 	 * Create a new image entry with an image file
@@ -139,11 +147,31 @@ public class ImageEntry extends ImageContainer
 		// The image is checked if the NEON site is tagged or no
 		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
 		{
-			if (this.siteTaken.getValue() != null)
-				return NEON_IMAGE_ICON;
+			if (this.icon.getValue() != null)
+				return this.icon.getValue();
 			return DEFAULT_IMAGE_ICON;
-		}, this.siteTaken);
+		}, this.siteTaken, this.icon);
 		selectedImage.bind(imageBinding);
+	}
+
+	/**
+	 * Downloads the image file into a buffered image
+	 *
+	 * @return A buffered image representing the image file
+	 */
+	protected BufferedImage retrieveRawImage()
+	{
+		try
+		{
+			// Read the file into an bufferedImage
+			return ImageIO.read(this.getFile());
+		}
+		catch (IOException e)
+		{
+			// If an error occurs, print it out
+			CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file '" + this.getFile().getAbsolutePath() + "'\n" + ExceptionUtils.getStackTrace(e));
+		}
+		return null;
 	}
 
 	/**
@@ -153,17 +181,56 @@ public class ImageEntry extends ImageContainer
 	 */
 	public Image buildDisplayableImage()
 	{
-		try
+		// Read the file into an bufferedImage
+		BufferedImage bufferedImage = this.retrieveRawImage();
+		// Return null if the bufferedImage did not read properly
+		if (bufferedImage == null)
+			return null;
+		// Can't use 'new Image(file.toURI().toString())' because it doesn't support tiffs, sad day
+		return SwingFXUtils.toFXImage(bufferedImage, null);
+	}
+
+	/**
+	 * Downloads the image entry, stores a down-scaled version of the icon, and discards the downloaded image file
+	 */
+	public void buildAndStoreIcon()
+	{
+		// Thread this off...
+		Task<Image> iconBuilder = new ErrorTask<Image>()
 		{
-			// Can't use 'new Image(file.toURI().toString())' because it doesn't support tiffs, sad day
-			return SwingFXUtils.toFXImage(ImageIO.read(this.getFile()), null);
-		}
-		catch (IOException e)
-		{
-			// If an error occurs, print it out
-			CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file '" + this.getFile().getAbsolutePath() + "'\n" + ExceptionUtils.getStackTrace(e));
-		}
-		return null;
+			@Override
+			protected Image call()
+			{
+				// Read the file into an bufferedImage
+				BufferedImage bufferedImage = ImageEntry.this.retrieveRawImage();
+				// Make sure the file was readable
+				if (bufferedImage != null)
+				{
+					// Downsize the image to icon size
+					java.awt.Image scaledInstance = bufferedImage.getScaledInstance(32, 32, BufferedImage.SCALE_REPLICATE);
+
+					// Grab the width and height of the image
+					Integer width = scaledInstance.getWidth(null);
+					Integer height = scaledInstance.getHeight(null);
+
+					// Convert the java.awt.Image to a BufferedImage, and then to a JavaFX Image
+					BufferedImage icon = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+					// Grab the graphics of the image and draw the icon to it
+					Graphics graphics = icon.getGraphics();
+					graphics.drawImage(scaledInstance, 0, 0, null);
+					graphics.dispose();
+
+					// Store the result
+					return SwingFXUtils.toFXImage(icon, null);
+				}
+				return null;
+			}
+		};
+		// Once this finishes, set the icon
+		iconBuilder.setOnSucceeded(event -> this.icon.setValue(iconBuilder.getValue()));
+		// Execute the
+		CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(iconBuilder);
 	}
 
 	///

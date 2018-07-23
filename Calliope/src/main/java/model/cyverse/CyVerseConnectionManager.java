@@ -567,12 +567,14 @@ public class CyVerseConnectionManager
 			{
 				// If the file is not a directory add it as a new image entry
 				if (!file.isDirectory())
+				{
 					if (AnalysisUtils.fileIsImage(file))
 					{
 						ImageEntry imageEntry = new CyVerseDSImageEntry(file);
 						imageEntry.initIconBindings();
 						currentDirectory.addChild(imageEntry);
 					}
+				}
 				else
 				{
 					// Grab the sub-directory

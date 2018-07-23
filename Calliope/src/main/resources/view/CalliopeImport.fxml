@@ -37,7 +37,7 @@
                                     <Insets bottom="20" left="5" right="5" top="20" />
                                 </padding>
                                 <children>
-                                    <Button fx:id="btnRefreshNEONSites" mnemonicParsing="false" onAction="#refreshNEONSites" styleClass="resetBtn" text="Refresh NEON Sites" />
+                                    <Button fx:id="btnRefreshNEONSites" disable="true" mnemonicParsing="false" onAction="#refreshNEONSites" styleClass="resetBtn" text="Refresh NEON Sites" />
                                 </children>
                             </FlowPane>
                         </children>

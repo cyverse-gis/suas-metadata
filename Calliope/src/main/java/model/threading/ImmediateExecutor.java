@@ -9,6 +9,7 @@ import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Class that takes a task and IMMEDIATELY begins exeuction without queuing
@@ -17,6 +18,8 @@ public class ImmediateExecutor extends BaseCalliopeExecutor
 {
 	// A list of active tasks being processed
 	private final ObservableList<Task<?>> activeTasks = FXCollections.observableArrayList(task -> new Observable[] { task.progressProperty(), task.messageProperty() });
+	// A list of tasks to display to the user
+	private final ObservableList<Task<?>> activeDisplayedTasks = FXCollections.observableArrayList(task -> new Observable[] { task.progressProperty(), task.messageProperty() });
 	// The number of tasks currently running
 	private final ReadOnlyIntegerWrapper tasksRunning = new ReadOnlyIntegerWrapper();
 
@@ -38,7 +41,10 @@ public class ImmediateExecutor extends BaseCalliopeExecutor
 	{
 		this.tasksRunning.add(-1);
 		if (worker instanceof Task<?>)
+		{
 			this.activeTasks.remove(worker);
+			this.activeDisplayedTasks.remove(worker);
+		}
 	}
 
 	/**
@@ -51,14 +57,31 @@ public class ImmediateExecutor extends BaseCalliopeExecutor
 	{
 		this.tasksRunning.add(1);
 		if (worker instanceof Task<?>)
+		{
 			this.activeTasks.add((Task<?>) worker);
+		}
+	}
+
+	/**
+	 * Adds a task to the executor, if display is true then we add it to our tasks to display list which can be rendered with a task progress view
+	 *
+	 * @param task The task to execute
+	 * @param display If the task should be added to the list to be displayed
+	 * @param <T> The return type of the task
+	 * @return A future representing this task's execution
+	 */
+	public <T> Future<?> addTask(Task<T> task, Boolean display)
+	{
+		if (display)
+			this.activeDisplayedTasks.add(task);
+		return super.addTask(task);
 	}
 
 	///
 	/// Getters, but use read only
 	///
 
-	public Integer getTaskRunning()
+	public Integer getTaskCount()
 	{
 		return this.tasksRunning.getValue();
 	}
@@ -71,5 +94,10 @@ public class ImmediateExecutor extends BaseCalliopeExecutor
 	public ObservableList<Task<?>> getActiveTasks()
 	{
 		return this.activeTasks;
+	}
+
+	public ObservableList<Task<?>> getActiveDisplayedTasks()
+	{
+		return activeDisplayedTasks;
 	}
 }

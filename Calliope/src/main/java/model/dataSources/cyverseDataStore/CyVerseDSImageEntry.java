@@ -6,7 +6,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
 import model.image.ImageEntry;
@@ -25,8 +24,6 @@ public class CyVerseDSImageEntry extends ImageEntry
 {
 	// The icon to use for all downloaded untagged images
 	private static final Image DEFAULT_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIcon.png").toString());
-	// The icon to use for all downloaded NEON tagged images
-	private static final Image NEON_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNeon.png").toString());
 	// The icon to use for an undownloaded images
 	private static final Image NO_DOWNLOAD_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNotDownloaded.png").toString());
 
@@ -48,20 +45,14 @@ public class CyVerseDSImageEntry extends ImageEntry
 	}
 
 	/**
-	 * Creates a displayable image from a CyVerse IRODSFile by downloading it using a stream
+	 * Instead of retrieving a local file we download an iRODS file and read that instead
 	 *
-	 * @return An image in memory representing the file on CyVerse
+	 * @return A buffered image representing this CyVerse datastore entry
 	 */
 	@Override
-	public Image buildDisplayableImage()
+	protected BufferedImage retrieveRawImage()
 	{
-		// Download and store the image data from the iRODS file on CyVerse
-		BufferedImage bufferedImage = CalliopeData.getInstance().getCyConnectionManager().readIRODSImage(this.getFile().getAbsolutePath());
-		// If the data is not null, return the image converted to a JavaFX image
-		if (bufferedImage != null)
-			return SwingFXUtils.toFXImage(bufferedImage, null);
-		else
-			return null;
+		return CalliopeData.getInstance().getCyConnectionManager().readIRODSImage(this.getFile().getAbsolutePath());
 	}
 
 	/**
@@ -83,12 +74,13 @@ public class CyVerseDSImageEntry extends ImageEntry
 		// The image is checked if the NEON site is tagged or no
 		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
 		{
-			if (super.getSiteTaken() != null)
-				return NEON_CLOUD_IMAGE_ICON;
-			else if (!this.wasMetadataRetrieved.getValue())
+			if (!this.wasMetadataRetrieved.getValue())
 				return NO_DOWNLOAD_CLOUD_IMAGE_ICON;
-			return DEFAULT_CLOUD_IMAGE_ICON;
-		}, super.siteTakenProperty(), this.wasMetadataRetrieved);
+			else if (this.icon.getValue() != null)
+				return this.icon.getValue();
+			else
+				return DEFAULT_CLOUD_IMAGE_ICON;
+		}, super.siteTakenProperty(), this.wasMetadataRetrieved, this.icon);
 		this.treeIconProperty().bind(imageBinding);
 	}
 

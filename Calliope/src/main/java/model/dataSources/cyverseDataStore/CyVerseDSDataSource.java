@@ -70,7 +70,12 @@ public class CyVerseDSDataSource implements IDataSource
 						// Remove any empty directories
 						DirectoryManager.removeEmptyDirectories(imageDirectory);
 						// Go over each image entry and queue its download
-						imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer -> ((CyVerseDSImageEntry) imageContainer).pullMetadataFromCyVerse());
+						imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer ->
+						{
+							CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) imageContainer;
+							cyVerseDSImageEntry.buildAndStoreIcon();
+							cyVerseDSImageEntry.pullMetadataFromCyVerse();
+						});
 						imageDirectory.setDataSource(CyVerseDSDataSource.this);
 						return imageDirectory;
 					}

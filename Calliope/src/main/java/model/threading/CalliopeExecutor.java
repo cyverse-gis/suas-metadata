@@ -37,6 +37,6 @@ public class CalliopeExecutor
 	 */
 	public Boolean anyTaskRunning()
 	{
-		return this.queuedExecutor.getTaskRunning() || this.immediateExecutor.getActiveTasks().size() > 0;
+		return this.queuedExecutor.getTaskRunning() || this.immediateExecutor.getTaskCount() > 0;
 	}
 }

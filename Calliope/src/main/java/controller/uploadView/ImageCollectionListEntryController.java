@@ -238,7 +238,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 						Task<Void> indexTask = dataSource.makeIndexTask(ImageCollectionListEntryController.this.getItem(), imageDirectory);
 						// Execute this index task
 						if (indexTask != null)
-							CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(indexTask);
+							CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(indexTask, true);
 						dragEvent.setDropCompleted(true);
 					})));
 		}

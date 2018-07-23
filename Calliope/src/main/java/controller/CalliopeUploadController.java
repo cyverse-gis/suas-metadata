@@ -185,7 +185,7 @@ public class CalliopeUploadController
 			}
 		});
 
-		ObservableList<Task<?>> activeTasks = CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveTasks();
+		ObservableList<Task<?>> activeTasks = CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveDisplayedTasks();
 
 		// Bind the tasks
 		EasyBind.listBind(this.tpvUploads.getTasks(), activeTasks);

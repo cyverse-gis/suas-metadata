@@ -841,7 +841,7 @@ public class CalliopeMapController
 						};
 						errorTask.setOnSucceeded(event -> this.btnDownloadQuery.setDisable(false));
 						// Execute the task
-						CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(errorTask);
+						CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(errorTask, true);
 					}
 				}
 				else
