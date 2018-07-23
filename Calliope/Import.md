@@ -1,12 +1,23 @@
 # Import Tab
-![Import Tab](./screenshots/importStart.PNG)
+![Import Tab](./screenshots/import.PNG)
 
 The import tab is where you can begin importing your drone data for processing. To begin, click the 'Import Images' button found in the bottom right corner. You will be prompted to pick a data source to import images from. There are currently 3 different options:
 1. CyVerse Data Store - If you have already uploaded your image data to the CyVerse Data Store you can use this option to import those files. This can happen if you use a third party tool to upload images such as CyberDuck or upload images straight to the Data Store using the Discovery Environment. 
 2. Local PC File(s) - This option lets you pick specific image files on your local PC to import. You may import a single image or multiple images if you desire. If you import multiple images, they must all be found in the same directory. 
 3. Local PC Directory - This option lets you pick a specific directory on your local PC to import. The directory will be recursively searched for any image files while ignoring unknown files. 
 
-After importing images into Calliope you may view them by clicking on them on the right panel. Depending on the speed of the PC, storage medium, and file size the preview may take some time to load. A loading circle will appear in the top left of the central image preview window indicating an image is loading. Left and right arrows are found on the left and right side of the central window allowing you to navigate to the next and previous image respectively.
+Supported file extensions are:
+- jpg
+- jpeg
+- tiff
+- tif
+- psd
+- png
+- bmp
+- gif
+- ico
+
+After importing images into Calliope you may view them by clicking on them on the right panel. Depending on the speed of the PC, storage medium, and file size the preview may take some time to load. A loading circle will appear in the top left of the central image preview window indicating an image is loading. Left and right arrows are found on the left and right side of the central window allowing you to navigate to the next and previous image respectively. You can scroll to zoom in and out of the image, and reset the zoom by double clicking the image or clicking 'Reset Image' at the bottom.
 
 Once an image is selected, the bottom metadata panel becomes populated. Here you may update any incorrect metadata about a specific image file. If the image file is missing a piece of metadata, the field will be blank, or 0. The metadata fields are described below:
 - Date Taken - The day and time the image was taken. This may be incorrect if the camera was setup improperly, and can be adjusted by either typing into the 'Date Taken' box or selecting the clock and picking a time. The value must be a valid date formatted in the same way as initially shown.
@@ -27,6 +38,7 @@ The Raw Metadata tab will show you all the raw metadata that was extracted from 
 If you would like to specify that an imported image was taken at a NEON site you can do one of two things:
 1. To manually specify which site an image was taken at, drag a NEON site from the left panel onto the central image preview or onto the image on the right panel to tag it with the site. You may also drag it to a directory, indicating that all images in that directory were taken at the given NEON site. 
 2. To automatically detect which site an image was taken at, select an image or directory, and then click on the globe icon in the top right corner of the central image preview window. You can then pick either:
-    - Detect if the image was taken at NEON site is within <input> km of the center point
-    - Detect if image was taken inside of a NEON site based on the site's boundary.
-The first option will test each image to see if it is within a certain distance of the center point of the site. If it is close to multiple sites, the closest one is picked. The second option will test if the image was taken inside of a know NEON site's boundary. 
+    - Detect if the image was taken at NEON site is within <input> km of the center point. The closest site is picked.
+    - Detect if image was taken inside of a NEON site based on the site's polygonal boundary.
+
+Once an image has been tagged with a NEON site, its icon will be updated with the NEON icon. 

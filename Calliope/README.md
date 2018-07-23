@@ -42,8 +42,8 @@ At this point you can enter your CyVerse account username and password into the 
 Calliope's interface is broken up by tabs found on the top of the window. A short description of each tab is described below:
 - [Home](./Home.md) - This tab allows you to exit the program and read credits.
 - [Import](./Import.md) - This tab lets you import image data and modify any metadata that may be found on those images.
-- Collections - This tab lets you manage uploading data to and from your PC as well as showing what data has already been uploaded.
-- Map - This tab allows you to see all uploaded images on an interactive map as well as perform queries to filter what data you see.
-- Settings - This tab lets you specify various settings, such as date and time format.
+- [Collections](./Collections.md) - This tab lets you manage uploading data to and from your PC as well as showing what data has already been uploaded.
+- [Map](./Map.md) - This tab allows you to see all uploaded images on an interactive map as well as perform queries to filter what data you see.
+- [Settings](./Settings.md) - This tab lets you specify various settings, such as date and time format.
 
 Each tab is described in detail if clicked on.
