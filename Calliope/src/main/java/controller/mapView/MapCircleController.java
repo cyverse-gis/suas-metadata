@@ -81,8 +81,8 @@ public class MapCircleController
 			Color from;
 
 			// Pick to and from colors based on if this circle is selected
-			if      (selected) { to = SELECTED_HIGHLIGHTED_COLOR; from = HIGHLIGHTED_COLOR; }
-			else               { to = REGULAR_COLOR;              from = SELECTED_REGULAR_COLOR; }
+			if    (selected) { to = SELECTED_HIGHLIGHTED_COLOR; from = HIGHLIGHTED_COLOR; }
+			else             { to = REGULAR_COLOR;              from = SELECTED_REGULAR_COLOR; }
 
 			// Set the to and from colors, and then play the animation from the start
 			fillTransition.setFromValue(from);

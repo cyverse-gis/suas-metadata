@@ -1,0 +1,4 @@
+# Home Tab
+![Home Tab](./screenshots/home.PNG)
+
+This is the default tab users land when logging in. The top left contains the Calliope logo, followed by a welcome message with your CyVerse username. The credits button can be used to see details about who worked on the project. The logout and exit buttons both close the program. This project was funded by the School of Natural Resources and the Environment (SNRE), and a link to their home page can be accessed by clicking the SNRE logo in the bottom left. The project was developed by CyVerse, and a link to their home page can be found by clicking the CyVerse logo in the bottom right.
