@@ -10,8 +10,8 @@
     -fx-graphic: url("../images/importWindow/delete16.png");
 }
 
-.importCbx {
-    -fx-graphic: url("../images/importWindow/import16.png");
+.importCbx .list-view .list-cell {
+    -fx-padding: 5 5 5 5;
 }
 
 .resetBtn {
