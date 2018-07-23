@@ -69,11 +69,15 @@ public class CyVerseDSDataSource implements IDataSource
 						CyVerseDSImageDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
 						// Remove any empty directories
 						DirectoryManager.removeEmptyDirectories(imageDirectory);
+						// Update progress based on init progress
+						this.updateMessage("Reading image metadata...");
+						DoubleProperty progressProperty = new SimpleDoubleProperty();
+						progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
+						DirectoryManager.initImages(imageDirectory, progressProperty);
 						// Go over each image entry and queue its download
 						imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer ->
 						{
 							CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) imageContainer;
-							cyVerseDSImageEntry.buildAndStoreIcon();
 							cyVerseDSImageEntry.pullMetadataFromCyVerse();
 						});
 						imageDirectory.setDataSource(CyVerseDSDataSource.this);

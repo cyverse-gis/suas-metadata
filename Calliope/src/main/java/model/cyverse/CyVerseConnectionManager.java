@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 public class CyVerseConnectionManager
 {
 	// The string containing the host address that we connect to
-	private static final String CYVERSE_HOST = "data.cyverse.org"; // diana.cyverse.org
+	private static final String CYVERSE_HOST = "data.cyverse.org";
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
 	// The directory that collections are stored in
@@ -571,7 +571,6 @@ public class CyVerseConnectionManager
 					if (AnalysisUtils.fileIsImage(file))
 					{
 						ImageEntry imageEntry = new CyVerseDSImageEntry(file);
-						imageEntry.initIconBindings();
 						currentDirectory.addChild(imageEntry);
 					}
 				}

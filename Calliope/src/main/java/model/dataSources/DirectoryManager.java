@@ -1,5 +1,6 @@
 package model.dataSources;
 
+import javafx.beans.property.DoubleProperty;
 import model.CalliopeData;
 import model.util.AnalysisUtils;
 import model.image.ImageContainer;
@@ -52,6 +53,28 @@ public class DirectoryManager
 	}
 
 	/**
+	 * Initializes all images in a directory, we do this so we can get a progress bar
+	 *
+	 * @param imageDirectory The directory containing images that need initializing
+	 * @param progressProperty How many images we've parsed so far
+	 */
+	public static void initImages(ImageDirectory imageDirectory, DoubleProperty progressProperty)
+	{
+		// List of images to init
+		List<ImageEntry> imageEntries = imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+		// The total number of images in the list
+		Integer imageCount = imageEntries.size();
+		for (Integer i = 0; i < imageCount; i++)
+		{
+			// Every 20 images we update progress
+			if (i % 20 == 0)
+				progressProperty.setValue(i.doubleValue() / imageCount.doubleValue());
+			// Read the metadata into each image
+			imageEntries.get(i).readFileMetadataFromImage();
+		}
+	}
+
+	/**
 	 * Reads a set of files and returns them in a usable format
 	 *
 	 * @param files
@@ -71,9 +94,6 @@ public class DirectoryManager
 			{
 				// Load the image file and metadata and add it to the directory
 				ImageEntry imageEntry = new ImageEntry(validImage);
-				imageEntry.initIconBindings();
-				imageEntry.readFileMetadataFromImage();
-				imageEntry.buildAndStoreIcon();
 				imageDirectory.addChild(imageEntry);
 			}
 			// Return the directory
@@ -96,9 +116,6 @@ public class DirectoryManager
 			// If it's not a directory, then just add the image
 			toReturn = new ImageDirectory(imageOrLocation.getParentFile());
 			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
-			imageEntry.initIconBindings();
-			imageEntry.readFileMetadataFromImage();
-			imageEntry.buildAndStoreIcon();
 			toReturn.addChild(imageEntry);
 		}
 		else
@@ -129,9 +146,6 @@ public class DirectoryManager
 				if (AnalysisUtils.fileIsImage(file))
 				{
 					ImageEntry imageEntry = new ImageEntry(file);
-					imageEntry.initIconBindings();
-					imageEntry.readFileMetadataFromImage();
-					imageEntry.buildAndStoreIcon();
 					current.addChild(imageEntry);
 				}
 				// Add all subdirectories to the directory

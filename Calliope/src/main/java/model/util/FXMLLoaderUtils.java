@@ -2,8 +2,6 @@ package model.util;
 
 import controller.Calliope;
 import javafx.fxml.FXMLLoader;
-import model.CalliopeData;
-import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.IOException;
 
@@ -30,7 +28,8 @@ public class FXMLLoaderUtils
 		}
 		catch (IOException exception)
 		{
-			CalliopeData.getInstance().getErrorDisplay().printError("Could not load the FXML file for the file " + FXMLFileName + "!\n" + ExceptionUtils.getStackTrace(exception));
+			exception.printStackTrace();
+			//CalliopeData.getInstance().getErrorDisplay().printError("Could not load the FXML file for the file " + FXMLFileName + "!\n" + ExceptionUtils.getStackTrace(exception));
 			System.exit(-1);
 		}
 

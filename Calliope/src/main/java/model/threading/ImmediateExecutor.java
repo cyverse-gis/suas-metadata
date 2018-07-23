@@ -28,7 +28,7 @@ public class ImmediateExecutor extends BaseCalliopeExecutor
 	 */
 	public ImmediateExecutor()
 	{
-		super(Executors.newFixedThreadPool(50));
+		super(Executors.newFixedThreadPool(25));
 	}
 
 	/**

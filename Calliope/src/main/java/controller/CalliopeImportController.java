@@ -376,7 +376,7 @@ public class CalliopeImportController
 						if (value == null)
 							return null;
 						// Perform the hard computation
-						return value.buildDisplayableImage();
+						return value.buildIntoImage();
 					}
 				};
 			}

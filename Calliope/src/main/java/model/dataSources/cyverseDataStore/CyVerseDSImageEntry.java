@@ -1,8 +1,6 @@
 package model.dataSources.cyverseDataStore;
 
 import com.thebuzzmedia.exiftool.Tag;
-import javafx.beans.binding.Binding;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -24,7 +22,7 @@ public class CyVerseDSImageEntry extends ImageEntry
 {
 	// The icon to use for all downloaded untagged images
 	private static final Image DEFAULT_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIcon.png").toString());
-	// The icon to use for an undownloaded images
+	// The icon to use for an un-downloaded images
 	private static final Image NO_DOWNLOAD_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIconNotDownloaded.png").toString());
 
 	// Flag telling us if the metadata on this image was retrieved or not
@@ -42,6 +40,7 @@ public class CyVerseDSImageEntry extends ImageEntry
 		super(file);
 		// The metadata is editable if it has been retrieved
 		this.metadataEditable.bind(this.wasMetadataRetrieved);
+		this.treeIconProperty().setValue(NO_DOWNLOAD_CLOUD_IMAGE_ICON);
 	}
 
 	/**
@@ -62,26 +61,6 @@ public class CyVerseDSImageEntry extends ImageEntry
 	public void readFileMetadataFromImage()
 	{
 		this.pullMetadataFromCyVerse();
-	}
-
-	/**
-	 * Overwrite the icon bindings to support custom icons for this image entry
-	 */
-	@Override
-	public void initIconBindings()
-	{
-		// Bind the image property to a conditional expression.
-		// The image is checked if the NEON site is tagged or no
-		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
-		{
-			if (!this.wasMetadataRetrieved.getValue())
-				return NO_DOWNLOAD_CLOUD_IMAGE_ICON;
-			else if (this.icon.getValue() != null)
-				return this.icon.getValue();
-			else
-				return DEFAULT_CLOUD_IMAGE_ICON;
-		}, super.siteTakenProperty(), this.wasMetadataRetrieved, this.icon);
-		this.treeIconProperty().bind(imageBinding);
 	}
 
 	/**
@@ -120,6 +99,8 @@ public class CyVerseDSImageEntry extends ImageEntry
 			// Update our flags
 			this.wasMetadataRetrieved.setValue(true);
 			metadataRetrievalInProgress = false;
+			this.treeIconProperty().setValue(DEFAULT_CLOUD_IMAGE_ICON);
+			this.buildAndStoreIcon();
 		});
 		// If the task fails, we set our flag to false so we can attempt the metadata retrieval again
 		metadataPullTask.setOnFailed(event -> metadataRetrievalInProgress = false);

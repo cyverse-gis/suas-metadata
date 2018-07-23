@@ -2,8 +2,6 @@ package model.image;
 
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
-import javafx.beans.binding.Binding;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
@@ -26,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -41,7 +40,7 @@ public class ImageEntry extends ImageContainer
 	private static final Image DEFAULT_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
 
 	// A property to wrap the currently selected image property. Must not be static!
-	private transient final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
+	private transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
 	// The actual file 
 	private final ObjectProperty<File> imageFile = new SimpleObjectProperty<File>();
 	// The date that the image was taken
@@ -65,8 +64,8 @@ public class ImageEntry extends ImageContainer
 	// If the image entry's metadata is currently ready to be edited
 	protected transient final SimpleBooleanProperty metadataEditable = new SimpleBooleanProperty(true);
 
-	// The Image's ICON
-	protected transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>();
+	// Flag that tells us if we've pulled the icon or not
+	private transient final AtomicBoolean gotIcon = new AtomicBoolean(false);
 
 	/**
 	 * Create a new image entry with an image file
@@ -139,22 +138,6 @@ public class ImageEntry extends ImageContainer
 	}
 
 	/**
-	 * Used to initialize icon bindings to their default
-	 */
-	public void initIconBindings()
-	{
-		// Bind the image property to a conditional expression.
-		// The image is checked if the NEON site is tagged or no
-		Binding<Image> imageBinding = Bindings.createObjectBinding(() ->
-		{
-			if (this.icon.getValue() != null)
-				return this.icon.getValue();
-			return DEFAULT_IMAGE_ICON;
-		}, this.siteTaken, this.icon);
-		selectedImage.bind(imageBinding);
-	}
-
-	/**
 	 * Downloads the image file into a buffered image
 	 *
 	 * @return A buffered image representing the image file
@@ -179,7 +162,7 @@ public class ImageEntry extends ImageContainer
 	 *
 	 * @return An image in memory representing the file on disk
 	 */
-	public Image buildDisplayableImage()
+	public Image buildIntoImage()
 	{
 		// Read the file into an bufferedImage
 		BufferedImage bufferedImage = this.retrieveRawImage();
@@ -191,10 +174,15 @@ public class ImageEntry extends ImageContainer
 	}
 
 	/**
-	 * Downloads the image entry, stores a down-scaled version of the icon, and discards the downloaded image file
+	 * Downloads the image entry, stores a down-scaled version of the icon, and discards the gotIcon image file
 	 */
 	public void buildAndStoreIcon()
 	{
+		if (this.gotIcon.get())
+			return;
+
+		this.gotIcon.set(true);
+
 		// Thread this off...
 		Task<Image> iconBuilder = new ErrorTask<Image>()
 		{
@@ -230,7 +218,7 @@ public class ImageEntry extends ImageContainer
 		// Once this finishes, set the icon
 		iconBuilder.setOnSucceeded(event -> this.icon.setValue(iconBuilder.getValue()));
 		// Execute the
-		CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(iconBuilder);
+		CalliopeData.getInstance().getExecutor().getBackgroundExecutor().addTask(iconBuilder);
 	}
 
 	///
@@ -240,7 +228,7 @@ public class ImageEntry extends ImageContainer
 	@Override
 	public ObjectProperty<Image> treeIconProperty()
 	{
-		return this.selectedImage;
+		return this.icon;
 	}
 
 	@Override

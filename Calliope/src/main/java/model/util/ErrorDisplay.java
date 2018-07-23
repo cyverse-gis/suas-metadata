@@ -12,7 +12,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
-import model.CalliopeData;
 import model.settings.SettingsData;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
@@ -31,6 +30,8 @@ public class ErrorDisplay
 	private Node infoImage;
 	// Pause transition is used to hide the notification bar after a few seconds
 	private PauseTransition delay = new PauseTransition(Duration.seconds(5));
+	// A reference to the settings that this program is currently using
+	private SettingsData settingsData;
 
 	/**
 	 * Constructor takes in a reference to the global data model
@@ -39,12 +40,13 @@ public class ErrorDisplay
 	 */
 	public ErrorDisplay(SettingsData settingsData)
 	{
+		this.settingsData = settingsData;
 		// Load in the image
 		this.infoImage = new ImageView(new Image("images/generic/info64.png"));
 		// Set the duration of the fade to be equal to what is in the settings. If the settings update, make sure to
 		// update this value too
 		this.delay.setDuration(Duration.seconds(settingsData.getPopupDelaySec()));
-		settingsData.popupDelaySecProperty().addListener((observable, oldValue, newValue) ->
+		this.settingsData.popupDelaySecProperty().addListener((observable, oldValue, newValue) ->
 		{
 			if (newValue != null)
 				this.delay.setDelay(Duration.seconds(newValue));
@@ -75,7 +77,7 @@ public class ErrorDisplay
 	 */
 	private void notifyOnFX(String content, Action... actions)
 	{
-		if (CalliopeData.getInstance().getSettings().getDisablePopups())
+		if (this.settingsData.getDisablePopups())
 		{
 			notificationPane.getActions().clear();
 			// When any action is pressed, we hide the notification. This makes sure that each action is mapped to a new action that hides

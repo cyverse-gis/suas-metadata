@@ -9,6 +9,8 @@ public class CalliopeExecutor
 	private QueuedExecutor queuedExecutor = new QueuedExecutor();
 	// Immediate executor is used to do tasks at once
 	private ImmediateExecutor immediateExecutor = new ImmediateExecutor();
+	// Background executor is used to do anything that can be canceled and isn't very important
+	private BackgroundExecutor backgroundExecutor = new BackgroundExecutor();
 
 	/**
 	 * Returns the queued executor, use this if you want to perform tasks one by one
@@ -28,6 +30,16 @@ public class CalliopeExecutor
 	public ImmediateExecutor getImmediateExecutor()
 	{
 		return this.immediateExecutor;
+	}
+
+	/**
+	 * Returns the background executor, use this if you want to perform tasks that can be canceled and are not that important
+	 *
+	 * @return The background executor
+	 */
+	public BackgroundExecutor getBackgroundExecutor()
+	{
+		return this.backgroundExecutor;
 	}
 
 	/**

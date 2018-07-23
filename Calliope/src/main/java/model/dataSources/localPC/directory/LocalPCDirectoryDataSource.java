@@ -1,14 +1,16 @@
 package model.dataSources.localPC.directory;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.concurrent.Task;
 import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
+import model.dataSources.localPC.LocalPCDataSource;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.dataSources.localPC.LocalPCDataSource;
 import model.threading.ErrorTask;
 
 import javax.swing.filechooser.FileSystemView;
@@ -74,6 +76,12 @@ public class LocalPCDirectoryDataSource extends LocalPCDataSource
 
 					// Remove any directories that are empty and contain no images
 					DirectoryManager.removeEmptyDirectories(directory);
+
+					// Update progress based on init progress
+					this.updateMessage("Reading image metadata...");
+					DoubleProperty progressProperty = new SimpleDoubleProperty();
+					progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
+					DirectoryManager.initImages(directory, progressProperty);
 
 					return directory;
 				}

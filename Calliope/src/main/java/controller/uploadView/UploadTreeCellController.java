@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import model.constant.CalliopeDataFormats;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
+import model.image.ImageEntry;
 
 import java.util.Objects;
 
@@ -113,6 +114,8 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 				this.disableProperty().bind(imageDirectory.uploadProgressProperty().isNotEqualTo(-1));
 				imageDirectory.uploadProgressProperty().addListener(expandedListener);
 			}
+			else if (item instanceof ImageEntry)
+				((ImageEntry) item).buildAndStoreIcon();
 
 			// Update the graphic
 			this.setGraphic(mainPane);

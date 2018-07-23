@@ -8,6 +8,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
 import model.image.ImageContainer;
@@ -37,6 +38,8 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	// Reference to the main pane of the tree cell
 	@FXML
 	public HBox mainPane;
+	@FXML
+	public FlowPane fpnIcons;
 
 	///
 	/// FXML Bound Fields end
@@ -120,6 +123,8 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 				this.disableProperty().bind(imageDirectory.uploadProgressProperty().isNotEqualTo(-1));
 				imageDirectory.uploadProgressProperty().addListener(expandedListener);
 			}
+			else if (item instanceof ImageEntry)
+				((ImageEntry) item).buildAndStoreIcon();
 
 			// Show the UI
 			this.setGraphic(mainPane);
