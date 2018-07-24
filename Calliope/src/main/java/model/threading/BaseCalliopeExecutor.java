@@ -84,6 +84,14 @@ public abstract class BaseCalliopeExecutor
 	}
 
 	/**
+	 * Shuts down the task performer and rejects any tasks after
+	 */
+	public void shutdown()
+	{
+		this.taskPerformer.shutdownNow();
+	}
+
+	/**
 	 * Called when a task finishes
 	 *
 	 * @param worker The worker that finished

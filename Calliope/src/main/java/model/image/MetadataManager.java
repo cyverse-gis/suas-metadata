@@ -211,15 +211,18 @@ public class MetadataManager
 	}
 
 	/**
-	 * Finalize is called like a deconstructor which closes the exiftool process
-	 *
-	 * @throws Throwable Throws an exception if something goes wrong
+	 * Called to stop the ExifTool process
 	 */
-	@Override
-	protected void finalize() throws Throwable
+	public void shutdown()
 	{
-		super.finalize();
-		// Close the exiftool process
-		this.exifTool.close();
+		if (this.exifTool != null)
+		{
+			// Close the exiftool process
+			try
+			{
+				this.exifTool.close();
+			}
+			catch (Exception ignored) {}
+		}
 	}
 }

@@ -43,6 +43,16 @@ public class CalliopeExecutor
 	}
 
 	/**
+	 * Called to shutdown all executors. After this call no more threads can be used
+	 */
+	public void shutdown()
+	{
+		this.backgroundExecutor.shutdown();
+		this.immediateExecutor.shutdown();
+		this.queuedExecutor.shutdown();
+	}
+
+	/**
 	 * Returns true if any of the executors are performing tasks, false otherwise
 	 *
 	 * @return True if any task is running, false otherwise

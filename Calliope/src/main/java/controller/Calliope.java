@@ -1,11 +1,13 @@
 package controller;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import model.CalliopeData;
+import model.threading.CalliopeExecutor;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.action.Action;
 
@@ -41,7 +43,8 @@ public class Calliope extends Application
         primaryStage.setOnCloseRequest(event ->
         {
             // If a task is still running ask for confirmation to exit
-            if (CalliopeData.getInstance().getExecutor().anyTaskRunning())
+            CalliopeExecutor calliopeExecutor = CalliopeData.getInstance().getExecutor();
+            if (calliopeExecutor.anyTaskRunning())
             {
                 CalliopeData.getInstance().getErrorDisplay().notify("Calliope is still cleaning up background tasks and exiting now may cause data corruption. Are you sure you want to exit?",
 					new Action("Exit Anyway", actionEvent -> System.exit(0)));
@@ -49,6 +52,13 @@ public class Calliope extends Application
             }
             else
             {
+                // Shutdown any executing threads
+                calliopeExecutor.shutdown();
+                // Shutdown ExifTool
+                CalliopeData.getInstance().getMetadataManager().shutdown();
+                // Kill the Application
+                Platform.exit();
+                // Force java exit (We need this because the map tile provider starts a thread that we don't have access to and can't be stopped
                 System.exit(0);
             }
         });
