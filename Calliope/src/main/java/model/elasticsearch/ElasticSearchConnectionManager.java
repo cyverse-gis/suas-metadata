@@ -21,6 +21,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -125,8 +129,14 @@ public class ElasticSearchConnectionManager
 	 */
 	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager, ErrorDisplay errorDisplay)
 	{
+		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials("david", "password");
+		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
+
 		// Establish a connection to the elastic search server
-		this.elasticSearchClient = new RestHighLevelClient(RestClient.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME)));
+		this.elasticSearchClient = new RestHighLevelClient(RestClient
+				.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
+				.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
 
 		// Test to see if the ElasticSearch index is up or not
 		try
