@@ -47,3 +47,7 @@ Calliope's interface is broken up by tabs found on the top of the window. A shor
 - [Settings](./Settings.md) - This tab lets you specify various settings, such as date and time format.
 
 Each tab is described in detail if clicked on.
+
+### Developer's Documentation
+
+If you would like to work on this project an outline of the code structure can be found [here](./DeveloperDocumentation.md).
