@@ -1264,6 +1264,14 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
+	 * @return Returns true if the ES cluster is connected to, and false otherwise
+	 */
+	public boolean isConnectionSuccessful()
+	{
+		return this.connectionSuccessful.getValue();
+	}
+
+	/**
 	 * @return Returns the proprety representing if the DB successfully connected
 	 */
 	public BooleanProperty connectionSuccessfulProperty()
