@@ -4,10 +4,7 @@ import controller.uploadView.ImageCollectionListEntryController;
 import controller.uploadView.ImageUploadDownloadListEntryController;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -55,6 +52,10 @@ public class CalliopeUploadController
 	@FXML
 	public Button btnDeleteCollection;
 
+	// The masker pane that hides the collections
+	@FXML
+	public MaskerPane mpnCollections;
+
 	// The primary split pane
 	@FXML
 	public SplitPane spnMain;
@@ -98,7 +99,6 @@ public class CalliopeUploadController
 
 	// Constant strings used to display status
 	private static final String STATUS_LOADING = "Loading collection uploads...";
-
 
 	// The currently selected image collection
 	private ObjectProperty<ImageCollection> selectedCollection = new SimpleObjectProperty<>();
@@ -253,22 +253,56 @@ public class CalliopeUploadController
 	/**
 	 * When we click the new collection button
 	 *
-	 * @param actionEvent ignored
+	 * @param actionEvent consumed
 	 */
 	public void newCollectionPressed(ActionEvent actionEvent)
 	{
-		// Create the collection
-		ImageCollection collection = new ImageCollection();
+		this.mpnCollections.setVisible(true);
+
+		// Create the newCollection
+		ImageCollection newCollection = new ImageCollection();
 		// Create permissions for the owner
 		Permission owner = new Permission();
-		// Ensure that the owner has own permissions and then add it to the collection
+		// Ensure that the owner has own permissions and then add it to the newCollection
 		owner.setUsername(CalliopeData.getInstance().usernameProperty().getValue());
 		owner.setRead(true);
 		owner.setUpload(true);
 		owner.setOwner(true);
-		collection.getPermissions().add(owner);
-		// Add the collection to the global collection list
-		CalliopeData.getInstance().getCollectionList().add(collection);
+		newCollection.getPermissions().add(owner);
+
+		// Create a task used to thread off the creation process
+		Task<Void> createTask = new ErrorTask<Void>()
+		{
+			@Override
+			protected Void call()
+			{
+				// We have done no work yet, so our progress is 0
+				this.updateProgress(0, 1);
+				this.updateMessage("Creating a new collection: " + newCollection.getName());
+
+				// We use this message updater to change the message string when the connection manager reports progress
+				StringProperty messageUpdater = new SimpleStringProperty("");
+				messageUpdater.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
+
+				CalliopeData.getInstance().getCyConnectionManager().pushLocalCollection(newCollection, messageUpdater);
+				CalliopeData.getInstance().getEsConnectionManager().pushLocalCollection(newCollection);
+
+				this.updateProgress(1, 1);
+				return null;
+			}
+		};
+
+		// Add the newCollection to the global newCollection list
+		createTask.setOnSucceeded(event ->
+		{
+			this.mpnCollections.setVisible(false);
+			CalliopeData.getInstance().getCollectionList().add(newCollection);
+		});
+
+		// Perform the task
+		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(createTask);
+
+		actionEvent.consume();
 	}
 
 	/**
@@ -286,6 +320,7 @@ public class CalliopeUploadController
 			CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to delete this collection?\nDeleting this collection will not remove any source images (you may do this manually).\nAre you sure you want to continue?",
 					new Action("Continue", actionEvent1 ->
 					{
+						this.mpnCollections.setVisible(true);
 						ErrorTask<Void> collectionRemovalTask = new ErrorTask<Void>()
 						{
 							@Override
@@ -299,7 +334,11 @@ public class CalliopeUploadController
 							}
 						};
 						// Remove the selected collection
-						collectionRemovalTask.setOnSucceeded(event -> CalliopeData.getInstance().getCollectionList().remove(selected));
+						collectionRemovalTask.setOnSucceeded(event ->
+						{
+							CalliopeData.getInstance().getCollectionList().remove(selected);
+							this.mpnCollections.setVisible(false);
+						});
 						CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(collectionRemovalTask);
 					}));
 		} else

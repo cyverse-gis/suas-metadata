@@ -2,6 +2,7 @@ package controller.uploadView;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.*;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -15,6 +16,7 @@ import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.threading.ErrorTask;
+import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.action.Action;
 import org.fxmisc.easybind.EasyBind;
 
@@ -65,6 +67,10 @@ public class ImageCollectionSettingsController
 	public Button btnAddUser;
 	@FXML
 	public Button btnTransferOwnership;
+
+	// Masker pane that hides options when checking usernames
+	@FXML
+	public MaskerPane mpnCheckingUsernames;
 
 	///
 	/// FXML Bound fields end
@@ -231,56 +237,90 @@ public class ImageCollectionSettingsController
 	 */
 	public void saveCollection(ActionEvent actionEvent)
 	{
-		// Disable the save button so that we don't click it twice
-		btnSave.setDisable(true);
-		ImageCollection currentlySelected = this.clonedCollection.getValue();
-		// Ensure that the permissions are valid first
-		for (Permission permission : currentlySelected.getPermissions())
-		{
-			// Double check that each username entered is valid
-			if (!CalliopeData.getInstance().getCyConnectionManager().isValidUsername(permission.getUsername()))
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("The username (" + permission.getUsername() + ") you entered was not found on the CyVerse system. Reminder: permissions are expecting usernames, not real names.");
-				btnSave.setDisable(false);
-				// Just return if there is an invalid username
-				return;
-			}
-		}
-		// Grab the cloned collection and update the original based on the new settings
-		originalCollection.setName(currentlySelected.getName());
-		originalCollection.setContactInfo(currentlySelected.getContactInfo());
-		originalCollection.setOrganization(currentlySelected.getOrganization());
-		originalCollection.setDescription(currentlySelected.getDescription());
-		// Here we can just update references, because we're done editing
-		originalCollection.getPermissions().setAll(currentlySelected.getPermissions());
+		// Show a spinning circle indicating that we are validating usernames
+		this.mpnCheckingUsernames.setVisible(true);
 
-		// Create a task used to thread off the saving process
-		Task<Void> saveTask = new ErrorTask<Void>()
+		// Grab the currently selected collection
+		ImageCollection currentlySelected = clonedCollection.getValue();
+
+		// Thread off the username checking
+		ErrorTask<String> usernameValidCheck = new ErrorTask<String>()
 		{
 			@Override
-			protected Void call()
+			protected String call()
 			{
-				// We have done no work yet, so our progress is 0
-				this.updateProgress(0, 1);
-				this.updateMessage("Saving the collection: " + originalCollection.getName());
-
-				// We use this message updater to change the message string when the connection manager reports progress
-				StringProperty messageUpdater = new SimpleStringProperty("");
-				messageUpdater.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
-
-				CalliopeData.getInstance().getCyConnectionManager().pushLocalCollection(originalCollection, messageUpdater);
-				CalliopeData.getInstance().getEsConnectionManager().pushLocalCollection(originalCollection);
-
-				this.updateProgress(1, 1);
+				// Ensure that the permissions are valid first
+				ObservableList<Permission> permissions = currentlySelected.getPermissions();
+				for (int i = 0; i < permissions.size(); i++)
+				{
+					Permission permission = permissions.get(i);
+					this.updateMessage("Checking username '" + permission.getUsername() + "'");
+					this.updateProgress(i, permissions.size());
+					// Double check that each username entered is valid
+					if (!CalliopeData.getInstance().getCyConnectionManager().isValidUsername(permission.getUsername()))
+					{
+						// Return the invalid name if we found one
+						return permission.getUsername();
+					}
+				}
+				// Return null if all usernames are OK
 				return null;
 			}
 		};
+		// When we're done validating...
+		usernameValidCheck.setOnSucceeded(event ->
+		{
+			// Hide the masker pane
+			this.mpnCheckingUsernames.setVisible(false);
+			// If we got an invalid username, show that
+			if (usernameValidCheck.getValue() != null)
+			{
+				CalliopeData.getInstance().getErrorDisplay().notify("The username (" + usernameValidCheck.getValue() + ") you entered was not found on the CyVerse system. Reminder: permissions are expecting usernames, not real names.");
+			}
+			else
+			{
+				// Grab the cloned collection and update the original based on the new settings
+				originalCollection.setName(currentlySelected.getName());
+				originalCollection.setContactInfo(currentlySelected.getContactInfo());
+				originalCollection.setOrganization(currentlySelected.getOrganization());
+				originalCollection.setDescription(currentlySelected.getDescription());
+				// Here we can just update references, because we're done editing
+				originalCollection.getPermissions().setAll(currentlySelected.getPermissions());
 
-		// Perform the task
-		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(saveTask);
+				// Create a task used to thread off the saving process
+				Task<Void> saveTask = new ErrorTask<Void>()
+				{
+					@Override
+					protected Void call()
+					{
+						// We have done no work yet, so our progress is 0
+						this.updateProgress(0, 1);
+						this.updateMessage("Saving the collection: " + originalCollection.getName());
 
-		// Close the edit window, since we're done with the edit
-		((Stage) this.tvwPermissions.getScene().getWindow()).close();
+						// We use this message updater to change the message string when the connection manager reports progress
+						StringProperty messageUpdater = new SimpleStringProperty("");
+						messageUpdater.addListener((observable, oldValue, newValue) -> this.updateMessage(newValue));
+
+						CalliopeData.getInstance().getCyConnectionManager().pushLocalCollection(originalCollection, messageUpdater);
+						CalliopeData.getInstance().getEsConnectionManager().pushLocalCollection(originalCollection);
+
+						this.updateProgress(1, 1);
+						return null;
+					}
+				};
+
+				// Perform the task
+				CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(saveTask);
+
+				// Close the edit window, since we're done with the edit
+				((Stage) this.tvwPermissions.getScene().getWindow()).close();
+			}
+		});
+
+		this.mpnCheckingUsernames.progressProperty().bind(usernameValidCheck.progressProperty());
+		this.mpnCheckingUsernames.textProperty().bind(usernameValidCheck.messageProperty());
+
+		CalliopeData.getInstance().getExecutor().getBackgroundExecutor().addTask(usernameValidCheck);
 
 		actionEvent.consume();
 	}

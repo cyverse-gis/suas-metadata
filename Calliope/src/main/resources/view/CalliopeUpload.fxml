@@ -13,24 +13,28 @@
         <URL value="@CalliopeUpload.css"/>
     </stylesheets>
     <items>
-        <VBox SplitPane.resizableWithParent="false">
-            <Label alignment="CENTER" prefWidth="Infinity" text="My Collections" textAlignment="CENTER">
-                <font>
-                    <Font size="20.0"/>
-                </font>
-                <VBox.margin>
-                    <Insets bottom="10" left="10" right="10" top="10"/>
-                </VBox.margin>
-            </Label>
-            <ListView fx:id="collectionListView" styleClass="collectionLvw" VBox.vgrow="ALWAYS"/>
-            <FlowPane alignment="CENTER" hgap="5" vgap="10">
-                <padding>
-                    <Insets bottom="20" left="5" right="5" top="20"/>
-                </padding>
-                <Button fx:id="btnNewCollection" onAction="#newCollectionPressed" styleClass="newCollectionBtn" text="New Collection"/>
-                <Button fx:id="btnDeleteCollection" onAction="#deleteCollectionPressed" styleClass="deleteCollectionBtn" text="Delete Collection"/>
-            </FlowPane>
-        </VBox>
+        <StackPane SplitPane.resizableWithParent="false">
+            <VBox>
+                <Label alignment="CENTER" prefWidth="Infinity" text="My Collections" textAlignment="CENTER">
+                    <font>
+                        <Font size="20.0"/>
+                    </font>
+                    <VBox.margin>
+                        <Insets bottom="10" left="10" right="10" top="10"/>
+                    </VBox.margin>
+                </Label>
+                <ListView fx:id="collectionListView" styleClass="collectionLvw" VBox.vgrow="ALWAYS"/>
+                <FlowPane alignment="CENTER" hgap="5" vgap="10">
+                    <padding>
+                        <Insets bottom="20" left="5" right="5" top="20"/>
+                    </padding>
+                    <Button fx:id="btnNewCollection" onAction="#newCollectionPressed" styleClass="newCollectionBtn" text="New Collection"/>
+                    <Button fx:id="btnDeleteCollection" onAction="#deleteCollectionPressed" styleClass="deleteCollectionBtn" text="Delete Collection"/>
+                </FlowPane>
+            </VBox>
+            <MaskerPane fx:id="mpnCollections" text="Creating/Saving Collection" visible="false" progress="-1"/>
+        </StackPane>
+
         <SplitPane fx:id="spnUploadSave" orientation="VERTICAL">
             <VBox>
                 <Label alignment="CENTER" prefWidth="Infinity" text="Items to Upload" textAlignment="CENTER">
@@ -49,40 +53,36 @@
                 </SplitPane>
             </VBox>
         </SplitPane>
-        <VBox SplitPane.resizableWithParent="false">
-            <children>
-                <StackPane VBox.vgrow="ALWAYS">
-                    <VBox fx:id="vbxDownloadList">
-                        <HBox alignment="CENTER" prefWidth="Infinity" spacing="15">
-                            <VBox.margin>
-                                <Insets bottom="10" left="10" right="10" top="10"/>
-                            </VBox.margin>
-                            <Label text="Uploaded Items" textAlignment="CENTER">
-                                <font>
-                                    <Font size="20.0"/>
-                                </font>
-                            </Label>
-                        </HBox>
-                        <ListView fx:id="uploadListDownloadListView" styleClass="uploadDownloadLvw" VBox.vgrow="ALWAYS"/>
-                        <HBox spacing="5">
-                            <VBox.margin>
-                                <Insets top="5" bottom="5" left="5" right="5"/>
-                            </VBox.margin>
-                            <children>
-                                <TextField fx:id="txtUploadSearch" promptText="Search Uploads" HBox.hgrow="ALWAYS" />
-                                <Button fx:id="btnResetSearch" onAction="#resetUploadSearch" styleClass="resetUploadBtn" HBox.hgrow="NEVER" />
-                            </children>
-                        </HBox>
-                        <FlowPane alignment="CENTER" hgap="5" vgap="10">
-                            <padding>
-                                <Insets bottom="20" left="5" right="5" top="20"/>
-                            </padding>
-                            <Button fx:id="btnRefreshUploads" onAction="#refreshUploads" styleClass="refreshUploadsBtn" text="Refresh"/>
-                        </FlowPane>
-                    </VBox>
-                    <MaskerPane fx:id="mpnDownloadUploads" progressVisible="true"/>
-                </StackPane>
-            </children>
-        </VBox>
+        <StackPane VBox.vgrow="ALWAYS" SplitPane.resizableWithParent="false">
+            <VBox fx:id="vbxDownloadList">
+                <HBox alignment="CENTER" prefWidth="Infinity" spacing="15">
+                    <VBox.margin>
+                        <Insets bottom="10" left="10" right="10" top="10"/>
+                    </VBox.margin>
+                    <Label text="Uploaded Items" textAlignment="CENTER">
+                        <font>
+                            <Font size="20.0"/>
+                        </font>
+                    </Label>
+                </HBox>
+                <ListView fx:id="uploadListDownloadListView" styleClass="uploadDownloadLvw" VBox.vgrow="ALWAYS"/>
+                <HBox spacing="5">
+                    <VBox.margin>
+                        <Insets top="5" bottom="5" left="5" right="5"/>
+                    </VBox.margin>
+                    <children>
+                        <TextField fx:id="txtUploadSearch" promptText="Search Uploads" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnResetSearch" onAction="#resetUploadSearch" styleClass="resetUploadBtn" HBox.hgrow="NEVER"/>
+                    </children>
+                </HBox>
+                <FlowPane alignment="CENTER" hgap="5" vgap="10">
+                    <padding>
+                        <Insets bottom="20" left="5" right="5" top="20"/>
+                    </padding>
+                    <Button fx:id="btnRefreshUploads" onAction="#refreshUploads" styleClass="refreshUploadsBtn" text="Refresh"/>
+                </FlowPane>
+            </VBox>
+            <MaskerPane fx:id="mpnDownloadUploads" progressVisible="true"/>
+        </StackPane>
     </items>
 </SplitPane>
