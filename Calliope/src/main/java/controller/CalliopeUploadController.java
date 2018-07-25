@@ -104,6 +104,7 @@ public class CalliopeUploadController
 	private ObjectProperty<ImageCollection> selectedCollection = new SimpleObjectProperty<>();
 
 	@FXML
+	@SuppressWarnings("unchecked")
 	public void initialize()
 	{
 		// First setup the collection list
@@ -282,14 +283,24 @@ public class CalliopeUploadController
 		if (selected != null)
 		{
 			// If a collection is selected, show an alert that data may be deleted!
-			CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to delete this collection?\nDeleting this collection will result in the permanent removal of all images uploaded to CyVerse to this collection.\nAre you sure you want to continue?",
+			CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to delete this collection?\nDeleting this collection will not remove any source images (you may do this manually).\nAre you sure you want to continue?",
 					new Action("Continue", actionEvent1 ->
 					{
-						// Remove the collection on the CyVerse system
-						CalliopeData.getInstance().getCyConnectionManager().removeCollection(selected);
+						ErrorTask<Void> collectionRemovalTask = new ErrorTask<Void>()
+						{
+							@Override
+							protected Void call()
+							{
+								this.updateMessage("Removing collection '" + selected.getName() + "'...");
 
+								// Remove the collection on the elastic search system
+								CalliopeData.getInstance().getEsConnectionManager().removeCollection(selected);
+								return null;
+							}
+						};
 						// Remove the selected collection
-						CalliopeData.getInstance().getCollectionList().remove(selected);
+						collectionRemovalTask.setOnSucceeded(event -> CalliopeData.getInstance().getCollectionList().remove(selected));
+						CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(collectionRemovalTask);
 					}));
 		} else
 		{

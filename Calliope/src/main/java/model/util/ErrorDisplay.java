@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 import model.settings.SettingsData;
+import org.apache.commons.lang.StringUtils;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
 
@@ -94,13 +95,15 @@ public class ErrorDisplay
 		{
 			// Create an alert from the content and the actions
 			Alert alert = new Alert(Alert.AlertType.INFORMATION);
-			// If our content is too long, replace it with a text area instead of a label for increased readability
-			if (content.length() > 150)
+			// If our content is too long (a stack trace...), replace it with a text area instead of a label for increased readability
+			if (StringUtils.countMatches(content, ".") > 5)
 			{
 				TextArea area = new TextArea(content);
 				area.setFont(Font.font("Monospaced", 12));
 				area.textProperty().bind(alert.contentTextProperty());
 				alert.getDialogPane().setContent(area);
+				alert.getDialogPane().setPrefHeight(400);
+				alert.getDialogPane().setPrefWidth(600);
 			}
 			// Set our alert content and header
 			alert.setContentText(content);

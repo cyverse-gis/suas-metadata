@@ -49,7 +49,9 @@ import java.util.stream.Collectors;
 public class CyVerseConnectionManager
 {
 	// The string containing the host address that we connect to
-	private static final String CYVERSE_HOST = "diana.cyverse.org";
+	private static final String CYVERSE_HOST = "data.cyverse.org";
+	// The string containing the host address of CyVerse
+	private static final Integer CYVERSE_PORT = 1247;
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
 	// The directory that collections are stored in
@@ -75,7 +77,7 @@ public class CyVerseConnectionManager
 		try
 		{
 			// Create a new CyVerse account given the host address, port, username, password, homedirectory, and one field I have no idea what it does..., however leaving it as empty string makes file creation work!
-			IRODSAccount account = IRODSAccount.instance(CYVERSE_HOST, 1247, username, password, HOME_DIRECTORY + username, ZONE, "", AuthScheme.STANDARD);
+			IRODSAccount account = IRODSAccount.instance(CYVERSE_HOST, CYVERSE_PORT, username, password, HOME_DIRECTORY + username, ZONE, "", AuthScheme.STANDARD);
 			// Create a new session
 			IRODSSession session = IRODSSession.instance(IRODSSimpleProtocolManager.instance());
 			// Create an irodsAO
@@ -157,32 +159,6 @@ public class CyVerseConnectionManager
 				}
 			}
 
-			this.sessionManager.closeSession();
-		}
-	}
-
-	/**
-	 * Removes a collection from CyVerse's system
-	 *
-	 * @param collection The collection to delete from CyVerse
-	 */
-	public void removeCollection(ImageCollection collection)
-	{
-		if (this.sessionManager.openSession())
-		{
-			// The name of the collection to remove
-			String collectionsDirName = COLLECTIONS_DIRECTORY + "/" + collection.getID().toString();
-			try
-			{
-				// If it exists, delete it
-				IRODSFile collectionDir = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount).instanceIRODSFile(collectionsDirName);
-				if (collectionDir.exists())
-					collectionDir.delete();
-			}
-			catch (JargonException e)
-			{
-				CalliopeData.getInstance().getErrorDisplay().notify("Could not delete the collection from CyVerse!\n" + ExceptionUtils.getStackTrace(e));
-			}
 			this.sessionManager.closeSession();
 		}
 	}
@@ -366,16 +342,16 @@ public class CyVerseConnectionManager
 						String fileRelativePath = localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), localDirAbsolutePath);
 						fileRelativePath = fileRelativePath.replace('\\', '/');
 						return fileRelativePath + "\n";
-					}, 900);
+					}, 500);
 
 					// For each tar part, upload
-					for (Integer tarPart = 0; tarPart < tarsToWrite.length; tarPart++)
+					for (int tarPart = 0; tarPart < tarsToWrite.length; tarPart++)
 					{
 						if (messageCallback != null)
 							messageCallback.setValue("Uploading TAR file part (" + (tarPart + 1) + " / " + tarsToWrite.length + ") to CyVerse...");
 
 						File toWrite = tarsToWrite[tarPart];
-						File localToUpload = new File(FilenameUtils.getFullPath(toWrite.getAbsolutePath()) + uploadFolderName + "-" + tarPart.toString() + "." + FilenameUtils.getExtension(toWrite.getAbsolutePath()));
+						File localToUpload = new File(FilenameUtils.getFullPath(toWrite.getAbsolutePath()) + uploadFolderName + "-" + Integer.toString(tarPart) + "." + FilenameUtils.getExtension(toWrite.getAbsolutePath()));
 						toWrite.renameTo(localToUpload);
 						// Upload the tar
 						this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount).putOperation(localToUpload, collectionUploadDir, transferCallback, null);
@@ -428,7 +404,7 @@ public class CyVerseConnectionManager
 				// the input list of IRODS paths
 				List<String> absoluteLocalFilePaths = absoluteIRODSImagePaths.stream().map(absoluteImagePath -> dirToSaveToAbsolutePath + File.separator + FilenameUtils.getName(absoluteImagePath)).collect(Collectors.toList());
 				// Iterate over the parallel lists
-				for (Integer i = 0; i < absoluteIRODSImagePaths.size() && i < absoluteLocalFilePaths.size(); i++)
+				for (int i = 0; i < absoluteIRODSImagePaths.size() && i < absoluteLocalFilePaths.size(); i++)
 				{
 					// Every 5 uploads update the progress
 					if (i % 5 == 0)

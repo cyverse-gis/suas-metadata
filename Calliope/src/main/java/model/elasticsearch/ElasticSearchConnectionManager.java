@@ -33,6 +33,8 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
@@ -699,6 +701,115 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
+	 * Removes a collection from the index without removing any source images
+	 *
+	 * @param imageCollection The collection to remove
+	 */
+	public void removeCollection(ImageCollection imageCollection)
+	{
+		try
+		{
+			// Delete by query isn't supported, so we do it ourselves
+
+			// Because the metadata index is long, we use a scroll to ensure reading results in reasonable chunks
+			Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1));
+			// Create a search request, and populate the fields
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest
+					.indices(INDEX_CALLIOPE_METADATA)
+					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					.scroll(scroll)
+					.source(new SearchSourceBuilder()
+							// Fetch results 500 at a time, and use a query that matches collection ID
+							.size(500)
+							.fetchSource(false)
+							.query(QueryBuilders.termsQuery("collectionID", imageCollection.getID().toString())));
+
+			try
+			{
+				// Grab the search results
+				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+				// Store the scroll id that was returned because we specified a scroll in the search request
+				String scrollID = searchResponse.getScrollId();
+				// Get a list of metadata fields (hits)
+				SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+				// Iterate while there are metadata entries to be read
+				while (searchHits != null && searchHits.length > 0)
+				{
+					// Create a bulk delete request
+					BulkRequest bulkRequest = new BulkRequest();
+
+					// Iterate over all current results
+					for (SearchHit searchHit : searchHits)
+					{
+						// Grab the ID of our search result
+						String id = searchHit.getId();
+
+						// Create a new delete request and prepare it to delete this entry because it matched our query
+						DeleteRequest documentDeleteRequest = new DeleteRequest();
+						documentDeleteRequest
+								.index(INDEX_CALLIOPE_METADATA)
+								.type(INDEX_CALLIOPE_METADATA_TYPE)
+								.id(id);
+
+						// Add the delete request
+						bulkRequest.add(documentDeleteRequest);
+					}
+
+					// Perform the bulk delete
+					BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+					if (bulkResponse.hasFailures())
+						CalliopeData.getInstance().getErrorDisplay().printError("Error performing bulk delete, status is " + bulkResponse.status().toString());
+
+					// Now that we've processed this wave of results, get the next 10 results
+					SearchScrollRequest scrollRequest = new SearchScrollRequest();
+					// Setup the scroll request
+					scrollRequest
+							.scrollId(scrollID)
+							.scroll(scroll);
+					// Perform the scroll, yielding another set of results
+					searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+					// Store the hits and the new scroll id
+					scrollID = searchResponse.getScrollId();
+					searchHits = searchResponse.getHits().getHits();
+				}
+
+				// Finish off the scroll request
+				ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+				clearScrollRequest.addScrollId(scrollID);
+				ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+				// If clearing the scroll request fails, show an error
+				if (!clearScrollResponse.isSucceeded())
+					CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading metadata");
+			}
+			catch (IOException e)
+			{
+				// Something went wrong, so show an error
+				CalliopeData.getInstance().getErrorDisplay().notify("Error removing metadata entries for the collection '" + imageCollection.getName() + "', error was:\n" + ExceptionUtils.getStackTrace(e));
+			}
+
+			// Create a delete request to delete the collection
+			DeleteRequest deleteRequest = new DeleteRequest();
+			deleteRequest
+					.index(INDEX_CALLIOPE_COLLECTIONS)
+					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+					.id(imageCollection.getID().toString());
+
+			// Delete the collection
+			DeleteResponse deleteResponse = this.elasticSearchClient.delete(deleteRequest);
+			// Print an error if the delete fails
+			if (deleteResponse.status() != RestStatus.OK)
+				CalliopeData.getInstance().getErrorDisplay().notify("Error deleting collection '" + imageCollection.getName() + "', status was " + deleteResponse.status());
+		}
+		catch (IOException e)
+		{
+			// Print an error if the delete fails
+			CalliopeData.getInstance().getErrorDisplay().notify("Error deleting collection '" + imageCollection.getName() + "'\n" + ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	/**
 	 * Downloads the upload list for a given collection
 	 *
 	 * @param imageCollection The image collection which we want to retrieve uploads of
@@ -886,25 +997,24 @@ public class ElasticSearchConnectionManager
 		// Create a multi search (one per image)
 		MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
 		// Search once per image
-		for (Integer i = 0; i < imageEntries.size(); i++)
+		for (ImageEntry imageEntry : imageEntries)
 		{
 			// Grab the image to search for
-			ImageEntry imageEntry = imageEntries.get(i);
 			// Create a search request
 			SearchRequest searchRequest = new SearchRequest();
 			try
 			{
 				// Initialize the search request
 				searchRequest
-					.indices(INDEX_CALLIOPE_NEON_SITES)
-					.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
-					.source(new SearchSourceBuilder()
-						// We only care about site code
-						.fetchSource(new String[] { "site.siteCode" }, new String[] { "boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName" })
-						// We only care about a single result
-						.size(1)
-						// We want to search where the polygon intersects our image's location (as a point)
-						.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
+						.indices(INDEX_CALLIOPE_NEON_SITES)
+						.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+						.source(new SearchSourceBuilder()
+								// We only care about site code
+								.fetchSource(new String[]{"site.siteCode"}, new String[]{"boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName"})
+								// We only care about a single result
+								.size(1)
+								// We want to search where the polygon intersects our image's location (as a point)
+								.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
 				// Store the search request
 				multiSearchRequest.add(searchRequest);
 			}
@@ -925,7 +1035,7 @@ public class ElasticSearchConnectionManager
 			if (multiSearchResponse.getResponses().length == imageEntries.size())
 			{
 				// Iterate over all responses
-				for (Integer i = 0; i < responses.length; i++)
+				for (int i = 0; i < responses.length; i++)
 				{
 					// Grab the response, and pull the hits
 					MultiSearchResponse.Item response = responses[i];
@@ -1222,7 +1332,7 @@ public class ElasticSearchConnectionManager
 			// Store the number of hits
 			Long totalHits = countSearchResponse.getHits().totalHits;
 			// Every aggregation we fire off will have a max of 1000 results
-			final Integer MAX_AGGS_PER_SEARCH = 1000;
+			final int MAX_AGGS_PER_SEARCH = 1000;
 			// Compute how many queries we need to perform to get all results
 			Integer partitionsRequired = Math.toIntExact(totalHits / MAX_AGGS_PER_SEARCH + 1);
 

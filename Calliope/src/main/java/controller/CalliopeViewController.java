@@ -63,7 +63,6 @@ public class CalliopeViewController
 	@FXML
 	public HyperlinkLabel hypRegisterPassword;
 
-
 	// The pane containing the login information
 	@FXML
 	public StackPane loginPane;
@@ -247,7 +246,7 @@ public class CalliopeViewController
 				@Override
 				protected Boolean call()
 				{
-					Integer NUM_STEPS = 6;
+					int NUM_STEPS = 6;
 
 					// First login
 					this.updateMessage("Logging in...");
