@@ -1,6 +1,6 @@
 # Calliope Developer Documentation
 
-This documentation outlines some design decisions made in the development of Calliope. A description of important classes can be found as well.
+This documentation outlines some design decisions made in the development of Calliope. A description of important classes can be found as well. Calliope is written in Java using JavaFX as well as numerous other libraries. 
 
 ## Important Design Patterns
 
@@ -8,7 +8,7 @@ This documentation outlines some design decisions made in the development of Cal
 
 Calliope is built using the standard MVC design pattern. 
 
-In this design pattern, the model is created first with complete independent from the view or controller. The model contains the data of the program and functions to manipulate that data. Any database connections or network threads are managed by the model.
+In this design pattern, the model is created first with complete independence from the view or controller. The model contains the data of the program and functions to manipulate that data. Any database connections or network threads are managed by the model.
 
 The view is completely independent from the model, but is linked or 'bound' to the controller. The view is made up of FXML and CSS files that define each user interface component. Each FXML file begins with a component that has an `fx:controller="x.y.z"` attribute that defines the controller the FXML file is bound to. Any actions done to the UI are forwarded to the controller through action listeners.
 
@@ -16,7 +16,7 @@ The controller is dependent on both the model and controller. Any UI components 
 
 ### Dependency Injection
 
-Calliope makes use of dependency injection to link the FXML file to its controller. This is automatically performed by JavaFX initializes its controller, so you won't need to do anything special. FXML elements with the tag `fx:id="abc"` tell JavaFX to 'dependency inject' this element into the field `private X abc;` found in the controller. If this field is not present an error will arise. 
+Calliope makes use of dependency injection to link the FXML file to its controller. This is automatically performed by JavaFX, so you won't need to do anything special. FXML elements with the tag `fx:id="abc"` tell JavaFX to 'dependency inject' this element into the field `private X abc;` found in the controller. If this field is not present an error will arise. 
 
 ### Singleton
 
