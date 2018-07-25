@@ -12,12 +12,12 @@ import javafx.collections.ObservableList;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.dataSources.IDataSource;
-import model.image.ImageDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSDataSource;
 import model.dataSources.localPC.directory.LocalPCDirectoryDataSource;
 import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.elasticsearch.ElasticSearchConnectionManager;
 import model.elasticsearch.query.QueryEngine;
+import model.image.ImageDirectory;
 import model.image.MetadataManager;
 import model.neon.BoundedSite;
 import model.neon.NeonData;
@@ -26,7 +26,10 @@ import model.settings.SettingsData;
 import model.threading.CalliopeExecutor;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
-import model.util.*;
+import model.util.CustomPropertyItem;
+import model.util.ErrorDisplay;
+import model.util.LocalDateTimeAdapter;
+import model.util.TempDirectoryManager;
 import org.hildan.fxgson.FxGson;
 
 import java.io.File;
@@ -55,7 +58,6 @@ public class CalliopeData
 
 	// A global list of image collections
 	private final ObservableList<ImageCollection> collectionList;
-
 
 	// A base directory to which we add all extra directories
 	private final ImageDirectory imageTree;
