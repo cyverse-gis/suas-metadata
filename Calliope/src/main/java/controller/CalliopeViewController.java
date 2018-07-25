@@ -161,7 +161,7 @@ public class CalliopeViewController
 		this.rctLoginBackground.heightProperty().bind(this.loginPane.heightProperty());
 
 		// Disable the login property if the username and password are empty
-		this.btnLogin.disableProperty().bind(this.USER_PASS_VALIDATOR.invalidProperty().or(loggingIn));
+		this.btnLogin.disableProperty().bind(this.USER_PASS_VALIDATOR.invalidProperty().or(loggingIn).or(CalliopeData.getInstance().getEsConnectionManager().connectionSuccessfulProperty()));
 
 		// Hide the login pane when logged in
 		this.loginPane.visibleProperty().bind(loggedIn.not());

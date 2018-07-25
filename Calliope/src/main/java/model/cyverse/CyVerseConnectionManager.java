@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 public class CyVerseConnectionManager
 {
 	// The string containing the host address that we connect to
-	private static final String CYVERSE_HOST = "data.cyverse.org";
+	private static final String CYVERSE_HOST = "diana.cyverse.org";
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
 	// The directory that collections are stored in

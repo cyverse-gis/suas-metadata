@@ -6,6 +6,8 @@ import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.micromata.opengis.kml.v_2_2_0.LinearRing;
 import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
@@ -124,12 +126,15 @@ public class ElasticSearchConnectionManager
 	// Create a new elastic search schema manager
 	private final ElasticSearchSchemaManager elasticSearchSchemaManager;
 
+	// Create a connection successful property
+	private BooleanProperty connectionSuccessful = new SimpleBooleanProperty(false);
+
 	/**
 	 * The constructor initializes the elastic search
 	 */
 	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager, ErrorDisplay errorDisplay)
 	{
-		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials("david", "password");
+		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(configurationManager.getElasticSearchUsername(), configurationManager.getElasticSearchPassword());
 		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
 
@@ -141,16 +146,22 @@ public class ElasticSearchConnectionManager
 		// Test to see if the ElasticSearch index is up or not
 		try
 		{
-			if (!this.elasticSearchClient.ping())
+			if (this.elasticSearchClient.ping())
+			{
+				this.connectionSuccessful.setValue(true);
+			}
+			else
+			{
 				errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
+			}
 		}
 		catch (ElasticsearchStatusException e)
 		{
-			System.err.println("Failed! " + e.status().toString());
+			errorDisplay.notify("Error connecting to the ElasticSearch index, error was " + e.status().toString());
 		}
 		catch (IOException e)
 		{
-			errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?\n" + ExceptionUtils.getStackTrace(e));
+			errorDisplay.notify("Error establishing a connection to the ElasticSearch index, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
@@ -1250,6 +1261,14 @@ public class ElasticSearchConnectionManager
 
 
 		return toReturn;
+	}
+
+	/**
+	 * @return Returns the proprety representing if the DB successfully connected
+	 */
+	public BooleanProperty connectionSuccessfulProperty()
+	{
+		return this.connectionSuccessful;
 	}
 
 	/**
