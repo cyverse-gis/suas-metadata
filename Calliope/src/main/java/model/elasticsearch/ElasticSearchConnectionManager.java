@@ -144,6 +144,10 @@ public class ElasticSearchConnectionManager
 			if (!this.elasticSearchClient.ping())
 				errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
 		}
+		catch (ElasticsearchStatusException e)
+		{
+			System.err.println("Failed! " + e.status().toString());
+		}
 		catch (IOException e)
 		{
 			errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?\n" + ExceptionUtils.getStackTrace(e));

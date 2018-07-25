@@ -159,8 +159,10 @@ public class CalliopeMapController
 	private List<MapNode> currentCircles = new ArrayList<>();
 	// A parallel list of controllers to that list of pins
 	private List<MapCircleController> currentCircleControllers = new ArrayList<>();
-	// A constant pin icon that we cache so we dont have to load the image over and over again
-	private static final Image PIN_ICON = new Image(ImageEntry.class.getResource("/images/mapWindow/neonIcon32.png").toString());
+	// A constant neon pin icon that we cache so we dont have to load the image over and over again
+	private static final Image NEON_ICON = new Image(ImageEntry.class.getResource("/images/mapWindow/neonIcon32.png").toString());
+	// A constant highlighted neon pin icon that we cache so we dont have to load the image over and over again
+	private static final Image NEON_HIGHLIGHTED_ICON = new Image(ImageEntry.class.getResource("/images/mapWindow/highlightedNeonIcon32.png").toString());
 	// The zoom threshold where we start to render polygons instead of pins
 	private static final Double PIN_TO_POLY_THRESHOLD = 10D;
 
@@ -307,7 +309,9 @@ public class CalliopeMapController
 						// Set the pin's center to be the node's center
 						mapPin.setLocation(centerPoint);
 						// Add a new imageview to the pin
-						ImageView pinImageView = new ImageView(PIN_ICON);
+						ImageView pinImageView = new ImageView();
+						// Make sure the image represents if the pin is hovered or not
+						pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(hovered -> hovered ? NEON_HIGHLIGHTED_ICON : NEON_ICON));
 						// Add the image to the pin
 						mapPin.getChildren().add(pinImageView);
 						// When we click a pin, show the popover
@@ -449,8 +453,10 @@ public class CalliopeMapController
 
 		// How many seconds the transition will take
 		final double TRANSITION_DURATION = 0.6;
+		final double MAX_QUERY_PANE_HEIGHT = 370;
+		final double MIN_QUERY_PANE_HEIGHT = 100;
 		// Reduce the height of the pane
-		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 330, 100);
+		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, MAX_QUERY_PANE_HEIGHT, MIN_QUERY_PANE_HEIGHT);
 		// Reduce the opacity of the pane
 		FadeTransition fadeOutTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
 		fadeOutTransition.setFromValue(1.0);
@@ -462,7 +468,7 @@ public class CalliopeMapController
 		rotateUpTransition.setAxis(new Point3D(1, 0, 0));
 		// Move the expander button to the bottom
 		TranslateTransition translateDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-		translateDownTransition.setFromY(-330);
+		translateDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
 		translateDownTransition.setToY(0);
 		// Setup the parallel transition
 		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition);
@@ -470,7 +476,7 @@ public class CalliopeMapController
 		this.fadeQueryOut.setOnFinished(event -> this.queryPane.setVisible(false));
 
 		// Increase the height of the pane
-		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, 100, 330);
+		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, MIN_QUERY_PANE_HEIGHT, MAX_QUERY_PANE_HEIGHT);
 		// Increase the opacity of the pane
 		FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
 		fadeInTransition.setFromValue(0.0);
@@ -483,7 +489,7 @@ public class CalliopeMapController
 		// Move the expander button to the top
 		TranslateTransition translateUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateUpTransition.setFromY(0);
-		translateUpTransition.setToY(-330);
+		translateUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
 		// Setup the parallel transition
 		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition);
 
