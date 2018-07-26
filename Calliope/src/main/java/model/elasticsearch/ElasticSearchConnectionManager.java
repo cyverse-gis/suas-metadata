@@ -24,6 +24,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -136,7 +137,25 @@ public class ElasticSearchConnectionManager
 	 */
 	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager, ErrorDisplay errorDisplay)
 	{
-		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(configurationManager.getElasticSearchUsername(), configurationManager.getElasticSearchPassword());
+		// The username and password to authenticate with
+		String username;
+		String password;
+
+		// If we set the admin boolean to true, then grab the admin password from the config. Admin account has unlimited access
+		if (configurationManager.isElasticSearchAdmin())
+		{
+			username = "admin";
+			password = configurationManager.getElasticSearchAdminPassword();
+		}
+		// Default to the basic public calliope user which has restricted access
+		else
+		{
+			username = "calliopeUser";
+			password = "basicUser";
+		}
+
+		// Setup the credentials provider
+		Credentials credentials = new UsernamePasswordCredentials(username, password);
 		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
 

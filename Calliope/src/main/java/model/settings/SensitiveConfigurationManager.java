@@ -21,10 +21,10 @@ public class SensitiveConfigurationManager
 	private String elasticSearchHost;
 	// The port of the host
 	private Integer elasticSearchPort;
-	// The user's ES username
-	private String elasticSearchUsername;
-	// The user's ES password
-	private String elasticSearchPassword;
+	// If the user is an admin
+	private Boolean isElasticSearchAdmin;
+	// If the user is an admin, the admin password
+	private String elasticSearchAdminPassword;
 
 	/**
 	 * Constructor reads the configuration file and initializes fields
@@ -53,10 +53,10 @@ public class SensitiveConfigurationManager
 			this.elasticSearchHost = configuration.getString("elasticSearch.host");
 			// Read the configuration file's port
 			this.elasticSearchPort = configuration.getInteger("elasticSearch.port", 9200);
-			// Read the configuration file's username
-			this.elasticSearchUsername = configuration.getString("elasticSearch.username");
-			// Read the configuration file's password
-			this.elasticSearchPassword = configuration.getString("elasticSearch.password");
+			// If the user is an admin
+			this.isElasticSearchAdmin = configuration.getBoolean("elasticSearch.admin");
+			// If the user is an admin, the admin password
+			this.elasticSearchAdminPassword = configuration.getString("elasticSearch.adminPassword");
 		}
 		catch (ConfigurationException | IOException e)
 		{
@@ -82,18 +82,18 @@ public class SensitiveConfigurationManager
 	}
 
 	/**
-	 * @return Getter for ES username
+	 * @return True if we should authenticate as an ES admin
 	 */
-	public String getElasticSearchUsername()
+	public Boolean isElasticSearchAdmin()
 	{
-		return this.elasticSearchUsername;
+		return this.isElasticSearchAdmin;
 	}
 
 	/**
-	 * @return Getter for ES password
+	 * @return The admin password
 	 */
-	public String getElasticSearchPassword()
+	public String getElasticSearchAdminPassword()
 	{
-		return this.elasticSearchPassword;
+		return this.elasticSearchAdminPassword;
 	}
 }
