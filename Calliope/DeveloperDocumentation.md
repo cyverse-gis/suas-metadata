@@ -61,3 +61,87 @@ This class contains all things related to threading. It contains 3 different thr
 ##### FXML Loader Utils (/util/FXMLLoaderUtils.java)
 
 This utility class allows for easy FXML document loading. Just call `FXMLLoaderUtils.loadFXML()` with the path of FXML file to load.
+
+## Libraries Used
+
+Click any of the library titles to find out more!
+
+### [JFXtras](http://jfxtras.org/)
+
+A library used for its high quality UI controls. This project relys heavily on the 'DateTimePicker' which allows for users to easily pick a date and/or time without having to type it in a special format.
+
+### [EasyBind](https://github.com/TomasMikula/EasyBind)
+
+One of the most important libraries in this project that provides helper classes for creating data bindings. In vanilla JavaFX it is challenging to create a listener that listens for changes in sub-properties of an object and this library makes that much easier with `EasyBind.monadic()`.
+
+### [ControlsFX](http://fxexperience.com/controlsfx/)
+
+ControlsFX arguably contains the highest quality set of controls ever for JavaFX. Calliope specifically makes use of the `PropertySheet`, `TaskProgressView`, `NotificationPane`, `HyperlinkLabel`, `StatusBar`, `Validators`, and much more.
+
+### [Apache Commons Lang](https://commons.apache.org/proper/commons-lang/)
+
+This library provides utility classes that allow for advanced string manipulation, number parsing, and exception parsing. It is used to format exceptions in popups and parsing strings into numbers.
+
+### [Apache Commons IO](https://commons.apache.org/proper/commons-io/)
+
+Much like Apache Commons Lang, this library provides utility classes for manipulating IO streams and files. It is used to retrieve file extensions and copy input streams to files.
+
+### [Apache Commons BeanUtils](http://commons.apache.org/proper/commons-beanutils/)
+
+An optional dependency that is required for apache commons configuration manager.
+
+### [Apache Commons Compress](https://commons.apache.org/proper/commons-compress/)
+
+Much like the other Apache Commons libraries, this one assists in the creation of TAR files as well as the extraction of KMZ files. This library lets us optimize uploads by 'tarring' images first.
+
+### [Apache Commons Configuration](https://commons.apache.org/proper/commons-configuration/)
+
+Once again another Apache Commons library, this time for managing and parsing configuration files. These are used to keep private details like passwords out of the code and in separate files.
+
+### [Gson](https://github.com/google/gson)
+
+A utility library by Google to help serialize Java objects into JSON and vice versa. This is incredibly useful when working with ElasticSearch which heavily makes use of JSON. 
+
+### [FXGson](https://github.com/joffrey-bion/fx-gson)
+
+An addon to Gson that allows for cleaner serialization and deserialization of JavaFX properties.
+
+### [Jargon](https://github.com/DICE-UNC/jargon)
+
+Arguably the most important library in this list, Jargon is a Java implementation of the iRODS protocol which allows for connection to CyVerse's iRODS-based Data Store. This allows users to authenticate and then upload and download images.
+
+### [ElasticSearch](https://www.elastic.co/)
+
+This library allows users to connect to an ElasticSearch index which enables fast queries and efficient data indexing. 
+
+### [Log4j](https://logging.apache.org/log4j/)
+
+A utility library used by ElasticSearch to print out errors and warnings. These are turned off by Calliope, but can be useful when debugging.
+
+### [JavaAPIforKml](https://labs.micromata.de/projects/jak.html)
+
+This library allows Java to parse and import KML files. These contain shape and boundary information of NEON sites ready to be drawn on the map.
+
+### [ExifToolLib](https://github.com/rkalla/exiftool)
+
+A fantastic Java interface to the ExifTool software used to read image file's metadata. This library starts the ExifTool process and keeps it alive while running multiple images through it.
+
+### [Java Advanced Imaging](https://www.oracle.com/technetwork/java/iio-141084.html)
+
+An advanced imaging library provided by Oracle to enable swing's `ImageIO` class to parse ".tif" image files. These can then be converted into JavaFX image files.
+
+### [Spatial4j](https://github.com/locationtech/spatial4j) and [JTS](https://github.com/locationtech/jts)
+
+Two utility libraries used by ElasticSearch for geo-queries.
+
+### [SLF4j](https://www.slf4j.org/)
+
+Another simple logging library used as a dependency to disable library logging.
+
+### [Logback](https://logback.qos.ch/)
+
+Intended successor to Log4j used to log information. This is used by the Jargon library and also disabled to remove debug messages.
+
+### [FX Map Control](https://github.com/ClemensFischer/FX-Map-Control)
+
+Advanced map rendering library for JavaFX that supports multiple tile providers and the addition of JavaFX nodes on the map.

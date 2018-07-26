@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 /**
  * Class used to wrap a configuration file containing a port and host IP
  */

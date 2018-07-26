@@ -51,3 +51,11 @@ Each tab is described in detail if clicked on.
 ### Developer's Documentation
 
 If you would like to work on this project an outline of the code structure can be found [here](./DeveloperDocumentation.md).
+
+### Credits
+
+This program is currently being developed by [CyVerse](https://github.com/DavidM1A2/). It is heavily based on previous code from [Sanimal](https://github.com/DavidM1A2/Sanimal). 
+
+- Software Developer - [David Slovikosky](https://github.com/DavidM1A2/)
+- Project Supervisor - [Tyson Swetnam](https://github.com/tyson-swetnam)
+- Funding - University of Arizona School of Natural Resources and the Environment ([SNRE](https://snre.arizona.edu/))

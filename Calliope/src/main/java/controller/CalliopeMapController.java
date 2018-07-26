@@ -953,6 +953,7 @@ public class CalliopeMapController
 			newContent.put(CalliopeDataFormats.POLYGON_LATITUDE_FORMAT, location.getLatitude());
 			newContent.put(CalliopeDataFormats.POLYGON_LONGITUDE_FORMAT, location.getLongitude());
 			dragboard.setContent(newContent);
+
 			// Drop is done
 			dragEvent.setDropCompleted(true);
 		}
