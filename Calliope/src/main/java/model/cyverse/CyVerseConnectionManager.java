@@ -342,7 +342,7 @@ public class CyVerseConnectionManager
 						String fileRelativePath = localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), localDirAbsolutePath);
 						fileRelativePath = fileRelativePath.replace('\\', '/');
 						return fileRelativePath + "\n";
-					}, 500);
+					}, 300);
 
 					// For each tar part, upload
 					for (int tarPart = 0; tarPart < tarsToWrite.length; tarPart++)

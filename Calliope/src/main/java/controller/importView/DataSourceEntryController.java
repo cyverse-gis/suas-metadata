@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import model.dataSources.IDataSource;
 
 public class DataSourceEntryController extends ListCell<IDataSource>
@@ -15,7 +15,7 @@ public class DataSourceEntryController extends ListCell<IDataSource>
 
 	// A reference to the main pane object
 	@FXML
-	public BorderPane mainPane;
+	public StackPane mainPane;
 
 	// The title at the top of the entry
 	@FXML

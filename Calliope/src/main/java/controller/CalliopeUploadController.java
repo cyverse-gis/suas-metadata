@@ -139,6 +139,8 @@ public class CalliopeUploadController
 		}).orElse(nothingSelected));
 
 		this.btnRefreshUploads.disableProperty().bind(nothingSelected);
+		this.txtUploadSearch.disableProperty().bind(nothingSelected);
+		this.btnResetSearch.disableProperty().bind(nothingSelected);
 
 		// Initialize root of the right side directory/image tree and make the root invisible
 		// This is because a treeview must have ONE root.

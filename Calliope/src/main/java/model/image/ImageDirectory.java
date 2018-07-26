@@ -200,24 +200,47 @@ public class ImageDirectory extends ImageContainer
 
 	/**
 	 * Setting the site taken on a directory sets the site on all children recursively
+	 *
 	 * @param site The site to set to
 	 */
 	@Override
 	public void setSiteTaken(BoundedSite site)
 	{
-		this.getChildren().forEach(child -> child.setSiteTaken(site));
+		this.getChildren().forEach(child ->
+		{
+			// If our child is a currently uploading image directory we don't want to modify it, so ignore it
+			if (child instanceof ImageDirectory && ((ImageDirectory) child).getUploadProgress() != -1)
+				return;
+			child.setSiteTaken(site);
+		});
 	}
 
+	/**
+	 * Setter for data source, also sets the data source for all child directories
+	 *
+	 * @param dataSource The data source of this directory
+	 */
 	public void setDataSource(IDataSource dataSource)
 	{
+		// Set the data source value
 		this.dataSource.setValue(dataSource);
+		// For each child, if it's a directory set its data source too
+		for (ImageContainer containerInList : this.children)
+			if (containerInList instanceof ImageDirectory)
+				((ImageDirectory) containerInList).setDataSource(dataSource);
 	}
 
+	/**
+	 * @return Returns the data source that this directory came from
+	 */
 	public IDataSource getDataSource()
 	{
 		return this.dataSource.getValue();
 	}
 
+	/**
+	 * @return The data source property
+	 */
 	public ObjectProperty<IDataSource> dataSourceProperty()
 	{
 		return this.dataSource;

@@ -185,8 +185,12 @@
             <artifactId>FX-Map-Control</artifactId>
             <version>-SNAPSHOT</version>
         </dependency>
-
-
+        <!-- https://mvnrepository.com/artifact/com.github.mreutegg/laszip4j -->
+        <dependency>
+            <groupId>com.github.mreutegg</groupId>
+            <artifactId>laszip4j</artifactId>
+            <version>0.5</version>
+        </dependency>
     </dependencies>
 
     <repositories>

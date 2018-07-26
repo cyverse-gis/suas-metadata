@@ -48,7 +48,7 @@ public class CyVerseDSDataSource implements IDataSource
 			TextInputDialog dialog = new TextInputDialog();
 			// Set the required fields:
 			dialog.setContentText(null);
-			dialog.setHeaderText("Enter the path to the top level CyVerse datastore directory to recursively index\nEx: /iplant/home/dslovikosky/myUploads/myImages/");
+			dialog.setHeaderText("Enter the path to the top level CyVerse Data Store directory to recursively index\nEx: /iplant/home/dslovikosky/myUploads/myImages/");
 			dialog.setTitle("Index Existing Images");
 
 			// Show the dialog and store the result
@@ -64,23 +64,27 @@ public class CyVerseDSDataSource implements IDataSource
 					protected ImageDirectory call()
 					{
 						// Update the message used by the task to display progress
-						this.updateMessage("Parsing existing images in preparation to index...");
+						this.updateMessage("Searching for image files in directory...");
 						// Ask our CyVerse connection manager to read the directory
 						CyVerseDSImageDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
-						// Remove any empty directories
-						DirectoryManager.removeEmptyDirectories(imageDirectory);
-						// Update progress based on init progress
-						this.updateMessage("Reading image metadata...");
-						DoubleProperty progressProperty = new SimpleDoubleProperty();
-						progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
-						DirectoryManager.initImages(imageDirectory, progressProperty);
-						// Go over each image entry and queue its download
-						imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer ->
+						// Will be null if the file does not exist
+						if (imageDirectory != null)
 						{
-							CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) imageContainer;
-							cyVerseDSImageEntry.pullMetadataFromCyVerse();
-						});
-						imageDirectory.setDataSource(CyVerseDSDataSource.this);
+							// Remove any empty directories
+							DirectoryManager.removeEmptyDirectories(imageDirectory);
+							// Update progress based on init progress
+							this.updateMessage("Reading image metadata...");
+							DoubleProperty progressProperty = new SimpleDoubleProperty();
+							progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
+							DirectoryManager.initImages(imageDirectory, progressProperty);
+							// Go over each image entry and queue its download
+							imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer ->
+							{
+								CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) imageContainer;
+								cyVerseDSImageEntry.pullMetadataFromCyVerse();
+							});
+							imageDirectory.setDataSource(CyVerseDSDataSource.this);
+						}
 						return imageDirectory;
 					}
 				};
@@ -89,6 +93,8 @@ public class CyVerseDSDataSource implements IDataSource
 					// After the task completes, we check if the return value is null and if it isn't we add it to our image tree
 					if (indexExistingTask.getValue() != null)
 						CalliopeData.getInstance().getImageTree().addChild(indexExistingTask.getValue());
+					else
+						CalliopeData.getInstance().getErrorDisplay().notify("Could not find the directory specified");
 				});
 				return indexExistingTask;
 			}

@@ -95,5 +95,6 @@
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: com.github.ClemensFischer:FX-Map-Control:-edf9bff4c9-1" level="project" />
+    <orderEntry type="library" name="Maven: com.github.mreutegg:laszip4j:0.5" level="project" />
   </component>
 </module>

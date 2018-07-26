@@ -3,6 +3,6 @@
 }
 
 .backgroundBorder {
-    -fx-border-width: 0 0 3 0;
-    -fx-border-color: black;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-color: rgba(0, 0, 0, 0.25);
 }

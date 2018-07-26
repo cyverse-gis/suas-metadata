@@ -6,22 +6,21 @@
 <?import javafx.scene.layout.HBox?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
-<BorderPane fx:id="mainPane" prefWidth="300" styleClass="backgroundBorder" fx:controller="controller.importView.DataSourceEntryController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+<?import javafx.scene.layout.StackPane?>
+<StackPane fx:id="mainPane" styleClass="backgroundBorder" fx:controller="controller.importView.DataSourceEntryController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@ImportableFormatEntry.css"/>
     </stylesheets>
     <padding>
-        <Insets right="10"/>
+        <Insets bottom="10"/>
     </padding>
-    <top>
-        <Label BorderPane.alignment="CENTER" fx:id="lblTitle" styleClass="titleLbl" text="Title test"/>
-    </top>
-    <center>
-        <HBox spacing="5" BorderPane.alignment="CENTER_LEFT" alignment="CENTER_LEFT">
-            <children>
-                <ImageView fx:id="imgIcon" fitHeight="64" fitWidth="64"/>
-                <Label fx:id="lblDescription" text="Description test" wrapText="true"/>
-            </children>
-        </HBox>
-    </center>
-</BorderPane>
+    <children>
+        <ImageView fx:id="imgIcon" StackPane.alignment="CENTER_LEFT" fitHeight="64" fitWidth="64"/>
+        <Label fx:id="lblTitle" StackPane.alignment="TOP_CENTER" styleClass="titleLbl" text="Title test"/>
+        <Label fx:id="lblDescription" StackPane.alignment="TOP_LEFT" text="Description test" wrapText="true" prefWidth="230">
+            <StackPane.margin>
+                <Insets top="32" left="74"/>
+            </StackPane.margin>
+        </Label>
+    </children>
+</StackPane>

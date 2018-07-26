@@ -528,6 +528,12 @@ public class CalliopeImportController
 			}
 		});
 
+		cache(EasyBind.monadic(this.currentlySelectedDirectory).selectProperty(ImageDirectory::uploadProgressProperty)).addListener((observable, oldValue, newValue) ->
+		{
+			if (newValue != null && newValue.doubleValue() != -1.0)
+				Platform.runLater(() -> this.imageTree.getSelectionModel().clearSelection());
+		});
+
 		// Initialize the fade transitions
 
 		// First create a fade-in transition for the location
