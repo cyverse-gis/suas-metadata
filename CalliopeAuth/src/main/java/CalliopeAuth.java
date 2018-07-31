@@ -64,22 +64,14 @@ public class CalliopeAuth
 			// Print out that we're sending a response
 			System.out.println("Sending a response, auth successful!");
 			System.out.println("Method was: " + httpExchange.getRequestMethod());
+			System.out.println("Principal was: " + httpExchange.getPrincipal().toString());
 			// Send back html code 200 with no body
 			httpExchange.sendResponseHeaders(200, 0);
-			// Close a body with 0 bytes
-			OutputStream outputStream = httpExchange.getResponseBody();
-			outputStream.close();
+			httpExchange.close();
 		});
 		// Set the authenticator for the root to ask Jargon to authenticate.
 		context.setAuthenticator(new BasicAuthenticator("/")
 		{
-			@Override
-			public Result authenticate(HttpExchange httpExchange)
-			{
-				System.out.println("Authenticate called with: " + httpExchange.getRequestMethod());
-				return super.authenticate(httpExchange);
-			}
-
 			/**
 			 * Given a username and a password this function lets us test if the account is valid
 			 *
