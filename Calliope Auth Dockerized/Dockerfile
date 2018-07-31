@@ -13,6 +13,7 @@ RUN apt-get install git -y
 RUN apt-get install maven -y
 
 WORKDIR /
+ADD https://api.github.com/repos/cyverse-gis/suas-metadata/git/refs/heads/master version.json
 RUN git clone https://github.com/cyverse-gis/suas-metadata
 
 WORKDIR /suas-metadata/CalliopeAuth
