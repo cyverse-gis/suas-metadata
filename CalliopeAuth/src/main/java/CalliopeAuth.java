@@ -61,8 +61,10 @@ public class CalliopeAuth
 		HttpContext context = server.createContext("/", httpExchange ->
 		{
 			System.out.println("Sending a response, auth successful!");
-			httpExchange.sendResponseHeaders(200, 0);
+			String returnValue = "methods: [*]";
+			httpExchange.sendResponseHeaders(200, returnValue.length());
 			OutputStream outputStream = httpExchange.getResponseBody();
+			outputStream.write(returnValue.getBytes());
 			outputStream.close();
 		});
 		// Set the authenticator for the root to ask Jargon to authenticate.
