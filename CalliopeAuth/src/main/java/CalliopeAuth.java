@@ -60,11 +60,8 @@ public class CalliopeAuth
 		// Create a context for the root (localhost:port/) that will be called if we get a valid request
 		HttpContext context = server.createContext("/", httpExchange ->
 		{
-			String resp = "<html><body>LEL</body></html>";
-			httpExchange.sendResponseHeaders(200, resp.length());
-			OutputStream outputStream = httpExchange.getResponseBody();
-			outputStream.write(resp.getBytes());
-			outputStream.close();
+			System.out.println("Sending a response, auth successful!");
+			httpExchange.sendResponseHeaders(200, 0);
 		});
 		// Set the authenticator for the root to ask Jargon to authenticate.
 		context.setAuthenticator(new BasicAuthenticator("/")
@@ -79,6 +76,7 @@ public class CalliopeAuth
 			@Override
 			public boolean checkCredentials(String username, String password)
 			{
+				System.out.println("Testing account: " + username);
 				// The session we will work with to authenticate
 				IRODSSession session = null;
 				try
@@ -91,12 +89,14 @@ public class CalliopeAuth
 					IRODSAccessObjectFactory irodsAO = IRODSAccessObjectFactoryImpl.instance(session);
 					// Perform the authentication and get a response
 					AuthResponse authResponse = irodsAO.authenticateIRODSAccount(account);
+					System.out.println("Account: " + authResponse.isSuccessful());
 					// If the authentication worked, return true otherwise return false
 					return authResponse.isSuccessful();
 				}
 				// If the authentication failed due to an exception, return false
 				catch (Exception e)
 				{
+					System.out.println("Authentication failed.");
 					return false;
 				}
 				finally

@@ -160,7 +160,7 @@ public class CalliopeViewController
 		this.rctLoginBackground.heightProperty().bind(this.loginPane.heightProperty());
 
 		// Disable the login property if the username and password are empty, if we're logging in, or if the ES connection failed
-		this.btnLogin.disableProperty().bind(this.USER_PASS_VALIDATOR.invalidProperty().or(loggingIn).or(CalliopeData.getInstance().getEsConnectionManager().connectionSuccessfulProperty().not()));
+		this.btnLogin.disableProperty().bind(this.USER_PASS_VALIDATOR.invalidProperty().or(loggingIn));
 
 		// Hide the login pane when logged in
 		this.loginPane.visibleProperty().bind(loggedIn.not());
@@ -210,7 +210,7 @@ public class CalliopeViewController
 	public void enterPressed(KeyEvent keyEvent)
 	{
 		// Ensure the username and password are valid, the ES connection is good, and we're not logging in, and the key pressed was enter
-		if (keyEvent.getCode() == KeyCode.ENTER && !this.USER_PASS_VALIDATOR.isInvalid() && CalliopeData.getInstance().getEsConnectionManager().isConnectionSuccessful() && !this.loggingIn.getValue())
+		if (keyEvent.getCode() == KeyCode.ENTER && !this.USER_PASS_VALIDATOR.isInvalid() && !this.loggingIn.getValue())
 		{
 			// Login! and comsume the event
 			this.performLogin();
@@ -252,6 +252,8 @@ public class CalliopeViewController
 					this.updateMessage("Logging in...");
 					this.updateProgress(1, NUM_STEPS);
 					Boolean loginSuccessful = cyConnectionManager.login(username, password);
+					if (loginSuccessful)
+						loginSuccessful = esConnectionManager.login(username, password);
 
 					if (loginSuccessful)
 					{

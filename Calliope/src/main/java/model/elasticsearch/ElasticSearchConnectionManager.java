@@ -129,34 +129,19 @@ public class ElasticSearchConnectionManager
 	// Create a new elastic search schema manager
 	private ElasticSearchSchemaManager elasticSearchSchemaManager;
 
-	// Create a connection successful property
-	private BooleanProperty connectionSuccessful = new SimpleBooleanProperty(false);
-
 	/**
-	 * The constructor initializes the elastic search
+	 * Given a username and password, this method logs a cyverse user in
+	 *
+	 * @param username The username of the CyVerse account
+	 * @param password The password of the CyVerse account
+	 * @return True if the login was successful, false otherwise
 	 */
-	public ElasticSearchConnectionManager(SensitiveConfigurationManager configurationManager, ErrorDisplay errorDisplay)
+	public Boolean login(String username, String password)
 	{
-		// The username and password to authenticate with
-		String username;
-		String password;
-
+		SensitiveConfigurationManager configurationManager = CalliopeData.getInstance().getSensitiveConfigurationManager();
 		// If the configuration manager has valid settings, initialize ES connection
 		if (configurationManager.isConfigurationValid())
 		{
-			// If we set the admin boolean to true, then grab the admin password from the config. Admin account has unlimited access
-			if (configurationManager.isElasticSearchAdmin())
-			{
-				username = "admin";
-				password = configurationManager.getElasticSearchAdminPassword();
-			}
-			// Default to the basic public calliope user which has restricted access
-			else
-			{
-				username = "calliopeUser";
-				password = "basicUser";
-			}
-
 			// Setup the credentials provider
 			Credentials credentials = new UsernamePasswordCredentials(username, password);
 			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -189,23 +174,24 @@ public class ElasticSearchConnectionManager
 			{
 				if (this.elasticSearchClient.ping())
 				{
-					this.connectionSuccessful.setValue(true);
 					this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
+					return true;
 				}
 				else
 				{
-					errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
+					CalliopeData.getInstance().getErrorDisplay().notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
 				}
 			}
 			catch (ElasticsearchStatusException e)
 			{
-				errorDisplay.notify("Error connecting to the ElasticSearch index, error was " + e.status().toString());
+				CalliopeData.getInstance().getErrorDisplay().notify("Error connecting to the ElasticSearch index, error was " + e.status().toString());
 			}
 			catch (IOException e)
 			{
-				errorDisplay.notify("Error establishing a connection to the ElasticSearch index, error was:\n" + ExceptionUtils.getStackTrace(e));
+				CalliopeData.getInstance().getErrorDisplay().notify("Error establishing a connection to the ElasticSearch index, error was:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -1410,22 +1396,6 @@ public class ElasticSearchConnectionManager
 
 
 		return toReturn;
-	}
-
-	/**
-	 * @return Returns true if the ES cluster is connected to, and false otherwise
-	 */
-	public boolean isConnectionSuccessful()
-	{
-		return this.connectionSuccessful.getValue();
-	}
-
-	/**
-	 * @return Returns the proprety representing if the DB successfully connected
-	 */
-	public BooleanProperty connectionSuccessfulProperty()
-	{
-		return this.connectionSuccessful;
 	}
 
 	/**

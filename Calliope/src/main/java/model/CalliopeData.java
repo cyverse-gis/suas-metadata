@@ -130,7 +130,7 @@ public class CalliopeData
 		this.cyConnectionManager = new CyVerseConnectionManager();
 
 		// Establish a connection to the ElasticSearch cluster
-		this.esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager, this.errorDisplay);
+		this.esConnectionManager = new ElasticSearchConnectionManager();
 
 		// Setup our preferences store which stores our username
 		this.calliopePreferences = Preferences.userNodeForPackage(CalliopeData.class);
