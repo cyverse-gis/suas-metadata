@@ -124,10 +124,10 @@ public class ElasticSearchConnectionManager
 	}.getType();
 
 	// Create a new elastic search client
-	private final RestHighLevelClient elasticSearchClient;
+	private RestHighLevelClient elasticSearchClient;
 
 	// Create a new elastic search schema manager
-	private final ElasticSearchSchemaManager elasticSearchSchemaManager;
+	private ElasticSearchSchemaManager elasticSearchSchemaManager;
 
 	// Create a connection successful property
 	private BooleanProperty connectionSuccessful = new SimpleBooleanProperty(false);
@@ -141,51 +141,71 @@ public class ElasticSearchConnectionManager
 		String username;
 		String password;
 
-		// If we set the admin boolean to true, then grab the admin password from the config. Admin account has unlimited access
-		if (configurationManager.isElasticSearchAdmin())
+		// If the configuration manager has valid settings, initialize ES connection
+		if (configurationManager.isConfigurationValid())
 		{
-			username = "admin";
-			password = configurationManager.getElasticSearchAdminPassword();
-		}
-		// Default to the basic public calliope user which has restricted access
-		else
-		{
-			username = "calliopeUser";
-			password = "basicUser";
-		}
-
-		// Setup the credentials provider
-		Credentials credentials = new UsernamePasswordCredentials(username, password);
-		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
-
-		// Establish a connection to the elastic search server
-		this.elasticSearchClient = new RestHighLevelClient(RestClient
-				.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
-				.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
-
-		// Test to see if the ElasticSearch index is up or not
-		try
-		{
-			if (this.elasticSearchClient.ping())
+			// If we set the admin boolean to true, then grab the admin password from the config. Admin account has unlimited access
+			if (configurationManager.isElasticSearchAdmin())
 			{
-				this.connectionSuccessful.setValue(true);
+				username = "admin";
+				password = configurationManager.getElasticSearchAdminPassword();
 			}
+			// Default to the basic public calliope user which has restricted access
 			else
 			{
-				errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
+				username = "calliopeUser";
+				password = "basicUser";
+			}
+
+			// Setup the credentials provider
+			Credentials credentials = new UsernamePasswordCredentials(username, password);
+			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+			credentialsProvider.setCredentials(AuthScope.ANY, credentials);
+
+			/*
+			try
+			{
+				KeyStore trustStore = KeyStore.getInstance("jks");
+				try (InputStream inputStream = Files.newInputStream(new File("./test.jks").toPath()))
+				{
+					trustStore.load(inputStream, password.toCharArray());
+				}
+				SSLContextBuilder sslContextBuilder = SSLContextBuilder.create().loadTrustMaterial(trustStore, null);
+				SSLContext build = sslContextBuilder.build();
+			}
+			catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | KeyManagementException e)
+			{
+				e.printStackTrace();
+			}
+			*/
+
+			// Establish a connection to the elastic search server
+			this.elasticSearchClient = new RestHighLevelClient(RestClient
+					.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
+					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
+
+			// Test to see if the ElasticSearch index is up or not
+			try
+			{
+				if (this.elasticSearchClient.ping())
+				{
+					this.connectionSuccessful.setValue(true);
+					this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
+				}
+				else
+				{
+					errorDisplay.notify("Could not establish a connection to the ElasticSearch cluster, is it down?");
+				}
+			}
+			catch (ElasticsearchStatusException e)
+			{
+				errorDisplay.notify("Error connecting to the ElasticSearch index, error was " + e.status().toString());
+			}
+			catch (IOException e)
+			{
+				errorDisplay.notify("Error establishing a connection to the ElasticSearch index, error was:\n" + ExceptionUtils.getStackTrace(e));
 			}
 		}
-		catch (ElasticsearchStatusException e)
-		{
-			errorDisplay.notify("Error connecting to the ElasticSearch index, error was " + e.status().toString());
-		}
-		catch (IOException e)
-		{
-			errorDisplay.notify("Error establishing a connection to the ElasticSearch index, error was:\n" + ExceptionUtils.getStackTrace(e));
-		}
-
-		this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
 	}
 
 	/**

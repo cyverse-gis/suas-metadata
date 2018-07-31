@@ -27,6 +27,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
@@ -135,17 +136,18 @@ public class CalliopeMapController
 	@FXML
 	public TableColumn<GeoImageResult, String> clmName;
 	@FXML
-	public TableColumn<GeoImageResult, String> clmCollection;
-	@FXML
-	public TableColumn<GeoImageResult, Double> clmAltitude;
-	@FXML
-	public TableColumn<GeoImageResult, String> clmCameraModel;
-	@FXML
 	public TableColumn<GeoImageResult, LocalDateTime> clmDate;
 
 	// Disable the download query button if the query is invalid
 	@FXML
 	public Button btnDownloadQuery;
+
+	// The map scale label
+	@FXML
+	public Label lblScale;
+	// The map scale box
+	@FXML
+	public HBox hbxScale;
 
 	///
 	/// FXML bound fields end
@@ -470,8 +472,12 @@ public class CalliopeMapController
 		TranslateTransition translateDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
 		translateDownTransition.setToY(0);
+		// Move the scale to the bottom
+		TranslateTransition translateScaleDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
+		translateScaleDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
+		translateScaleDownTransition.setToY(0);
 		// Setup the parallel transition
-		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition);
+		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition, translateScaleDownTransition);
 		// Once finished, hide the query pane
 		this.fadeQueryOut.setOnFinished(event -> this.queryPane.setVisible(false));
 
@@ -490,8 +496,12 @@ public class CalliopeMapController
 		TranslateTransition translateUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateUpTransition.setFromY(0);
 		translateUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
+		// Move the scale to the top
+		TranslateTransition translateScaleUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
+		translateScaleUpTransition.setFromY(0);
+		translateScaleUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
 		// Setup the parallel transition
-		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition);
+		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition);
 
 		///
 		/// Setup the query panel on the bottom of the screen
@@ -556,16 +566,10 @@ public class CalliopeMapController
 
 		// Make the 5 column's header's wrappable
 		TableColumnHeaderUtil.makeHeaderWrappable(this.clmName);
-		TableColumnHeaderUtil.makeHeaderWrappable(this.clmCollection);
-		TableColumnHeaderUtil.makeHeaderWrappable(this.clmAltitude);
-		TableColumnHeaderUtil.makeHeaderWrappable(this.clmCameraModel);
 		TableColumnHeaderUtil.makeHeaderWrappable(this.clmDate);
 
 		// Each column is bound to a different permission
 		this.clmName.setCellValueFactory(param -> param.getValue().nameProperty());
-		this.clmCollection.setCellValueFactory(param -> param.getValue().collectionNameProperty());
-		this.clmAltitude.setCellValueFactory(param -> param.getValue().altitudeProperty().asObject());
-		this.clmCameraModel.setCellValueFactory(param -> param.getValue().cameraModelProperty());
 		this.clmDate.setCellValueFactory(param -> param.getValue().dateProperty());
 		// Sort the date column by the date comparator
 		this.clmDate.setComparator(Comparator.naturalOrder());
@@ -633,6 +637,43 @@ public class CalliopeMapController
 			{
 				// Remove the circle highlight
 				oldValue.setSelected(false);
+			}
+		});
+
+		///
+		/// Setup the map scale indicator on the bottom left
+		///
+
+		this.map.zoomLevelProperty().addListener((observable, oldValue, newValue) ->
+		{
+			final Double RESIZE_POINT = 150D;
+			final Integer INCREMENT_PER_CHANGE = 10;
+			Double pixelsPerMeter = this.map.getProjection().getMapScale(this.map.getCenter()).getY();
+			Double currentPixelsPerMeter = pixelsPerMeter;
+			Integer interactionCount = 1000 / INCREMENT_PER_CHANGE;
+			for (int meterScale = 0; meterScale < interactionCount; meterScale++)
+			{
+				if (currentPixelsPerMeter > RESIZE_POINT)
+				{
+					this.lblScale.setText(Long.toString(Math.round(Math.pow(INCREMENT_PER_CHANGE, meterScale))) + " m");
+					this.hbxScale.setMinWidth(currentPixelsPerMeter);
+					this.hbxScale.setMaxWidth(currentPixelsPerMeter);
+					return;
+				}
+				currentPixelsPerMeter = currentPixelsPerMeter * INCREMENT_PER_CHANGE;
+			}
+			Double currentPixelsPerKM = currentPixelsPerMeter;
+			interactionCount = 1000000 / INCREMENT_PER_CHANGE;
+			for (int kmScale = 0; kmScale < interactionCount; kmScale++)
+			{
+				if (currentPixelsPerKM > RESIZE_POINT)
+				{
+					this.lblScale.setText(Long.toString(Math.round(Math.pow(INCREMENT_PER_CHANGE, kmScale))) + " km");
+					this.hbxScale.setMinWidth(currentPixelsPerKM);
+					this.hbxScale.setMaxWidth(currentPixelsPerKM);
+					return;
+				}
+				currentPixelsPerKM = currentPixelsPerKM * INCREMENT_PER_CHANGE;
 			}
 		});
 	}

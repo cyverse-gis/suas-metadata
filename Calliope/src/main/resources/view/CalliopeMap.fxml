@@ -2,10 +2,11 @@
 
 
 <?import fxmapcontrol.Map?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 <?import library.ImageViewPane?>
 <?import org.controlsfx.control.ToggleSwitch?>
@@ -16,6 +17,16 @@
     </stylesheets>
     <children>
         <Map fx:id="map" StackPane.alignment="CENTER" onDragDropped="#dragDropped" onDragOver="#dragOver" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
+        <HBox fx:id="hbxScale" StackPane.alignment="BOTTOM_LEFT" alignment="CENTER_LEFT" styleClass="scaleRct" minHeight="30" maxHeight="30" minWidth="100" maxWidth="100">
+            <StackPane.margin>
+                <Insets left="5" bottom="5"/>
+            </StackPane.margin>
+            <Label fx:id="lblScale" GridPane.halignment="LEFT" GridPane.valignment="CENTER" GridPane.rowSpan="2" text="10 m">
+                <HBox.margin>
+                    <Insets left="5"/>
+                </HBox.margin>
+            </Label>
+        </HBox>
         <GridPane fx:id="gpnMapSettings" StackPane.alignment="TOP_LEFT" vgap="5" hgap="5" styleClass="propertiesPanel" maxWidth="-Infinity" maxHeight="-Infinity">
             <StackPane.margin>
                 <Insets top="15" left="15" bottom="15"/>
@@ -53,9 +64,6 @@
                                 </columnResizePolicy>
                                 <columns>
                                     <TableColumn editable="false" text="File" fx:id="clmName"/>
-                                    <TableColumn editable="false" text="Collection" fx:id="clmCollection"/>
-                                    <TableColumn editable="false" text="Altitude" fx:id="clmAltitude"/>
-                                    <TableColumn editable="false" text="Camera Model" fx:id="clmCameraModel"/>
                                     <TableColumn editable="false" text="Date Taken" fx:id="clmDate"/>
                                 </columns>
                             </TableView>

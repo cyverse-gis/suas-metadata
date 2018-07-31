@@ -24,6 +24,16 @@
 /Java Metadata Processor/logs/*
 /Java Metadata Processor/tmp/*
 
+/CalliopeAuth/.idea/
+/CalliopeAuth/CalliopeAuth.iml
+/CalliopeAuth/out/*
+/CalliopeAuth/demoApplication.log
+/CalliopeAuth/debug.log
+/CalliopeAuth/target/
+/CalliopeAuth/build/*
+/CalliopeAuth/logs/*
+/CalliopeAuth/tmp/*
+
 /PythonSandbox/.idea/*
 /PythonSandbox/venv/*
 /PythonSandbox/__pycache__

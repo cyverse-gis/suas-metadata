@@ -65,3 +65,7 @@
 .imgWildcatResearch:hover {
     -fx-effect: dropshadow(gaussian, yellow, 15, .5, 0, 0);
 }
+
+.imgARS:hover {
+    -fx-effect: dropshadow(gaussian, yellow, 15, .5, 0, 0);
+}

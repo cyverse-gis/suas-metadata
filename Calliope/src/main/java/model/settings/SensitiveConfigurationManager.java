@@ -1,10 +1,12 @@
 package model.settings;
 
 import controller.Calliope;
+import model.util.ErrorDisplay;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;
@@ -24,11 +26,15 @@ public class SensitiveConfigurationManager
 	private Boolean isElasticSearchAdmin;
 	// If the user is an admin, the admin password
 	private String elasticSearchAdminPassword;
+	// If the configuration loaded successfully
+	private Boolean configurationValid = false;
 
 	/**
 	 * Constructor reads the configuration file and initializes fields
+	 *
+	 * @param errorDisplay The error displayer to print errors to
 	 */
-	public SensitiveConfigurationManager()
+	public SensitiveConfigurationManager(ErrorDisplay errorDisplay)
 	{
 		// Create a config factory helper object
 		Configurations configs = new Configurations();
@@ -56,11 +62,18 @@ public class SensitiveConfigurationManager
 			this.isElasticSearchAdmin = configuration.getBoolean("elasticSearch.admin");
 			// If the user is an admin, the admin password
 			this.elasticSearchAdminPassword = configuration.getString("elasticSearch.adminPassword");
+
+			// Config is good to go
+			this.configurationValid = true;
 		}
 		catch (ConfigurationException | IOException e)
 		{
 			// Print an error because the file may not exist
 			System.err.println("Error parsing configuration file, elastic search database connection could not be established!\n" + ExceptionUtils.getStackTrace(e));
+		}
+		catch (ConversionException e)
+		{
+			errorDisplay.notify("Invalid ElasticSearch host or port, please check `calliope.properties`!");
 		}
 	}
 
@@ -94,5 +107,13 @@ public class SensitiveConfigurationManager
 	public String getElasticSearchAdminPassword()
 	{
 		return this.elasticSearchAdminPassword;
+	}
+
+	/**
+	 * @return True if the configuration was loaded successfully
+	 */
+	public Boolean isConfigurationValid()
+	{
+		return this.configurationValid;
 	}
 }

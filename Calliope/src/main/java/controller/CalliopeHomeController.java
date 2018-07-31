@@ -131,6 +131,23 @@ public class CalliopeHomeController
 	}
 
 	/**
+	 * When the user clicks the ARS logo
+	 *
+	 * @param mouseEvent consumed
+	 */
+	public void showARSWebsite(MouseEvent mouseEvent)
+	{
+		try
+		{
+			Desktop.getDesktop().browse(new URI("https://www.usda.gov/"));
+		}
+		catch (IOException | URISyntaxException ignored)
+		{
+		}
+		mouseEvent.consume();
+	}
+
+	/**
 	 * When the user clicks the credits button
 	 *
 	 * @param actionEvent consumed

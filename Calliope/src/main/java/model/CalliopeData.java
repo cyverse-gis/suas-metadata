@@ -107,8 +107,14 @@ public class CalliopeData
 	 */
 	private CalliopeData()
 	{
+		// Load our program settings
+		this.settings = new SettingsData();
+
+		// Setup our debug/error logger
+		this.errorDisplay = new ErrorDisplay(this.settings);
+
 		// Setup our sensitive config manager
-		this.sensitiveConfigurationManager = new SensitiveConfigurationManager();
+		this.sensitiveConfigurationManager = new SensitiveConfigurationManager(this.errorDisplay);
 
 		// Initialize our username and logged in properties
 		this.usernameProperty = new SimpleStringProperty("");
@@ -122,12 +128,6 @@ public class CalliopeData
 
 		// Establish a connection to the CyVerse datastore
 		this.cyConnectionManager = new CyVerseConnectionManager();
-
-		// Load our program settings
-		this.settings = new SettingsData();
-
-		// Setup our debug/error logger
-		this.errorDisplay = new ErrorDisplay(this.settings);
 
 		// Establish a connection to the ElasticSearch cluster
 		this.esConnectionManager = new ElasticSearchConnectionManager(this.sensitiveConfigurationManager, this.errorDisplay);

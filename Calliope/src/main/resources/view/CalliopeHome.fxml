@@ -56,5 +56,8 @@
         <ImageView fitHeight="80" onMouseClicked="#showSNREWebsite" preserveRatio="true" styleClass="imgSNRE" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="10">
             <Image url="@../images/mainMenu/snre.PNG" />
         </ImageView>
+        <ImageView fitHeight="80" onMouseClicked="#showARSWebsite" preserveRatio="true" styleClass="imgARS" AnchorPane.bottomAnchor="100" AnchorPane.leftAnchor="10">
+            <Image url="@../images/mainMenu/ars.png" />
+        </ImageView>
     </children>
 </AnchorPane>

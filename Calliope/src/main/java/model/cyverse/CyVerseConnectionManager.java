@@ -399,7 +399,6 @@ public class CyVerseConnectionManager
 				// Create a file factory used to create IRODSFiles
 				IRODSFileFactory irodsFileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 
-				long time = System.currentTimeMillis();
 				// Map the iRODS file paths to local file paths based on the directory to download into. We later abuse the fact that this list is parallel to
 				// the input list of IRODS paths
 				List<String> absoluteLocalFilePaths = absoluteIRODSImagePaths.stream().map(absoluteImagePath -> dirToSaveToAbsolutePath + File.separator + FilenameUtils.getName(absoluteImagePath)).collect(Collectors.toList());
@@ -429,7 +428,6 @@ public class CyVerseConnectionManager
 					// Perform the get operation
 					dataTransferOperations.getOperation(irodsFile, localFile, null, null);
 				}
-				System.out.println((System.currentTimeMillis() - time) / 1000.0D);
 			}
 			catch (JargonException e)
 			{

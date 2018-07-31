@@ -21,6 +21,12 @@
     -fx-background-radius: 32px;
 }
 
+.scaleRct {
+    -fx-border-width: 0px 3px 3px 3px;
+    -fx-border-color: darkgray;
+    -fx-background-color: rgba(255, 255, 255, 0.5);
+}
+
 .queryConditionsLvw > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
 .queryConditionsLvw > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:focused,
 .queryConditionsLvw > .virtual-flow > .clipped-container > .sheet > .list-cell {
