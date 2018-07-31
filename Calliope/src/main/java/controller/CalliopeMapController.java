@@ -23,6 +23,8 @@ import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -44,12 +46,14 @@ import model.elasticsearch.query.QueryEngine;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
 import model.image.ImageEntry;
 import model.neon.BoundedSite;
+import model.settings.SettingsData;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -59,7 +63,11 @@ import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
 
 import javax.swing.filechooser.FileSystemView;
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -148,6 +156,10 @@ public class CalliopeMapController
 	// The map scale box
 	@FXML
 	public HBox hbxScale;
+
+	// The label containing any map credits
+	@FXML
+	public HyperlinkLabel lblMapCredits;
 
 	///
 	/// FXML bound fields end
@@ -258,6 +270,10 @@ public class CalliopeMapController
 				this.addNodeToMap(newMapTileProvider, MapLayers.TILE_PROVIDER);
 			}
 		});
+		// Update the credits label whenever the map provider changes
+		this.lblMapCredits.textProperty().bind(EasyBind.monadic(this.cbxMapProvider.getSelectionModel().selectedItemProperty()).map(mapProvider -> "Map tiles by [" + mapProvider.toString() + "]"));
+		// Update the action to reflect the currently selected map provider
+		this.lblMapCredits.onActionProperty().bind(EasyBind.monadic(this.cbxMapProvider.getSelectionModel().selectedItemProperty()).map(mapProvider -> event -> { try { Desktop.getDesktop().browse(new URI(mapProvider.getCreditURL())); } catch (URISyntaxException | IOException ignored) {} }));
 
 		///
 		/// Setup the pop-over which is shown if a site pin is clicked
@@ -476,8 +492,12 @@ public class CalliopeMapController
 		TranslateTransition translateScaleDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
 		translateScaleDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
 		translateScaleDownTransition.setToY(0);
+		// Move the map credits to the bottom
+		TranslateTransition translateCreditsDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.lblMapCredits);
+		translateCreditsDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
+		translateCreditsDownTransition.setToY(0);
 		// Setup the parallel transition
-		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition, translateScaleDownTransition);
+		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition, translateScaleDownTransition, translateCreditsDownTransition);
 		// Once finished, hide the query pane
 		this.fadeQueryOut.setOnFinished(event -> this.queryPane.setVisible(false));
 
@@ -500,8 +520,12 @@ public class CalliopeMapController
 		TranslateTransition translateScaleUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
 		translateScaleUpTransition.setFromY(0);
 		translateScaleUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
+		// Move the credits to the top
+		TranslateTransition translateCreditsUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.lblMapCredits);
+		translateCreditsUpTransition.setFromY(0);
+		translateCreditsUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
 		// Setup the parallel transition
-		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition);
+		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition, translateCreditsUpTransition);
 
 		///
 		/// Setup the query panel on the bottom of the screen
@@ -646,34 +670,44 @@ public class CalliopeMapController
 
 		this.map.zoomLevelProperty().addListener((observable, oldValue, newValue) ->
 		{
-			final Double RESIZE_POINT = 150D;
-			final Integer INCREMENT_PER_CHANGE = 10;
-			Double pixelsPerMeter = this.map.getProjection().getMapScale(this.map.getCenter()).getY();
-			Double currentPixelsPerMeter = pixelsPerMeter;
-			Integer interactionCount = 1000 / INCREMENT_PER_CHANGE;
-			for (int meterScale = 0; meterScale < interactionCount; meterScale++)
+			// The minimum size in pixels of the scale in the bottom left
+			final double MIN_SIZE = 100;
+			// The maximum size in pixels of the scale in the bottom left
+			final double MAX_SIZE = 300;
+			// Pixels per meter to start with here
+			double pixelsPerPowerOf10 = this.map.getProjection().getMapScale(this.map.getCenter()).getY();
+			// Iterate up to 25 times (or 10^25)
+			for (int currentPowerOf10 = 0; currentPowerOf10 < 25; currentPowerOf10++)
 			{
-				if (currentPixelsPerMeter > RESIZE_POINT)
+				// If the pixels per meter is greater than the minimum, we stop and draw it at that size
+				if (pixelsPerPowerOf10 > MIN_SIZE)
 				{
-					this.lblScale.setText(Long.toString(Math.round(Math.pow(INCREMENT_PER_CHANGE, meterScale))) + " m");
-					this.hbxScale.setMinWidth(currentPixelsPerMeter);
-					this.hbxScale.setMaxWidth(currentPixelsPerMeter);
+					// Compute the scale based on the power of 10
+					long scale = Math.round(Math.pow(10, currentPowerOf10));
+					// Test if we want it to use KM or M based on the power of 10.
+					boolean willUseKM = currentPowerOf10 > 3;
+
+					// If the pixels per power of 10 is bigger than our max size, draw it at 1/2 size
+					if (pixelsPerPowerOf10 < MAX_SIZE)
+					{
+						// Set the text based on if it's KM or M
+						this.lblScale.setText(willUseKM ? Long.toString(scale / 1000) + " km" : Long.toString(scale) + " m");
+						// Force the HBox width
+						this.hbxScale.setMinWidth(pixelsPerPowerOf10);
+						this.hbxScale.setMaxWidth(pixelsPerPowerOf10);
+					}
+					else
+					{
+						// Set the text based on if it's KM or M. We divide by 2 to ensure it's not too large
+						this.lblScale.setText(willUseKM ? Long.toString(scale / 2000) + " km" : Long.toString(scale / 2) + " m");
+						// Force the HBox width
+						this.hbxScale.setMinWidth(pixelsPerPowerOf10 / 2);
+						this.hbxScale.setMaxWidth(pixelsPerPowerOf10 / 2);
+					}
 					return;
 				}
-				currentPixelsPerMeter = currentPixelsPerMeter * INCREMENT_PER_CHANGE;
-			}
-			Double currentPixelsPerKM = currentPixelsPerMeter;
-			interactionCount = 1000000 / INCREMENT_PER_CHANGE;
-			for (int kmScale = 0; kmScale < interactionCount; kmScale++)
-			{
-				if (currentPixelsPerKM > RESIZE_POINT)
-				{
-					this.lblScale.setText(Long.toString(Math.round(Math.pow(INCREMENT_PER_CHANGE, kmScale))) + " km");
-					this.hbxScale.setMinWidth(currentPixelsPerKM);
-					this.hbxScale.setMaxWidth(currentPixelsPerKM);
-					return;
-				}
-				currentPixelsPerKM = currentPixelsPerKM * INCREMENT_PER_CHANGE;
+				// Increment pixels by a power of 10
+				pixelsPerPowerOf10 = pixelsPerPowerOf10 * 10;
 			}
 		});
 	}

@@ -7,15 +7,17 @@ import fxmapcontrol.MapTileLayer;
  */
 public enum MapProviders
 {
-	OpenStreetMaps("Open Street Map", MapTileLayer.getOpenStreetMapLayer()),
-	OpenTopoMap("Open Topo Map", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17)),
-	OpenMapSurferRoads("Open Map Surfer - Roads", new MapTileLayer("OpenMapSurferRoads", "https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", 0, 20)),
-	EsriWorldStreetMap("Esri World Street Map", new MapTileLayer("EsriWorldStreetMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", 0, 19)),
-	EsriWorldTopoMap("Esri World Topo Map", new MapTileLayer("EsriWorldTopoMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 0, 19)),
-	EsriWorldImagery("Esri World Imagery", new MapTileLayer("EsriWorldImagery", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 0, 19));
+	OpenStreetMaps("Open Street Map", "https://www.openstreetmap.org/", MapTileLayer.getOpenStreetMapLayer()),
+	OpenTopoMap("Open Topo Map", "https://opentopomap.org/about", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17)),
+	OpenMapSurferRoads("Open Map Surfer - Roads", "http://korona.geog.uni-heidelberg.de/", new MapTileLayer("OpenMapSurferRoads", "https://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}", 0, 20)),
+	EsriWorldStreetMap("Esri World Street Map", "https://www.esri.com/en-us/home", new MapTileLayer("EsriWorldStreetMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", 0, 19)),
+	EsriWorldTopoMap("Esri World Topo Map", "https://www.esri.com/en-us/home", new MapTileLayer("EsriWorldTopoMap", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", 0, 19)),
+	EsriWorldImagery("Esri World Imagery", "https://www.esri.com/en-us/home", new MapTileLayer("EsriWorldImagery", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 0, 19));
 
 	// The user-friendly name of the provider
 	private String name;
+	// The link to the website crediting this map tile providers
+	private String creditURL;
 	// The JavaFX map tile layer node
 	private MapTileLayer mapTileProvider;
 
@@ -23,11 +25,13 @@ public enum MapProviders
 	 * Constructor just initializes fields
 	 *
 	 * @param name The user-friendly name of the provider
+	 * @param creditURL The URL to the credits for this map tile layer
 	 * @param mapTileProvider The JavaFX map tile layer node
 	 */
-	MapProviders(String name, MapTileLayer mapTileProvider)
+	MapProviders(String name, String creditURL, MapTileLayer mapTileProvider)
 	{
 		this.name = name;
+		this.creditURL = creditURL;
 		this.mapTileProvider = mapTileProvider;
 	}
 
@@ -38,6 +42,14 @@ public enum MapProviders
 	public String toString()
 	{
 		return this.name;
+	}
+
+	/**
+	 * @return A URL crediting this map tile provider
+	 */
+	public String getCreditURL()
+	{
+		return this.creditURL;
 	}
 
 	/**

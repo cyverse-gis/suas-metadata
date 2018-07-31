@@ -1,8 +1,8 @@
 package model.util;
 
 import model.image.UTMCoord;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.core.util.FileUtils;
 
 import java.io.File;
 
@@ -24,7 +24,7 @@ public class AnalysisUtils
 	 */
 	public static boolean fileIsImage(File file)
 	{
-		return fileIsImage(FileUtils.getFileExtension(file));
+		return fileIsImage(FilenameUtils.getExtension(file.getName()));
 	}
 
 	/**

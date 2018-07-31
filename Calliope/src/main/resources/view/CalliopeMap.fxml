@@ -11,6 +11,7 @@
 <?import library.ImageViewPane?>
 <?import org.controlsfx.control.ToggleSwitch?>
 <?import java.net.URL?>
+<?import org.controlsfx.control.HyperlinkLabel?>
 <StackPane fx:controller="controller.CalliopeMapController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@CalliopeMap.css"/>
@@ -129,5 +130,10 @@
                 </ImageView>
             </graphic>
         </Button>
+        <HyperlinkLabel fx:id="lblMapCredits" StackPane.alignment="BOTTOM_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity">
+            <StackPane.margin>
+                <Insets right="5" bottom="5"/>
+            </StackPane.margin>
+        </HyperlinkLabel>
     </children>
 </StackPane>
