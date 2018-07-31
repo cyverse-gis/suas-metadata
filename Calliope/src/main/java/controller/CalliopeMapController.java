@@ -33,6 +33,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 import library.AlignedMapNode;
 import library.TableColumnHeaderUtil;
 import model.CalliopeData;
@@ -53,6 +54,7 @@ import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.controlsfx.control.CheckComboBox;
 import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
@@ -144,7 +146,16 @@ public class CalliopeMapController
 	@FXML
 	public TableColumn<GeoImageResult, String> clmName;
 	@FXML
+	public TableColumn<GeoImageResult, String> clmCollection;
+	@FXML
+	public TableColumn<GeoImageResult, Double> clmAltitude;
+	@FXML
+	public TableColumn<GeoImageResult, String> clmCameraModel;
+	@FXML
 	public TableColumn<GeoImageResult, LocalDateTime> clmDate;
+
+	// Check boxes to hide & show columns
+	public CheckComboBox<TableColumn<GeoImageResult, ?>> ccbxColumns;
 
 	// Disable the download query button if the query is invalid
 	@FXML
@@ -488,6 +499,8 @@ public class CalliopeMapController
 		TranslateTransition translateDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
 		translateDownTransition.setToY(0);
+		// Expand the expander button
+		Timeline maxWidthExpansion = new Timeline(new KeyFrame(Duration.seconds(TRANSITION_DURATION), new KeyValue(this.btnExpander.prefWidthProperty(), 170)));
 		// Move the scale to the bottom
 		TranslateTransition translateScaleDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
 		translateScaleDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
@@ -497,9 +510,13 @@ public class CalliopeMapController
 		translateCreditsDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
 		translateCreditsDownTransition.setToY(0);
 		// Setup the parallel transition
-		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition, translateScaleDownTransition, translateCreditsDownTransition);
+		this.fadeQueryOut = new ParallelTransition(fadeOutTransition, heightDownTransition, rotateUpTransition, translateDownTransition, translateScaleDownTransition, translateCreditsDownTransition, maxWidthExpansion);
 		// Once finished, hide the query pane
-		this.fadeQueryOut.setOnFinished(event -> this.queryPane.setVisible(false));
+		this.fadeQueryOut.setOnFinished(event ->
+		{
+			this.queryPane.setVisible(false);
+			this.btnExpander.setText("Query");
+		});
 
 		// Increase the height of the pane
 		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, MIN_QUERY_PANE_HEIGHT, MAX_QUERY_PANE_HEIGHT);
@@ -516,6 +533,8 @@ public class CalliopeMapController
 		TranslateTransition translateUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateUpTransition.setFromY(0);
 		translateUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
+		// Contract the expander button
+		Timeline maxWidthContraction = new Timeline(new KeyFrame(Duration.seconds(TRANSITION_DURATION), new KeyValue(this.btnExpander.prefWidthProperty(), 64)));
 		// Move the scale to the top
 		TranslateTransition translateScaleUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
 		translateScaleUpTransition.setFromY(0);
@@ -525,7 +544,7 @@ public class CalliopeMapController
 		translateCreditsUpTransition.setFromY(0);
 		translateCreditsUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
 		// Setup the parallel transition
-		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition, translateCreditsUpTransition);
+		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition, translateCreditsUpTransition, maxWidthContraction);
 
 		///
 		/// Setup the query panel on the bottom of the screen
@@ -588,37 +607,87 @@ public class CalliopeMapController
 		/// Setup the top left box of settings
 		///
 
-		// Make the 5 column's header's wrappable
-		TableColumnHeaderUtil.makeHeaderWrappable(this.clmName);
-		TableColumnHeaderUtil.makeHeaderWrappable(this.clmDate);
-
-		// Each column is bound to a different permission
+		// Each column is bound to a different image metadata tag
 		this.clmName.setCellValueFactory(param -> param.getValue().nameProperty());
+		this.clmCollection.setCellValueFactory(param -> param.getValue().collectionNameProperty());
+		this.clmAltitude.setCellValueFactory(param -> param.getValue().altitudeProperty().asObject());
+		this.clmCameraModel.setCellValueFactory(param -> param.getValue().cameraModelProperty());
 		this.clmDate.setCellValueFactory(param -> param.getValue().dateProperty());
 		// Sort the date column by the date comparator
 		this.clmDate.setComparator(Comparator.naturalOrder());
 		// Set the date format. This code is taken from DEFAULT_CELL_FACTORY in TableColumn.class
 		this.clmDate.setCellFactory(param -> new TableCell<GeoImageResult, LocalDateTime>()
 		{
+			/**
+			 * Called when a new item is added to this cell
+			 *
+			 * @param localDateTime The new local date time to display
+			 * @param empty If the cell should be empty
+			 */
 			@Override
 			protected void updateItem(LocalDateTime localDateTime, boolean empty)
 			{
+				// If the date is null, return
 				if (localDateTime == getItem())
 					return;
-
+				// Update the item internally
 				super.updateItem(localDateTime, empty);
-
-				if (localDateTime == null)
-				{
-					super.setText(null);
-					super.setGraphic(null);
-				}
+				// If the date is null, set the text and graphic to null
+				if (localDateTime == null) { super.setText(null); super.setGraphic(null); }
+				// Otherwise, update the text with the properly formatted date
 				else
 				{
 					super.setText(CalliopeData.getInstance().getSettings().formatDateTime(localDateTime, " "));
 					super.setGraphic(null);
 				}
 			}
+		});
+
+		// Add all columns to the check box combo box
+		this.ccbxColumns.getItems().add(this.clmName);
+		this.ccbxColumns.getItems().add(this.clmCollection);
+		this.ccbxColumns.getItems().add(this.clmAltitude);
+		this.ccbxColumns.getItems().add(this.clmCameraModel);
+		this.ccbxColumns.getItems().add(this.clmDate);
+
+		// Start with just name and date checked
+		this.ccbxColumns.getCheckModel().check(this.clmName);
+		this.ccbxColumns.getCheckModel().check(this.clmDate);
+
+		// Remove the columns that are not checked by default
+		for (int index = 0; index < this.ccbxColumns.getItems().size(); index++)
+			if (!this.ccbxColumns.getCheckModel().isChecked(index))
+				this.tbvImageMetadata.getColumns().remove(this.ccbxColumns.getItems().get(index));
+
+		// The combo box will show the title of the column as its text
+		this.ccbxColumns.setConverter(new StringConverter<TableColumn<GeoImageResult, ?>>()
+		{
+			@Override
+			public String toString(TableColumn<GeoImageResult, ?> tableColumn) { return tableColumn.getText(); }
+			@Override
+			public TableColumn<GeoImageResult, ?> fromString(String columnName) { return null; }
+		});
+		// When the checked indices list changes, we update the shown columns
+		this.ccbxColumns.getCheckModel().getCheckedIndices().addListener((ListChangeListener<Integer>) c ->
+		{
+			while (c.next())
+				// If the index was removed...
+				if (c.wasRemoved())
+					for (Integer removedIndex : c.getRemoved())
+					{
+						// Grab the removed column and remove it
+						TableColumn<GeoImageResult, ?> removedColumn = ccbxColumns.getCheckModel().getItem(removedIndex);
+						this.tbvImageMetadata.getColumns().remove(removedColumn);
+					}
+				// If the index was added...
+				else if (c.wasAdded())
+					for (Integer addedIndex : c.getAddedSubList())
+					{
+						// Grab the column to add and make sure it's in the table
+						TableColumn<GeoImageResult, ?> addedColumn = ccbxColumns.getCheckModel().getItem(addedIndex);
+						if (!this.tbvImageMetadata.getColumns().contains(addedColumn))
+							this.tbvImageMetadata.getColumns().add(addedColumn);
+					}
 		});
 
 		///
@@ -668,7 +737,7 @@ public class CalliopeMapController
 		/// Setup the map scale indicator on the bottom left
 		///
 
-		this.map.zoomLevelProperty().addListener((observable, oldValue, newValue) ->
+		EasyBind.subscribe(this.map.zoomLevelProperty(), newValue ->
 		{
 			// The minimum size in pixels of the scale in the bottom left
 			final double MIN_SIZE = 100;
@@ -839,6 +908,7 @@ public class CalliopeMapController
 		if (!expandedQuery)
 		{
 			this.fadeQueryIn.play();
+			this.btnExpander.setText("");
 			this.queryPane.setVisible(true);
 		}
 		else

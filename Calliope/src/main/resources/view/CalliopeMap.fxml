@@ -12,6 +12,7 @@
 <?import org.controlsfx.control.ToggleSwitch?>
 <?import java.net.URL?>
 <?import org.controlsfx.control.HyperlinkLabel?>
+<?import org.controlsfx.control.CheckComboBox?>
 <StackPane fx:controller="controller.CalliopeMapController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@CalliopeMap.css"/>
@@ -55,23 +56,30 @@
                 <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
                     <content>
                         <VBox spacing="5">
-                            <HBox alignment="CENTER_LEFT" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="4" maxWidth="Infinity">
+                            <HBox alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
                                 <Label text="Maximum Selection Results:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                 <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="5000" initialValue="100" amountToStepBy="10" HBox.hgrow="NEVER" />
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
+                                <Label text="Columns:" HBox.hgrow="NEVER"/>
+                                <CheckComboBox fx:id="ccbxColumns" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                             </HBox>
                             <TableView fx:id="tbvImageMetadata">
                                 <columnResizePolicy>
                                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                 </columnResizePolicy>
                                 <columns>
-                                    <TableColumn editable="false" text="File" fx:id="clmName"/>
-                                    <TableColumn editable="false" text="Date Taken" fx:id="clmDate"/>
+                                    <TableColumn fx:id="clmName" editable="false" text="File"/>
+                                    <TableColumn fx:id="clmDate" editable="false" text="Date Taken"/>
+                                    <TableColumn fx:id="clmAltitude" editable="false" text="Altitude"/>
+                                    <TableColumn fx:id="clmCameraModel" editable="false" text="Camera Model"/>
+                                    <TableColumn fx:id="clmCollection" editable="false" text="Collection"/>
                                 </columns>
                             </TableView>
                         </VBox>
                     </content>
                 </TitledPane>
-                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images to Hard Disk" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2">
+                <Button fx:id="btnDownloadQuery" onAction="#downloadQuery" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Queried Images to Hard Disk" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" maxWidth="Infinity">
                     <graphic>
                         <ImageView>
                             <Image url="@../images/mapWindow/downloadIcon16.png"/>
@@ -123,7 +131,7 @@
                 </HBox>
             </items>
         </SplitPane>
-        <Button fx:id="btnExpander" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER" minWidth="64" maxWidth="64" minHeight="64" maxHeight="64">
+        <Button fx:id="btnExpander" text="Query" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER" textAlignment="CENTER" prefWidth="170" minHeight="64" maxHeight="64">
             <graphic>
                 <ImageView>
                     <Image url="@../images/mapWindow/expander64.png"/>

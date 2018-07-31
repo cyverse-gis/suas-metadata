@@ -19,6 +19,7 @@
 
 .expanderBtn {
     -fx-background-radius: 32px;
+    -fx-font-size: 24px;
 }
 
 .scaleRct {
