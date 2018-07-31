@@ -1,5 +1,6 @@
 import com.sun.net.httpserver.BasicAuthenticator;
 import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.irods.jargon.core.connection.AuthScheme;
@@ -62,6 +63,7 @@ public class CalliopeAuth
 		{
 			// Print out that we're sending a response
 			System.out.println("Sending a response, auth successful!");
+			System.out.println("Method was: " + httpExchange.getRequestMethod());
 			// Send back html code 200 with no body
 			httpExchange.sendResponseHeaders(200, 0);
 			// Close a body with 0 bytes
@@ -71,6 +73,13 @@ public class CalliopeAuth
 		// Set the authenticator for the root to ask Jargon to authenticate.
 		context.setAuthenticator(new BasicAuthenticator("/")
 		{
+			@Override
+			public Result authenticate(HttpExchange httpExchange)
+			{
+				System.out.println("Authenticate called with: " + httpExchange.getRequestMethod());
+				return super.authenticate(httpExchange);
+			}
+
 			/**
 			 * Given a username and a password this function lets us test if the account is valid
 			 *
