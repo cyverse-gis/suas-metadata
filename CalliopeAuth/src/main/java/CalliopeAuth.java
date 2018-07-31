@@ -35,12 +35,15 @@ public class CalliopeAuth
 	// Each user is part of the iPlant zone
 	private static final String CYVERSE_ZONE = "iplant";
 
+	// 3 endpoints, one for each different program, one for calliope users, one for calliope view users, and one for calliope admins
 	private static final String CALLIOPE_USER_ENDPOINT = "/calliopeUserLogin";
 	private static final String CALLIOPE_VIEW_USER_ENDPOINT = "/calliopeViewUserLogin";
 	private static final String CALLIOPE_ADMIN_ENDPOINT = "/calliopeAdminLogin";
 
+	// A list of admin accounts
 	private static final List<String> CALLIOPE_ADMIN_ACCOUNTS = Arrays.asList("dslovikosky");
 
+	// A username and password to be used by the calliope view program
 	private static final String CALLIOPE_VIEW_GUEST_USERNAME = "guest";
 	private static final String CALLIOPE_VIEW_GUEST_PASSWORD = "guest";
 
@@ -137,7 +140,6 @@ public class CalliopeAuth
 			IRODSAccessObjectFactory irodsAO = IRODSAccessObjectFactoryImpl.instance(session);
 			// Perform the authentication and get a response
 			AuthResponse authResponse = irodsAO.authenticateIRODSAccount(account);
-			System.out.println("Account: " + authResponse.isSuccessful());
 			// If the authentication worked, return true otherwise return false
 			return authResponse.isSuccessful();
 		}
