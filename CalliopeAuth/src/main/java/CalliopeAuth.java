@@ -60,11 +60,8 @@ public class CalliopeAuth
 		// Create a context for the root (localhost:port/) that will be called if we get a valid request
 		HttpContext context = server.createContext("/", httpExchange ->
 		{
-			httpExchange.getRequestHeaders().forEach((key, value) -> System.out.println(key + ", " + value));
 			System.out.println("Sending a response, auth successful!");
 			httpExchange.sendResponseHeaders(200, 0);
-			OutputStream outputStream = httpExchange.getResponseBody();
-			outputStream.close();
 		});
 		// Set the authenticator for the root to ask Jargon to authenticate.
 		context.setAuthenticator(new BasicAuthenticator("/")
