@@ -58,4 +58,8 @@ This program is currently being developed by [CyVerse](https://github.com/DavidM
 
 - Software Developer - [David Slovikosky](https://github.com/DavidM1A2/)
 - Project Supervisor - [Tyson Swetnam](https://github.com/tyson-swetnam)
-- Funding - University of Arizona School of Natural Resources and the Environment ([SNRE](https://snre.arizona.edu/))
+- Funding Sources: University of Arizona School of Natural Resources and the Environment ([SNRE](https://snre.arizona.edu/)), & [USDA Agricultural Research Service Southwest Watershed Research Center](https://www.ars.usda.gov/pacific-west-area/tucson-az/southwest-watershed-research-center/)
+
+**This material is based upon work supported by the U.S. Department of Agriculture, Agricultural Research Service, under Agreement no. 58-2022-5-13.**
+
+**Any opinions, findings, conclusion, or recommendations expressed in this publication are those of the author(s) and do not necessarily reflect the view of the U.S. Department of Agriculture.**
