@@ -6,7 +6,7 @@ import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.query.conditions.AltitudeCondition;
 import model.elasticsearch.query.conditions.ObservableLocation;
-import model.neon.BoundedSite;
+import model.site.Site;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.GeoValidationMethod;
@@ -100,11 +100,11 @@ public class ElasticSearchQuery
 	/**
 	 * Adds a given site to the query
 	 *
-	 * @param boundedSite The site to 'and' into the query
+	 * @param site The site to 'and' into the query
 	 */
-	public void addNeonSite(BoundedSite boundedSite)
+	public void addSite(Site site)
 	{
-		this.neonSiteQuery.add(boundedSite.getSite().getSiteCode());
+		this.neonSiteQuery.add(site.getCode());
 	}
 
 	/**
@@ -200,7 +200,7 @@ public class ElasticSearchQuery
 		// Make sure that we have at least one neon site we're looking for
 		// Neon sites are IDd by code
 		if (!neonSiteQuery.isEmpty())
-			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.neonSiteCode", this.neonSiteQuery));
+			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.siteCode", this.neonSiteQuery));
 
 		return this.queryBuilder;
 	}

@@ -9,7 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
 import model.image.ImageEntry;
-import model.neon.BoundedSite;
+import model.site.Site;
 import model.threading.ErrorTask;
 import model.util.AnalysisUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -18,19 +18,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class NeonSiteDetectorController
+public class SiteDetectorController
 {
 	///
 	/// FXML bound fields start
 	///
 
-	// The radio button to select distance from center NEON site detection
+	// The radio button to select distance from center site detection
 	@FXML
 	public RadioButton rbnByDistance;
-	// The radio button to select distance from center NEON site detection
+	// The radio button to select distance from center site detection
 	@FXML
 	public RadioButton rbnByBoundary;
-	// The text field used by the distance select NEON site detection
+	// The text field used by the distance select site detection
 	@FXML
 	public TextField txtDistance;
 	// The button used to fire off our site detection
@@ -51,7 +51,7 @@ public class NeonSiteDetectorController
 	private List<ImageEntry> imageEntries = Collections.emptyList();
 
 	/**
-	 * Initializes this NEON site detector form
+	 * Initializes this site detector form
 	 */
 	@FXML
 	public void initialize()
@@ -101,7 +101,7 @@ public class NeonSiteDetectorController
 			Double maxDistance = NumberUtils.toDouble(this.txtDistance.getText(), 0);
 
 			// Do this in a thread so we don't slow down the program
-			ErrorTask<BoundedSite[]> detectTask = new ErrorTask<BoundedSite[]>()
+			ErrorTask<Site[]> detectTask = new ErrorTask<Site[]>()
 			{
 				/**
 				 * Return a list of sites parallel to the list of images
@@ -109,13 +109,13 @@ public class NeonSiteDetectorController
 				 * @return A list of sites parallel to the image list where each pair contains the image and the site for that image
 				 */
 				@Override
-				protected BoundedSite[] call()
+				protected Site[] call()
 				{
-					this.updateMessage("Detecting NEON sites for images...");
+					this.updateMessage("Detecting sites for images...");
 					// Create the parallel array
-					BoundedSite[] toReturn = new BoundedSite[imageEntries.size()];
+					Site[] toReturn = new Site[imageEntries.size()];
 					// Grab the raw sites from our cache
-					List<BoundedSite> rawSites = CalliopeData.getInstance().getSiteList();
+					List<Site> rawSites = CalliopeData.getInstance().getSiteManager().getSites();
 					// For each image, find the closest site
 					for (Integer i = 0; i < imageEntries.size(); i++)
 					{
@@ -124,9 +124,9 @@ public class NeonSiteDetectorController
 						// Grab the image
 						ImageEntry toProcess = imageEntries.get(i);
 						// Find the closest site to the image
-						BoundedSite closest = CalliopeData.getInstance().getNeonData().closestBoundedSiteTo(rawSites, toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
+						Site closest = CalliopeData.getInstance().getSiteManager().closestSiteTo(rawSites, toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
 						// Compute the distance to that site
-						Double distance = AnalysisUtils.distanceBetween(closest.getSite().getSiteLatitude(), closest.getSite().getSiteLongitude(), toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
+						Double distance = AnalysisUtils.distanceBetween(closest.getCenter().getLat(), closest.getCenter().getLon(), toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
 						// If the distance is less than the one required, we found the right spot
 						if (distance <= maxDistance)
 							toReturn[i] = closest;
@@ -150,19 +150,19 @@ public class NeonSiteDetectorController
 		// If we are searching by boundary, we need ES to help us
 		else if (this.rbnByBoundary.isSelected())
 		{
-			ErrorTask<BoundedSite[]> detectTask = new ErrorTask<BoundedSite[]>()
+			ErrorTask<Site[]> detectTask = new ErrorTask<Site[]>()
 			{
 				@Override
-				protected BoundedSite[] call()
+				protected Site[] call()
 				{
-					this.updateMessage("Detecting NEON sites for images...");
+					this.updateMessage("Detecting sites for images...");
 					// Create an array of results to return
-					BoundedSite[] toReturn = new BoundedSite[imageEntries.size()];
+					Site[] toReturn = new Site[imageEntries.size()];
 
 					// Grab the global site list
-					List<BoundedSite> sites = CalliopeData.getInstance().getSiteList();
+					List<Site> sites = CalliopeData.getInstance().getSiteManager().getSites();
 					// Ask ES to give us a parallel array of site codes to our image entries
-					String[] siteCodes = CalliopeData.getInstance().getEsConnectionManager().detectNEONSites(imageEntries);
+					String[] siteCodes = CalliopeData.getInstance().getEsConnectionManager().detectSites(imageEntries);
 					// For each parallel entry, process it
 					for (Integer i = 0; i < siteCodes.length; i++)
 					{
@@ -171,8 +171,8 @@ public class NeonSiteDetectorController
 						// If the site code is null, set the value to return as null, if not, process the code
 						if (siteCode != null)
 						{
-							// Grab the bounded site associated with the site code
-							Optional<BoundedSite> correctSite = sites.stream().filter(boundedSite -> boundedSite.getSite().getSiteCode().equals(siteCode)).findFirst();
+							// Grab the site associated with the site code
+							Optional<Site> correctSite = sites.stream().filter(site -> site.getCode().equals(siteCode)).findFirst();
 							// If we got a site, store it
 							if (correctSite.isPresent())
 								toReturn[i] = correctSite.get();

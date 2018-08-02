@@ -1,11 +1,12 @@
-package model.neon;
+package model.site.neon;
 
 import de.micromata.opengis.kml.v_2_2_0.*;
 import de.micromata.opengis.kml.v_2_2_0.gx.Tour;
 import model.CalliopeData;
+import model.site.Boundary;
+import model.site.neon.jsonPOJOs.RawNEONSite;
 import model.util.AnalysisUtils;
-import model.neon.jsonPOJOs.Site;
-import model.neon.jsonPOJOs.Sites;
+import model.site.neon.jsonPOJOs.RawNEONSiteList;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -14,6 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.common.geo.GeoPoint;
 
 import java.io.*;
 import java.net.URL;
@@ -37,17 +39,17 @@ public class NeonData
 	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-20180605v16.kmz";
 
 	/**
-	 * Parses a KML document into a list of bounded sites
+	 * Parses a KML document into a list of sites
 	 *
 	 * @return A list of sites + their boundaries
 	 */
-	public List<BoundedSite> retrieveBoundedSites()
+	public List<NEONSite> retrieveSites()
 	{
-		// Create a list of bounded sites to add to
-		List<BoundedSite> boundedSites = new ArrayList<>();
+		// Create a list of sites to add to
+		List<NEONSite> neonSites = new ArrayList<>();
 
 		// Grab the current list of sites from the NEON API
-		List<Site> sites = this.pullSites();
+		List<RawNEONSite> rawNEONSites = this.pullSites();
 
 		// Grab the current KML from the NEON website
 		Kml kml = this.getCurrentSiteKML();
@@ -99,12 +101,23 @@ public class NeonData
 										// A point contains a list of coordinates, which contains exactly one element, grab it
 										Coordinate locationCoord = location.getCoordinates().get(0);
 										// Find the closest site to this location coordinate
-										Site site = this.closestSiteTo(sites, locationCoord.getLatitude(), locationCoord.getLongitude());
+										RawNEONSite rawNEONSite = this.closestSiteTo(rawNEONSites, locationCoord.getLatitude(), locationCoord.getLongitude());
 										// Make sure the site is non-null
-										if (site != null)
+										if (rawNEONSite != null)
 										{
-											// Add the bounded site to our list
-											boundedSites.add(new BoundedSite(site, boundary));
+											// Compute the outer and inner  boundaries
+											List<GeoPoint> outerBoundary = boundary.getOuterBoundaryIs().getLinearRing().getCoordinates().stream().map(coordinate -> new GeoPoint(coordinate.getLatitude(), coordinate.getLongitude())).collect(Collectors.toList());
+											List<List<GeoPoint>> innerBoundaries = boundary.getInnerBoundaryIs().stream().map(innerBoundary -> innerBoundary.getLinearRing().getCoordinates().stream().map(coordinate -> new GeoPoint(coordinate.getLatitude(), coordinate.getLongitude())).collect(Collectors.toList())).collect(Collectors.toList());
+											NEONSite neonSite = new NEONSite(rawNEONSite.getSiteName(), rawNEONSite.getSiteCode(), new Boundary(outerBoundary, innerBoundaries));
+											// Set the NEON specific details
+											neonSite.setDomainName(rawNEONSite.getDomainName());
+											neonSite.setDomainCode(rawNEONSite.getDomainCode());
+											neonSite.setSiteType(rawNEONSite.getSiteType());
+											neonSite.setSiteDescription(rawNEONSite.getSiteDescription());
+											neonSite.setStateName(rawNEONSite.getStateName());
+											neonSite.setStateCode(rawNEONSite.getStateCode());
+											// Add the neon site to our list
+											neonSites.add(neonSite);
 										}
 									}
 								}
@@ -117,7 +130,7 @@ public class NeonData
 			}
 		}
 
-		return boundedSites;
+		return neonSites;
 	}
 
 	/**
@@ -173,37 +186,37 @@ public class NeonData
 	/**
 	 * Given a latitude and a longitude this method returns the closest site
 	 *
-	 * @param sites The sites to search through
+	 * @param rawNEONSites The sites to search through
 	 * @param latitude The latitude to test
 	 * @param longitude The longitude to test
 	 * @return The site closest to the lat/long pair
 	 */
-	private Site closestSiteTo(List<Site> sites, Double latitude, Double longitude)
+	private RawNEONSite closestSiteTo(List<RawNEONSite> rawNEONSites, Double latitude, Double longitude)
 	{
 		// Compute the shortest distance, test each site
 		Double shortestDistance = Double.MAX_VALUE;
-		Site closestSite = null;
+		RawNEONSite closestRawNEONSite = null;
 		// Iterate over all sites
-		for (Site site : sites)
+		for (RawNEONSite rawNEONSite : rawNEONSites)
 		{
 			// Compute the distance between the site and the lat/long point
-			Double distanceToSite = AnalysisUtils.distanceBetween(latitude, longitude, site.getSiteLatitude(), site.getSiteLongitude());
+			Double distanceToSite = AnalysisUtils.distanceBetween(latitude, longitude, rawNEONSite.getSiteLatitude(), rawNEONSite.getSiteLongitude());
 			// If this site is the closest so far, store it
 			if (distanceToSite < shortestDistance)
 			{
 				// Store the site and the distance
 				shortestDistance = distanceToSite;
-				closestSite = site;
+				closestRawNEONSite = rawNEONSite;
 			}
 		}
 		// Return the closest site
-		return closestSite;
+		return closestRawNEONSite;
 	}
 
 	/**
 	 * Pulls the list of NEON sites from the NEON api and returns them in a structured format
 	 */
-	private List<Site> pullSites()
+	private List<RawNEONSite> pullSites()
 	{
 		try
 		{
@@ -216,9 +229,9 @@ public class NeonData
 			// Join all the lines together into a single JSON string
 			String json = jsonReader.lines().collect(Collectors.joining());
 			// Convert the JSON string into a structured format
-			Site[] sites = CalliopeData.getInstance().getGson().fromJson(json, Sites.class).getData();
+			RawNEONSite[] rawNEONSites = CalliopeData.getInstance().getGson().fromJson(json, RawNEONSiteList.class).getData();
 			// Store the result
-			return Arrays.asList(sites);
+			return Arrays.asList(rawNEONSites);
 		}
 		catch (IOException e)
 		{
@@ -277,35 +290,5 @@ public class NeonData
 		{
 			System.out.println(StringUtils.repeat("-", depth * 2) + " <tour> " + feature.getName());
 		}
-	}
-
-	/**
-	 * Given a latitude and a longitude this method returns the closest bounded site
-	 *
-	 * @param sites The sites to search through
-	 * @param latitude The latitude to test
-	 * @param longitude The longitude to test
-	 * @return The site closest to the lat/long pair
-	 */
-	public BoundedSite closestBoundedSiteTo(List<BoundedSite> sites, Double latitude, Double longitude)
-	{
-		// Compute the shortest distance, test each site
-		Double shortestDistance = Double.MAX_VALUE;
-		BoundedSite closestSite = null;
-		// Iterate over all sites
-		for (BoundedSite site : sites)
-		{
-			// Compute the distance between the site and the lat/long point
-			Double distanceToSite = AnalysisUtils.distanceBetween(latitude, longitude, site.getSite().getSiteLatitude(), site.getSite().getSiteLongitude());
-			// If this site is the closest so far, store it
-			if (distanceToSite < shortestDistance)
-			{
-				// Store the site and the distance
-				shortestDistance = distanceToSite;
-				closestSite = site;
-			}
-		}
-		// Return the closest site
-		return closestSite;
 	}
 }

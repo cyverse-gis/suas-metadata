@@ -3,7 +3,7 @@ package model.image;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import library.HierarchyData;
-import model.neon.BoundedSite;
+import model.site.Site;
 
 import java.io.File;
 
@@ -16,7 +16,7 @@ public abstract class ImageContainer implements HierarchyData<ImageContainer>
 	public abstract File getFile();
 
 	// Sets the site taken of the given image container
-	public abstract void setSiteTaken(BoundedSite site);
+	public abstract void setSiteTaken(Site site);
 
 	/**
 	 * To string just prints out the file name by default

@@ -5,15 +5,15 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 import model.CalliopeData;
+import model.site.Site;
 import model.util.AnalysisUtils;
 import model.image.UTMCoord;
-import model.neon.BoundedSite;
 import model.settings.SettingsData;
 
 /**
  * Controller class for the location list cell
  */
-public class SiteListEntryController extends ListCell<BoundedSite>
+public class SiteListEntryController extends ListCell<Site>
 {
     ///
     /// FXML bound fields start
@@ -72,7 +72,7 @@ public class SiteListEntryController extends ListCell<BoundedSite>
      * @param empty If the cell is empty
      */
     @Override
-    protected void updateItem(BoundedSite site, boolean empty)
+    protected void updateItem(Site site, boolean empty)
     {
         // Update the cell first
         super.updateItem(site, empty);
@@ -88,35 +88,35 @@ public class SiteListEntryController extends ListCell<BoundedSite>
         // if the cell is not empty, set the field's values and set the graphic
         else
         {
-            this.lblName.setText(site.getSite().getSiteName());
-            this.lblCode.setText(site.getSite().getSiteCode());
+            this.lblName.setText(site.getName());
+            this.lblCode.setText(site.getCode());
             this.refreshLabels(site, CalliopeData.getInstance().getSettings().getLocationFormat(), CalliopeData.getInstance().getSettings().getDistanceUnits());
             this.setGraphic(mainPane);
         }
     }
 
     /**
-     * Update the location labels based on the format
+     * Update the site labels based on the format
      *
-     * @param location The new location
-     * @param format The format of the location
+     * @param site The new site
+     * @param format The format of the site
      * @param distanceUnits The units to be used when creating distance labels
      */
-    private void refreshLabels(BoundedSite location, SettingsData.LocationFormat format, SettingsData.DistanceUnits distanceUnits)
+    private void refreshLabels(Site site, SettingsData.LocationFormat format, SettingsData.DistanceUnits distanceUnits)
     {
         // If we are using latitude & longitude
         if (format == SettingsData.LocationFormat.LatLong)
         {
             // Locations are stored in lat/lng so we can just use the value
-            this.lblLocationFirst.setText(Double.toString(location.getSite().getSiteLatitude()));
-            this.lblLocationSecond.setText(Double.toString(location.getSite().getSiteLongitude()));
+            this.lblLocationFirst.setText(Double.toString(site.getCenter().getLat()));
+            this.lblLocationSecond.setText(Double.toString(site.getCenter().getLon()));
             this.lblLocationThird.setText("");
         }
         // If we are using UTM
         else if (format == SettingsData.LocationFormat.UTM)
         {
             // Convert to UTM
-            UTMCoord utmEquiv = AnalysisUtils.Deg2UTM(location.getSite().getSiteLatitude(), location.getSite().getSiteLongitude());
+            UTMCoord utmEquiv = AnalysisUtils.Deg2UTM(site.getCenter().getLat(), site.getCenter().getLon());
             // Update the labels
             this.lblLocationFirst.setText(utmEquiv.getEasting().intValue() + "E");
             this.lblLocationSecond.setText(utmEquiv.getNorthing().intValue() + "N");

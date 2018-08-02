@@ -1,8 +1,11 @@
 package controller;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import controller.importView.SitePopOverController;
 import controller.mapView.MapCircleController;
-import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import fxmapcontrol.*;
 import javafx.animation.*;
 import javafx.beans.binding.Bindings;
@@ -35,7 +38,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import library.AlignedMapNode;
-import library.TableColumnHeaderUtil;
 import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
 import model.constant.MapProviders;
@@ -45,9 +47,8 @@ import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.QueryEngine;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
-import model.image.ImageEntry;
-import model.neon.BoundedSite;
-import model.settings.SettingsData;
+import model.site.Boundary;
+import model.site.Site;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.transitions.HeightTransition;
@@ -62,6 +63,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+import org.geotools.data.shapefile.files.ShpFiles;
+import org.geotools.data.shapefile.shp.ShapefileReader;
 import org.locationtech.jts.math.MathUtil;
 
 import javax.swing.filechooser.FileSystemView;
@@ -184,10 +187,6 @@ public class CalliopeMapController
 	private List<MapNode> currentCircles = new ArrayList<>();
 	// A parallel list of controllers to that list of pins
 	private List<MapCircleController> currentCircleControllers = new ArrayList<>();
-	// A constant neon pin icon that we cache so we dont have to load the image over and over again
-	private static final Image NEON_ICON = new Image(ImageEntry.class.getResource("/images/mapWindow/neonIcon32.png").toString());
-	// A constant highlighted neon pin icon that we cache so we dont have to load the image over and over again
-	private static final Image NEON_HIGHLIGHTED_ICON = new Image(ImageEntry.class.getResource("/images/mapWindow/highlightedNeonIcon32.png").toString());
 	// The zoom threshold where we start to render polygons instead of pins
 	private static final Double PIN_TO_POLY_THRESHOLD = 10D;
 
@@ -243,6 +242,28 @@ public class CalliopeMapController
 	{
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
+
+		/*
+		try
+		{
+			ShpFiles shpFile = new ShpFiles("C:\\Users\\David\\Downloads\\ltar_site_polygon\\ltar_site_polygon.shp");
+			GeometryFactory geometryFactory = new GeometryFactory();
+			ShapefileReader shapefileReader = new ShapefileReader(shpFile, false, true, geometryFactory);
+			while(shapefileReader.hasNext())
+			{
+				ShapefileReader.Record record = shapefileReader.nextRecord();
+				Envelope envelope = record.envelope();
+				MultiPolygon simplifiedShape = (MultiPolygon) record.getSimplifiedShape();
+				Coordinate[] coordinates = simplifiedShape.getBoundary().getCoordinates();
+				int x = 5;
+			}
+			shapefileReader.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		*/
 
 		///
 		/// Setup the Z-Layer ordering system
@@ -307,29 +328,29 @@ public class CalliopeMapController
 		/// Setup our sites on the map. When a new site gets added we add a polygon & pin, when it gets removed we clear the polygon & pin
 		///
 
-		// Create a map of bounded sites to polygons for quick lookup later
-		java.util.Map<BoundedSite, Pair<MapPolygon, MapNode>> siteToPolygonAndPin = new HashMap<>();
+		// Create a map of sites to polygons for quick lookup later
+		java.util.Map<Site, Pair<MapPolygon, MapNode>> siteToPolygonAndPin = new HashMap<>();
 		// When our site list changes, we update our map
-		CalliopeData.getInstance().getSiteList().addListener((ListChangeListener<? super BoundedSite>) change ->
+		CalliopeData.getInstance().getSiteManager().getSites().addListener((ListChangeListener<? super Site>) change ->
 		{
 			while (change.next())
 				if (change.wasAdded())
 				{
-					// Iterate over all new bounded sites and add them to the map
-					for (BoundedSite boundedSite : change.getAddedSubList())
+					// Iterate over all new sites and add them to the map
+					for (Site site : change.getAddedSubList())
 					{
-						Location centerPoint = new Location(boundedSite.getSite().getSiteLatitude(), boundedSite.getSite().getSiteLongitude());
+						Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
 
 						// Grab the polygon representing the boundary of this site
-						Polygon polygon = boundedSite.getBoundary();
+						Boundary polygon = site.getBoundary();
 						// Create a map polygon to render this site's boundary
 						MapPolygon mapPolygon = new MapPolygon();
 						// Setup the polygon's boundary
-						mapPolygon.getLocations().addAll(polygon.getOuterBoundaryIs().getLinearRing().getCoordinates().stream().map(coordinate -> new Location(coordinate.getLatitude(), coordinate.getLongitude())).collect(Collectors.toList()));
+						mapPolygon.getLocations().addAll(polygon.getOuterBoundary().stream().map(coordinate -> new Location(coordinate.getLat(), coordinate.getLon())).collect(Collectors.toList()));
 						// Setup the polygon's center location point
 						mapPolygon.setLocation(centerPoint);
 						// Add a CSS attribute to all polygons so that we can style them later
-						mapPolygon.getStyleClass().add("neon-site-boundary");
+						mapPolygon.getStyleClass().add("site-boundary");
 						// Make sure we can drag & drop through the polygon
 						mapPolygon.setMouseTransparent(true);
 
@@ -340,14 +361,14 @@ public class CalliopeMapController
 						// Add a new imageview to the pin
 						ImageView pinImageView = new ImageView();
 						// Make sure the image represents if the pin is hovered or not
-						pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(hovered -> hovered ? NEON_HIGHLIGHTED_ICON : NEON_ICON));
+						pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(site::getIcon));
 						// Add the image to the pin
 						mapPin.getChildren().add(pinImageView);
 						// When we click a pin, show the popover
 						mapPin.setOnMouseClicked(event ->
 						{
 							// Call our controller's update method and then show the popup
-							sitePopOverController.updateSite(boundedSite.getSite());
+							sitePopOverController.updateSite(site);
 							popOver.show(mapPin);
 							event.consume();
 						});
@@ -363,18 +384,18 @@ public class CalliopeMapController
 							this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
 
 						// Store a reference to the polygon in our hashmap to ensure we can retrieve it later in remove
-						siteToPolygonAndPin.put(boundedSite, MutablePair.of(mapPolygon, mapPin));
+						siteToPolygonAndPin.put(site, MutablePair.of(mapPolygon, mapPin));
 					}
 				}
 				// If a site is removed, lookup our site in the hashmap and clear it out
 				else if (change.wasRemoved())
 				{
-					// Iterate over bounded sites
-					for (BoundedSite boundedSite : change.getRemoved())
+					// Iterate over sites
+					for (Site site : change.getRemoved())
 						// If the site is present in the polygon hashmap, remove it from the FXML hierarchy
-						if (siteToPolygonAndPin.containsKey(boundedSite))
+						if (siteToPolygonAndPin.containsKey(site))
 						{
-							Pair<MapPolygon, MapNode> polygonAndPinPair = siteToPolygonAndPin.remove(boundedSite);
+							Pair<MapPolygon, MapNode> polygonAndPinPair = siteToPolygonAndPin.remove(site);
 							this.removeNodeFromMap(polygonAndPinPair.getLeft());
 							this.removeNodeFromMap(polygonAndPinPair.getRight());
 						}
@@ -603,6 +624,8 @@ public class CalliopeMapController
 							this.removeNodeFromMap(modelToVisual.remove(removedQueryCondition));
 		});
 
+
+
 		///
 		/// Setup the top left box of settings
 		///
@@ -788,7 +811,7 @@ public class CalliopeMapController
 	 * @param oldZoom The old zoom we're changing from
 	 * @param newZoom The new zoom we're moving to
 	 */
-	private void updateSitePins(java.util.Map<BoundedSite, Pair<MapPolygon, MapNode>> siteToPolygonAndPin, Double oldZoom, Double newZoom)
+	private void updateSitePins(java.util.Map<Site, Pair<MapPolygon, MapNode>> siteToPolygonAndPin, Double oldZoom, Double newZoom)
 	{
 		// We went from below to above the threshold
 		if (newZoom > PIN_TO_POLY_THRESHOLD && oldZoom <= PIN_TO_POLY_THRESHOLD)

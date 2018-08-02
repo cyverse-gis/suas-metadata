@@ -9,8 +9,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import model.elasticsearch.query.QueryCondition;
-import model.elasticsearch.query.conditions.NeonCondition;
-import model.neon.BoundedSite;
+import model.elasticsearch.query.conditions.SiteCondition;
+import model.site.Site;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Comparator;
@@ -26,7 +26,7 @@ public class NeonConditionController implements IConditionController
 
 	// The listview of sites to filter
 	@FXML
-	public ListView<BoundedSite> siteFilterListView;
+	public ListView<Site> siteFilterListView;
 	// The search bar for the sites
 	@FXML
 	public TextField txtSiteSearch;
@@ -36,33 +36,33 @@ public class NeonConditionController implements IConditionController
 	///
 
 	// The data model reference
-	private NeonCondition siteCondition;
+	private SiteCondition siteCondition;
 
 	@Override
 	public void initializeData(QueryCondition queryCondition)
 	{
 		// Make sure the data model we received matches our type
-		if (queryCondition instanceof NeonCondition)
+		if (queryCondition instanceof SiteCondition)
 		{
-			this.siteCondition = (NeonCondition) queryCondition;
+			this.siteCondition = (SiteCondition) queryCondition;
 
 			// Grab the site list from our data model item
-			SortedList<BoundedSite> boundedSitesSorted = new SortedList<>(this.siteCondition.getBoundedSites());
+			SortedList<Site> sitesSorted = new SortedList<>(this.siteCondition.getSites());
 			// We set the comparator to be the name of the collection
-			boundedSitesSorted.setComparator(Comparator.comparing(boundedSite -> boundedSite.getSite().getSiteName()));
-			// We create a local wrapper of the bounded sites list to filter
-			FilteredList<BoundedSite> boundedSitesFilteredList = new FilteredList<>(boundedSitesSorted);
+			sitesSorted.setComparator(Comparator.comparing(Site::getName));
+			// We create a local wrapper of the sites list to filter
+			FilteredList<Site> sitesFiltered = new FilteredList<>(sitesSorted);
 			// Set the filter to update whenever the search text changes
 			this.txtSiteSearch.textProperty().addListener(observable -> {
-				boundedSitesFilteredList.setPredicate(boundedSite ->
-						// Allow any bounded sites with a name or code containing the search text
-						StringUtils.containsIgnoreCase(boundedSite.getSite().getSiteName(), this.txtSiteSearch.getCharacters()) ||
-								StringUtils.containsIgnoreCase(boundedSite.getSite().getSiteCode(), this.txtSiteSearch.getCharacters()));
+				sitesFiltered.setPredicate(site ->
+						// Allow any sites with a name or code containing the search text
+						StringUtils.containsIgnoreCase(site.getName(), this.txtSiteSearch.getCharacters()) ||
+						StringUtils.containsIgnoreCase(site.getCode(), this.txtSiteSearch.getCharacters()));
 			});
 			// Set the items of the sites list view to the newly sorted list
-			this.siteFilterListView.setItems(boundedSitesFilteredList);
+			this.siteFilterListView.setItems(sitesFiltered);
 			// Each site gets a checkbox
-			this.siteFilterListView.setCellFactory(CheckBoxListCell.forListView(boundedSite -> this.siteCondition.boundedSiteSelectedProperty(boundedSite)));
+			this.siteFilterListView.setCellFactory(CheckBoxListCell.forListView(site -> this.siteCondition.siteSelectedProperty(site)));
 			this.siteFilterListView.setEditable(true);
 		}
 	}
@@ -72,7 +72,7 @@ public class NeonConditionController implements IConditionController
 	 *
 	 * @param actionEvent consumed
 	 */
-	public void clearBoundedSiteSearch(ActionEvent actionEvent)
+	public void clearSiteSearch(ActionEvent actionEvent)
 	{
 		this.txtSiteSearch.clear();
 		actionEvent.consume();

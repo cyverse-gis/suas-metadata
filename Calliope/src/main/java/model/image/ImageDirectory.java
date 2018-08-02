@@ -9,7 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import model.dataSources.IDataSource;
-import model.neon.BoundedSite;
+import model.site.Site;
 
 import java.io.File;
 import java.util.stream.Stream;
@@ -204,7 +204,7 @@ public class ImageDirectory extends ImageContainer
 	 * @param site The site to set to
 	 */
 	@Override
-	public void setSiteTaken(BoundedSite site)
+	public void setSiteTaken(Site site)
 	{
 		this.getChildren().forEach(child ->
 		{

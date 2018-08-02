@@ -26,7 +26,7 @@ import model.CalliopeData;
 import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.ElasticSearchConnectionManager;
-import model.neon.BoundedSite;
+import model.site.Site;
 import model.settings.SettingsData;
 import model.threading.ErrorTask;
 import org.controlsfx.control.HyperlinkLabel;
@@ -267,7 +267,7 @@ public class CalliopeViewController
 						//esConnectionManager.nukeAndRecreateUserIndex();
 						//esConnectionManager.nukeAndRecreateMetadataIndex();
 						//esConnectionManager.nukeAndRecreateCollectionsIndex();
-						//esConnectionManager.nukeAndRecreateNeonSitesIndex();
+						//esConnectionManager.nukeAndRecreateSitesIndex();
 
 						// Then initialize the remove calliope directory
 						this.updateMessage("Initializing Calliope elastic index...");
@@ -285,10 +285,10 @@ public class CalliopeViewController
 						// Pull any locations from the elastic index
 						this.updateMessage("Pulling locations from elastic index...");
 						this.updateProgress(4, NUM_STEPS);
-						List<BoundedSite> sites = esConnectionManager.pullRemoteSites();
+						List<Site> sites = esConnectionManager.pullRemoteSites();
 
 						// Set the location list to be these locations
-						Platform.runLater(() -> CalliopeData.getInstance().getSiteList().addAll(sites));
+						Platform.runLater(() -> CalliopeData.getInstance().getSiteManager().getSites().addAll(sites));
 
 						// Pull any collections from the elastic index
 						this.updateMessage("Pulling collections from elastic index...");

@@ -9,10 +9,10 @@
         <Insets left="5" right="5"/>
     </GridPane.margin>
     <stylesheets>
-        <URL value="@NeonCondition.css"/>
+        <URL value="@SiteCondition.css"/>
     </stylesheets>
     <top>
-        <Label text="Neon Site Filter" BorderPane.alignment="CENTER">
+        <Label text="Site Filter" BorderPane.alignment="CENTER">
             <BorderPane.margin>
                 <Insets top="5" bottom="10"/>
             </BorderPane.margin>
@@ -29,8 +29,8 @@
                         <Insets left="5" right="5" top="10"/>
                     </VBox.margin>
                     <children>
-                        <TextField fx:id="txtSiteSearch" promptText="Search Neon Sites" HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#clearBoundedSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER"/>
+                        <TextField fx:id="txtSiteSearch" promptText="Search Sites" HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#clearSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER"/>
                     </children>
                 </HBox>
                 <FlowPane alignment="CENTER" hgap="5" vgap="10">

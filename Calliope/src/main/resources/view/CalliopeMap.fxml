@@ -131,7 +131,7 @@
                 </HBox>
             </items>
         </SplitPane>
-        <Button fx:id="btnExpander" text="Query" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER" textAlignment="CENTER" prefWidth="170" minHeight="64" maxHeight="64">
+        <Button fx:id="btnExpander" text="Query" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER"  prefWidth="170" minHeight="64" maxHeight="64">
             <graphic>
                 <ImageView>
                     <Image url="@../images/mapWindow/expander64.png"/>

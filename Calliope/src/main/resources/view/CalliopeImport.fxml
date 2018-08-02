@@ -19,7 +19,7 @@
     <items>
         <TabPane fx:id="leftTabPane" styleClass="lightBorder" SplitPane.resizableWithParent="false">
             <tabs>
-                <Tab closable="false" text="NEON Sites">
+                <Tab closable="false" text="Sites">
                     <VBox>
                         <children>
                             <ListView fx:id="siteListView" onDragDetected="#locationListDrag" VBox.vgrow="ALWAYS" styleClass="locationList" maxHeight="Infinity" />
@@ -37,7 +37,7 @@
                                     <Insets bottom="20" left="5" right="5" top="20" />
                                 </padding>
                                 <children>
-                                    <Button fx:id="btnRefreshNEONSites" disable="true" mnemonicParsing="false" onAction="#refreshNEONSites" styleClass="resetBtn" text="Refresh NEON Sites" />
+                                    <Button mnemonicParsing="false" styleClass="resetBtn" text="Refresh NEON Sites" />
                                 </children>
                             </FlowPane>
                         </children>

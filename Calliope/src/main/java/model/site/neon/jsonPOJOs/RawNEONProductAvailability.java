@@ -1,4 +1,4 @@
-package model.neon.jsonPOJOs;
+package model.site.neon.jsonPOJOs;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -8,7 +8,7 @@ import javafx.beans.property.StringProperty;
 /**
  * POJO class used in JSON deserialization
  */
-public class ProductAvailability
+public class RawNEONProductAvailability
 {
 	/*
 	All fields below are listed because they are required for JSON serialization. None are actually used for now.

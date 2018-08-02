@@ -19,10 +19,10 @@ import model.elasticsearch.ElasticSearchConnectionManager;
 import model.elasticsearch.query.QueryEngine;
 import model.image.ImageDirectory;
 import model.image.MetadataManager;
-import model.neon.BoundedSite;
-import model.neon.NeonData;
+import model.openElevation.ElevationData;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
+import model.site.SiteManager;
 import model.threading.CalliopeExecutor;
 import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
@@ -52,9 +52,6 @@ public class CalliopeData
 
 	// The sensitive data configuration file so we don't put up sensitive info on Github
 	private SensitiveConfigurationManager sensitiveConfigurationManager;
-
-	// A global list of neon locations
-	private final ObservableList<BoundedSite> siteList;
 
 	// A global list of image collections
 	private final ObservableList<ImageCollection> collectionList;
@@ -94,13 +91,17 @@ public class CalliopeData
 	// Query engine used in storing the current query setup
 	private QueryEngine queryEngine;
 
-	// NEON data api connection
-	private NeonData neonData;
+	// Site data for sites like NEON or LTAR
+	private SiteManager siteManager;
 
 	// Class to handle metadata management
 	private MetadataManager metadataManager;
 
+	// A list of data sources that we can import images from
 	private ObservableList<IDataSource> dataSources;
+
+	// Any elevation data used to compute height above ground
+	private ElevationData elevationData;
 
 	/**
 	 * Private constructor since we're using the singleton design pattern
@@ -141,14 +142,14 @@ public class CalliopeData
 		// Create the query engine which executes ES queries
 		this.queryEngine = new QueryEngine();
 
-		// Download and setup NEON data
-		this.neonData = new NeonData();
+		// Setup site data
+		this.siteManager = new SiteManager();
 
 		// Setup our metadata management class
 		this.metadataManager = new MetadataManager(this.errorDisplay);
 
-		// Create the location list and add some default locations
-		this.siteList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(site -> new Observable[]{ site.siteProperty(), site.boundaryProperty() }));
+		// Setup our elevation data
+		this.elevationData = new ElevationData(this.sensitiveConfigurationManager);
 
 		// Create the image collection list
 		this.collectionList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(collection -> new Observable[]{collection.nameProperty(), collection.getPermissions(), collection.organizationProperty(), collection.contactInfoProperty(), collection.descriptionProperty(), collection.idProperty() }));
@@ -196,14 +197,6 @@ public class CalliopeData
 		this.dataSources.add(new CyVerseDSDataSource());
 		this.dataSources.add(new LocalPCImageDataSource());
 		this.dataSources.add(new LocalPCDirectoryDataSource());
-	}
-
-	/**
-	 * @return The global site list
-	 */
-	public ObservableList<BoundedSite> getSiteList()
-	{
-		return siteList;
 	}
 
 	/**
@@ -314,9 +307,9 @@ public class CalliopeData
 		return this.sensitiveConfigurationManager;
 	}
 
-	public NeonData getNeonData()
+	public SiteManager getSiteManager()
 	{
-		return this.neonData;
+		return this.siteManager;
 	}
 
 	public MetadataManager getMetadataManager()
@@ -327,5 +320,10 @@ public class CalliopeData
 	public ObservableList<IDataSource> getDataSources()
 	{
 		return dataSources;
+	}
+
+	public ElevationData getElevationData()
+	{
+		return elevationData;
 	}
 }

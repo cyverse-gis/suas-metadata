@@ -1,25 +1,20 @@
 package model.elasticsearch;
 
 import com.google.gson.reflect.TypeToken;
-import de.micromata.opengis.kml.v_2_2_0.Boundary;
-import de.micromata.opengis.kml.v_2_2_0.Coordinate;
-import de.micromata.opengis.kml.v_2_2_0.LinearRing;
-import de.micromata.opengis.kml.v_2_2_0.Polygon;
 import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.dataSources.UploadedEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.neon.BoundedSite;
-import model.neon.jsonPOJOs.Site;
+import model.site.Boundary;
+import model.site.neon.NEONSite;
+import model.site.Site;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
-import model.util.ErrorDisplay;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.http.HttpHost;
@@ -109,14 +104,14 @@ public class ElasticSearchConnectionManager
 	// The number of replicas to be created by the collections index, for development we don't need any
 	private static final Integer INDEX_CALLIOPE_COLLECTIONS_REPLICA_COUNT = 0;
 
-	// The name of the neonSite index
-	private static final String INDEX_CALLIOPE_NEON_SITES = "neon_sites";
-	// The type for the Calliope neonSite index
-	private static final String INDEX_CALLIOPE_NEON_SITES_TYPE = "_doc";
-	// The number of shards to be used by the neonSite index, for development we just need 1
-	private static final Integer INDEX_CALLIOPE_NEON_SITES_SHARD_COUNT = 1;
-	// The number of replicas to be created by the neonSite index, for development we don't need any
-	private static final Integer INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT = 0;
+	// The name of the sites index
+	private static final String INDEX_CALLIOPE_SITES = "sites";
+	// The type for the Calliope sites index
+	private static final String INDEX_CALLIOPE_SITES_TYPE = "_doc";
+	// The number of shards to be used by the sites index, for development we just need 1
+	private static final Integer INDEX_CALLIOPE_SITES_SHARD_COUNT = 1;
+	// The number of replicas to be created by the sites index, for development we don't need any
+	private static final Integer INDEX_CALLIOPE_SITES_REPLICA_COUNT = 0;
 
 	// The type used to serialize a list of cloud uploads
 	private static final Type UPLOADED_ENTRY_LIST_TYPE = new TypeToken<ArrayList<UploadedEntry>>()
@@ -148,6 +143,7 @@ public class ElasticSearchConnectionManager
 			credentialsProvider.setCredentials(AuthScope.ANY, credentials);
 
 			/*
+			// SSL
 			try
 			{
 				KeyStore trustStore = KeyStore.getInstance("jks");
@@ -258,23 +254,45 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
-	 * Destroys and rebuilds entire neon sites index. All neon sites stored will be lost
+	 * Destroys and rebuilds entire sites index. All sites stored will be lost
 	 */
-	public void nukeAndRecreateNeonSitesIndex()
+	public void nukeAndRecreateSitesIndex()
 	{
 		try
 		{
 			this.createIndex(
-					INDEX_CALLIOPE_NEON_SITES,
-					INDEX_CALLIOPE_NEON_SITES_TYPE,
-					this.elasticSearchSchemaManager.makeCalliopeNeonSiteIndexMapping(INDEX_CALLIOPE_NEON_SITES_TYPE),
-					INDEX_CALLIOPE_NEON_SITES_SHARD_COUNT,
-					INDEX_CALLIOPE_NEON_SITES_REPLICA_COUNT,
+					INDEX_CALLIOPE_SITES,
+					INDEX_CALLIOPE_SITES_TYPE,
+					this.elasticSearchSchemaManager.makeCalliopeSiteIndexMapping(INDEX_CALLIOPE_SITES_TYPE),
+					INDEX_CALLIOPE_SITES_SHARD_COUNT,
+					INDEX_CALLIOPE_SITES_REPLICA_COUNT,
 					true);
+
+			// Use a bulk insert
+			BulkRequest bulkRequest = new BulkRequest();
+
+			// Download the list of sites from all sources
+			List<? extends Site> sites = CalliopeData.getInstance().getSiteManager().downloadSites();
+			// Iterate over each of the sites
+			for (Site site : sites)
+			{
+				// Create an index request, use our schema manager to ensure the proper fields are inserted
+				IndexRequest indexRequest = new IndexRequest()
+						.index(INDEX_CALLIOPE_SITES)
+						.type(INDEX_CALLIOPE_SITES_TYPE)
+						.source(this.elasticSearchSchemaManager.makeCreateSite(site));
+				bulkRequest.add(indexRequest);
+			}
+
+			// Store the response of the bulk insert
+			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+			// Make sure it was OK, if not, print an error
+			if (bulkResponse.status() != RestStatus.OK)
+				CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk site insert! Status = " + bulkResponse.status());
 		}
 		catch (IOException e)
 		{
-			CalliopeData.getInstance().getErrorDisplay().notify("Error creating neon site index mapping. Error was:\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error creating site index mapping and insertion. Error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 	}
 
@@ -458,18 +476,18 @@ public class ElasticSearchConnectionManager
 	 * @return The user's sites
 	 */
 	@SuppressWarnings("unchecked")
-	public List<BoundedSite> pullRemoteSites()
+	public List<Site> pullRemoteSites()
 	{
 		// A list of sites to return
-		List<BoundedSite> toReturn = new ArrayList<>();
+		List<Site> toReturn = new ArrayList<>();
 
 		// Because the site list could be potentially long, we use a scroll to ensure reading results in reasonable chunks
 		Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1));
 		// Create a search request, and populate the fields
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest
-				.indices(INDEX_CALLIOPE_NEON_SITES)
-				.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+				.indices(INDEX_CALLIOPE_SITES)
+				.types(INDEX_CALLIOPE_SITES_TYPE)
 				.scroll(scroll)
 				.source(new SearchSourceBuilder()
 						// Fetch results 10 at a time, and use a query that matches everything
@@ -494,40 +512,50 @@ public class ElasticSearchConnectionManager
 				{
 					// Grab the sites as a map object
 					Map<String, Object> sitesMap = searchHit.getSourceAsMap();
-					if (sitesMap.containsKey("site") && sitesMap.containsKey("boundary"))
+					// A sites map should have the following properties:
+					if (sitesMap.containsKey("name") && sitesMap.containsKey("code") && sitesMap.containsKey("type") && sitesMap.containsKey("boundary") && sitesMap.containsKey("details"))
 					{
-						// Convert the map to JSON, and then into an ImageCollection object. It's a bit of a hack but it works well
-						String siteJSON = CalliopeData.getInstance().getGson().toJson(sitesMap.get("site"));
-						Site site = CalliopeData.getInstance().getGson().fromJson(siteJSON, Site.class);
-						site.initFromJSON();
+						// Get each field as an object
+						Object nameObj = sitesMap.get("name");
+						Object codeObj = sitesMap.get("code");
+						Object typeObj = sitesMap.get("type");
+						Object boundaryMapObj = sitesMap.get("boundary");
+						Object detailsObj = sitesMap.get("details");
 
-						// Test if the site has a boundary
-						if (sitesMap.containsKey("boundary"))
+						// Make sure each field has the proper type
+						if (nameObj instanceof String && codeObj instanceof String && typeObj instanceof String && boundaryMapObj instanceof Map<?, ?> && detailsObj instanceof List<?>)
 						{
-							// Grab the boundary map
-							Object boundaryMap = sitesMap.get("boundary");
-							// Make sure that it is indeed a map
-							if (boundaryMap instanceof Map<?, ?>)
-							{
-								// Grab the coordinates list
-								Object polygonObject = ((Map<?, ?>) boundaryMap).get("coordinates");
-								// Make sure the polygon object is a list
-								if (polygonObject instanceof List<?>)
-								{
-									// The object should be a list of lists of lists
-									List<List<List<Double>>> polygonRaw = (List<List<List<Double>>>) polygonObject;
+							// Cast each object to the proper type
+							String name = (String) nameObj;
+							String code = (String) codeObj;
+							String type = (String) typeObj;
+							Map<String, Object> boundaryMap = (Map<String, Object>) boundaryMapObj;
+							List<String> details = (List<String>) detailsObj;
 
-									// Create a new boundary polygon
-									Polygon boundary = new Polygon();
-									// Set the outer boundary to be the first polygon in the list
-									boundary.setOuterBoundaryIs(this.rawToBoundary(polygonRaw.get(0)));
-									// The rest of the polygons are inner boundaries, so map the remainder of the list to another list of boundary polygons
-									boundary.setInnerBoundaryIs(polygonRaw.subList(1, polygonRaw.size()).stream().map(this::rawToBoundary).collect(Collectors.toList()));
-									// Store the boundary
-									toReturn.add(new BoundedSite(site, boundary));
+							// The boundary map should have coordinates
+							if (boundaryMap.containsKey("coordinates"))
+							{
+								// Grab the coordinates as an object
+								Object boundaryRawObj = boundaryMap.get("coordinates");
+								// Check if the raw boundary is a list
+								if (boundaryRawObj instanceof List<?>)
+								{
+									// Cast the object to a list
+									List<List<List<Double>>> boundaryRaw = (List<List<List<Double>>>) boundaryRawObj;
+
+									// Compute the boundary from the raw boundary list
+									Boundary boundary = this.rawToBoundary(boundaryRaw);
+
+									// Test the type and parse the details accordingly
+									if (type.equalsIgnoreCase("neon"))
+									{
+										// Make a NEON site and then parse the details, add it to be returned
+										NEONSite site = new NEONSite(name, code, boundary);
+										this.injectDetailsIntoNEONSite(site, details);
+										toReturn.add(site);
+									}
 								}
 							}
-
 						}
 					}
 				}
@@ -551,7 +579,7 @@ public class ElasticSearchConnectionManager
 			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
 			// If clearing the scroll request fails, show an error
 			if (!clearScrollResponse.isSucceeded())
-				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading neon sites");
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading sites");
 		}
 		catch (IOException e)
 		{
@@ -563,15 +591,73 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
-	 * Convert a list of (longitude, latitude) lists to a linear ring boundary
+	 * Convert a list of lists of (longitude, latitude) lists to a boundary
 	 *
-	 * @param rawBoundary The raw boundary to be convereted
+	 * @param rawBoundary The raw boundary to be converted
 	 * @return The boundary
 	 */
-	private Boundary rawToBoundary(List<List<Double>> rawBoundary)
+	private Boundary rawToBoundary(List<List<List<Double>>> rawBoundary)
 	{
-		// Map the raw boundary to a list of coordinates, and then that coordinate list to a boundary
-		return new Boundary().withLinearRing(new LinearRing().withCoordinates(rawBoundary.stream().map(latLongList -> new Coordinate(latLongList.get(0), latLongList.get(1))).collect(Collectors.toList())));
+		// The outer boundary is always the first list
+		List<List<Double>> outerBoundary = rawBoundary.get(0);
+		// The inner boundaries are any lists after the first
+		List<List<List<Double>>> innerBoundary = rawBoundary.subList(1, rawBoundary.size());
+
+		// Map the raw boundary to a list of geo-points. Do this for both outer and inner boundary
+		return new Boundary(extractPoints(outerBoundary), innerBoundary.stream().map(this::extractPoints).collect(Collectors.toList()));
+	}
+
+	/**
+	 * Given a list of raw points this method returns the same list in a structured format. The input should be a list of lists that have length 2, where the
+	 * first entry is a longitude and second entry is a latitude
+	 *
+	 * @param rawPoints The raw point list to input
+	 * @return A structured list using GeoPoints
+	 */
+	private List<GeoPoint> extractPoints(List<List<Double>> rawPoints)
+	{
+		return rawPoints.stream().map(pointPair -> new GeoPoint(pointPair.get(1), pointPair.get(0))).collect(Collectors.toList());
+	}
+
+	/**
+	 * Attempts to parse the details and adds them to the NEON site
+	 *
+	 * @param neonSite The site to add details to
+	 * @param details The details to add to the site
+	 */
+	private void injectDetailsIntoNEONSite(NEONSite neonSite, List<String> details)
+	{
+		// Iterate over each detail
+		details.forEach(detail ->
+		{
+			// Grab the key and value which are separated by the first ':'
+			String key = StringUtils.substringBefore(detail, ":");
+			String value = StringUtils.substringAfter(detail, ":");
+			// Based on the key, set the right field
+			switch(key)
+			{
+				case "domainName":
+					neonSite.setDomainName(value);
+					break;
+				case "domainCode":
+					neonSite.setDomainCode(value);
+					break;
+				case "siteDescription":
+					neonSite.setSiteDescription(value);
+					break;
+				case "siteType":
+					neonSite.setSiteType(value);
+					break;
+				case "stateCode":
+					neonSite.setStateCode(value);
+					break;
+				case "stateName":
+					neonSite.setStateName(value);
+					break;
+				default:
+					break;
+			}
+		});
 	}
 
 	/**
@@ -971,50 +1057,13 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
-	 * Clears and reloads the NEON site cache from the NEON api
-	 */
-	public void refreshNeonSiteCache()
-	{
-		List<BoundedSite> boundedSites = CalliopeData.getInstance().getNeonData().retrieveBoundedSites();
-		// Clear the current index
-		this.nukeAndRecreateNeonSitesIndex();
-		try
-		{
-			// Use a bulk insert
-			BulkRequest bulkRequest = new BulkRequest();
-
-			// Iterate over each of the bounded sites
-			for (BoundedSite boundedSite : boundedSites)
-			{
-				// Create an index request, use our schema manager to ensure the proper fields are inserted
-				IndexRequest indexRequest = new IndexRequest()
-						.index(INDEX_CALLIOPE_NEON_SITES)
-						.type(INDEX_CALLIOPE_NEON_SITES_TYPE)
-						.source(this.elasticSearchSchemaManager.makeCreateNEONSite(boundedSite));
-				bulkRequest.add(indexRequest);
-			}
-
-			// Store the response of the bulk insert
-			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
-			// Make sure it was OK, if not, print an error
-			if (bulkResponse.status() != RestStatus.OK)
-				CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk NEON insert! Status = " + bulkResponse.status());
-		}
-		catch (IOException e)
-		{
-			// The insert failed, print an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error inserting updated NEON sites into the index!\n" + ExceptionUtils.getStackTrace(e));
-		}
-	}
-
-	/**
-	 * Given a list of images this function returns a parallel array of site codes of NEON sites that each image belongs to
+	 * Given a list of images this function returns a parallel array of site codes of sites that each image belongs to
 	 *
-	 * @param imageEntries The list of images to detect NEON sites in
-	 * @return A list of NEON site codes as a parallel array to the original image list with null if no NEON site is at the location
+	 * @param imageEntries The list of images to detect sites in
+	 * @return A list of site codes as a parallel array to the original image list with null if no site is at the location
 	 */
 	@SuppressWarnings("unchecked")
-	public String[] detectNEONSites(List<ImageEntry> imageEntries)
+	public String[] detectSites(List<ImageEntry> imageEntries)
 	{
 		// A parallel array to return
 		String[] toReturn = new String[imageEntries.size()];
@@ -1031,11 +1080,11 @@ public class ElasticSearchConnectionManager
 			{
 				// Initialize the search request
 				searchRequest
-						.indices(INDEX_CALLIOPE_NEON_SITES)
-						.types(INDEX_CALLIOPE_NEON_SITES_TYPE)
+						.indices(INDEX_CALLIOPE_SITES)
+						.types(INDEX_CALLIOPE_SITES_TYPE)
 						.source(new SearchSourceBuilder()
 								// We only care about site code
-								.fetchSource(new String[]{"site.siteCode"}, new String[]{"boundary", "site.domainCode", "site.domainName", "site.siteDescription", "site.siteLatitude", "site.siteLongitude", "site.siteName", "site.siteType", "site.stateCode", "site.stateName"})
+								.fetchSource(new String[]{"code"}, new String[]{"boundary", "details", "name", "site.siteDescription", "type"})
 								// We only care about a single result
 								.size(1)
 								// We want to search where the polygon intersects our image's location (as a point)
@@ -1070,34 +1119,23 @@ public class ElasticSearchConnectionManager
 					{
 						// Grab the raw hit map
 						Map<String, Object> siteMap = hits[0].getSourceAsMap();
-						// It should have a site field
-						if (siteMap.containsKey("site"))
+
+						// Make sure our site field has a site code field
+						if (siteMap.containsKey("code"))
 						{
-							// Grab the site field
-							Object siteDetailsMapObj = siteMap.get("site");
-							// The site field should be a map
-							if (siteDetailsMapObj instanceof Map<?, ?>)
+							// Grab the site code field
+							Object siteCodeObj = siteMap.get("code");
+							// Make sure the site code field is a string
+							if (siteCodeObj instanceof String)
 							{
-								// Convert the site field to a map
-								Map<String, Object> siteDetailsMap = (Map<String, Object>) siteDetailsMapObj;
-								// Make sure our site field has a site code field
-								if (siteDetailsMap.containsKey("siteCode"))
-								{
-									// Grab the site code field
-									Object siteCodeObj = siteDetailsMap.get("siteCode");
-									// Make sure the site code field is a string
-									if (siteCodeObj instanceof String)
-									{
-										// Store the site code field
-										toReturn[i] = (String) siteCodeObj;
-									}
-								}
+								// Store the site code field
+								toReturn[i] = (String) siteCodeObj;
 							}
 						}
 					}
 					else
 					{
-						// No results = no NEON site
+						// No results = no site
 						toReturn[i] = null;
 					}
 				}
@@ -1111,7 +1149,7 @@ public class ElasticSearchConnectionManager
 		catch (IOException e)
 		{
 			// The query failed, print an error
-			CalliopeData.getInstance().getErrorDisplay().notify("Error performing multisearch for NEON site codes.\n" + ExceptionUtils.getStackTrace(e));
+			CalliopeData.getInstance().getErrorDisplay().notify("Error performing multisearch for site codes.\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return toReturn;
@@ -1272,7 +1310,7 @@ public class ElasticSearchConnectionManager
 			// We only want specific fields which reduces the bandwidth uses, list those here
 			FetchSourceContext fieldsWeWant = new FetchSourceContext(true,
 					new String[] { "storagePath", "collectionID", "imageMetadata.altitude", "imageMetadata.cameraModel", "imageMetadata.dateTaken" },
-					new String[] { "imageMetadata.dayOfWeekTaken", "imageMetadata.dayOfYearTaken", "imageMetadata.droneMaker", "imageMetadata.hourTaken", "imageMetadata.monthTaken", "imageMetadata.neonSiteCode", "imageMetadata.position", "imageMetadata.rotation", "imageMetadata.speed", "imageMetadata.yearTaken" });
+					new String[] { "imageMetadata.dayOfWeekTaken", "imageMetadata.dayOfYearTaken", "imageMetadata.droneMaker", "imageMetadata.hourTaken", "imageMetadata.monthTaken", "imageMetadata.siteCode", "imageMetadata.position", "imageMetadata.rotation", "imageMetadata.speed", "imageMetadata.yearTaken" });
 			// Iterate over all document IDs and add one get request for each one
 			geoBucket.getKnownDocumentIDs().forEach(documentID ->
 					multiGetRequest.add(new MultiGetRequest.Item(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, documentID).fetchSourceContext(fieldsWeWant)));

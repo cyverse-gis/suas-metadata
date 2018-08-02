@@ -14,7 +14,7 @@ import model.CalliopeData;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.neon.BoundedSite;
+import model.site.Site;
 
 import java.util.Optional;
 
@@ -190,7 +190,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 		{
 			String siteCode = (String) dragboard.getContent(SITE_CODE_FORMAT);
 			// Grab the species with the given ID
-			Optional<BoundedSite> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(boundedSite -> boundedSite.getSite().getSiteCode().equals(siteCode)).findFirst();
+			Optional<Site> toAdd = CalliopeData.getInstance().getSiteManager().getSites().stream().filter(site -> site.getCode().equals(siteCode)).findFirst();
 			// Add the species to the image
 			if (toAdd.isPresent())
 			{

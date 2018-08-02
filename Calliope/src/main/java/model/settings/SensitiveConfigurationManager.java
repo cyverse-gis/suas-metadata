@@ -18,14 +18,14 @@ import java.io.InputStream;
  */
 public class SensitiveConfigurationManager
 {
-	// The IP of the host
+	// The IP of the ES host
 	private String elasticSearchHost;
-	// The port of the host
+	// The port of the ES host
 	private Integer elasticSearchPort;
-	// If the user is an admin
-	private Boolean isElasticSearchAdmin;
-	// If the user is an admin, the admin password
-	private String elasticSearchAdminPassword;
+	// The IP of the elevation server host
+	private String elevationServerHost;
+	// The port of the elevation server host
+	private Integer elevationServerPort;
 	// If the configuration loaded successfully
 	private Boolean configurationValid = false;
 
@@ -54,14 +54,14 @@ public class SensitiveConfigurationManager
 
 			// Open the properties file
 			Configuration configuration = configs.properties(configFile);
-			// Read the configuration file's host
+			// Read the configuration file's ES host
 			this.elasticSearchHost = configuration.getString("elasticSearch.host");
-			// Read the configuration file's port
+			// Read the configuration file's ES port
 			this.elasticSearchPort = configuration.getInteger("elasticSearch.port", 9200);
-			// If the user is an admin
-			this.isElasticSearchAdmin = configuration.getBoolean("elasticSearch.admin");
-			// If the user is an admin, the admin password
-			this.elasticSearchAdminPassword = configuration.getString("elasticSearch.adminPassword");
+			// Read the configuration file's elevation server host
+			this.elevationServerHost = configuration.getString("elevationServer.host");
+			// Read the configuration file's elevation server port
+			this.elevationServerPort = configuration.getInteger("elevationServer.port", 8080);
 
 			// Config is good to go
 			this.configurationValid = true;
@@ -94,19 +94,19 @@ public class SensitiveConfigurationManager
 	}
 
 	/**
-	 * @return True if we should authenticate as an ES admin
+	 * @return Getter for the server host that supplies elevation data
 	 */
-	public Boolean isElasticSearchAdmin()
+	public String getElevationServerHost()
 	{
-		return this.isElasticSearchAdmin;
+		return this.elevationServerHost;
 	}
 
 	/**
-	 * @return The admin password
+	 * @return Getter for the server port that supplies elevation data
 	 */
-	public String getElasticSearchAdminPassword()
+	public Integer getElevationServerPort()
 	{
-		return this.elasticSearchAdminPassword;
+		return this.elevationServerPort;
 	}
 
 	/**

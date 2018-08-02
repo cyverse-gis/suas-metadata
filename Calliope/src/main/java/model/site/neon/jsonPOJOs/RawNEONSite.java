@@ -1,11 +1,11 @@
-package model.neon.jsonPOJOs;
+package model.site.neon.jsonPOJOs;
 
 import javafx.beans.property.*;
 
 /**
  * POJO class used in JSON deserialization
  */
-public class Site
+public class RawNEONSite
 {
 	/*
 	All fields below are listed because they are required for JSON serialization. Only a few of the fields are actually used.
@@ -22,7 +22,7 @@ public class Site
 	private final StringProperty siteType = new SimpleStringProperty(null);
 	private final StringProperty stateCode = new SimpleStringProperty(null);
 	private final StringProperty stateName = new SimpleStringProperty(null);
-	private transient ObjectProperty<ProductAvailability[]> dataProducts = new SimpleObjectProperty<>();
+	private transient ObjectProperty<RawNEONProductAvailability[]> dataProducts = new SimpleObjectProperty<>();
 
 	/**
 	 * Utility function to be called if this class is deserialized from JSON
@@ -132,12 +132,12 @@ public class Site
 		return stateName;
 	}
 
-	public ProductAvailability[] getDataProducts()
+	public RawNEONProductAvailability[] getDataProducts()
 	{
 		return dataProducts.get();
 	}
 
-	public ObjectProperty<ProductAvailability[]> dataProductsProperty()
+	public ObjectProperty<RawNEONProductAvailability[]> dataProductsProperty()
 	{
 		return dataProducts;
 	}

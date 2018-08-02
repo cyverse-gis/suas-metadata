@@ -1,17 +1,17 @@
-package model.neon.jsonPOJOs;
+package model.site.neon.jsonPOJOs;
 
 /**
  * POJO class used in JSON deserialization
  */
-public class Sites
+public class RawNEONSiteList
 {
 	/*
 	The field listed below is required for JSON serialization. The sites object just contains a list of sites
 	 */
 
-	private final Site[] data = null;
+	private final RawNEONSite[] data = null;
 
-	public Site[] getData()
+	public RawNEONSite[] getData()
 	{
 		return data;
 	}

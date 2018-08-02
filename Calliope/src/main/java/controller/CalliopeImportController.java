@@ -1,6 +1,6 @@
 package controller;
 
-import controller.importView.NeonSiteDetectorController;
+import controller.importView.SiteDetectorController;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -37,8 +37,7 @@ import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
 import model.dataSources.IDataSource;
 import model.image.*;
-import model.neon.BoundedSite;
-import model.neon.jsonPOJOs.Site;
+import model.site.Site;
 import model.threading.ErrorService;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
@@ -81,7 +80,7 @@ public class CalliopeImportController
 
 	// The list view containing all locations
 	@FXML
-	public ListView<BoundedSite> siteListView;
+	public ListView<Site> siteListView;
 
 	// The button to reset the image effects
 	@FXML
@@ -119,10 +118,6 @@ public class CalliopeImportController
 	// Top right hbox containing location info
 	@FXML
 	public HBox hbxLocation;
-
-	// The button used to rebuild the NEON data index
-	@FXML
-	public Button btnRefreshNEONSites;
 
 	// The text field used to search the list of sites
 	@FXML
@@ -208,9 +203,9 @@ public class CalliopeImportController
 	private List<Property<?>> cache = new ArrayList<>();
 
 	// The stage used to hold the neon site detector content
-	private Stage neonSiteDetectorStage;
+	private Stage siteDetectorStage;
 	// The controller which controls the neon site detector stage
-	private NeonSiteDetectorController neonSiteDetectorController;
+	private SiteDetectorController siteDetectorController;
 
 	/**
 	 * Initialize the Calliope import view and data bindings
@@ -224,16 +219,16 @@ public class CalliopeImportController
 		// Then we setup the site list
 
 		// Grab the global site list
-		SortedList<BoundedSite> sites = new SortedList<>(CalliopeData.getInstance().getSiteList());
+		SortedList<Site> sites = new SortedList<>(CalliopeData.getInstance().getSiteManager().getSites());
 		// Set the comparator to be the name of the site
-		sites.setComparator(Comparator.comparing(boundedSite -> boundedSite.getSite().getSiteName()));
+		sites.setComparator(Comparator.comparing(Site::getName));
 		// Create a filtered list of sites
-		FilteredList<BoundedSite> filteredSites = new FilteredList<>(sites);
+		FilteredList<Site> filteredSites = new FilteredList<>(sites);
 		// Set the filter to update whenever the site search text changes
 		filteredSites.predicateProperty().bind(Bindings.createObjectBinding(() -> (siteToFilter ->
 				// Allow any site with a name or code search text
-				(StringUtils.containsIgnoreCase(siteToFilter.getSite().getSiteName(), this.txtSiteSearch.getCharacters()) ||
-				 StringUtils.containsIgnoreCase(siteToFilter.getSite().getSiteCode(), this.txtSiteSearch.getCharacters()))), this.txtSiteSearch.textProperty()));
+				(StringUtils.containsIgnoreCase(siteToFilter.getName(), this.txtSiteSearch.getCharacters()) ||
+				 StringUtils.containsIgnoreCase(siteToFilter.getCode(), this.txtSiteSearch.getCharacters()))), this.txtSiteSearch.textProperty()));
 		// Set the items of the site list view to the newly sorted list
 		this.siteListView.setItems(filteredSites);
 		// Set the cell factory to be our custom location list cell
@@ -396,7 +391,7 @@ public class CalliopeImportController
 		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the site name to the selected image's location
-		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(BoundedSite::siteProperty).map(Site::getSiteName));
+		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(Site::nameProperty));
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(currentlySelectedImage.isNotNull().or(currentlySelectedDirectory.isNotNull()));
 		// Hide the progress bar when no tasks remain
@@ -433,26 +428,26 @@ public class CalliopeImportController
 		// Setup the neon site detector stage
 
 		// Load the FXML file of the editor window
-		FXMLLoader neonSiteDetectorLoader = FXMLLoaderUtils.loadFXML("importView/NeonSiteDetector.fxml");
+		FXMLLoader neonSiteDetectorLoader = FXMLLoaderUtils.loadFXML("importView/SiteDetector.fxml");
 		// Grab the controller
-		this.neonSiteDetectorController = neonSiteDetectorLoader.getController();
+		this.siteDetectorController = neonSiteDetectorLoader.getController();
 
 		// Create the stage that will have the neon site detector
-		this.neonSiteDetectorStage = new Stage();
+		this.siteDetectorStage = new Stage();
 		// Set the title
-		this.neonSiteDetectorStage.setTitle("Neon Site Detector");
+		this.siteDetectorStage.setTitle("Neon Site Detector");
 		// Set the modality and initialize the owner to be this current window
-		this.neonSiteDetectorStage.initModality(Modality.WINDOW_MODAL);
+		this.siteDetectorStage.initModality(Modality.WINDOW_MODAL);
 		// Make sure the window is the right size and can't be resized
-		this.neonSiteDetectorStage.setResizable(false);
+		this.siteDetectorStage.setResizable(false);
 		// Set the scene to the root of the FXML file
 		Scene neonSiteDetectorScene = new Scene(neonSiteDetectorLoader.getRoot());
 		// Set the scene of the stage, and show it!
-		this.neonSiteDetectorStage.setScene(neonSiteDetectorScene);
+		this.siteDetectorStage.setScene(neonSiteDetectorScene);
 		// When we close the stage don't close it, just hide it
-		this.neonSiteDetectorStage.setOnCloseRequest(event ->
+		this.siteDetectorStage.setOnCloseRequest(event ->
 		{
-			this.neonSiteDetectorStage.hide();
+			this.siteDetectorStage.hide();
 			event.consume();
 		});
 
@@ -644,7 +639,7 @@ public class CalliopeImportController
 	public void locationListDrag(MouseEvent mouseEvent)
 	{
 		// Grab the selected site, make sure it's not null
-		BoundedSite selected = this.siteListView.getSelectionModel().getSelectedItem();
+		Site selected = this.siteListView.getSelectionModel().getSelectedItem();
 		if (selected != null)
 		{
 			// Create a dragboard and begin the drag and drop
@@ -652,7 +647,7 @@ public class CalliopeImportController
 
 			// Create a clipboard and put the location unique ID into that clipboard
 			ClipboardContent content = new ClipboardContent();
-			content.put(CalliopeDataFormats.SITE_CODE_FORMAT, selected.getSite().getSiteCode());
+			content.put(CalliopeDataFormats.SITE_CODE_FORMAT, selected.getCode());
 			// Set the dragboard's context, and then consume the event
 			dragboard.setContent(content);
 
@@ -718,7 +713,7 @@ public class CalliopeImportController
 		{
 			String siteCode = (String) dragboard.getContent(CalliopeDataFormats.SITE_CODE_FORMAT);
 			// Grab the site with the given ID
-			Optional<BoundedSite> toAdd = CalliopeData.getInstance().getSiteList().stream().filter(boundedSite -> boundedSite.getSite().getSiteCode().equals(siteCode)).findFirst();
+			Optional<Site> toAdd = CalliopeData.getInstance().getSiteManager().getSites().stream().filter(site -> site.getCode().equals(siteCode)).findFirst();
 			// Add the site to the image
 			if (toAdd.isPresent())
 				// Check if we have a selected image or directory to update!
@@ -740,38 +735,6 @@ public class CalliopeImportController
 		// Set the success equal to the flag, and consume the event
 		dragEvent.setDropCompleted(success);
 		dragEvent.consume();
-	}
-
-	/**
-	 * Called to reload the current NEON site cache on the ES index
-	 *
-	 * @param actionEvent consumed
-	 */
-	public void refreshNEONSites(ActionEvent actionEvent)
-	{
-		// Disable the button during processing
-		this.btnRefreshNEONSites.setDisable(true);
-
-		// The refresh task just calls our ES manager
-		ErrorTask<Void> refreshTask = new ErrorTask<Void>()
-		{
-			@Override
-			protected Void call()
-			{
-				this.updateMessage("Updating NEON site index from latest data...");
-				CalliopeData.getInstance().getEsConnectionManager().refreshNeonSiteCache();
-				return null;
-			}
-		};
-
-		// Enable the button after processing
-		refreshTask.setOnSucceeded(event -> this.btnRefreshNEONSites.setDisable(false));
-
-		// Add the task to be executed
-		CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(refreshTask);
-
-		// Consume the event
-		actionEvent.consume();
 	}
 
 	/**
@@ -847,11 +810,11 @@ public class CalliopeImportController
 		if (images != null && !images.isEmpty())
 		{
 			// Pull the sub-images in the directory
-			this.neonSiteDetectorController.updateItems(images);
+			this.siteDetectorController.updateItems(images);
 			// Make sure that this stage belongs to the main stage
-			if (this.neonSiteDetectorStage.getOwner() == null)
-				this.neonSiteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
-			this.neonSiteDetectorStage.showAndWait();
+			if (this.siteDetectorStage.getOwner() == null)
+				this.siteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
+			this.siteDetectorStage.showAndWait();
 		}
 
 		mouseEvent.consume();

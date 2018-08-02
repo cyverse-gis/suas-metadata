@@ -2,7 +2,11 @@ package controller.importView;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import model.neon.jsonPOJOs.Site;
+import javafx.scene.layout.VBox;
+import javafx.util.Pair;
+import model.site.Site;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 
 /**
  * Simple class for displaying site information as a pop-over
@@ -16,33 +20,13 @@ public class SitePopOverController
 	// The NEON site name
 	@FXML
 	public Label lblName;
-	// The NEON domain name
+
+	// A VBox of extra keys
 	@FXML
-	public Label lblDomainName;
-	// The NEON domain code
+	public VBox vbxKeys;
+	// A VBox of extra values
 	@FXML
-	public Label lblDomainCode;
-	// The NEON site code
-	@FXML
-	public Label lblSiteCode;
-	// The NEON site description
-	@FXML
-	public Label lblSiteDescription;
-	// The NEON site centroid latitude
-	@FXML
-	public Label lblSiteLatitude;
-	// The NEON site centroid longitude
-	@FXML
-	public Label lblSiteLongitude;
-	// The NEON site type
-	@FXML
-	public Label lblSiteType;
-	// The NEON site state code
-	@FXML
-	public Label lblStateCode;
-	// The NEON site state name
-	@FXML
-	public Label lblStateName;
+	public VBox vbxValues;
 
 	///
 	/// FXML Bound Fields End
@@ -63,16 +47,21 @@ public class SitePopOverController
 	 */
 	public void updateSite(Site site)
 	{
-		// Just set all the fields to new values
-		this.lblName.setText(site.getSiteName());
-		this.lblDomainName.setText(site.getDomainName());
-		this.lblDomainCode.setText(site.getDomainCode());
-		this.lblSiteCode.setText(site.getSiteCode());
-		this.lblSiteDescription.setText(site.getSiteDescription());
-		this.lblSiteLatitude.setText(Double.toString(site.getSiteLatitude()));
-		this.lblSiteLongitude.setText(Double.toString(site.getSiteLongitude()));
-		this.lblSiteType.setText(site.getSiteType());
-		this.lblStateCode.setText(site.getStateCode());
-		this.lblStateName.setText(site.getStateName());
+		// Clear the existing labels in the pop over
+		this.vbxKeys.getChildren().clear();
+		this.vbxValues.getChildren().clear();
+
+		// Update the name label to be the site's name
+		this.lblName.setText(site.getName());
+		// Add a 'site code' key with the value as the site's code
+		this.vbxKeys.getChildren().add(new Label("Site Code:"));
+		this.vbxValues.getChildren().add(new Label(site.getCode()));
+		// For each additional detail we add one key as the detail's name and a value as the detail's actual value
+		for (Pair<String, ?> detail : site.getDetails())
+		{
+			// We convert 'camelCaseWords' into 'Regular English Capitalized Words' using word and string utils
+			this.vbxKeys.getChildren().add(new Label(WordUtils.capitalize(StringUtils.join(StringUtils.splitByCharacterTypeCamelCase(detail.getKey()), " ") + ":")));
+			this.vbxValues.getChildren().add(new Label(detail.getValue().toString()));
+		}
 	}
 }

@@ -7,7 +7,7 @@ import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import model.CalliopeData;
-import model.neon.BoundedSite;
+import model.site.Site;
 import model.settings.MetadataCustomItem;
 import model.threading.ErrorTask;
 import model.util.CustomPropertyItem;
@@ -46,7 +46,7 @@ public class ImageEntry extends ImageContainer
 	// The date that the image was taken
 	private final ObjectProperty<LocalDateTime> dateTaken = new SimpleObjectProperty<>();
 	// The NEON site closest to the image
-	private final ObjectProperty<BoundedSite> siteTaken = new SimpleObjectProperty<>(null);
+	private final ObjectProperty<Site> siteTaken = new SimpleObjectProperty<>(null);
 	// The lat/long/elevation of this image
 	private final ObjectProperty<Position> locationTaken = new SimpleObjectProperty<>(null);
 	// The name of the drone maker company
@@ -103,38 +103,49 @@ public class ImageEntry extends ImageContainer
 	 */
 	protected void readFileMetadataFromMap(Map<Tag, String> imageMetadataMap)
 	{
-			// Constant meaning that the metadata attribute was not given in the metadata
-			final String UNSPECIFIED = "Unspecified";
-			// Clear the list of raw metadata
-			this.rawMetadata.clear();
-			// For each metadata tag, add an item to the list
-			for (Map.Entry<Tag, String> entry : imageMetadataMap.entrySet())
-				this.rawMetadata.add(new MetadataCustomItem(entry.getKey().getName(), entry.getValue()));
-			// Sort the raw metadata by name for convenience
-			this.rawMetadata.sort(Comparator.comparing(CustomPropertyItem::getName));
+		// Constant meaning that the metadata attribute was not given in the metadata
+		final String UNSPECIFIED = "Unspecified";
+		// Clear the list of raw metadata
+		this.rawMetadata.clear();
+		// For each metadata tag, add an item to the list
+		for (Map.Entry<Tag, String> entry : imageMetadataMap.entrySet())
+			this.rawMetadata.add(new MetadataCustomItem(entry.getKey().getName(), entry.getValue()));
+		// Sort the raw metadata by name for convenience
+		this.rawMetadata.sort(Comparator.comparing(CustomPropertyItem::getName));
 
-			// Now we parse the raw metadata into something useful to index
+		// Now we parse the raw metadata into something useful to index
 
-			// Starting with date taken, convert the raw date taken as a string into an object
-			this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
-			// Next convert the lat/long/altitude into a location object
-			this.locationTaken.setValue(new Position(
-					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
-			// Then store the maker and model fields separately
-			this.droneMaker.setValue(imageMetadataMap.getOrDefault(StandardTag.MAKE, UNSPECIFIED));
-			this.cameraModel.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.CAMERA_MODEL_NAME, UNSPECIFIED));
-			// Speed can be stored as a 3D vector, so convert 3 doubles to a vector
-			this.speed.setValue(new Vector3(
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_X, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_Y, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_Z, "0"))));
-			// Rotation can be stored as a 3D vector, so convert 3 doubles to a vector
-			this.rotation.setValue(new Vector3(
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ROLL, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.PITCH, "0")),
-					Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.YAW, "0"))));
+		// Starting with date taken, convert the raw date taken as a string into an object
+		this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
+		// Next convert the lat/long/altitude into a location object
+		this.locationTaken.setValue(new Position(
+				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, "0")),
+				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
+				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
+		// Then store the maker and model fields separately
+		this.droneMaker.setValue(imageMetadataMap.getOrDefault(StandardTag.MAKE, UNSPECIFIED));
+		this.cameraModel.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.CAMERA_MODEL_NAME, UNSPECIFIED));
+		// Speed can be stored as a 3D vector, so convert 3 doubles to a vector
+		this.speed.setValue(new Vector3(
+				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_X, "0")),
+				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_Y, "0")),
+				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.SPEED_Z, "0"))));
+		// Rotation can be stored as a 3D vector, so convert 3 doubles to a vector
+		this.rotation.setValue(new Vector3(
+				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ROLL, "0")),
+				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.PITCH, "0")),
+				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.YAW, "0"))));
+
+		//Double heightAboveGround = CalliopeData.getInstance().getElevationData().computeHeightAboveGround(this);
+		/*
+		Double gsd = CalliopeData.getInstance().getElevationData().computeGSD(
+			this.locationTaken.getValue().getElevation(),
+			Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.FOCAL_LENGTH, "0")),
+			84D,
+			84D,
+			Integer.parseInt(imageMetadataMap.getOrDefault(StandardTag.IMAGE_WIDTH, "0")),
+			Integer.parseInt(imageMetadataMap.getOrDefault(StandardTag.IMAGE_HEIGHT, "0")));
+		*/
 	}
 
 	/**
@@ -333,17 +344,17 @@ public class ImageEntry extends ImageContainer
 	}
 
 	@Override
-	public void setSiteTaken(BoundedSite siteTaken)
+	public void setSiteTaken(Site siteTaken)
 	{
 		this.siteTaken.setValue(siteTaken);
 	}
 
-	public BoundedSite getSiteTaken()
+	public Site getSiteTaken()
 	{
 		return siteTaken.getValue();
 	}
 
-	public ObjectProperty<BoundedSite> siteTakenProperty()
+	public ObjectProperty<Site> siteTakenProperty()
 	{
 		return siteTaken;
 	}

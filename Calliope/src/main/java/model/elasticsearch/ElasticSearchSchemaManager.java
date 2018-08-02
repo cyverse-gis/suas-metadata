@@ -1,14 +1,15 @@
 package model.elasticsearch;
 
-import de.micromata.opengis.kml.v_2_2_0.Boundary;
-import de.micromata.opengis.kml.v_2_2_0.Coordinate;
+import javafx.collections.ObservableList;
+import javafx.util.Pair;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.ImageEntry;
-import model.neon.BoundedSite;
+import model.site.Site;
 import model.settings.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.xcontent.*;
 
 import java.io.BufferedReader;
@@ -107,7 +108,7 @@ public class ElasticSearchSchemaManager
 							.startObject("dayOfWeekTaken")
 								.field("type", "integer")
 							.endObject()
-							.startObject("neonSiteCode")
+							.startObject("siteCode")
 								.field("type", "keyword")
 							.endObject()
 							.startObject("position")
@@ -232,50 +233,27 @@ public class ElasticSearchSchemaManager
 	 *
 	 * @return An XContentBuilder which can be used to create JSON in Java
 	 */
-	XContentBuilder makeCalliopeNeonSiteIndexMapping(String indexType) throws IOException
+	XContentBuilder makeCalliopeSiteIndexMapping(String indexType) throws IOException
 	{
 		// Well, it's the builder design pattern. RIP me
 		return XContentFactory.jsonBuilder()
 		.startObject()
 			.startObject(indexType)
 				.startObject("properties")
-					.startObject("site")
-						.field("type", "object")
-						.startObject("properties")
-							.startObject("domainCode")
-								.field("type", "keyword")
-							.endObject()
-							.startObject("domainName")
-								.field("type", "text")
-							.endObject()
-							.startObject("siteCode")
-								.field("type", "keyword")
-							.endObject()
-							.startObject("siteDescription")
-								.field("type", "text")
-							.endObject()
-							.startObject("siteLatitude")
-								.field("type", "double")
-							.endObject()
-							.startObject("siteLongitude")
-								.field("type", "double")
-							.endObject()
-							.startObject("siteName")
-								.field("type", "text")
-							.endObject()
-							.startObject("siteType")
-								.field("type", "keyword")
-							.endObject()
-							.startObject("stateCode")
-								.field("type", "keyword")
-							.endObject()
-							.startObject("stateName")
-								.field("type", "keyword")
-							.endObject()
-						.endObject()
+					.startObject("name")
+						.field("type", "keyword")
+					.endObject()
+					.startObject("code")
+						.field("type", "keyword")
 					.endObject()
 					.startObject("boundary")
 						.field("type", "geo_shape")
+					.endObject()
+					.startObject("type")
+						.field("type", "keyword")
+					.endObject()
+					.startObject("details")
+						.field("type", "keyword")
 					.endObject()
 				.endObject()
 			.endObject()
@@ -402,7 +380,7 @@ public class ElasticSearchSchemaManager
 				.field("hourTaken", imageEntry.getDateTaken().getHour())
 				.field("dayOfYearTaken", imageEntry.getDateTaken().getDayOfYear())
 				.field("dayOfWeekTaken", imageEntry.getDateTaken().getDayOfWeek().getValue())
-				.field("neonSiteCode", imageEntry.getSiteTaken() != null ? imageEntry.getSiteTaken().getSite().getSiteCode() : null)
+				.field("siteCode", imageEntry.getSiteTaken() != null ? imageEntry.getSiteTaken().getCode() : null)
 				.field("position", imageEntry.getLocationTaken().getLatitude() + ", " + imageEntry.getLocationTaken().getLongitude())
 				.field("altitude", imageEntry.getLocationTaken().getElevation())
 				.field("droneMaker", imageEntry.getDroneMaker())
@@ -422,32 +400,31 @@ public class ElasticSearchSchemaManager
 	}
 
 	/**
-	 * Utility function used to create a JSON request body which creates a neon site entry
+	 * Utility function used to create a JSON request body which creates a site entry
 	 *
-	 * @param boundedSite The NEON site with boundary
+	 * @param site The site with boundary
 	 * @return A JSON creator used by ES to create a request
 	 * @throws IOException IO Exception if the JSON is invalid, this shouldn't happen
 	 */
-	XContentBuilder makeCreateNEONSite(BoundedSite boundedSite) throws IOException
+	XContentBuilder makeCreateSite(Site site) throws IOException
 	{
-		// Grab the bounded site's outer boundary which is the real polygon that makes up the boundary
-		Boundary outerBoundary = boundedSite.getBoundary().getOuterBoundaryIs();
-		// Grab the bounded site's inner boundary which is a list of holes inside of the outer boundary
-		List<Boundary> innerBoundaries = boundedSite.getBoundary().getInnerBoundaryIs();
+		// Grab the site's outer boundary which is the real polygon that makes up the boundary
+		List<GeoPoint> outerBoundary = site.getBoundary().getOuterBoundary();
+		// Grab the site's inner boundary which is a list of holes inside of the outer boundary
+		List<ObservableList<GeoPoint>> innerBoundaries = site.getBoundary().getInnerBoundaries();
 		// ElasticSearch assumes the first array we give it contains the outer boundary which is then followed by 0 or more inner boundary arrays
-		List<Boundary> boundariesCombined = new ArrayList<>();
+		List<List<GeoPoint>> boundariesCombined = new ArrayList<>();
 		// Add the outer boundary, then the inner boundaries
 		boundariesCombined.add(outerBoundary);
 		if (innerBoundaries != null)
 			boundariesCombined.addAll(innerBoundaries);
 
-		String siteJSON = CalliopeData.getInstance().getGson().toJson(boundedSite.getSite());
-
 		// Start off the content builder with fields we know such as name, code, and description
 		XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
 		.startObject()
-			.field("site")
-			.copyCurrentStructure(XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, siteJSON.getBytes()))
+			.field("name", site.getName())
+			.field("code", site.getType() + "-" + site.getCode())
+			.field("type", site.getType())
 			.startObject("boundary")
 				.field("type", "polygon")
 				// Polygon coordinates are given as a 3-deep array. First an array of boundaries,
@@ -455,20 +432,20 @@ public class ElasticSearchSchemaManager
 				.startArray("coordinates");
 
 		// Go over each boundary
-		for (Boundary boundary : boundariesCombined)
+		for (List<GeoPoint> boundary : boundariesCombined)
 		{
 			// Start the boundary array
 			xContentBuilder
 					.startArray();
 
 			// Go over each coordinate in the boundary array
-			for (Coordinate coordinate : boundary.getLinearRing().getCoordinates())
+			for (GeoPoint coordinate : boundary)
 			{
 				// Start the coordinate array, and insert [long, lat]
 				xContentBuilder
 						.startArray()
-							.value(coordinate.getLongitude())
-							.value(coordinate.getLatitude())
+							.value(coordinate.getLon())
+							.value(coordinate.getLat())
 						.endArray();
 			}
 
@@ -481,6 +458,16 @@ public class ElasticSearchSchemaManager
 		xContentBuilder
 				.endArray()
 			.endObject()
+			.startArray("details");
+
+		// Go over each detail and add key:value to the array
+		for (Pair<String, ?> detail : site.getDetails())
+			xContentBuilder
+				.value(detail.getKey() + ":" + detail.getValue());
+
+		// End the details array and the object
+		xContentBuilder
+			.endArray()
 		.endObject();
 		return xContentBuilder;
 	}
