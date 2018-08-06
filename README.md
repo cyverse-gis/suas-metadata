@@ -6,7 +6,7 @@ This repository maintains the software used for the Project Calliope sUAS (small
 
 ### Calliope
 
-[info here]
+Desktop Java application used to import, tag, organize, upload, and visualize drone images. More details can be found (here)[./Calliope]
 
 ### CalliopeAuth
 
