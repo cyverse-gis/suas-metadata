@@ -9,6 +9,7 @@ import model.dataSources.UploadedEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.site.Boundary;
+import model.site.ltar.LTARSite;
 import model.site.neon.NEONSite;
 import model.site.Site;
 import model.settings.SensitiveConfigurationManager;
@@ -22,27 +23,35 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.bulk.BulkItemRequest;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.geo.builders.PointBuilder;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
@@ -163,7 +172,8 @@ public class ElasticSearchConnectionManager
 			// Establish a connection to the elastic search server
 			this.elasticSearchClient = new RestHighLevelClient(RestClient
 					.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
-					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
+					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)).setMaxRetryTimeoutMillis(120000)
+					.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(120000).setConnectTimeout(120000)));
 
 			// Test to see if the ElasticSearch index is up or not
 			try
@@ -273,22 +283,31 @@ public class ElasticSearchConnectionManager
 
 			// Download the list of sites from all sources
 			List<? extends Site> sites = CalliopeData.getInstance().getSiteManager().downloadSites();
+
+			int x = 0;
+
 			// Iterate over each of the sites
 			for (Site site : sites)
 			{
+				XContentBuilder xContentBuilder = this.elasticSearchSchemaManager.makeCreateSite(site);
 				// Create an index request, use our schema manager to ensure the proper fields are inserted
 				IndexRequest indexRequest = new IndexRequest()
 						.index(INDEX_CALLIOPE_SITES)
 						.type(INDEX_CALLIOPE_SITES_TYPE)
-						.source(this.elasticSearchSchemaManager.makeCreateSite(site));
+						.source(xContentBuilder);
 				bulkRequest.add(indexRequest);
 			}
+
+			bulkRequest.timeout(TimeValue.timeValueMinutes(15));
 
 			// Store the response of the bulk insert
 			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
 			// Make sure it was OK, if not, print an error
 			if (bulkResponse.status() != RestStatus.OK)
 				CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk site insert! Status = " + bulkResponse.status());
+
+			if (bulkResponse.hasFailures())
+				CalliopeData.getInstance().getErrorDisplay().printError(bulkResponse.buildFailureMessage());
 		}
 		catch (IOException e)
 		{
@@ -554,6 +573,13 @@ public class ElasticSearchConnectionManager
 										this.injectDetailsIntoNEONSite(site, details);
 										toReturn.add(site);
 									}
+									else if (type.equalsIgnoreCase("ltar"))
+									{
+										// Make a LTAR site and then parse the details, add it to be returned
+										LTARSite site = new LTARSite(name, code, boundary);
+										this.injectDetailsIntoLTARSite(site, details);
+										toReturn.add(site);
+									}
 								}
 							}
 						}
@@ -653,6 +679,38 @@ public class ElasticSearchConnectionManager
 					break;
 				case "stateName":
 					neonSite.setStateName(value);
+					break;
+				default:
+					break;
+			}
+		});
+	}
+
+	/**
+	 * Attempts to parse the details and adds them to the LTAR site
+	 *
+	 * @param ltarSite The site to add details to
+	 * @param details The details to add to the site
+	 */
+	private void injectDetailsIntoLTARSite(LTARSite ltarSite, List<String> details)
+	{
+		// Iterate over each detail
+		details.forEach(detail ->
+		{
+			// Grab the key and value which are separated by the first ':'
+			String key = StringUtils.substringBefore(detail, ":");
+			String value = StringUtils.substringAfter(detail, ":");
+			// Based on the key, set the right field
+			switch(key)
+			{
+				case "acronym":
+					ltarSite.setAcronym(value);
+					break;
+				case "city":
+					ltarSite.setCity(value);
+					break;
+				case "state":
+					ltarSite.setState(value);
 					break;
 				default:
 					break;

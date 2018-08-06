@@ -243,28 +243,6 @@ public class CalliopeMapController
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
 
-		/*
-		try
-		{
-			ShpFiles shpFile = new ShpFiles("C:\\Users\\David\\Downloads\\ltar_site_polygon\\ltar_site_polygon.shp");
-			GeometryFactory geometryFactory = new GeometryFactory();
-			ShapefileReader shapefileReader = new ShapefileReader(shpFile, false, true, geometryFactory);
-			while(shapefileReader.hasNext())
-			{
-				ShapefileReader.Record record = shapefileReader.nextRecord();
-				Envelope envelope = record.envelope();
-				MultiPolygon simplifiedShape = (MultiPolygon) record.getSimplifiedShape();
-				Coordinate[] coordinates = simplifiedShape.getBoundary().getCoordinates();
-				int x = 5;
-			}
-			shapefileReader.close();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		*/
-
 		///
 		/// Setup the Z-Layer ordering system
 		///

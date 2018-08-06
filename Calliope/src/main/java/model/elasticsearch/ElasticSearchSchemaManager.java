@@ -10,7 +10,12 @@ import model.site.Site;
 import model.settings.SettingsData;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
+import org.elasticsearch.common.geo.builders.LineStringBuilder;
+import org.elasticsearch.common.geo.builders.PolygonBuilder;
+import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.common.xcontent.*;
+import org.locationtech.jts.geom.Coordinate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -408,56 +413,20 @@ public class ElasticSearchSchemaManager
 	 */
 	XContentBuilder makeCreateSite(Site site) throws IOException
 	{
-		// Grab the site's outer boundary which is the real polygon that makes up the boundary
-		List<GeoPoint> outerBoundary = site.getBoundary().getOuterBoundary();
-		// Grab the site's inner boundary which is a list of holes inside of the outer boundary
-		List<ObservableList<GeoPoint>> innerBoundaries = site.getBoundary().getInnerBoundaries();
-		// ElasticSearch assumes the first array we give it contains the outer boundary which is then followed by 0 or more inner boundary arrays
-		List<List<GeoPoint>> boundariesCombined = new ArrayList<>();
-		// Add the outer boundary, then the inner boundaries
-		boundariesCombined.add(outerBoundary);
-		if (innerBoundaries != null)
-			boundariesCombined.addAll(innerBoundaries);
-
 		// Start off the content builder with fields we know such as name, code, and description
 		XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
 		.startObject()
 			.field("name", site.getName())
 			.field("code", site.getType() + "-" + site.getCode())
 			.field("type", site.getType())
-			.startObject("boundary")
-				.field("type", "polygon")
-				// Polygon coordinates are given as a 3-deep array. First an array of boundaries,
-				// where each boundary is an array of locations, where each location is an array of [long, lat] positions
-				.startArray("coordinates");
+			.field("boundary");
 
-		// Go over each boundary
-		for (List<GeoPoint> boundary : boundariesCombined)
-		{
-			// Start the boundary array
-			xContentBuilder
-					.startArray();
+		List<Coordinate> outerBoundary = site.getBoundary().getOuterBoundary().stream().map(geoPoint -> new Coordinate(geoPoint.getLon(), geoPoint.getLat())).collect(Collectors.toList());
+		PolygonBuilder polygonBuilder = new PolygonBuilder(new LineStringBuilder(outerBoundary), ShapeBuilder.Orientation.RIGHT, true);
+		site.getBoundary().getInnerBoundaries().forEach(innerBoundary -> polygonBuilder.hole(new LineStringBuilder(innerBoundary.stream().map(geoPoint -> new Coordinate(geoPoint.getLon(), geoPoint.getLat())).collect(Collectors.toList())), true));
+		polygonBuilder.toXContent(xContentBuilder, ToXContent.EMPTY_PARAMS);
 
-			// Go over each coordinate in the boundary array
-			for (GeoPoint coordinate : boundary)
-			{
-				// Start the coordinate array, and insert [long, lat]
-				xContentBuilder
-						.startArray()
-							.value(coordinate.getLon())
-							.value(coordinate.getLat())
-						.endArray();
-			}
-
-			// Finish the boundary array
-			xContentBuilder
-					.endArray();
-		}
-
-		// Finish the coordinates array
 		xContentBuilder
-				.endArray()
-			.endObject()
 			.startArray("details");
 
 		// Go over each detail and add key:value to the array

@@ -34,28 +34,10 @@ public abstract class Site
 	public Site(String name, String code, String type, Boundary boundary)
 	{
 		// Set the four simple fields
-		this.name.setValue(name);
-		this.code.setValue(code);
-		this.type.setValue(type);
-		this.boundary.setValue(boundary);
-
-		// Compute the center
-
-		// Average the latitudes and longitudes
-		double avgLat = 0;
-		double avgLon = 0;
-		// Go over the outer boundary, and add up all lat longs
-		ObservableList<GeoPoint> outerBoundary = boundary.getOuterBoundary();
-		for (GeoPoint geoPoint : outerBoundary)
-		{
-			avgLat = avgLat + geoPoint.getLat();
-			avgLon = avgLon + geoPoint.getLon();
-		}
-		// Divide by the number of points to get the average lat and long
-		avgLat = avgLat / outerBoundary.size();
-		avgLon = avgLon / outerBoundary.size();
-		// Set the center point's lat and long
-		this.center.setValue(new GeoPoint(avgLat, avgLon));
+		this.setName(name);
+		this.setCode(code);
+		this.setType(type);
+		this.setBoundary(boundary);
 	}
 
 	/**
@@ -104,9 +86,34 @@ public abstract class Site
 		return this.name;
 	}
 
+	/**
+	 * Set boundary is special in that it also updates the center
+	 *
+	 * @param boundary The new boundary
+	 */
 	public void setBoundary(Boundary boundary)
 	{
 		this.boundary.setValue(boundary);
+
+		// Recompute the center if boundary is not null
+		if (boundary != null)
+		{
+			// Average the latitudes and longitudes
+			double avgLat = 0;
+			double avgLon = 0;
+			// Go over the outer boundary, and add up all lat longs
+			ObservableList<GeoPoint> outerBoundary = boundary.getOuterBoundary();
+			for (GeoPoint geoPoint : outerBoundary)
+			{
+				avgLat = avgLat + geoPoint.getLat();
+				avgLon = avgLon + geoPoint.getLon();
+			}
+			// Divide by the number of points to get the average lat and long
+			avgLat = avgLat / outerBoundary.size();
+			avgLon = avgLon / outerBoundary.size();
+			// Set the center point's lat and long
+			this.center.setValue(new GeoPoint(avgLat, avgLon));
+		}
 	}
 	public Boundary getBoundary()
 	{

@@ -267,7 +267,7 @@ public class CalliopeViewController
 						//esConnectionManager.nukeAndRecreateUserIndex();
 						//esConnectionManager.nukeAndRecreateMetadataIndex();
 						//esConnectionManager.nukeAndRecreateCollectionsIndex();
-						//esConnectionManager.nukeAndRecreateSitesIndex();
+						esConnectionManager.nukeAndRecreateSitesIndex();
 
 						// Then initialize the remove calliope directory
 						this.updateMessage("Initializing Calliope elastic index...");
