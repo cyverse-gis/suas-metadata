@@ -5,13 +5,18 @@ Calliope is a program developed by CyVerse for the School of Natural Resources a
 ## Installation
 
 ### Getting Started
-This repository should be cloned and then built using maven. All dependencies will be automatically fetched. through maven 
+This repository should be cloned and then built using maven. All dependencies will be automatically fetched through maven. Please note that you will need ExifTool installed on your system as well to import images and read metadata.  
 
 #### Prerequisites
-Java 8:
+Java 8: <br>
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
-Maven:
-https://maven.apache.org/install.html
+<br>
+Maven:<br>
+https://maven.apache.org/install.html<br>
+ExifTool:<br>
+https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
+
+Please note that ExifTool must be accessible in your system $PATH environment variable. You can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system.
 
 #### Build from Source
 Clone the github repository into a directory:
@@ -46,7 +51,7 @@ Calliope's interface is broken up by tabs found on the top of the window. A shor
 - [Map](./Map.md) - This tab allows you to see all uploaded images on an interactive map as well as perform queries to filter what data you see.
 - [Settings](./Settings.md) - This tab lets you specify various settings, such as date and time format.
 
-Each tab is described in detail if clicked on.
+Hint: Click on a tab above to get a detailed description of the tab.
 
 ### Developer's Documentation
 
@@ -54,7 +59,7 @@ If you would like to work on this project an outline of the code structure can b
 
 ### Credits
 
-This program is currently being developed by [CyVerse](https://github.com/DavidM1A2/). It is heavily based on previous code from [Sanimal](https://github.com/DavidM1A2/Sanimal). 
+This program is currently being developed by [CyVerse](https://www.cyverse.org/). It is heavily based on previous code from [Sanimal](https://github.com/DavidM1A2/Sanimal). 
 
 - Software Developer - [David Slovikosky](https://github.com/DavidM1A2/)
 - Project Supervisor - [Tyson Swetnam](https://github.com/tyson-swetnam)
