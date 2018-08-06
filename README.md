@@ -12,31 +12,15 @@ Desktop Java application used to import, tag, organize, upload, and visualize dr
 
 Backend Java application used to accept and forward HTTP basic authentication requests from ElasticSearch to CyVerse using iRODS. More details can be found [here](./CalliopeAuth) 
 
-### ElasticSearch
+### Java Metadata Processor & Python Sandbox
 
-[info here]
-
-### Java Metadata Processor
-
-[info here]
-
-### Python Sandbox
-
-[info here]
+A Java and Python implementation of a program that could run on CentOS7 along side iRODS. iRODS rules could trigger automatic metadata indexing through this java program or python script. Both are currently not used, but much of the code from the Java metadata processor is reflected in [Calliope](./Calliope)
 
 ### iRODS Server
 
-[info here]
-
-### iRODS
-
-[info here]
+Simple directory containing two files, `iRODS Installation Steps CentOS7.txt` and `iRODS rules.txt`. The first file contains a list of instructions to install a custom iRODS server on a fresh CentOS7 install. This can be used to test iRODS rules. Test iRODS rules are found in the second text file, even though none of them are actually used.
 
 ### Photoscan-scripts
-
-### Developer's Documentation
-
-If you would like to work on this project an outline of the code structure can be found [here](./DeveloperDocumentation.md).
 
 ### Credits
 
