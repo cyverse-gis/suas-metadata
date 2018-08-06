@@ -7,7 +7,7 @@ Calliope is a program developed by CyVerse for the School of Natural Resources a
 ### Getting Started
 This repository should be cloned and then built using maven. All Java dependencies will be automatically fetched through maven. Please note that you will need ExifTool installed on your system as well to import images and read metadata.  
 
-#### Prerequisites
+### Prerequisites
 Java 8: <br>
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 <br>
@@ -18,7 +18,7 @@ https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
 
 *Important:* ExifTool must be accessible in your system $PATH environment variable. You can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
-#### Build from Source
+### Build from Source
 Clone the github repository into a directory:
 ```shell
 git clone https://github.com/cyverse-gis/suas-metadata <directory>

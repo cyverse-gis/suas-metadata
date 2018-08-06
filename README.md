@@ -10,7 +10,7 @@ Desktop Java application used to import, tag, organize, upload, and visualize dr
 
 ### CalliopeAuth
 
-[info here]
+Backend Java application used to accept and forward HTTP basic authentication requests from ElasticSearch to CyVerse using iRODS. More details can be found [here](./CalliopeAuth) 
 
 ### ElasticSearch
 
