@@ -1,9 +1,5 @@
 package controller;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
 import controller.importView.SitePopOverController;
 import controller.mapView.MapCircleController;
 import fxmapcontrol.*;
@@ -25,8 +21,8 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -53,8 +49,7 @@ import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.CheckComboBox;
 import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.PopOver;
@@ -63,8 +58,6 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.geotools.data.shapefile.files.ShpFiles;
-import org.geotools.data.shapefile.shp.ShapefileReader;
 import org.locationtech.jts.math.MathUtil;
 
 import javax.swing.filechooser.FileSystemView;
@@ -102,10 +95,10 @@ public class CalliopeMapController
 	public ComboBox<MapProviders> cbxMapProvider;
 	// A toggle switch to enable or disable NEON site markers
 	@FXML
-	public ToggleSwitch tswMarkers;
+	public ToggleSwitch tswNEON;
 	// A toggle switch to enable or disable NEON site boundaries
 	@FXML
-	public ToggleSwitch tswBoundaries;
+	public ToggleSwitch tswLTAR;
 	// A toggle switch to enable or disable image count circles
 	@FXML
 	public ToggleSwitch tswImageCounts;
@@ -306,19 +299,49 @@ public class CalliopeMapController
 		/// Setup our sites on the map. When a new site gets added we add a polygon & pin, when it gets removed we clear the polygon & pin
 		///
 
-		// Create a map of sites to polygons for quick lookup later
-		java.util.Map<Site, Pair<MapPolygon, MapNode>> siteToPolygonAndPin = new HashMap<>();
-		// When our site list changes, we update our map
-		CalliopeData.getInstance().getSiteManager().getSites().addListener((ListChangeListener<? super Site>) change ->
+		List<Node> mapSiteNodes = new ArrayList<>();
+		ReRunnableService<List<String>> siteBoundaryDrawingService = new ReRunnableService<>(() ->
 		{
-			while (change.next())
-				if (change.wasAdded())
+			// Compute the bounds of the map inside of the window, this is used to compute the extent to which we can see the map
+			// We do it here so that it's on the FXApplicationThread and not in our custom task thread
+			Bounds boundsInParent = map.getBoundsInParent();
+			return new ErrorTask<List<String>>()
+			{
+				@Override
+				protected List<String> call()
 				{
-					// Iterate over all new sites and add them to the map
-					for (Site site : change.getAddedSubList())
-					{
-						Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
+					// Using the bounds we compute the maximum and minimum lat/long values which we will pass to elasticsearch later
+					Location topLeft = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
+					Location bottomRight = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
+					// This is the important line. We call ES to grab all site codes within our viewport
+					return CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
+							MathUtil.clamp(topLeft.getLatitude(), -90.0, 90.0),
+							MathUtil.clamp(topLeft.getLongitude(), -180.0, 180.0),
+							MathUtil.clamp(bottomRight.getLatitude(), -90.0, 90.0),
+							MathUtil.clamp(bottomRight.getLongitude(), -180.0, 180.0));
+				}
+			};
+		});
+		siteBoundaryDrawingService.addFinishListener(siteCodesToDraw ->
+		{
+			// Remove any known nodes from the map and clear the site nodes list
+			mapSiteNodes.forEach(this::removeNodeFromMap);
+			mapSiteNodes.clear();
+			// Grab the current list of sites
+			ObservableList<Site> sites = CalliopeData.getInstance().getSiteManager().getSites();
+			// For each of the returned site codes....
+			for (String siteCode : siteCodesToDraw)
+			{
+				// ... find the corresponding site and process it
+				sites.stream().filter(siteToTest -> siteToTest.getCode().equals(siteCode)).findFirst().ifPresent(site ->
+				{
+					// Convert the site's center to a location
+					Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
+
+					// If we're zoomed in far enough, show the polygon, otherwise show the pin
+					if (this.map.getZoomLevel() > PIN_TO_POLY_THRESHOLD)
+					{
 						// Grab the polygon representing the boundary of this site
 						Boundary polygon = site.getBoundary();
 						// Create a map polygon to render this site's boundary
@@ -331,7 +354,16 @@ public class CalliopeMapController
 						mapPolygon.getStyleClass().add("site-boundary");
 						// Make sure we can drag & drop through the polygon
 						mapPolygon.setMouseTransparent(true);
+						// Hide the polygon if the toggle switch is off
+						mapPolygon.visibleProperty().bind(
+								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
+							.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 
+						mapSiteNodes.add(mapPolygon);
+						this.addNodeToMap(mapPolygon, MapLayers.BORDER_POLYGON);
+					}
+					else
+					{
 						// Create a map pin to render the site's center point when zoomed out
 						MapNode mapPin = new AlignedMapNode(Pos.CENTER);
 						// Set the pin's center to be the node's center
@@ -351,33 +383,16 @@ public class CalliopeMapController
 							event.consume();
 						});
 
-						// Hide/Show polygons or pins when the toggle switches are toggled
-						mapPolygon.visibleProperty().bind(this.tswBoundaries.selectedProperty());
-						mapPin.visibleProperty().bind(this.tswMarkers.selectedProperty());
+						// Hide/Show pins when the toggle switches are toggled
+						mapPin.visibleProperty().bind(
+								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
+						    .or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 
-						// If we're zoomed in far enough, show the polygon, otherwise show the pin
-						if (this.map.getZoomLevel() > PIN_TO_POLY_THRESHOLD)
-							this.addNodeToMap(mapPolygon, MapLayers.BORDER_POLYGON);
-						else
-							this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
-
-						// Store a reference to the polygon in our hashmap to ensure we can retrieve it later in remove
-						siteToPolygonAndPin.put(site, MutablePair.of(mapPolygon, mapPin));
+						mapSiteNodes.add(mapPin);
+						this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
 					}
-				}
-				// If a site is removed, lookup our site in the hashmap and clear it out
-				else if (change.wasRemoved())
-				{
-					// Iterate over sites
-					for (Site site : change.getRemoved())
-						// If the site is present in the polygon hashmap, remove it from the FXML hierarchy
-						if (siteToPolygonAndPin.containsKey(site))
-						{
-							Pair<MapPolygon, MapNode> polygonAndPinPair = siteToPolygonAndPin.remove(site);
-							this.removeNodeFromMap(polygonAndPinPair.getLeft());
-							this.removeNodeFromMap(polygonAndPinPair.getRight());
-						}
-				}
+				});
+			}
 		});
 
 		///
@@ -463,13 +478,15 @@ public class CalliopeMapController
 			// If we started dragging or got a null don't do anything
 			if (newValue == null || newValue)
 				return;
+			// Redraw all the site boundaries in our view because we moved our map
+			siteBoundaryDrawingService.requestAnotherRun();
 			// Redraw all the pin circles with new values because we moved our map
 			circleDrawingService.requestAnotherRun();
 		});
 		// When the mouse scroll is touched and the zoom is changed we update our circles too
 		this.map.zoomLevelProperty().addListener((observable, oldValue, newValue) ->
 		{
-			this.updateSitePins(siteToPolygonAndPin, oldValue.doubleValue(), newValue.doubleValue());
+			siteBoundaryDrawingService.requestAnotherRun();
 			circleDrawingService.requestAnotherRun();
 		});
 		// When our query changes we request another circle drawing run which updates the mini circles containing images
@@ -780,45 +797,6 @@ public class CalliopeMapController
 				pixelsPerPowerOf10 = pixelsPerPowerOf10 * 10;
 			}
 		});
-	}
-
-	/**
-	 * Updates the site pins based on the the current zoom. If the zoom is close enough, then show polygons
-	 *
-	 * @param siteToPolygonAndPin A map of site to the two UI elements that make it up (polygon & pin)
-	 * @param oldZoom The old zoom we're changing from
-	 * @param newZoom The new zoom we're moving to
-	 */
-	private void updateSitePins(java.util.Map<Site, Pair<MapPolygon, MapNode>> siteToPolygonAndPin, Double oldZoom, Double newZoom)
-	{
-		// We went from below to above the threshold
-		if (newZoom > PIN_TO_POLY_THRESHOLD && oldZoom <= PIN_TO_POLY_THRESHOLD)
-		{
-			// Go over all UI elements and show the correct element
-			siteToPolygonAndPin.values().forEach(polygonAndPinPair ->
-			{
-				MapPolygon mapPolygon = polygonAndPinPair.getLeft();
-				MapNode mapPin = polygonAndPinPair.getRight();
-				// Remove the pin, and add the polygon
-				this.removeNodeFromMap(mapPin);
-				if (!this.map.getChildren().contains(mapPolygon))
-					this.addNodeToMap(mapPolygon, MapLayers.BORDER_POLYGON);
-			});
-		}
-		// We went from above to below the threshold
-		else if (newZoom <= PIN_TO_POLY_THRESHOLD && oldZoom > PIN_TO_POLY_THRESHOLD)
-		{
-			// Go over all UI elements and show the correct element
-			siteToPolygonAndPin.values().forEach(polygonAndPinPair ->
-			{
-				MapPolygon mapPolygon = polygonAndPinPair.getLeft();
-				MapNode mapPin = polygonAndPinPair.getRight();
-				// Remove the polygon, and add the pin
-				this.removeNodeFromMap(mapPolygon);
-				if (!this.map.getChildren().contains(mapPin))
-					this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
-			});
-		}
 	}
 
 	/**

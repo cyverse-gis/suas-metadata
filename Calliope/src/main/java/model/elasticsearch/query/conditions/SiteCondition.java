@@ -8,6 +8,7 @@ import model.CalliopeData;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.QueryCondition;
 import model.site.Site;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -90,5 +91,33 @@ public class SiteCondition extends QueryCondition
 	{
 		for (BooleanProperty selected : this.siteToSelected.values())
 			selected.set(false);
+	}
+
+	/**
+	 * Selects images take at NEON sites only
+	 */
+	public void selectNEON()
+	{
+		this.siteToSelected.forEach((site, selected) ->
+		{
+			if (StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"))
+				selected.setValue(true);
+			else
+				selected.setValue(false);
+		});
+	}
+
+	/**
+	 * Selects images take at LTAR sites only
+	 */
+	public void selectLTAR()
+	{
+		this.siteToSelected.forEach((site, selected) ->
+		{
+			if (StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"))
+				selected.setValue(true);
+			else
+				selected.setValue(false);
+		});
 	}
 }

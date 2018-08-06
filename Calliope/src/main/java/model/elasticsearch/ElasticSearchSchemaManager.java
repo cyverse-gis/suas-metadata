@@ -1,16 +1,14 @@
 package model.elasticsearch;
 
-import javafx.collections.ObservableList;
 import javafx.util.Pair;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.ImageEntry;
-import model.site.Site;
 import model.settings.SettingsData;
+import model.site.Site;
+import model.util.LocUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
 import org.elasticsearch.common.geo.builders.LineStringBuilder;
 import org.elasticsearch.common.geo.builders.PolygonBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilder;
@@ -21,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -421,9 +418,14 @@ public class ElasticSearchSchemaManager
 			.field("type", site.getType())
 			.field("boundary");
 
-		List<Coordinate> outerBoundary = site.getBoundary().getOuterBoundary().stream().map(geoPoint -> new Coordinate(geoPoint.getLon(), geoPoint.getLat())).collect(Collectors.toList());
+		// Utilize ElasticSearch helper classes to add the boundary polygon.
+		// First we convert the list of GeoPoints into a list of coordinates.
+		List<Coordinate> outerBoundary = LocUtils.geoToCoord(site.getBoundary().getOuterBoundary());
+		// We then create a new polygon builder with the outer boundary and make sure to coerce the starting and ending points.
 		PolygonBuilder polygonBuilder = new PolygonBuilder(new LineStringBuilder(outerBoundary), ShapeBuilder.Orientation.RIGHT, true);
-		site.getBoundary().getInnerBoundaries().forEach(innerBoundary -> polygonBuilder.hole(new LineStringBuilder(innerBoundary.stream().map(geoPoint -> new Coordinate(geoPoint.getLon(), geoPoint.getLat())).collect(Collectors.toList())), true));
+		// Then, for each inner boundary, we add a hole the polygon builder represented by the inner boundary
+		site.getBoundary().getInnerBoundaries().forEach(innerBoundary -> polygonBuilder.hole(new LineStringBuilder(LocUtils.geoToCoord(innerBoundary)), true));
+		// Finally we write the polygon builder to our xcontent which will serialize to JSON
 		polygonBuilder.toXContent(xContentBuilder, ToXContent.EMPTY_PARAMS);
 
 		xContentBuilder

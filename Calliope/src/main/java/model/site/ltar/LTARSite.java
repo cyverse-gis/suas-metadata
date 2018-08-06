@@ -10,8 +10,12 @@ import model.image.ImageEntry;
 import model.site.Boundary;
 import model.site.Site;
 
+/**
+ * A LTAR site class that has acronym, city, and state extra fields
+ */
 public class LTARSite extends Site
 {
+	// Extra fields that a LTAR site will give us
 	private StringProperty acronym = new SimpleStringProperty(null);
 	private StringProperty city = new SimpleStringProperty(null);
 	private StringProperty state = new SimpleStringProperty(null);
@@ -56,6 +60,9 @@ public class LTARSite extends Site
 			return LTAR_ICON;
 	}
 
+	/**
+	 * @return Returns a list of details that this LTAR site provides. Details are unique to each site type
+	 */
 	@Override
 	public ObservableList<Pair<String, ?>> getDetails()
 	{
@@ -65,6 +72,10 @@ public class LTARSite extends Site
 			new Pair<>("state", this.getState())
 		);
 	}
+
+	///
+	/// Getters/Setters for the LTAR site fields
+	///
 
 	public void setAcronym(String acronym)
 	{

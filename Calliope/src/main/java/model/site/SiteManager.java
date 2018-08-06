@@ -71,7 +71,7 @@ public class SiteManager
 	 */
 	public List<? extends Site> downloadSites()
 	{
-		return this.neonData.retrieveSites();//Stream.concat(this.neonData.retrieveSites().stream(), this.ltarData.retrieveSites().stream()).collect(Collectors.toList());
+		return Stream.concat(this.neonData.retrieveSites().stream(), this.ltarData.retrieveSites().stream()).collect(Collectors.toList());
 	}
 
 	/**

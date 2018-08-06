@@ -24,7 +24,7 @@
 /Java Metadata Processor/logs/*
 /Java Metadata Processor/tmp/*
 
-/CalliopeAuth/.idea/
+/CalliopeAuth/.idea/*
 /CalliopeAuth/CalliopeAuth.iml
 /CalliopeAuth/out/*
 /CalliopeAuth/demoApplication.log

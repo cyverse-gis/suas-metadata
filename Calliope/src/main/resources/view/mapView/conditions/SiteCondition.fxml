@@ -38,8 +38,10 @@
                         <Insets bottom="10" left="5" right="5" top="10"/>
                     </padding>
                     <children>
-                        <Button onAction="#selectAllSites" mnemonicParsing="false" text="Select All"/>
-                        <Button onAction="#selectNoSites" mnemonicParsing="false" text="Select None"/>
+                        <Button onAction="#selectAllSites" mnemonicParsing="false" text="All"/>
+                        <Button onAction="#selectNEONSites" mnemonicParsing="false" text="NEON Only"/>
+                        <Button onAction="#selectLTARSites" mnemonicParsing="false" text="LTAR Only"/>
+                        <Button onAction="#selectNoSites" mnemonicParsing="false" text="None"/>
                     </children>
                 </FlowPane>
             </children>

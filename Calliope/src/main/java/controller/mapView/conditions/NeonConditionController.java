@@ -101,4 +101,28 @@ public class NeonConditionController implements IConditionController
 			siteCondition.selectNone();
 		actionEvent.consume();
 	}
+
+	/**
+	 * Selects NEON sites for the given data model
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void selectNEONSites(ActionEvent actionEvent)
+	{
+		if (siteCondition != null)
+			siteCondition.selectNEON();
+		actionEvent.consume();
+	}
+
+	/**
+	 * Selects LTAR sites for the given data model
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void selectLTARSites(ActionEvent actionEvent)
+	{
+		if (siteCondition != null)
+			siteCondition.selectLTAR();
+		actionEvent.consume();
+	}
 }

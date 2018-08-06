@@ -8,12 +8,12 @@ import model.cyverse.ImageCollection;
 import model.dataSources.UploadedEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
-import model.site.Boundary;
-import model.site.ltar.LTARSite;
-import model.site.neon.NEONSite;
-import model.site.Site;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
+import model.site.Boundary;
+import model.site.Site;
+import model.site.ltar.LTARSite;
+import model.site.neon.NEONSite;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -23,14 +23,11 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
-import org.elasticsearch.action.bulk.BulkItemRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -38,20 +35,17 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.*;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.builders.EnvelopeBuilder;
 import org.elasticsearch.common.geo.builders.PointBuilder;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
@@ -72,6 +66,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+import org.locationtech.jts.geom.Coordinate;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -284,7 +279,19 @@ public class ElasticSearchConnectionManager
 			// Download the list of sites from all sources
 			List<? extends Site> sites = CalliopeData.getInstance().getSiteManager().downloadSites();
 
-			int x = 0;
+			// Iterate over all sites. Any that have duplicate site names will receive a number at the end signifying that they are in fact different parts of the same site
+			sites.stream().collect(Collectors.groupingBy(Site::getName)).forEach((name, siteList) ->
+			{
+				// If our aggregated sites list has more than 1 entry, we need to mark each entry with a unique ID
+				if (siteList.size() > 1)
+					for (int i = 0; i < siteList.size(); i++)
+					{
+						Site site = siteList.get(i);
+						// Add the name and code to each site
+						site.setName(site.getName() + "-" + (i + 1));
+						site.setCode(site.getCode() + "-" + (i + 1));
+					}
+			});
 
 			// Iterate over each of the sites
 			for (Site site : sites)
@@ -306,8 +313,29 @@ public class ElasticSearchConnectionManager
 			if (bulkResponse.status() != RestStatus.OK)
 				CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk site insert! Status = " + bulkResponse.status());
 
+			Integer failureCount = 0;
+			// If there were any errors in the bulk insertion show them
 			if (bulkResponse.hasFailures())
-				CalliopeData.getInstance().getErrorDisplay().printError(bulkResponse.buildFailureMessage());
+			{
+				// A list of response responses
+				BulkItemResponse[] responses = bulkResponse.getItems();
+				for (int i = 0; i < responses.length; i++)
+				{
+					// Grab the response
+					BulkItemResponse response = responses[i];
+					// If it failed, print out the failure
+					if (response.isFailed())
+					{
+						System.out.println("Site '" + sites.get(i).toString() + "' indexing failed: " + response.getFailureMessage());
+						failureCount++;
+					}
+				}
+			}
+			// If we had any errors print out how many failed
+			if (failureCount > 0)
+			{
+				CalliopeData.getInstance().getErrorDisplay().printError(failureCount.toString() + " out of " + sites.size() + " had invalid geometries!");
+			}
 		}
 		catch (IOException e)
 		{
@@ -1342,6 +1370,89 @@ public class ElasticSearchConnectionManager
 		{
 			// The user somehow managed to pass illegal values to the aggregation by moving the map into a strange position. Print an error but recover
 			CalliopeData.getInstance().getErrorDisplay().notify("Invalid geo-aggregation, error was:\n" + ExceptionUtils.getStackTrace(e));
+		}
+
+		return toReturn;
+	}
+
+	/**
+	 * Retrieves a list of site codes that are within a box defined by the two corners
+	 *
+	 * @param topLeftLat The top left corner's latitude
+	 * @param topLeftLong The top left corner's longitude
+	 * @param bottomRightLat The bottom right corner's latitude
+	 * @param bottomRightLong The bottom right corner's longitude
+	 * @return A list of site codes that are within this bounding box
+	 */
+	public List<String> grabSiteCodesWithin(Double topLeftLat, Double topLeftLong, Double bottomRightLat, Double bottomRightLong)
+	{
+		List<String> toReturn = new ArrayList<>();
+
+		try
+		{
+			// Because the site list could be potentially long, we use a scroll to ensure reading results in reasonable chunks
+			Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1));
+			// Create a search request, and populate the fields
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest
+					.indices(INDEX_CALLIOPE_SITES)
+					.types(INDEX_CALLIOPE_SITES_TYPE)
+					.scroll(scroll)
+					.source(new SearchSourceBuilder()
+							// Fetch results 100 at a time, and use a query that matches everything
+							.size(100)
+							.fetchSource(new FetchSourceContext(true, new String[] { "code" }, null))
+							// We use a geo-intersection query that tests if our viewport intersects the site's boundary
+							.query(QueryBuilders.geoIntersectionQuery("boundary", new EnvelopeBuilder(new Coordinate(topLeftLong, topLeftLat), new Coordinate(bottomRightLong, bottomRightLat)))));
+
+
+			// Grab the search results
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			// Store the scroll id that was returned because we specified a scroll in the search request
+			String scrollID = searchResponse.getScrollId();
+			// Get a list of sites (hits)
+			SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+			// Iterate while there are more collections to be read
+			while (searchHits != null && searchHits.length > 0)
+			{
+				// Iterate over all current results
+				for (SearchHit searchHit : searchHits)
+				{
+					// Grab the sites as a map object
+					Map<String, Object> sitesMap = searchHit.getSourceAsMap();
+					// We should only get 1 map value, the code, which we can add to our list
+					if (sitesMap.containsKey("code") && sitesMap.get("code") instanceof String)
+					{
+						toReturn.add((String) sitesMap.get("code"));
+					}
+				}
+
+				// Now that we've processed this wave of results, get the next 100 results
+				SearchScrollRequest scrollRequest = new SearchScrollRequest();
+				// Setup the scroll request
+				scrollRequest
+						.scrollId(scrollID)
+						.scroll(scroll);
+				// Perform the scroll, yielding another set of results
+				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+				// Store the hits and the new scroll id
+				scrollID = searchResponse.getScrollId();
+				searchHits = searchResponse.getHits().getHits();
+			}
+
+			// Finish off the scroll request
+			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+			clearScrollRequest.addScrollId(scrollID);
+			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+			// If clearing the scroll request fails, show an error
+			if (!clearScrollResponse.isSucceeded())
+				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading sites");
+		}
+		catch (IOException e)
+		{
+			// Something went wrong, so show an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Error pulling remote sites, error was:\n" + ExceptionUtils.getStackTrace(e));
 		}
 
 		return toReturn;
