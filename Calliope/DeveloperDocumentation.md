@@ -8,7 +8,7 @@ This documentation outlines some design decisions made in the development of Cal
 
 Calliope is built using the standard MVC design pattern. 
 
-In this design pattern, the model is created first with complete independence from the view or controller. The model contains the data of the program and functions to manipulate that data. Any database connections or network threads are managed by the model.
+In this design pattern, the model is created first with complete independence from the view or controller. The model tends to be made up of simple classes that make up the data of the program and functions to manipulate that data. Any database connections or network threads are managed by the model. 
 
 The view is completely independent from the model, but is linked or 'bound' to the controller. The view is made up of FXML and CSS files that define each user interface component. Each FXML file begins with a component that has an `fx:controller="x.y.z"` attribute that defines the controller the FXML file is bound to. Any actions done to the UI are forwarded to the controller through action listeners.
 
@@ -16,11 +16,15 @@ The controller is dependent on both the model and controller. Any UI components 
 
 ### Dependency Injection
 
-Calliope makes use of dependency injection to link the FXML file to its controller. This is automatically performed by JavaFX, so you won't need to do anything special. FXML elements with the tag `fx:id="abc"` tell JavaFX to 'dependency inject' this element into the field `private X abc;` found in the controller. If this field is not present an error will arise. 
+Calliope makes use of dependency injection to link a FXML file to its controller. This is automatically performed by JavaFX, so you won't need to do anything special. FXML elements with the tag `<X fx:id="abc"/>` tell JavaFX to 'dependency inject' this element into the field `private X abc;` found in the controller. If this field is not present an error will arise. 
 
 ### Singleton
 
-The singleton design pattern ensures only one instance of an object is ever created. This is used to ensure one publicly accessible data model is available to all controller files without needing to pass object references around. This can be dangerous and is not the best design decision, but it does work. 
+The singleton design pattern ensures only one instance of an object is ever created. This is used to ensure one publicly accessible data model is available to all controller files without needing to pass object references around. This data can be accessed with:
+```java
+CalliopeData.getInstance()...
+```
+While this makes referencing the data model very easy, it can be dangerous. A publicly accessible data model is typically frowned upon in traditional object oriented programming and is not the best design decision, but it does work for now. In the future this should be refactored to pass references around to each individual file.
 
 ### Observer
 
@@ -32,15 +36,15 @@ Model classes are found in: ` /src/main/java/model`
 
 ##### Calliope Data (/CalliopeData.java)
 
-This object contains all data used by Calliope. This data contains the list of sites, list of collections, currently imported images, CyVerse connection manager, ElasticSearch connection manager, threaded executor, and much more. To access the data model from anywhere in the program use `CalliopeData.getInstance()`. 
+This object contains all data used by Calliope. This data contains the list of sites, list of collections, currently imported images, CyVerse connection manager, ElasticSearch connection manager, threaded executor, and much more. To access the data model from anywhere in the program use `CalliopeData.getInstance()`. Any additional classes that need a single instance and a global presence should be added to this class.
 
 ##### CyVerse Connection Manager (/cyverse/CyVerseConnectionManager.java)
 
-This class contains all method definitions for connecting to CyVerse using Jargon. It lets users authenticate their account, upload images, download files, and much more. 
+This class contains all method definitions for connecting to CyVerse using Jargon. It lets users authenticate their account, upload images, download files, and much more. Any logic that interfaces with iRODS or the CyVerse datastore should be found in this file or at least in the `/cyverse/` package.
 
 ##### Elastic Search Connection Manager (/elasticsearch/ElasticSearchConnectionManager.java)
 
-This class contains all method definitions for connecting to the ElasticSearch index. It lets users authenticate their account, index images, and perform metadata queries. 
+This class contains all method definitions for connecting to the ElasticSearch index. It lets users authenticate their account, index images, and perform metadata queries. Any logic that interfaces with ElasticSearch should be found in this file or at least in the `/elasticsearch/` package.
 
 ##### Data Sources (/dataSources/IDataSource.java)
 
