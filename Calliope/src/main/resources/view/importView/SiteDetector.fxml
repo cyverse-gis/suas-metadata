@@ -39,9 +39,9 @@
 
                 <HBox fx:id="hbxDistance" BorderPane.alignment="CENTER" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1" spacing="5">
                     <children>
-                        <Label text="Detect if the image was taken at site is within"/>
+                        <Label text="Detect if the image was taken within"/>
                         <TextField fx:id="txtDistance" promptText="distance"/>
-                        <Label text="km of the center point."/>
+                        <Label text="km of the center point of a site."/>
                     </children>
                 </HBox>
                 <HBox fx:id="hbxBoundary" BorderPane.alignment="CENTER" alignment="CENTER_LEFT" GridPane.rowIndex="1" GridPane.columnIndex="1" spacing="5">

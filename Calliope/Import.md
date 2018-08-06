@@ -27,18 +27,16 @@ Once an image is selected, the bottom metadata panel becomes populated. Here you
 - Drone Brand - The brand of the drone, may be something like 'DJI'. This will be blank if the drone did not embed brand information on the image file. The brand name can contain any characters.
 - Camera Model - The camera model used to take the image, may be something like 'FC330'. This will be blank if the drone did not embed camera information on the image file. The camera model name can contain any characters.
 - Drone Speed - A 3-dimensional vector representing this drone's x, y, and z velocities the moment the image was taken. These will all be 0 if the drone did not embed any speed information on the image. All three fields must contain valid numbers.
-- Drone Rotation - A 3-dimensional vector representing this drone's roll, pitch, and yaw. velocities the moment the image was taken. These will all be 0 if the drone did not embed any rotational information on the image. All three fields must contain valid numbers.
+- Drone Rotation - A 3-dimensional vector representing this drone's roll, pitch, and yaw the moment the image was taken. These will all be 0 if the drone did not embed any rotational information on the image. All three fields must contain valid numbers.
 
-The left panel of the import window has two tabs, one for NEON sites and one for Raw Metadata. 
+The left panel of the import window has two tabs, one for sites and one for Raw Metadata. 
 
-The NEON sites panel shows one entry per NEON site. These sites can be viewed in more detail on https://www.neonscience.org/field-sites/field-sites-map. Some site names may be repeated if they are nearby without a common geo-graphical boundary. You can search for a NEON site by typing into the 'Search Sites' box below the list of NEON sites. The 'X' button will clear the current search. 
+The sites panel shows one entry per NEON or LTAR site. Some site names and codes may be repeated if two sites are nearby without a common geo-graphical boundary. To avoid confusion, Calliope adds a `-<Number>` to the end of each site name/code when the name/code is shared. For example, if two sites are called `Example Site Name` the first will be renamed to `Example Site Name-1` and the second will be renamed to `Example Site Name-2`. You can search for a site by typing into the 'Search Sites' box below the list of sites. The 'X' button will clear the current search. 
 
 The Raw Metadata tab will show you all the raw metadata that was extracted from the image file. It is not editable, but can be useful for seeing what other data your images have stored. 
 
-If you would like to specify that an imported image was taken at a NEON site you can do one of two things:
-1. To manually specify which site an image was taken at, drag a NEON site from the left panel onto the central image preview or onto the image on the right panel to tag it with the site. You may also drag it to a directory, indicating that all images in that directory were taken at the given NEON site. 
+If you would like to specify that an imported image was taken at a specific site you can do one of two things:
+1. To manually specify which site an image was taken at, drag a site from the left panel onto the central image preview or onto the image on the right panel to tag it with the site. You may also drag it to a directory, indicating that all images in that directory were taken at the given site. 
 2. To automatically detect which site an image was taken at, select an image or directory, and then click on the globe icon in the top right corner of the central image preview window. You can then pick either:
-    - Detect if the image was taken at NEON site is within <input> km of the center point. The closest site is picked.
-    - Detect if image was taken inside of a NEON site based on the site's polygonal boundary.
-
-Once an image has been tagged with a NEON site, its icon will be updated with the NEON icon. 
+    - Detect if the image was taken within <input> km of the center point of a site. The closest site is picked.
+    - Detect if image was taken inside of a site based on the site's polygonal boundary. If the latitude and longitude the image was taken at is inside of boundary, the site is picked.

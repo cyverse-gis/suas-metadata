@@ -5,7 +5,7 @@ Calliope is a program developed by CyVerse for the School of Natural Resources a
 ## Installation
 
 ### Getting Started
-This repository should be cloned and then built using maven. All dependencies will be automatically fetched through maven. Please note that you will need ExifTool installed on your system as well to import images and read metadata.  
+This repository should be cloned and then built using maven. All Java dependencies will be automatically fetched through maven. Please note that you will need ExifTool installed on your system as well to import images and read metadata.  
 
 #### Prerequisites
 Java 8: <br>
@@ -16,7 +16,7 @@ https://maven.apache.org/install.html<br>
 ExifTool:<br>
 https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
 
-Please note that ExifTool must be accessible in your system $PATH environment variable. You can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system.
+*Important:* ExifTool must be accessible in your system $PATH environment variable. You can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
 #### Build from Source
 Clone the github repository into a directory:

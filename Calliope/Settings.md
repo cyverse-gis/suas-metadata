@@ -5,7 +5,7 @@ The settings tab lets you customize Calliope's look and feel. The customizable s
 - Date Format - What format dates should be displayed as in the program.
 - Time Format - What format times are displayed as in the program.
 - Position Format - Sets locations to display as latitude & longitude or UTM coordinates.
-- Distance Units - If calliope should show distances in feet or meters.
+- Distance Units - If Calliope should show distances in feet or meters.
 - Hide Popup Delay - Only used if 'Disable Popups' is checked. Sets the wait time each popup will stay before being automatically closed.
 - Disable Popups - If popups are a problem for your current system configuration (ex. using X11 forwarding) you can enable this to remove as many popups as possible and move them to the bottom of the screen, however some are unavoidable (such as importing images).
 
