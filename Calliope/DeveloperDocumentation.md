@@ -48,11 +48,19 @@ This class contains all method definitions for connecting to the ElasticSearch i
 
 ##### Data Sources (/dataSources/IDataSource.java)
 
-This interface defines a set of methods used for interacting with different data sources. This should be implemented if adding support for more data sources such as Amazon S3 or Google Drive.
+This interface defines a set of methods used for interacting with different data sources. This should be implemented if adding support for more data sources such as Amazon S3 or Google Drive. To add a data source add the following line to `CalliopeData.java`
+```java
+private void addDefaultDataSources()
+{
+    ...
+    this.dataSources.add(new MyDataSource());
+    ...
+}
+```
 
 ##### Image Container (/image/ImageContainer.java)
 
-This interface is implemented by ImageEntry and ImageDirectory. Both these classes Are used in the tree of files on the right side on the import tab. ImageEntries are the programmatic form of an image file, while ImageDirectories are the programmatic form of a directory. ImageDirectories contain a list of sub-directories and files while ImageEntries contain image metadata and icon. This interface may be extended for custom image and directory implementations for use in new data sources. 
+This interface is implemented by `ImageEntry.java` and `ImageDirectory.java`. Both these classes are used in the tree of files on the right side on the import tab. `ImageEntry`ies are the programmatic form of an image file, while `ImageDirectory`ies are the programmatic form of a directory. ImageDirectories contain a list of sub-directories and files while ImageEntries contain image metadata and an icon. This interface may be extended for custom image and directory implementations for use in new data sources. See [Data Sources](#data-sources-datasourcesidatasourcejava) for info on how to add new data sources.
 
 ##### Settings Data (/settings/SettingsData.java)
 
@@ -60,11 +68,17 @@ This class contains a list of settings to be displayed in the settings tab. All 
 
 ##### Calliope Executor (/threading/CalliopeExecutor.java)
 
-This class contains all things related to threading. It contains 3 different threading executors, the BackgroundExecutor, ImmediateExecutor, and QueuedExecutor. The background executor has 25 available threads all running at once which can receive tasks without user knowledge. The ImmediateExecutor does the same thing as the background executor, but the task message and progress is displayed to the user in the Collections tab. Task progress is shown in the center column at the bottom. The QueuedExecutor is used for any operation that must be done in a specific order. Any tasks added to this executor are guaranteed to run in the order they are added. This executor is used for doing tasks such as importing images, and logging in. Progress is displayed to the user at the bottom of the central pane in the import tab. 
+This class contains all things related to threading. It contains 3 different threading executors, the BackgroundExecutor, ImmediateExecutor, and QueuedExecutor. 
+- Background Executor: This executor has 25 available threads all running at once which can receive tasks without user knowledge. No progress is displayed to the user. This should be used when performing tasks such as loading icons.
+ - Immediate Executor: This does the same thing as the background executor, but the task message and progress is displayed to the user in the Collections tab. Task progress is shown in the center column at the bottom. This should be used for performing uploads (to a data source).
+  - Queued Executor: This is used for any operation that must be done in a specific order. Any tasks added to this executor are guaranteed to run in the order they are added. This executor is used for doing tasks such as importing images, and logging in. Progress is displayed to the user at the bottom of the central pane in the import tab. 
 
 ##### FXML Loader Utils (/util/FXMLLoaderUtils.java)
 
-This utility class allows for easy FXML document loading. Just call `FXMLLoaderUtils.loadFXML()` with the path of FXML file to load.
+This utility class allows for easy FXML document loading. Just call `FXMLLoaderUtils.loadFXML()` with the path of FXML file to load. As an example, to load the FXML file to render the sites list, we do:
+```java
+FXMLLoaderUtils.loadFXML("importView/SiteListEntry.fxml")
+```
 
 ## Libraries Used
 
