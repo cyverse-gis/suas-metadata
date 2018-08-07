@@ -8,14 +8,13 @@ Calliope Auth is a backend program developed to assist an ElasticSearch index in
 
 This repository should be cloned and then built using maven. All Java dependencies will be automatically fetched through maven.
 
-### Prerequisites
+### Building from Source
 
-Java 8: <br>
+Make sure you have the following tools installed on your system:<br>
+Java 8:<br>
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html<br> 
 Maven:<br>
 https://maven.apache.org/install.html
-
-### Build from Source
 
 Clone the github repository into a directory:
 
