@@ -332,17 +332,10 @@ public class CyVerseConnectionManager
 							"CyVerse Data Store");
 
 					// Create the meta.csv representing the metadata for all images in the tar file
-					String localDirAbsolutePath = directoryToWrite.getFile().getAbsolutePath();
 					String localDirName = directoryToWrite.getFile().getName();
 
 					// Make a set of tar files from the image files. Don't use a single tar file because we may have > 1000 images in each
-					File[] tarsToWrite = DirectoryManager.directoryToTars(directoryToWrite, imageEntry ->
-					{
-						// Compute the image's "cyverse" path
-						String fileRelativePath = localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), localDirAbsolutePath);
-						fileRelativePath = fileRelativePath.replace('\\', '/');
-						return fileRelativePath + "\n";
-					}, 300);
+					File[] tarsToWrite = DirectoryManager.directoryToTars(directoryToWrite, 300);
 
 					// For each tar part, upload
 					for (int tarPart = 0; tarPart < tarsToWrite.length; tarPart++)

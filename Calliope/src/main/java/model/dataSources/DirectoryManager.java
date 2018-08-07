@@ -2,10 +2,10 @@ package model.dataSources;
 
 import javafx.beans.property.DoubleProperty;
 import model.CalliopeData;
-import model.util.AnalysisUtils;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
+import model.util.AnalysisUtils;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -15,7 +15,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -163,10 +162,9 @@ public class DirectoryManager
 	 * Given an image directory, this will create a TAR file out of the directory
 	 *
 	 * @param directory The image directory to TAR
-	 * @param imageToMetadata The CSV file representing each image's metadata
 	 * @return The TAR file
 	 */
-	public static File[] directoryToTars(ImageDirectory directory, Function<ImageEntry, String> imageToMetadata, Integer maxImagesPerTar)
+	public static File[] directoryToTars(ImageDirectory directory, Integer maxImagesPerTar)
 	{
 		maxImagesPerTar = maxImagesPerTar - 1;
 		try
