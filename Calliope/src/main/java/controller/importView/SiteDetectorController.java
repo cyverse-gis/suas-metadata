@@ -124,9 +124,9 @@ public class SiteDetectorController
 						// Grab the image
 						ImageEntry toProcess = imageEntries.get(i);
 						// Find the closest site to the image
-						Site closest = CalliopeData.getInstance().getSiteManager().closestSiteTo(rawSites, toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
+						Site closest = CalliopeData.getInstance().getSiteManager().closestSiteTo(rawSites, toProcess.getPositionTaken().getLatitude(), toProcess.getPositionTaken().getLongitude());
 						// Compute the distance to that site
-						Double distance = AnalysisUtils.distanceBetween(closest.getCenter().getLat(), closest.getCenter().getLon(), toProcess.getLocationTaken().getLatitude(), toProcess.getLocationTaken().getLongitude());
+						Double distance = AnalysisUtils.distanceBetween(closest.getCenter().getLat(), closest.getCenter().getLon(), toProcess.getPositionTaken().getLatitude(), toProcess.getPositionTaken().getLongitude());
 						// If the distance is less than the one required, we found the right spot
 						if (distance <= maxDistance)
 							toReturn[i] = closest;

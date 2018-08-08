@@ -691,13 +691,13 @@ public class CalliopeMapController
 			}
 		});
 		this.clmDroneMaker.setCellValueFactory(param -> param.getValue().droneMakerProperty());
-		this.clmElevation.setCellValueFactory(param -> EasyBind.monadic(param.getValue().locationTakenProperty()).selectProperty(x -> x.elevationProperty().asObject()));
+		this.clmElevation.setCellValueFactory(param -> EasyBind.monadic(param.getValue().positionTakenProperty()).selectProperty(x -> x.elevationProperty().asObject()));
 		this.clmFileType.setCellValueFactory(param -> param.getValue().fileTypeProperty());
 		this.clmFocalLength.setCellValueFactory(param -> param.getValue().focalLengthProperty().asObject());
 		this.clmWidth.setCellValueFactory(param -> param.getValue().widthProperty().asObject());
 		this.clmHeight.setCellValueFactory(param -> param.getValue().heightProperty().asObject());
-		this.clmLatitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().locationTakenProperty()).selectProperty(x -> x.latitudeProperty().asObject()));
-		this.clmLongitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().locationTakenProperty()).selectProperty(x -> x.longitudeProperty().asObject()));
+		this.clmLatitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().positionTakenProperty()).selectProperty(x -> x.latitudeProperty().asObject()));
+		this.clmLongitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().positionTakenProperty()).selectProperty(x -> x.longitudeProperty().asObject()));
 		this.clmSite.setCellValueFactory(param -> param.getValue().siteTakenProperty());
 		this.clmSpeed.setCellValueFactory(param -> param.getValue().speedProperty());
 		this.clmRotation.setCellValueFactory(param -> param.getValue().rotationProperty());

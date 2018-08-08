@@ -123,7 +123,7 @@ public class CyVerseDSDataSource implements IDataSource
 		// Each image must have a location tagged
 		for (CyVerseDSImageEntry imageEntry : directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).map(imageContainer -> (CyVerseDSImageEntry) imageContainer).collect(Collectors.toList()))
 			// All images must a) be downloaded and b) have a valid location taken
-			if (!imageEntry.wasMetadataRetrieved() || imageEntry.getLocationTaken() == null)
+			if (!imageEntry.wasMetadataRetrieved() || imageEntry.getPositionTaken() == null)
 			{
 				validDirectory = false;
 				break;

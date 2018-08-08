@@ -334,11 +334,11 @@ public class CalliopeImportController
 		this.txtDateTaken.disableProperty().bind(metadataEnabled);
 		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty)));
 		this.txtLatitude.disableProperty().bind(metadataEnabled);
-		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::latitudeProperty)), numStrconverter);
+		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::positionTakenProperty).selectProperty(Position::latitudeProperty)), numStrconverter);
 		this.txtLongitude.disableProperty().bind(metadataEnabled);
-		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::longitudeProperty)), numStrconverter);
+		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::positionTakenProperty).selectProperty(Position::longitudeProperty)), numStrconverter);
 		this.txtElevation.disableProperty().bind(metadataEnabled);
-		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::locationTakenProperty).selectProperty(Position::elevationProperty)), numStrconverter);
+		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::positionTakenProperty).selectProperty(Position::elevationProperty)), numStrconverter);
 		this.txtDroneBrand.disableProperty().bind(metadataEnabled);
 		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::droneMakerProperty)));
 		this.txtCameraModel.disableProperty().bind(metadataEnabled);
@@ -804,7 +804,7 @@ public class CalliopeImportController
 			images = Collections.singletonList(this.currentlySelectedImage.getValue());
 		// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
 		else if (this.currentlySelectedDirectory.getValue() != null)
-			images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getLocationTaken() != null).collect(Collectors.toList());
+			images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
 
 		// If we got any images at all, process them
 		if (images != null && !images.isEmpty())

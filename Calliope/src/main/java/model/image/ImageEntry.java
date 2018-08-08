@@ -48,7 +48,7 @@ public class ImageEntry extends ImageContainer
 	// The NEON site closest to the image
 	private final ObjectProperty<Site> siteTaken = new SimpleObjectProperty<>(null);
 	// The lat/long/elevation of this image
-	private final ObjectProperty<Position> locationTaken = new SimpleObjectProperty<>(null);
+	private final ObjectProperty<Position> positionTaken = new SimpleObjectProperty<>(null);
 	// The name of the drone maker company
 	private final StringProperty droneMaker = new SimpleStringProperty(null);
 	// The name of the drone camera model
@@ -127,7 +127,7 @@ public class ImageEntry extends ImageContainer
 		// Starting with date taken, convert the raw date taken as a string into an object
 		this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
 		// Next convert the lat/long/altitude into a location object
-		this.locationTaken.setValue(new Position(
+		this.positionTaken.setValue(new Position(
 				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, "0")),
 				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
 				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
@@ -146,7 +146,7 @@ public class ImageEntry extends ImageContainer
 				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.YAW, "0"))));
 
 		// Grab the position this image was taken at
-		Position position = this.locationTaken.getValue();
+		Position position = this.positionTaken.getValue();
 		// Set the altitude to the position's elevation - the ground elevation position
 		this.altitude.setValue(position.getElevation() - CalliopeData.getInstance().getElevationData().getGroundElevation(position.getLatitude(), position.getLongitude()));
 		// Store the file type, focal length, width, and height
@@ -276,19 +276,19 @@ public class ImageEntry extends ImageContainer
 		return dateTaken;
 	}
 
-	public void setLocationTaken(Position positionTaken)
+	public void setPositionTaken(Position positionTaken)
 	{
-		this.locationTaken.setValue(positionTaken);
+		this.positionTaken.setValue(positionTaken);
 	}
 
-	public Position getLocationTaken()
+	public Position getPositionTaken()
 	{
-		return locationTaken.getValue();
+		return positionTaken.getValue();
 	}
 
-	public ObjectProperty<Position> locationTakenProperty()
+	public ObjectProperty<Position> positionTakenProperty()
 	{
-		return locationTaken;
+		return positionTaken;
 	}
 
 	public void setDroneMaker(String droneMaker)

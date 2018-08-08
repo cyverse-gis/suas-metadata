@@ -35,7 +35,7 @@ public class ImageDirectory extends ImageContainer
 			{
 				image.dateTakenProperty(),
 				image.fileProperty(),
-				image.locationTakenProperty(),
+				image.positionTakenProperty(),
 				image.treeIconProperty(),
 				image.droneMakerProperty(),
 				image.cameraModelProperty(),

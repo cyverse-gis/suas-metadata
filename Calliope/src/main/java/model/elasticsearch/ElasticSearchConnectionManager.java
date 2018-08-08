@@ -16,7 +16,6 @@ import model.site.Boundary;
 import model.site.Site;
 import model.site.ltar.LTARSite;
 import model.site.neon.NEONSite;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -70,7 +69,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.locationtech.jts.geom.Coordinate;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.ZoneId;
@@ -1177,7 +1175,7 @@ public class ElasticSearchConnectionManager
 								// We only care about a single result
 								.size(1)
 								// We want to search where the polygon intersects our image's location (as a point)
-								.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getLocationTaken().getLongitude(), imageEntry.getLocationTaken().getLatitude()))));
+								.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getPositionTaken().getLongitude(), imageEntry.getPositionTaken().getLatitude()))));
 				// Store the search request
 				multiSearchRequest.add(searchRequest);
 			}
@@ -1545,7 +1543,7 @@ public class ElasticSearchConnectionManager
 										imageEntry.setDroneMaker(metadataMap.get("droneMaker").toString());
 										String[] longAndLat = metadataMap.get("position").toString().split(", ");
 										if (longAndLat.length == 2)
-											imageEntry.setLocationTaken(new Position(NumberUtils.toDouble(longAndLat[1], Double.NaN), NumberUtils.toDouble(longAndLat[0], Double.NaN), NumberUtils.toDouble(metadataMap.get("elevation").toString(), Double.NaN)));
+											imageEntry.setPositionTaken(new Position(NumberUtils.toDouble(longAndLat[1], Double.NaN), NumberUtils.toDouble(longAndLat[0], Double.NaN), NumberUtils.toDouble(metadataMap.get("elevation").toString(), Double.NaN)));
 										imageEntry.setFileType(metadataMap.get("fileType").toString());
 										imageEntry.setFocalLength(NumberUtils.toDouble(metadataMap.get("focalLength").toString(), Double.NaN));
 										imageEntry.setWidth(NumberUtils.toDouble(metadataMap.get("width").toString(), Double.NaN));
