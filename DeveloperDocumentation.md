@@ -181,6 +181,10 @@ sudo su irods
 
 Once iRODS is setup you can add custom rules to the file `/etc/irods/core.re`. 
 
+### Calliope Auth
+
+Unfortunately, ElasticSearch does not come with any method of authenticating users by default, and gives any user full permissions. To circumvent this, a plugin must be used instead to forward authentication requests through Calliope Auth to iRODS. Calliope auth is documented in the [Calliope Auth directory](./CalliopeAuth/README.md).
+
 ### Calliope
 
-The Calliope client is the core of the Calliope project. It is written in Java using JavaFX and runs as a downloadable desktop application. Users must import images from a `data source` which is essentially a supplier for image files. Currently images may be imported from the data store or from their local PC. After importing images, users can upload images to the data store which also triggers elast
+The Calliope client is the core of the Calliope project. It is written in Java using JavaFX and runs as a downloadable desktop application. To see more Calliope documentation click [here](./Calliope/README.md).
