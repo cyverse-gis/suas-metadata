@@ -37,6 +37,15 @@ public class Vector3
 		this.z.setValue(z);
 	}
 
+	/**
+	 * @return Returns the vector in the format [x, y, z]
+	 */
+	@Override
+	public String toString()
+	{
+		return "[" + this.getX() + ", " + this.getY() + ", " + this.getZ() + "]";
+	}
+
 	///
 	/// Setters/Getters
 	///

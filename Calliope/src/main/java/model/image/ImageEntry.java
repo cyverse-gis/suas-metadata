@@ -57,6 +57,15 @@ public class ImageEntry extends ImageContainer
 	private final ObjectProperty<Vector3> speed = new SimpleObjectProperty<>(new Vector3());
 	// The rotation the drone had when the image was taken
 	private final ObjectProperty<Vector3> rotation = new SimpleObjectProperty<>(new Vector3());
+	// The altitude the image was taken at above the ground
+	private final DoubleProperty altitude = new SimpleDoubleProperty(-1);
+	// The type of the image file
+	private final StringProperty fileType = new SimpleStringProperty(null);
+	// The focal length that the image was taken with
+	private final DoubleProperty focalLength = new SimpleDoubleProperty(-1);
+	// The width and height of the image
+	private final DoubleProperty width = new SimpleDoubleProperty(-1);
+	private final DoubleProperty height = new SimpleDoubleProperty(-1);
 
 	// The raw metadata entries without any modifications
 	private transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
@@ -136,16 +145,15 @@ public class ImageEntry extends ImageContainer
 				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.PITCH, "0")),
 				Double.parseDouble(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.YAW, "0"))));
 
-		//Double heightAboveGround = CalliopeData.getInstance().getElevationData().computeHeightAboveGround(this);
-		/*
-		Double gsd = CalliopeData.getInstance().getElevationData().computeGSD(
-			this.locationTaken.getValue().getElevation(),
-			Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.FOCAL_LENGTH, "0")),
-			84D,
-			84D,
-			Integer.parseInt(imageMetadataMap.getOrDefault(StandardTag.IMAGE_WIDTH, "0")),
-			Integer.parseInt(imageMetadataMap.getOrDefault(StandardTag.IMAGE_HEIGHT, "0")));
-		*/
+		// Grab the position this image was taken at
+		Position position = this.locationTaken.getValue();
+		// Set the altitude to the position's elevation - the ground elevation position
+		this.altitude.setValue(position.getElevation() - CalliopeData.getInstance().getElevationData().getGroundElevation(position.getLatitude(), position.getLongitude()));
+		// Store the file type, focal length, width, and height
+		this.fileType.setValue(imageMetadataMap.getOrDefault(StandardTag.FILE_TYPE, UNSPECIFIED));
+		this.focalLength.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.FOCAL_LENGTH, "0")));
+		this.width.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_WIDTH, "0")));
+		this.height.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_HEIGHT, "0")));
 	}
 
 	/**
@@ -341,6 +349,81 @@ public class ImageEntry extends ImageContainer
 	public ObjectProperty<Vector3> rotationProperty()
 	{
 		return rotation;
+	}
+
+	public void setAltitude(Double altitude)
+	{
+		this.altitude.setValue(altitude);
+	}
+
+	public double getAltitude()
+	{
+		return this.altitude.getValue();
+	}
+
+	public DoubleProperty altitudeProperty()
+	{
+		return this.altitude;
+	}
+
+	public void setFileType(String fileType)
+	{
+		this.fileType.setValue(fileType);
+	}
+
+	public String getFileType()
+	{
+		return this.fileType.getValue();
+	}
+
+	public StringProperty fileTypeProperty()
+	{
+		return this.fileType;
+	}
+
+	public void setFocalLength(Double focalLength)
+	{
+		this.focalLength.setValue(focalLength);
+	}
+
+	public double getFocalLength()
+	{
+		return this.focalLength.getValue();
+	}
+
+	public DoubleProperty focalLengthProperty()
+	{
+		return this.focalLength;
+	}
+
+	public void setWidth(Double width)
+	{
+		this.width.setValue(width);
+	}
+
+	public double getWidth()
+	{
+		return this.width.getValue();
+	}
+
+	public DoubleProperty widthProperty()
+	{
+		return this.width;
+	}
+
+	public void setHeight(Double height)
+	{
+		this.height.setValue(height);
+	}
+
+	public double getHeight()
+	{
+		return this.height.getValue();
+	}
+
+	public DoubleProperty heightProperty()
+	{
+		return this.height;
 	}
 
 	@Override

@@ -11,7 +11,7 @@
 <?import org.controlsfx.control.PropertySheet?>
 <?import org.controlsfx.control.StatusBar?>
 <?import java.net.URL?>
-<?import java.lang.String?>
+
 <SplitPane fx:id="mainPane" fx:controller="controller.CalliopeImportController" dividerPositions="0.2, 0.8" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@CalliopeImport.css" />

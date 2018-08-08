@@ -53,7 +53,7 @@
                 <ToggleSwitch fx:id="tswLTAR" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="1" text="LTAR Sites: " maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswImageCounts" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts: " maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswQueryPolygons" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="2" text="Query Filter Polygons: " maxWidth="Infinity"/>
-                <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2">
+                <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" maxWidth="Infinity">
                     <content>
                         <VBox spacing="5">
                             <HBox alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
@@ -61,7 +61,7 @@
                                 <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="5000" initialValue="100" amountToStepBy="10" HBox.hgrow="NEVER" />
                             </HBox>
                             <HBox alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
-                                <Label text="Columns:" HBox.hgrow="NEVER"/>
+                                <Label text="Columns:"  minWidth="60" maxWidth="60"/>
                                 <CheckComboBox fx:id="ccbxColumns" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                             </HBox>
                             <TableView fx:id="tbvImageMetadata">
@@ -73,7 +73,18 @@
                                     <TableColumn fx:id="clmDate" editable="false" text="Date Taken"/>
                                     <TableColumn fx:id="clmAltitude" editable="false" text="Altitude"/>
                                     <TableColumn fx:id="clmCameraModel" editable="false" text="Camera Model"/>
+                                    <TableColumn fx:id="clmDroneMaker" editable="false" text="Drone Maker"/>
                                     <TableColumn fx:id="clmCollection" editable="false" text="Collection"/>
+                                    <TableColumn fx:id="clmElevation" editable="false" text="Drone Elevation"/>
+                                    <TableColumn fx:id="clmFileType" editable="false" text="File Type"/>
+                                    <TableColumn fx:id="clmFocalLength" editable="false" text="Focal Length"/>
+                                    <TableColumn fx:id="clmWidth" editable="false" text="Image Width"/>
+                                    <TableColumn fx:id="clmHeight" editable="false" text="Image Height"/>
+                                    <TableColumn fx:id="clmLatitude" editable="false" text="Latitude"/>
+                                    <TableColumn fx:id="clmLongitude" editable="false" text="Longitude"/>
+                                    <TableColumn fx:id="clmSite" editable="false" text="Site"/>
+                                    <TableColumn fx:id="clmSpeed" editable="false" text="Speed Vector"/>
+                                    <TableColumn fx:id="clmRotation" editable="false" text="Rotation Vector"/>
                                 </columns>
                             </TableView>
                         </VBox>

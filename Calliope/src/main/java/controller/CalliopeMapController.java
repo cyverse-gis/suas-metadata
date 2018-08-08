@@ -34,15 +34,18 @@ import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import library.AlignedMapNode;
+import library.DragResizer;
 import model.CalliopeData;
 import model.constant.CalliopeDataFormats;
 import model.constant.MapProviders;
+import model.cyverse.ImageCollection;
 import model.elasticsearch.GeoBucket;
-import model.elasticsearch.GeoImageResult;
+import model.elasticsearch.QueryImageEntry;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.QueryEngine;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
+import model.image.Vector3;
 import model.site.Boundary;
 import model.site.Site;
 import model.threading.ErrorTask;
@@ -137,21 +140,43 @@ public class CalliopeMapController
 
 	// The table view with metadata columns
 	@FXML
-	public TableView<GeoImageResult> tbvImageMetadata;
-	// 5 Columns of metadata, the image file name, collection name, altitude taken, camera model, and date taken
+	public TableView<QueryImageEntry> tbvImageMetadata;
+	// Columns of metadata which can be disabled or enabled
 	@FXML
-	public TableColumn<GeoImageResult, String> clmName;
+	public TableColumn<QueryImageEntry, String> clmName;
 	@FXML
-	public TableColumn<GeoImageResult, String> clmCollection;
+	public TableColumn<QueryImageEntry, String> clmCollection;
 	@FXML
-	public TableColumn<GeoImageResult, Double> clmAltitude;
+	public TableColumn<QueryImageEntry, Double> clmAltitude;
 	@FXML
-	public TableColumn<GeoImageResult, String> clmCameraModel;
+	public TableColumn<QueryImageEntry, String> clmCameraModel;
 	@FXML
-	public TableColumn<GeoImageResult, LocalDateTime> clmDate;
+	public TableColumn<QueryImageEntry, LocalDateTime> clmDate;
+	@FXML
+	public TableColumn<QueryImageEntry, String> clmDroneMaker;
+	@FXML
+	public TableColumn<QueryImageEntry, Double> clmElevation;
+	@FXML
+	public TableColumn<QueryImageEntry, String> clmFileType;
+	@FXML
+	public TableColumn<QueryImageEntry, Double> clmFocalLength;
+	@FXML
+	public TableColumn<QueryImageEntry, Double> clmWidth;
+	@FXML
+	public TableColumn<QueryImageEntry, Double> clmHeight;
+	@FXML
+	public TableColumn<QueryImageEntry, Double> clmLatitude;
+	@FXML
+	public TableColumn<QueryImageEntry, Double> clmLongitude;
+	@FXML
+	public TableColumn<QueryImageEntry, Site> clmSite;
+	@FXML
+	public TableColumn<QueryImageEntry, Vector3> clmSpeed;
+	@FXML
+	public TableColumn<QueryImageEntry, Vector3> clmRotation;
 
 	// Check boxes to hide & show columns
-	public CheckComboBox<TableColumn<GeoImageResult, ?>> ccbxColumns;
+	public CheckComboBox<TableColumn<QueryImageEntry, ?>> ccbxColumns;
 
 	// Disable the download query button if the query is invalid
 	@FXML
@@ -235,6 +260,12 @@ public class CalliopeMapController
 	{
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
+
+		///
+		/// Make the grid pane of settings resizable
+		///
+
+		DragResizer.makeResizable(this.gpnMapSettings);
 
 		///
 		/// Setup the Z-Layer ordering system
@@ -328,13 +359,12 @@ public class CalliopeMapController
 			// Remove any known nodes from the map and clear the site nodes list
 			mapSiteNodes.forEach(this::removeNodeFromMap);
 			mapSiteNodes.clear();
-			// Grab the current list of sites
-			ObservableList<Site> sites = CalliopeData.getInstance().getSiteManager().getSites();
 			// For each of the returned site codes....
 			for (String siteCode : siteCodesToDraw)
 			{
 				// ... find the corresponding site and process it
-				sites.stream().filter(siteToTest -> siteToTest.getCode().equals(siteCode)).findFirst().ifPresent(site ->
+				Site site = CalliopeData.getInstance().getSiteManager().getSiteByCode(siteCode);
+				if (site != null)
 				{
 					// Convert the site's center to a location
 					Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
@@ -391,7 +421,7 @@ public class CalliopeMapController
 						mapSiteNodes.add(mapPin);
 						this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
 					}
-				});
+				}
 			}
 		});
 
@@ -626,15 +656,15 @@ public class CalliopeMapController
 		///
 
 		// Each column is bound to a different image metadata tag
-		this.clmName.setCellValueFactory(param -> param.getValue().nameProperty());
-		this.clmCollection.setCellValueFactory(param -> param.getValue().collectionNameProperty());
+		this.clmName.setCellValueFactory(param -> param.getValue().irodsAbsolutePathProperty());
+		this.clmCollection.setCellValueFactory(param -> EasyBind.monadic(param.getValue().imageCollectionProperty()).selectProperty(ImageCollection::nameProperty));
 		this.clmAltitude.setCellValueFactory(param -> param.getValue().altitudeProperty().asObject());
 		this.clmCameraModel.setCellValueFactory(param -> param.getValue().cameraModelProperty());
-		this.clmDate.setCellValueFactory(param -> param.getValue().dateProperty());
+		this.clmDate.setCellValueFactory(param -> param.getValue().dateTakenProperty());
 		// Sort the date column by the date comparator
 		this.clmDate.setComparator(Comparator.naturalOrder());
 		// Set the date format. This code is taken from DEFAULT_CELL_FACTORY in TableColumn.class
-		this.clmDate.setCellFactory(param -> new TableCell<GeoImageResult, LocalDateTime>()
+		this.clmDate.setCellFactory(param -> new TableCell<QueryImageEntry, LocalDateTime>()
 		{
 			/**
 			 * Called when a new item is added to this cell
@@ -660,6 +690,17 @@ public class CalliopeMapController
 				}
 			}
 		});
+		this.clmDroneMaker.setCellValueFactory(param -> param.getValue().droneMakerProperty());
+		this.clmElevation.setCellValueFactory(param -> EasyBind.monadic(param.getValue().locationTakenProperty()).selectProperty(x -> x.elevationProperty().asObject()));
+		this.clmFileType.setCellValueFactory(param -> param.getValue().fileTypeProperty());
+		this.clmFocalLength.setCellValueFactory(param -> param.getValue().focalLengthProperty().asObject());
+		this.clmWidth.setCellValueFactory(param -> param.getValue().widthProperty().asObject());
+		this.clmHeight.setCellValueFactory(param -> param.getValue().heightProperty().asObject());
+		this.clmLatitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().locationTakenProperty()).selectProperty(x -> x.latitudeProperty().asObject()));
+		this.clmLongitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().locationTakenProperty()).selectProperty(x -> x.longitudeProperty().asObject()));
+		this.clmSite.setCellValueFactory(param -> param.getValue().siteTakenProperty());
+		this.clmSpeed.setCellValueFactory(param -> param.getValue().speedProperty());
+		this.clmRotation.setCellValueFactory(param -> param.getValue().rotationProperty());
 
 		// Add all columns to the check box combo box
 		this.ccbxColumns.getItems().add(this.clmName);
@@ -667,6 +708,17 @@ public class CalliopeMapController
 		this.ccbxColumns.getItems().add(this.clmAltitude);
 		this.ccbxColumns.getItems().add(this.clmCameraModel);
 		this.ccbxColumns.getItems().add(this.clmDate);
+		this.ccbxColumns.getItems().add(this.clmDroneMaker);
+		this.ccbxColumns.getItems().add(this.clmElevation);
+		this.ccbxColumns.getItems().add(this.clmFileType);
+		this.ccbxColumns.getItems().add(this.clmFocalLength);
+		this.ccbxColumns.getItems().add(this.clmWidth);
+		this.ccbxColumns.getItems().add(this.clmHeight);
+		this.ccbxColumns.getItems().add(this.clmLatitude);
+		this.ccbxColumns.getItems().add(this.clmLongitude);
+		this.ccbxColumns.getItems().add(this.clmSite);
+		this.ccbxColumns.getItems().add(this.clmSpeed);
+		this.ccbxColumns.getItems().add(this.clmRotation);
 
 		// Start with just name and date checked
 		this.ccbxColumns.getCheckModel().check(this.clmName);
@@ -678,12 +730,12 @@ public class CalliopeMapController
 				this.tbvImageMetadata.getColumns().remove(this.ccbxColumns.getItems().get(index));
 
 		// The combo box will show the title of the column as its text
-		this.ccbxColumns.setConverter(new StringConverter<TableColumn<GeoImageResult, ?>>()
+		this.ccbxColumns.setConverter(new StringConverter<TableColumn<QueryImageEntry, ?>>()
 		{
 			@Override
-			public String toString(TableColumn<GeoImageResult, ?> tableColumn) { return tableColumn.getText(); }
+			public String toString(TableColumn<QueryImageEntry, ?> tableColumn) { return tableColumn.getText(); }
 			@Override
-			public TableColumn<GeoImageResult, ?> fromString(String columnName) { return null; }
+			public TableColumn<QueryImageEntry, ?> fromString(String columnName) { return null; }
 		});
 		// When the checked indices list changes, we update the shown columns
 		this.ccbxColumns.getCheckModel().getCheckedIndices().addListener((ListChangeListener<Integer>) c ->
@@ -694,7 +746,7 @@ public class CalliopeMapController
 					for (Integer removedIndex : c.getRemoved())
 					{
 						// Grab the removed column and remove it
-						TableColumn<GeoImageResult, ?> removedColumn = ccbxColumns.getCheckModel().getItem(removedIndex);
+						TableColumn<QueryImageEntry, ?> removedColumn = ccbxColumns.getCheckModel().getItem(removedIndex);
 						this.tbvImageMetadata.getColumns().remove(removedColumn);
 					}
 				// If the index was added...
@@ -702,7 +754,7 @@ public class CalliopeMapController
 					for (Integer addedIndex : c.getAddedSubList())
 					{
 						// Grab the column to add and make sure it's in the table
-						TableColumn<GeoImageResult, ?> addedColumn = ccbxColumns.getCheckModel().getItem(addedIndex);
+						TableColumn<QueryImageEntry, ?> addedColumn = ccbxColumns.getCheckModel().getItem(addedIndex);
 						if (!this.tbvImageMetadata.getColumns().contains(addedColumn))
 							this.tbvImageMetadata.getColumns().add(addedColumn);
 					}
@@ -713,11 +765,11 @@ public class CalliopeMapController
 		///
 
 		// A service that can download a selected circle's metadata
-		ReRunnableService<List<GeoImageResult>> circleMetadataDownloader = new ReRunnableService<>(() ->
-			new ErrorTask<List<GeoImageResult>>()
+		ReRunnableService<List<QueryImageEntry>> circleMetadataDownloader = new ReRunnableService<>(() ->
+			new ErrorTask<List<QueryImageEntry>>()
 			{
 				@Override
-				protected List<GeoImageResult> call()
+				protected List<QueryImageEntry> call()
 				{
 					// Test if our input is non-null (it should never be null)
 					if (selectedCircle.getValue() != null)

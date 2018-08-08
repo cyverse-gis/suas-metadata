@@ -19,7 +19,7 @@ import model.elasticsearch.ElasticSearchConnectionManager;
 import model.elasticsearch.query.QueryEngine;
 import model.image.ImageDirectory;
 import model.image.MetadataManager;
-import model.openElevation.ElevationData;
+import model.elevationAPI.ElevationData;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
 import model.site.SiteManager;
@@ -149,7 +149,7 @@ public class CalliopeData
 		this.metadataManager = new MetadataManager(this.errorDisplay);
 
 		// Setup our elevation data
-		this.elevationData = new ElevationData(this.sensitiveConfigurationManager);
+		this.elevationData = new ElevationData();
 
 		// Create the image collection list
 		this.collectionList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(collection -> new Observable[]{collection.nameProperty(), collection.getPermissions(), collection.organizationProperty(), collection.contactInfoProperty(), collection.descriptionProperty(), collection.idProperty() }));

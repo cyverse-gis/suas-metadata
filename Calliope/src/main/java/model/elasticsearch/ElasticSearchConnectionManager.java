@@ -8,6 +8,8 @@ import model.cyverse.ImageCollection;
 import model.dataSources.UploadedEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
+import model.image.Position;
+import model.image.Vector3;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
 import model.site.Boundary;
@@ -68,6 +70,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.locationtech.jts.geom.Coordinate;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.ZoneId;
@@ -1463,13 +1466,13 @@ public class ElasticSearchConnectionManager
 	 * view specifics about a "geo-aggregation" dot found on the map tab
 	 *
 	 * @param geoBucket The bucket to pull data from
-	 * @return A list of GeoImageResults that contain advanced metadata about simple lat/long points or "dots" found on the map tab
+	 * @return A list of image results that contain advanced metadata about simple lat/long points or "dots" found on the map tab
 	 */
 	@SuppressWarnings("unchecked")
-	public List<GeoImageResult> performCircleLookup(GeoBucket geoBucket)
+	public List<QueryImageEntry> performCircleLookup(GeoBucket geoBucket)
 	{
 		// Create a list of results to return
-		List<GeoImageResult> toReturn = new ArrayList<>();
+		List<QueryImageEntry> toReturn = new ArrayList<>();
 
 		// If the geo-bucket is not null and non-empty, we perform a multi-get for each document ID
 		if (geoBucket != null && !geoBucket.getKnownDocumentIDs().isEmpty())
@@ -1478,8 +1481,8 @@ public class ElasticSearchConnectionManager
 			MultiGetRequest multiGetRequest = new MultiGetRequest();
 			// We only want specific fields which reduces the bandwidth uses, list those here
 			FetchSourceContext fieldsWeWant = new FetchSourceContext(true,
-					new String[] { "storagePath", "collectionID", "imageMetadata.altitude", "imageMetadata.cameraModel", "imageMetadata.dateTaken" },
-					new String[] { "imageMetadata.dayOfWeekTaken", "imageMetadata.dayOfYearTaken", "imageMetadata.droneMaker", "imageMetadata.hourTaken", "imageMetadata.monthTaken", "imageMetadata.siteCode", "imageMetadata.position", "imageMetadata.rotation", "imageMetadata.speed", "imageMetadata.yearTaken" });
+					new String[] { "storagePath", "collectionID", "imageMetadata.altitude", "imageMetadata.cameraModel", "imageMetadata.dateTaken", "imageMetadata.droneMaker", "imageMetadata.elevation", "imageMetadata.fileType", "imageMetadata.focalLength", "imageMetadata.height", "imageMetadata.width", "imageMetadata.position", "imageMetadata.rotation", "imageMetadata.speed", "imageMetadata.siteCode" },
+					null);
 			// Iterate over all document IDs and add one get request for each one
 			geoBucket.getKnownDocumentIDs().forEach(documentID ->
 					multiGetRequest.add(new MultiGetRequest.Item(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, documentID).fetchSourceContext(fieldsWeWant)));
@@ -1497,7 +1500,9 @@ public class ElasticSearchConnectionManager
 						// Grab the JSON response as a hash map
 						Map<String, Object> sourceAsMap = itemResponse.getResponse().getSourceAsMap();
 						// Ensure the JSON contains 3 keys
-						if (sourceAsMap.containsKey("collectionID") && sourceAsMap.containsKey("storagePath") && sourceAsMap.containsKey("imageMetadata"))
+						if (sourceAsMap.containsKey("collectionID") &&
+							sourceAsMap.containsKey("storagePath") &&
+							sourceAsMap.containsKey("imageMetadata"))
 						{
 							// The imageMetadata object should be a map
 							Object metadataMapObj = sourceAsMap.get("imageMetadata");
@@ -1506,21 +1511,50 @@ public class ElasticSearchConnectionManager
 							{
 								// Cast the object to a map
 								Map<String, Object> metadataMap = (Map<String, Object>) metadataMapObj;
-								// This new map should have 3 fields, test that
-								if (metadataMap.containsKey("altitude") && metadataMap.containsKey("cameraModel") && metadataMap.containsKey("dateTaken"))
+								// This new map should have specific fields, test that
+								if (metadataMap.containsKey("altitude") &&
+									metadataMap.containsKey("cameraModel") &&
+									metadataMap.containsKey("dateTaken") &&
+									metadataMap.containsKey("droneMaker") &&
+									metadataMap.containsKey("elevation") &&
+									metadataMap.containsKey("fileType") &&
+									metadataMap.containsKey("focalLength") &&
+									metadataMap.containsKey("height") &&
+									metadataMap.containsKey("width") &&
+									metadataMap.containsKey("position") &&
+									metadataMap.containsKey("rotation") &&
+									metadataMap.containsKey("speed") &&
+									metadataMap.containsKey("siteCode"))
 								{
-									// Convert the storage path to just a file name by taking the absolute path and taking the file name
-									String fileName = FilenameUtils.getName(sourceAsMap.get("storagePath").toString());
-									// Grab the collection ID
-									String collectionID = sourceAsMap.get("collectionID").toString();
-									// Add a new GeoImageResult to return. We convert date, collection, and altitude strings into a usable format
-									toReturn.add(new GeoImageResult(
-										fileName,
-										CalliopeData.getInstance().getCollectionList().stream().filter(collection -> collection.getID().toString().equals(collectionID)).findFirst().map(ImageCollection::getName).orElse("Not Found"),
-										NumberUtils.toDouble(metadataMap.get("altitude").toString(), Double.NaN),
-										metadataMap.get("cameraModel").toString(),
-										ZonedDateTime.parse(metadataMap.get("dateTaken").toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime()
-									));
+									Object speedMapObj = metadataMap.get("speed");
+									Object rotationMapObj = metadataMap.get("rotation");
+									if (speedMapObj instanceof Map<?, ?> && rotationMapObj instanceof Map<?, ?>)
+									{
+										Map<String, Double> speedMap = (Map<String, Double>) speedMapObj;
+										Map<String, Double> rotationMap = (Map<String, Double>) rotationMapObj;
+
+										// Grab the collection ID
+										String collectionID = sourceAsMap.get("collectionID").toString();
+										// Add a new GeoImageResult to return. Convert relevant fields to a usable format
+										QueryImageEntry imageEntry = new QueryImageEntry();
+										imageEntry.setIrodsAbsolutePath(sourceAsMap.get("storagePath").toString());
+										imageEntry.setImageCollection(CalliopeData.getInstance().getCollectionList().stream().filter(collection -> collection.getID().toString().equals(collectionID)).findFirst().orElse(null));
+										imageEntry.setAltitude(NumberUtils.toDouble(metadataMap.get("altitude").toString(), Double.NaN));
+										imageEntry.setCameraModel(metadataMap.get("cameraModel").toString());
+										imageEntry.setDateTaken(ZonedDateTime.parse(metadataMap.get("dateTaken").toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime());
+										imageEntry.setDroneMaker(metadataMap.get("droneMaker").toString());
+										String[] longAndLat = metadataMap.get("position").toString().split(", ");
+										if (longAndLat.length == 2)
+											imageEntry.setLocationTaken(new Position(NumberUtils.toDouble(longAndLat[1], Double.NaN), NumberUtils.toDouble(longAndLat[0], Double.NaN), NumberUtils.toDouble(metadataMap.get("elevation").toString(), Double.NaN)));
+										imageEntry.setFileType(metadataMap.get("fileType").toString());
+										imageEntry.setFocalLength(NumberUtils.toDouble(metadataMap.get("focalLength").toString(), Double.NaN));
+										imageEntry.setWidth(NumberUtils.toDouble(metadataMap.get("width").toString(), Double.NaN));
+										imageEntry.setHeight(NumberUtils.toDouble(metadataMap.get("height").toString(), Double.NaN));
+										imageEntry.setSiteTaken(CalliopeData.getInstance().getSiteManager().getSiteByCode(metadataMap.get("siteCode").toString()));
+										imageEntry.setSpeed(new Vector3(NumberUtils.toDouble(speedMap.get("x").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("y").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("z").toString(), Double.NaN)));
+										imageEntry.setRotation(new Vector3(NumberUtils.toDouble(rotationMap.get("roll").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("pitch").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("yaw").toString(), Double.NaN)));
+										toReturn.add(imageEntry);
+									}
 								}
 							}
 						}
