@@ -1,5 +1,5 @@
 /Calliope/.idea/*
-/Calliope/Calliope.iml
+/Calliope/.iml
 /Calliope/out/*
 /Calliope/demoApplication.log
 /Calliope/debug.log
@@ -13,6 +13,7 @@
 /Calliope/gradlew.bat
 /Calliope/calliope.properties
 /Calliope/exiftool.exe
+/Calliope/*.las
 
 /Java Metadata Processor/.idea/*
 /Java Metadata Processor/Java Metadata Processor.iml
