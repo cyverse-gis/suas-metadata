@@ -30,13 +30,72 @@ Research drones are often flown in special recognized locations known as sites. 
 1. NEON Sites - These sites are specified by the National Ecological Observatory Network (NEON). All site names and codes can be found through their [data api](http://data.neonscience.org/data-api#/) as JSON and boundaries must be manually downloaded on their website as a KMZ file.
 2. LTAR Sites - These sites are specified by Long-Term Agroecosystem Research (LTAR) project. They provide site name, code, and boundary all through a single ESRI shape file. This shape file must be manually downloaded on the LTAR site.
 
-### What is the `CyVerse Data Store`?
+### What is the `CyVerse data store`?
 
-The CyVerse Data Store is the heart of CyVerse infrustracture. The `Data Store` refers to the database CyVerse keeps to store all files and information. This massive database is managed by a protocol called iRODS. iRODS enables data to be secured with user permissions, allows data to be uploaded/downloaded, can store file metadata, and provides encrypted user authentication. It organizes its files similarly to a classic Unix system where the root directory is `/` and user accounts are under the directory `/iplant/home/<username>`. Each new user has full permission over their home directory but nothing else.
+The CyVerse data store is the heart of CyVerse infrustracture. The `data store` refers to the database CyVerse keeps to store all files and information. This massive database is managed by a protocol called iRODS. iRODS enables data to be secured with user permissions, allows data to be uploaded/downloaded, can store file metadata, and provides encrypted user authentication. It organizes its files similarly to a classic Unix system where the root directory is `/` and user accounts are under the directory `/iplant/home/<username>`. Each new user has full permission over their home directory but nothing else.
 
-Anyone can make a free CyVerse account to begin accessing the Data Store. If you haven't done so, you should make an account since all Calliope products require logging in before use. You can access the Data Store using any iRODS capable client, of which some are listed below:
+Anyone can make a free CyVerse account to begin accessing the data store. If you haven't done so, you should make an account since all Calliope products require logging in before use. You can access the data store using any iRODS capable client, of which some are listed below:
 
-- The Discovery Environment (DE) - The DE is a web platform hosted by CyVerse to view your data in the Data Store. To access it, see https://user.cyverse.org/dashboard/ and select `Request Access` under the Discovery Environment. You need to wait to be approved for DE use, which can take some time. You can email a CyVerse administrator if you need to be approved more quickly. Once you are approved to use the DE, and can click `Launch`. Here you can see the Unix-like directory structure provided by iRODS as well as manage file permissions manually.
+- The Discovery Environment (DE) - The DE is a web platform hosted by CyVerse to view your data in the data store. To access it, see https://user.cyverse.org/dashboard/ and select `Request Access` under the Discovery Environment. You need to wait to be approved for DE use, which can take some time. You can email a CyVerse administrator if you need to be approved more quickly. Once you are approved to use the DE, and can click `Launch`. Here you can see the Unix-like directory structure provided by iRODS as well as manage file permissions manually.
 - CyberDuck - This is a third party program that supports the iRODS protocol. To setup CyberDuck google `cyverse cyberduck` and follow the offical CyVerse tutorial. It is great for uploading and downloading files quickly.
-- iCommands - If you prefer to use a command line interface to acccess the Data Store, you can do so using iCommands. This tool supports many of the basic Unix commands such as `cd`, except that the command is proceeded with an `i`, so you would execute `icd <dir>` to change directories. Full iCommands documentation can be found here: https://docs.irods.org/master/icommands/user/
+- iCommands - If you prefer to use a command line interface to acccess the data store, you can do so using iCommands. This tool supports many of the basic Unix commands such as `cd`, except that the command is proceeded with an `i`, so you would execute `icd <dir>` to change directories. Full iCommands documentation can be found here: https://docs.irods.org/master/icommands/user/
 - Programming libraries - iRODS provides many libraries for various programming languages to connect to an iRODS server and execute commands on it. Since Calliope is written in Java, the library "Jargon" is used. If you want to use a different language like Python, that's also supported. 
+
+### What is ElasticSearch?
+
+ElasticSearch is a database that is optimized for fast searches. If you want details about how ElasticSearch works, read more [here](https://www.elastic.co/guide/index.html). Simply put, ElasticSearch accepts HTTP REST requests with JSON bodies to decide what you want it to do, and then returns a response as JSON. For example, if you wanted to list all indices currently stored, the http request would be:
+```json
+Request:
+GET http://<elasticsearch-server-ip>/_cat/indices?format=json
+Response:
+[
+  {
+    "health": "green",
+    "status": "open",
+    "index": "sites",
+    "uuid": "b6h7tH3_QyuXmwnG_YbcNw",
+    "pri": "1",
+    "rep": "0",
+    "docs.count": "291",
+    "docs.deleted": "0",
+    "store.size": "9.2mb",
+    "pri.store.size": "9.2mb"
+  }
+]
+```
+
+In this example, our ElasticSearch database had a single index named "sites" with 291 "documents" which are similar to rows in a traditional SQL database. Please note that an `index` in a ElasticSearch is the same thing as a `table` in a traditional SQL database. Notice that we didn't specify a JSON body for the GET request. That is because this specific endpoint does not require any additional data to execute, it can simply take all its arguments in the URL. We will need to use the JSON body, however, if we want to insert a new site into this index, for example:
+
+```json
+Request:
+POST http://<elasticsearch-server-ip>/sites/_doc/0
+{
+  "name": "Test site",
+  "code": "352ge"
+}
+Response:
+{
+  "_index": "sites",
+  "_type": "_doc",
+  "_id": "0",
+  "_version": 1,
+  "result": "created",
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 0,
+  "_primary_term": 1
+}
+```
+
+As we can see, this request was successful and we inserted a site with name "Test site" and code "352ge" into our theoretical sites index. ElasticSearch also supports a variety of libraries that abstract away the HTTP REST api into a simple interface for a given language. Calliope makes use of the Java and Python ElasticSearch libraries.
+
+## Tying all the components together
+
+The Calliope project makes use of many different programs and apis to accomplish its goal, and those are described below.
+
+### Calliope
+
+The Calliope client is the core of the Calliope project. It is written in Java using JavaFX and runs as a downloadable desktop application. Users must import images from a `data source` which is essentially a supplier for image files. Currently images may be imported from the data store or from their local PC. After importing images, users can upload images to the data store which also triggers elast

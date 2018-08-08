@@ -8,7 +8,7 @@ Calliope Auth is a backend program developed to assist an ElasticSearch index in
 
 This repository should be cloned and then built using maven. All Java dependencies will be automatically fetched through maven.
 
-### Building with docker
+### Building with Docker
 
 Building CalliopeAuth with docker is much easier than building from source because all dependencies are handled for you. Start by downloading the `Dockerfile` in `/suas-metadata/CalliopeAuth/` and then execute:
 
