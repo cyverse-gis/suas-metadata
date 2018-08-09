@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import org.controlsfx.control.CheckComboBox?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import org.controlsfx.control.MaskerPane?>
+<StackPane prefHeight="-Infinity" prefWidth="240" fx:controller="controller.mapView.conditions.FileTypeConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <BorderPane>
+        <top>
+            <Label text="File Type Filter" BorderPane.alignment="CENTER">
+                <BorderPane.margin>
+                    <Insets top="5" bottom="10"/>
+                </BorderPane.margin>
+            </Label>
+        </top>
+        <center>
+            <ListView fx:id="lvwFileType"/>
+        </center>
+        <bottom>
+            <Button text="Refresh Site Types" onAction="#refreshPressed" BorderPane.alignment="CENTER">
+                <BorderPane.margin>
+                    <Insets left="5" bottom="5" right="5" top="5"/>
+                </BorderPane.margin>
+                <graphic>
+                    <ImageView>
+                        <Image url="@../../../images/mapWindow/reset16.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </bottom>
+    </BorderPane>
+    <MaskerPane fx:id="mpnRefreshing" text="Loading list of types" visible="false"/>
+</StackPane>

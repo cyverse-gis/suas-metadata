@@ -75,7 +75,7 @@
                                     <TableColumn fx:id="clmCameraModel" editable="false" text="Camera Model"/>
                                     <TableColumn fx:id="clmDroneMaker" editable="false" text="Drone Maker"/>
                                     <TableColumn fx:id="clmCollection" editable="false" text="Collection"/>
-                                    <TableColumn fx:id="clmElevation" editable="false" text="Drone Elevation"/>
+                                    <TableColumn fx:id="clmElevation" editable="false" text="Elevation"/>
                                     <TableColumn fx:id="clmFileType" editable="false" text="File Type"/>
                                     <TableColumn fx:id="clmFocalLength" editable="false" text="Focal Length"/>
                                     <TableColumn fx:id="clmWidth" editable="false" text="Image Width"/>

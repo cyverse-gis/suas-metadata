@@ -1638,6 +1638,57 @@ public class ElasticSearchConnectionManager
 	}
 
 	/**
+	 * Downloads a list of file types from ES using a terms aggregation
+	 *
+	 * @return A list of unique file types
+	 */
+	public List<String> downloadFileTypeList()
+	{
+		List<String> toReturn = new ArrayList<>();
+
+		// Create a search request, and populate the fields
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest
+			.indices(INDEX_CALLIOPE_METADATA)
+			.types(INDEX_CALLIOPE_METADATA_TYPE)
+			.source(new SearchSourceBuilder()
+					// Fetch no results, we're only interested into aggregation portion of the query
+					.size(0)
+					// Don't fetch anything unnecessary
+					.fetchSource(false)
+					// Our query will match all documents if no query was provided
+					.query(QueryBuilders.matchAllQuery())
+					// Add our aggregation now
+					.aggregation(AggregationBuilders.terms("fileTypes").field("imageMetadata.fileType")));
+
+		// Execute the search in a try catch
+		try
+		{
+			// Perform the search
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			// Return the aggregations
+			Aggregations aggregations = searchResponse.getAggregations();
+			// Get the file types aggregation
+			Aggregation fileTypesAggregation = aggregations.asMap().get("fileTypes");
+			// Convert the aggregation into a usable format
+			if (fileTypesAggregation instanceof ParsedStringTerms)
+			{
+				// Cast the aggregation
+				ParsedStringTerms fileTypes = (ParsedStringTerms) fileTypesAggregation;
+				// For each bucket, add the key of the bucket
+				fileTypes.getBuckets().forEach(bucket -> toReturn.add(bucket.getKeyAsString()));
+			}
+		}
+		// If an error occurs then show an error
+		catch (IOException e)
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("There was an error retrieving the current list of file types.\n" + ExceptionUtils.getStackTrace(e));
+		}
+
+		return toReturn;
+	}
+
+	/**
 	 * Finalize method is called like a deconstructor and can be used to clean up any floating objects
 	 *
 	 * @throws Throwable If finalization fails for some reason

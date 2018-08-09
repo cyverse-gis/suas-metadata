@@ -12,13 +12,13 @@ import model.elasticsearch.query.QueryCondition;
 import model.settings.SettingsData;
 
 /**
- * Data model used by the "Altitude filter" query condition
+ * Data model used by the "Elevation filter" query condition
  */
-public class AltitudeCondition extends QueryCondition
+public class ElevationCondition extends QueryCondition
 {
-	// The altitude to compute on
-	private DoubleProperty altitude = new SimpleDoubleProperty(0);
-	// The units to interpret altitude as
+	// The elevation to compute on
+	private DoubleProperty elevation = new SimpleDoubleProperty(0);
+	// The units to interpret elevation as
 	private ObjectProperty<SettingsData.DistanceUnits> units = new SimpleObjectProperty<>(SettingsData.DistanceUnits.Meters);
 	// The comparison operator
 	private ObjectProperty<NumericComparisonOperator> comparisonOperator = new SimpleObjectProperty<>(NumericComparisonOperator.Equal);
@@ -29,7 +29,7 @@ public class AltitudeCondition extends QueryCondition
 	private ObservableList<SettingsData.DistanceUnits> unitList = FXCollections.observableArrayList(SettingsData.DistanceUnits.values());
 
 	/**
-	 * This query condition ensures only altitudes are queried for
+	 * This query condition ensures only elevations are queried for
 	 *
 	 * @param query The current state of the query before the appending
 	 */
@@ -38,8 +38,9 @@ public class AltitudeCondition extends QueryCondition
 	{
 		if (this.comparisonOperator.getValue() != null)
 		{
-			Double distanceInMeters = this.units.getValue().formatToMeters(this.altitude.getValue());
-			query.addAltitudeCondition(distanceInMeters, this.comparisonOperator.getValue());
+			// Make sure we convert the distance to meters
+			Double distanceInMeters = this.units.getValue().formatToMeters(this.elevation.getValue());
+			query.addElevationCondition(distanceInMeters, this.comparisonOperator.getValue());
 		}
 	}
 
@@ -51,23 +52,23 @@ public class AltitudeCondition extends QueryCondition
 	@Override
 	public String getFXMLConditionEditor()
 	{
-		return "AltitudeCondition.fxml";
+		return "ElevationCondition.fxml";
 	}
 
 	/**
-	 * The altitude property as an integer
+	 * The elevation property as an integer
 	 *
-	 * @return Altitude to query
+	 * @return Elevation to query
 	 */
-	public DoubleProperty altitudeProperty()
+	public DoubleProperty elevationProperty()
 	{
-		return this.altitude;
+		return this.elevation;
 	}
 
 	/**
-	 * The units used by altitude
+	 * The units used by elevation
 	 *
-	 * @return The units of altitude
+	 * @return The units of elevation
 	 */
 	public ObjectProperty<SettingsData.DistanceUnits> unitsProperty()
 	{
@@ -75,7 +76,7 @@ public class AltitudeCondition extends QueryCondition
 	}
 
 	/**
-	 * The operator used to compare the current altitude and the one on cyverse
+	 * The operator used to compare the current elevation and the one on cyverse
 	 *
 	 * @return The comparison operator
 	 */

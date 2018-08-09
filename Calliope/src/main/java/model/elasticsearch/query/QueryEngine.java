@@ -25,6 +25,7 @@ public class QueryEngine
 	public enum QueryFilters
 	{
 		ALTITUDE_FILTER("Altitude filter", AltitudeCondition::new),
+		ELEVATION_FILTER("Elevation filter", ElevationCondition::new),
 		YEAR_FILTER("Year Filter", YearCondition::new),
 		MONTH_FILTER("Month Filter", MonthCondition::new),
 		HOUR_FILTER("Hour Filter", HourCondition::new),
@@ -33,7 +34,8 @@ public class QueryEngine
 		START_TIME_FILTER("Start Date Filter", StartDateCondition::new),
 		END_TIME_FILTER("End Date Filter", EndDateCondition::new),
 		COLLECTION_FILTER("Collection Filter", CollectionCondition::new),
-		MAP_POLYGON_FILTER("Map Polygon Filter", MapPolygonCondition::new);
+		MAP_POLYGON_FILTER("Map Polygon Filter", MapPolygonCondition::new),
+		FILE_TYPE_FILTER("File Type Filter", FileTypeCondition::new);
 
 		private String displayName;
 		private Supplier<QueryCondition> instanceCreator;

@@ -1,10 +1,8 @@
 package model.elasticsearch.query;
 
 
-import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
-import model.elasticsearch.query.conditions.AltitudeCondition;
 import model.elasticsearch.query.conditions.ObservableLocation;
 import model.site.Site;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -33,7 +31,10 @@ public class ElasticSearchQuery
 	private Set<Integer> hourQuery = new HashSet<>();
 	// A list of days of week to query for
 	private Set<Integer> dayOfWeekQuery = new HashSet<>();
-	private Set<String> neonSiteQuery = new HashSet<>();
+	// A list of sites to query for
+	private Set<String> siteQuery = new HashSet<>();
+	// A list of file types to query for
+	private Set<String> fileTypeQuery = new HashSet<>();
 
 	// Query builder used to make queries that we will send out
 	private final BoolQueryBuilder queryBuilder;
@@ -104,7 +105,17 @@ public class ElasticSearchQuery
 	 */
 	public void addSite(Site site)
 	{
-		this.neonSiteQuery.add(site.getCode());
+		this.siteQuery.add(site.getCode());
+	}
+
+	/**
+	 * Adds a given file type to the query
+	 *
+	 * @param fileType The file type to 'and' into the query
+	 */
+	public void addFileType(String fileType)
+	{
+		this.fileTypeQuery.add(fileType);
 	}
 
 	/**
@@ -133,30 +144,20 @@ public class ElasticSearchQuery
 	 * @param altitude The altitude value to filter on
 	 * @param operator The operator with which to test the given altitude, can be <, <=, >, >=, or =
 	 */
-	public void addAltitudeCondition(Double altitude, AltitudeCondition.AltitudeComparisonOperators operator)
+	public void addAltitudeCondition(Double altitude, NumericComparisonOperator operator)
 	{
-		switch (operator)
-		{
-			// Depending on the operator we pick a query to be used
-			case Equal:
-				this.queryBuilder.must().add(QueryBuilders.termQuery("imageMetadata.altitude", altitude));
-				break;
-			case GreaterThan:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").gt(altitude));
-				break;
-			case GreaterThanOrEqual:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").gte(altitude));
-				break;
-			case LessThan:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").lt(altitude));
-				break;
-			case LessThanOrEqual:
-				this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.altitude").lte(altitude));
-				break;
-			default:
-				CalliopeData.getInstance().getErrorDisplay().printError("Got an impossible altitude condition");
-				break;
-		}
+		this.queryBuilder.must().add(operator.createCondition("imageMetadata.altitude", altitude));
+	}
+
+	/**
+	 * Adds a condition on which elevation can be filtered with an operator argument
+	 *
+	 * @param elevation The elevation value to filter on
+	 * @param operator The operator with which to test the given elevation, can be <, <=, >, >=, or =
+	 */
+	public void addElevationCondition(Double elevation, NumericComparisonOperator operator)
+	{
+		this.queryBuilder.must().add(operator.createCondition("imageMetadata.elevation", elevation));
 	}
 
 	/**
@@ -199,8 +200,12 @@ public class ElasticSearchQuery
 
 		// Make sure that we have at least one neon site we're looking for
 		// Neon sites are IDd by code
-		if (!neonSiteQuery.isEmpty())
-			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.siteCode", this.neonSiteQuery));
+		if (!siteQuery.isEmpty())
+			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.siteCode", this.siteQuery));
+
+		// Make sure that we have at least one file type we're looking for
+		if (!fileTypeQuery.isEmpty())
+			this.queryBuilder.must().add(QueryBuilders.termsQuery("imageMetadata.fileType", this.fileTypeQuery));
 
 		return this.queryBuilder;
 	}
