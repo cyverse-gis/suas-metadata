@@ -38,12 +38,12 @@ public class Vector3
 	}
 
 	/**
-	 * @return Returns the vector in the format [x, y, z]
+	 * @return Returns the vector in the format [x y z]
 	 */
 	@Override
 	public String toString()
 	{
-		return "[" + this.getX() + ", " + this.getY() + ", " + this.getZ() + "]";
+		return "[" + this.getX() + " " + this.getY() + " " + this.getZ() + "]";
 	}
 
 	///

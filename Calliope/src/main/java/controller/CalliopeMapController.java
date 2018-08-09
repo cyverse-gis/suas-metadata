@@ -31,6 +31,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import library.AlignedMapNode;
@@ -52,6 +53,7 @@ import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.CheckComboBox;
 import org.controlsfx.control.HyperlinkLabel;
@@ -66,6 +68,7 @@ import org.locationtech.jts.math.MathUtil;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -1140,5 +1143,58 @@ public class CalliopeMapController
 		}
 		// Consume the drag
 		dragEvent.consume();
+	}
+
+	/**
+	 * Called when the create CSV button is pressed
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void createCSV(ActionEvent actionEvent)
+	{
+		// Make sure popups are enabled
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
+		{
+			// Create a file chooser to pick which csv file to write to
+			FileChooser fileChooser = new FileChooser();
+			// Set the title of the window
+			fileChooser.setTitle("Save As");
+			// Set the initial directory to just be documents folder
+			fileChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
+			// Grab the file to save to
+			File fileToSaveTo = fileChooser.showSaveDialog(this.map.getScene().getWindow());
+
+			// Make sure we got a file to save to
+			if (fileToSaveTo != null)
+			{
+				// If the file exists, delete the old one first
+				if (fileToSaveTo.exists())
+					fileToSaveTo.delete();
+				// Open a file writer to the file
+				try (FileWriter fileWriter = new FileWriter(fileToSaveTo))
+				{
+					// Create the header based on column name
+					String header = this.tbvImageMetadata.getColumns().stream().map(TableColumnBase::getText).collect(Collectors.joining(",")) + "\n";
+					fileWriter.write(header);
+
+					// For each item in the table, print a row
+					for (QueryImageEntry queryImageEntry : this.tbvImageMetadata.getItems())
+					{
+						String row = this.tbvImageMetadata.getColumns().stream().map(column -> column.getCellData(queryImageEntry).toString()).collect(Collectors.joining(","));
+						fileWriter.write(row + "\n");
+					}
+				}
+				// If the file could not be written, show an error
+				catch (IOException e)
+				{
+					CalliopeData.getInstance().getErrorDisplay().notify("Could not save the CSV file, error was:\n" + ExceptionUtils.getStackTrace(e));
+				}
+			}
+		}
+		else
+		{
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to specify where to download the CSV to.");
+		}
+		actionEvent.consume();
 	}
 }

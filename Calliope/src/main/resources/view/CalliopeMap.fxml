@@ -60,9 +60,9 @@
                                 <Label text="Maximum Selection Results:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                                 <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="5000" initialValue="100" amountToStepBy="10" HBox.hgrow="NEVER" />
                             </HBox>
-                            <HBox alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
+                            <HBox fx:id="hbxColumns" alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
                                 <Label text="Columns:"  minWidth="60" maxWidth="60"/>
-                                <CheckComboBox fx:id="ccbxColumns" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <CheckComboBox fx:id="ccbxColumns" HBox.hgrow="ALWAYS" maxWidth="${hbxColumns.width - 65}"/>
                             </HBox>
                             <TableView fx:id="tbvImageMetadata">
                                 <columnResizePolicy>
@@ -87,6 +87,13 @@
                                     <TableColumn fx:id="clmRotation" editable="false" text="Rotation Vector"/>
                                 </columns>
                             </TableView>
+                            <Button text="Create CSV" onAction="#createCSV" maxWidth="Infinity">
+                                <graphic>
+                                    <ImageView>
+                                        <Image url="@../images/mapWindow/save16.png"/>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
                         </VBox>
                     </content>
                 </TitledPane>
