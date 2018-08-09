@@ -1,7 +1,9 @@
 package controller;
 
 import controller.importView.SitePopOverController;
+import controller.mapView.LayeredMap;
 import controller.mapView.MapCircleController;
+import controller.mapView.MapLayers;
 import fxmapcontrol.*;
 import javafx.animation.*;
 import javafx.beans.binding.Bindings;
@@ -90,7 +92,7 @@ public class CalliopeMapController
 
 	// The primary map object to display sites and images on
 	@FXML
-	public Map map;
+	public LayeredMap map;
 
 	// A box containing any map specific settings (not query filters)
 	@FXML
@@ -211,14 +213,6 @@ public class CalliopeMapController
 	// The zoom threshold where we start to render polygons instead of pins
 	private static final Double PIN_TO_POLY_THRESHOLD = 10D;
 
-	// Next 3 variables are a bit of a hack, but they allow us to have a z-order for our map
-	// A cache of each node's Z order field
-	private java.util.Map<Node, Integer> zOrder;
-	// A sorted list which will be sorted by z-order
-	private ObservableList<Node> sortedNodes;
-	// A cache to a listener to avoid early garbage collection
-	private Subscription subscriptionCache;
-
 	// Flag telling us if the query box is currently expanded or contracted
 	private Boolean expandedQuery = false;
 	// The currently 'in-use' query used to filter showing images on the map
@@ -230,30 +224,6 @@ public class CalliopeMapController
 
 	// The currently selected circle
 	private ObjectProperty<MapCircleController> selectedCircle = new SimpleObjectProperty<>();
-
-	// An enum with a set of map layers and their respective Z-layer
-	private enum MapLayers
-	{
-		TILE_PROVIDER(0),
-		BORDER_POLYGON(1),
-		CIRCLES(2),
-		QUERY_BOUNDARY(3),
-		QUERY_CORNER(4),
-		SITE_PINS(5);
-
-		// The z-layer
-		private Integer zLayer;
-
-		/**
-		 * Constructor just sets the z-layer field
-		 *
-		 * @param zLayer The map z-layer
-		 */
-		MapLayers(Integer zLayer)
-		{
-			this.zLayer = zLayer;
-		}
-	}
 
 	/**
 	 * Initialize sets up the analysis window and bindings
@@ -271,24 +241,11 @@ public class CalliopeMapController
 		DragResizer.makeResizable(this.gpnMapSettings);
 
 		///
-		/// Setup the Z-Layer ordering system
-		///
-
-		// Initialize our z-order cache
-		this.zOrder = new HashMap<>();
-		// Let the base list be our custom observable list, we add to this list not map.getChildren()
-		this.sortedNodes = FXCollections.observableArrayList();
-		// Sort this custom list of nodes by the z-order, and then assign it to the map's children field. Now any nodes added to the sorted nodes list
-		// will be automatically added to the map's children list in sorted order. Store a useless reference to the subscription otherwise it will be
-		// garbage collected early
-		this.subscriptionCache = EasyBind.listBind(this.map.getChildren(), new SortedList<>(this.sortedNodes, Comparator.comparing(node -> zOrder.getOrDefault(node, -1))));
-
-		///
 		/// Setup the tile providers
 		///
 
 		// Add the default tile layer to the background, use OpenStreetMap by default
-		this.addNodeToMap(MapProviders.OpenStreetMaps.getMapTileProvider(), MapLayers.TILE_PROVIDER);
+		this.map.addChild(MapProviders.OpenStreetMaps.getMapTileProvider(), MapLayers.TILE_PROVIDER);
 		// Setup our map provider combobox, first set the items to be an unmodifiable list of enums
 		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
 		// Select OSM as the default map provider
@@ -303,8 +260,8 @@ public class CalliopeMapController
 				MapTileLayer oldMapTileProvider = oldValue.getMapTileProvider();
 				MapTileLayer newMapTileProvider = newValue.getMapTileProvider();
 				// Remove the old provider, add the new one
-				this.removeNodeFromMap(oldMapTileProvider);
-				this.addNodeToMap(newMapTileProvider, MapLayers.TILE_PROVIDER);
+				this.map.removeChild(oldMapTileProvider);
+				this.map.addChild(newMapTileProvider, MapLayers.TILE_PROVIDER);
 			}
 		});
 		// Update the credits label whenever the map provider changes
@@ -360,7 +317,7 @@ public class CalliopeMapController
 		siteBoundaryDrawingService.addFinishListener(siteCodesToDraw ->
 		{
 			// Remove any known nodes from the map and clear the site nodes list
-			mapSiteNodes.forEach(this::removeNodeFromMap);
+			mapSiteNodes.forEach(this.map::removeChild);
 			mapSiteNodes.clear();
 			// For each of the returned site codes....
 			for (String siteCode : siteCodesToDraw)
@@ -393,7 +350,7 @@ public class CalliopeMapController
 							.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 
 						mapSiteNodes.add(mapPolygon);
-						this.addNodeToMap(mapPolygon, MapLayers.BORDER_POLYGON);
+						this.map.addChild(mapPolygon, MapLayers.BORDER_POLYGON);
 					}
 					else
 					{
@@ -422,7 +379,7 @@ public class CalliopeMapController
 						    .or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 
 						mapSiteNodes.add(mapPin);
-						this.addNodeToMap(mapPin, MapLayers.SITE_PINS);
+						this.map.addChild(mapPin, MapLayers.SITE_PINS);
 					}
 				}
 			}
@@ -469,7 +426,7 @@ public class CalliopeMapController
 			{
 				MapNode newCircle = this.createCircle();
 				newCircle.visibleProperty().bind(this.tswImageCounts.selectedProperty());
-				this.addNodeToMap(newCircle, MapLayers.CIRCLES);
+				this.map.addChild(newCircle, MapLayers.CIRCLES);
 			}
 			// If we have less buckets than currently existing circles, remove circles until the two buckets have the same size. We
 			// do this to avoid having to allocate any memory at all
@@ -477,7 +434,7 @@ public class CalliopeMapController
 			{
 				MapNode toRemove = currentCircles.remove(currentCircles.size() - 1);
 				currentCircleControllers.remove(currentCircleControllers.size() - 1);
-				this.removeNodeFromMap(toRemove);
+				this.map.removeChild(toRemove);
 			}
 
 			// At this point our buckets should have the same size, test that here
@@ -640,7 +597,7 @@ public class CalliopeMapController
 							// Store the mapping that we can use for removal later
 							modelToVisual.put(mapPolygonCondition, mapPolygon);
 							// Add the polygon at the query boundary layer
-							this.addNodeToMap(mapPolygon, MapLayers.QUERY_BOUNDARY);
+							this.map.addChild(mapPolygon, MapLayers.QUERY_BOUNDARY);
 						}
 				}
 				// If we remove a query condition, test if we need to remove a map polygon
@@ -649,7 +606,7 @@ public class CalliopeMapController
 					for (QueryCondition removedQueryCondition : change.getRemoved())
 						if (removedQueryCondition instanceof MapPolygonCondition)
 							// If it is, grab the visual element from our map and remove it
-							this.removeNodeFromMap(modelToVisual.remove(removedQueryCondition));
+							this.map.removeChild(modelToVisual.remove(removedQueryCondition));
 		});
 
 
@@ -905,31 +862,6 @@ public class CalliopeMapController
 		else if (zoom <= 19)
 			return 8;
 		else return 9;
-	}
-
-	/**
-	 * Adds a node into the map using the binding we created earlier. First we add
-	 * to our z-order map and then insert into our sorted nodes list which ensures that
-	 * the z-order is properly applied
-	 *
-	 * @param node The node to add to the list
-	 * @param zOrder The z-order to assign to the node
-	 */
-	private void addNodeToMap(Node node, MapLayers zOrder)
-	{
-		this.zOrder.put(node, zOrder.zLayer);
-		this.sortedNodes.add(node);
-	}
-
-	/**
-	 * Removes the node from the map as well as the z-order hashmap
-	 *
-	 * @param node The node to remove
-	 */
-	private void removeNodeFromMap(Node node)
-	{
-		this.sortedNodes.remove(node);
-		this.zOrder.remove(node);
 	}
 
 	/**
