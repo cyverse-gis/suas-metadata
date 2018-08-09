@@ -1,16 +1,22 @@
 package model.elasticsearch.query;
 
 
+import fxmapcontrol.Location;
+import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.elasticsearch.query.conditions.ObservableLocation;
 import model.site.Site;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.builders.EnvelopeBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.GeoValidationMethod;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.locationtech.jts.geom.Coordinate;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -136,6 +142,17 @@ public class ElasticSearchQuery
 	public void setEndDate(LocalDateTime endDate)
 	{
 		this.queryBuilder.must().add(QueryBuilders.rangeQuery("imageMetadata.dateTaken").lte(endDate.atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT)));
+	}
+
+	/**
+	 * Sets the top left and bottom right corner of the queried images
+	 *
+	 * @param topLeft The top left corner
+	 * @param bottomRight The bottom right corner
+	 */
+	public void setViewport(Location topLeft, Location bottomRight)
+	{
+		this.queryBuilder.must().add(QueryBuilders.geoBoundingBoxQuery("imageMetadata.position").setCorners(new GeoPoint(topLeft.getLatitude(), topLeft.getLongitude()), new GeoPoint(bottomRight.getLatitude(), bottomRight.getLongitude())));
 	}
 
 	/**

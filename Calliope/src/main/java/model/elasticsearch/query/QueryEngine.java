@@ -35,7 +35,8 @@ public class QueryEngine
 		END_TIME_FILTER("End Date Filter", EndDateCondition::new),
 		COLLECTION_FILTER("Collection Filter", CollectionCondition::new),
 		MAP_POLYGON_FILTER("Map Polygon Filter", MapPolygonCondition::new),
-		FILE_TYPE_FILTER("File Type Filter", FileTypeCondition::new);
+		FILE_TYPE_FILTER("File Type Filter", FileTypeCondition::new),
+		VIEWPORT_CONDITION("Viewport Filter", ViewportCondition::new);
 
 		private String displayName;
 		private Supplier<QueryCondition> instanceCreator;

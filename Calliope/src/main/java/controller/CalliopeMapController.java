@@ -14,7 +14,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,6 +44,7 @@ import model.cyverse.ImageCollection;
 import model.elasticsearch.GeoBucket;
 import model.elasticsearch.QueryImageEntry;
 import model.elasticsearch.query.ElasticSearchQuery;
+import model.elasticsearch.query.MapQueryCondition;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.QueryEngine;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
@@ -64,7 +64,6 @@ import org.controlsfx.control.ToggleSwitch;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 import org.locationtech.jts.math.MathUtil;
 
 import javax.swing.filechooser.FileSystemView;
@@ -79,6 +78,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -239,6 +239,19 @@ public class CalliopeMapController
 		///
 
 		DragResizer.makeResizable(this.gpnMapSettings);
+
+		///
+		/// When a new query condition gets added that requires a map reference send it that reference here
+		///
+
+		CalliopeData.getInstance().getQueryEngine().getQueryConditions().addListener((ListChangeListener<QueryCondition>) c ->
+		{
+			while (c.next())
+				if (c.wasAdded())
+					for (QueryCondition queryCondition : c.getAddedSubList())
+						if (queryCondition instanceof MapQueryCondition)
+							((MapQueryCondition) queryCondition).setMap(this.map);
+		});
 
 		///
 		/// Setup the tile providers
@@ -568,7 +581,7 @@ public class CalliopeMapController
 		///
 
 		// A mapping of map polygon condition -> map polygon visual
-		java.util.Map<MapPolygonCondition, MapPolygon> modelToVisual = new HashMap<>();
+		Map<MapPolygonCondition, MapPolygon> modelToVisual = new HashMap<>();
 		// Add a special interaction for our MapPolygonCondition that allows us to draw on the map
 		CalliopeData.getInstance().getQueryEngine().getQueryConditions().addListener((ListChangeListener<QueryCondition>) change ->
 		{
