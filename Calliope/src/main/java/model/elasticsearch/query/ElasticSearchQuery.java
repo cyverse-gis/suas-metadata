@@ -7,11 +7,15 @@ import model.cyverse.ImageCollection;
 import model.elasticsearch.query.conditions.ObservableLocation;
 import model.site.Site;
 import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
+import org.elasticsearch.common.geo.builders.PolygonBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.GeoValidationMethod;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.locationtech.jts.geom.Coordinate;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -148,6 +152,16 @@ public class ElasticSearchQuery
 	public void addBox(Location topLeft, Location bottomRight)
 	{
 		this.queryBuilder.must().add(QueryBuilders.geoBoundingBoxQuery("imageMetadata.position").setCorners(new GeoPoint(topLeft.getLatitude(), topLeft.getLongitude()), new GeoPoint(bottomRight.getLatitude(), bottomRight.getLongitude())));
+	}
+
+	/**
+	 * Filters all images by a given polygon (set of points
+	 *
+	 * @param locations The locations that make up the polygon
+	 */
+	public void addPolygon(List<Location> locations)
+	{
+		this.queryBuilder.must().add(QueryBuilders.geoPolygonQuery("imageMetadata.position", locations.stream().map(location -> new GeoPoint(location.getLatitude(), location.getLongitude())).collect(Collectors.toList())));
 	}
 
 	/**

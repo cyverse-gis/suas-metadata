@@ -59,6 +59,11 @@ public class AlignedMapNode extends MapNode
 					setTranslateX(viewportPosition.getX() - boundsInParent.getWidth() / 2);
 					setTranslateY(viewportPosition.getY() - boundsInParent.getHeight());
 					break;
+				case BOTTOM_RIGHT:
+					// Align the node on the bottom and right
+					setTranslateX(viewportPosition.getX());
+					setTranslateY(viewportPosition.getY());
+					break;
 				default:
 					throw new UnsupportedOperationException("Alignment " + this.getAlignment().toString() + " not yet supported by aligned map node");
 			}

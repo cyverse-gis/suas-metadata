@@ -1,0 +1,11 @@
+.handleCcl {
+    -fx-fill: orange;
+    -fx-stroke-width: 2px;
+    -fx-stroke: darkblue;
+}
+
+.handleCcl:hover {
+    -fx-fill: #ffee00;
+    -fx-stroke-width: 2px;
+    -fx-stroke: #0000df;
+}

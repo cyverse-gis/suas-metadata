@@ -41,7 +41,7 @@ public class MapBoxCondition extends MapQueryCondition
 		// Set the new map
 		super.setMap(map);
 		// Add the polygon to the new map
-		map.addChild(polygon, MapLayers.BORDER_POLYGON);
+		map.addChild(polygon, MapLayers.QUERY_BOUNDARY);
 	}
 
 	/**
@@ -52,18 +52,7 @@ public class MapBoxCondition extends MapQueryCondition
 	@Override
 	public void appendConditionToQuery(ElasticSearchQuery query)
 	{
-		// Get the list of locations the polygon is made up of
-		ObservableList<Location> locations = polygon.getLocations();
-		// The number of locations should be exactly 4
-		if (locations.size() == 4)
-		{
-			// Compute the min lat/long, and then add the box to the query
-			double minLat = locations.stream().min(Comparator.comparing(Location::getLatitude)).get().getLatitude();
-			double minLon = locations.stream().min(Comparator.comparing(Location::getLongitude)).get().getLongitude();
-			double maxLat = locations.stream().max(Comparator.comparing(Location::getLatitude)).get().getLatitude();
-			double maxLon = locations.stream().max(Comparator.comparing(Location::getLongitude)).get().getLongitude();
-			query.addBox(new Location(maxLat, minLon), new Location(minLat, maxLon));
-		}
+		query.addPolygon(polygon.getLocations());
 	}
 
 	/**

@@ -2,28 +2,31 @@ package controller.mapView.conditions;
 
 import controller.mapView.IConditionController;
 import controller.mapView.LayeredMap;
-import fxmapcontrol.Location;
-import fxmapcontrol.Map;
-import fxmapcontrol.MapPolygon;
-import fxmapcontrol.MapProjection;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import controller.mapView.MapLayers;
+import controller.mapView.conditions.handle.HandleController;
+import fxmapcontrol.*;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.MouseEvent;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.ListView;
+import library.AlignedMapNode;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.MapBoxCondition;
+import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.ToggleSwitch;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 
 /**
  * Condition controller for the map box condition
@@ -66,6 +69,9 @@ public class MapBoxConditionController implements IConditionController
 	private EventHandler<MouseEvent> onMouseDragged;
 	private EventHandler<MouseEvent> onMouseReleased;
 
+	// A hash map of locations to handle map nodes
+	private java.util.Map<Location, Node> locationToHandle = new HashMap<>();
+
 	/**
 	 * Initialize sets up the list view of coordinates with a cell factory
 	 */
@@ -96,13 +102,17 @@ public class MapBoxConditionController implements IConditionController
 	@Override
 	public void initializeData(QueryCondition queryCondition)
 	{
-		// If the map box condition is non-null wipe out the previous event listeners
+		// If the map box condition is non-null wipe out any changes we made to the map
 		if (mapBoxCondition != null)
 		{
 			LayeredMap map = mapBoxCondition.getMap();
+			// Such as map listeners.....
 			map.removeEventHandler(MouseEvent.DRAG_DETECTED, onDragDetected);
 			map.removeEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDragged);
 			map.removeEventHandler(MouseEvent.MOUSE_RELEASED, onMouseReleased);
+			// And handle nodes...
+			for (Node node : this.locationToHandle.values())
+				map.removeChild(node);
 		}
 
 		// If we have new valid data, update this cell to display that data
@@ -171,6 +181,7 @@ public class MapBoxConditionController implements IConditionController
 				if (this.drawingBox)
 				{
 					this.drawingBox = false;
+					this.rebuildHandles();
 					this.mpnWaiting.setVisible(false);
 				}
 			};
@@ -179,6 +190,9 @@ public class MapBoxConditionController implements IConditionController
 			map.addEventHandler(MouseEvent.DRAG_DETECTED, onDragDetected);
 			map.addEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDragged);
 			map.addEventHandler(MouseEvent.MOUSE_RELEASED, onMouseReleased);
+
+			// Now that we've got a new polygon build handles for it
+			this.rebuildHandles();
 		}
 	}
 
@@ -196,5 +210,51 @@ public class MapBoxConditionController implements IConditionController
 		// Hide the waiting masker pane
 		this.mpnWaiting.setVisible(true);
 		actionEvent.consume();
+	}
+
+	/**
+	 * Takes the current polygon and builds map handles for it
+	 */
+	private void rebuildHandles()
+	{
+		// Remove any existing handles
+		locationToHandle.values().forEach(handle -> this.mapBoxCondition.getMap().removeChild(handle));
+		locationToHandle.clear();
+
+		// For each location on the box, add a handle at each position
+		ObservableList<Location> locations = this.mapBoxCondition.getPolygon().getLocations();
+		for (Location location : locations)
+		{
+			// Create a handle at the location's point
+			MapNode handle = new AlignedMapNode(Pos.CENTER);
+			// Set the handle's center to be the location's center
+			handle.setLocation(location);
+
+			// Load a handle FXML document for the handle
+			FXMLLoader fxmlLoader = FXMLLoaderUtils.loadFXML("mapView/conditions/handle/Handle.fxml");
+			// Store the controller
+			HandleController handleController = fxmlLoader.getController();
+			// Set the handle controller's fields
+			handleController.setLocation(location);
+			handleController.setMap(this.mapBoxCondition.getMap());
+			handle.locationProperty().bind(handleController.locationProperty());
+			// When the location property changes we replace the location found in the polygon's location list
+			handle.locationProperty().addListener((observable, oldValue, newValue) ->
+			{
+				int oldIndex = locations.indexOf(oldValue);
+				locations.remove(oldValue);
+				locations.add(oldIndex, newValue);
+			});
+			// Hide the handle when the toggle switch is off
+			handle.visibleProperty().bind(this.tswShow.selectedProperty());
+
+			// Add the handle to the map node
+			handle.getChildren().add(fxmlLoader.getRoot());
+
+			// Store a reference to the handle in our map
+			locationToHandle.put(location, handle);
+			// Add the child to our map
+			this.mapBoxCondition.getMap().addChild(handle, MapLayers.QUERY_CORNER);
+		}
 	}
 }
