@@ -21,9 +21,11 @@ import jfxtras.scene.control.ListView;
 import library.AlignedMapNode;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
+import model.util.AnalysisUtils;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.ToggleSwitch;
+import org.locationtech.spatial4j.distance.DistanceUtils;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -37,9 +39,6 @@ public class MapPolygonConditionController implements IConditionController
 	/// FXML Bound Fields Start
 	///
 
-	// The button that allows us to draw on the map
-	@FXML
-	public Button btnDraw;
 	// The toggle switch that shows and hides the bounding box
 	@FXML
 	public ToggleSwitch tswShow;
@@ -209,6 +208,52 @@ public class MapPolygonConditionController implements IConditionController
 		this.mapPolygonCondition.getMap().setManipulationModes(EnumSet.noneOf(Map.ManipulationModes.class));
 		// Hide the waiting masker pane
 		this.mpnWaiting.setVisible(true);
+		actionEvent.consume();
+	}
+
+	/**
+	 * When we click the add vertex button which adds a vertex to the polygon
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void addVertex(ActionEvent actionEvent)
+	{
+		// References to the furthest two points
+		Location avgPoint1 = null;
+		Location avgPoint2 = null;
+		// The current
+		double currentMaxDistance = 0D;
+
+		// Grab the list of locations
+		ObservableList<Location> locations = this.mapPolygonCondition.getPolygon().getLocations();
+		// Iterate over all locations
+		for (int i = 0; i < locations.size(); i++)
+		{
+			// Grab the two adjacent locations
+			Location first  = locations.get(i);
+			// Ensure that we wrap around if we hit the end of the list...
+			Location second = (i + 1) == locations.size() ? locations.get(0) : locations.get(i + 1);
+			// Compute the distance between the points
+			double distance = AnalysisUtils.distanceBetween(first.getLatitude(), first.getLongitude(), second.getLatitude(), second.getLongitude());
+			// Test if the distance is bigger than the current max
+			if (distance > currentMaxDistance)
+			{
+				// Set the current max distance and points
+				currentMaxDistance = distance;
+				avgPoint1 = first;
+				avgPoint2 = second;
+			}
+		}
+
+		// If the max distance is non 0, add the location
+		if (currentMaxDistance > 0)
+		{
+			// Add the a new vertex in the middle of the furthest two vertices.
+			locations.add(locations.indexOf(avgPoint1) + 1, new Location((avgPoint1.getLatitude() + avgPoint2.getLatitude()) / 2, (avgPoint1.getLongitude() + avgPoint2.getLongitude()) / 2));
+			// Rebuild any handles we've created
+			this.rebuildHandles();
+		}
+
 		actionEvent.consume();
 	}
 
