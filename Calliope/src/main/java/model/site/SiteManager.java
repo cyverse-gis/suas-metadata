@@ -4,7 +4,6 @@ import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import model.CalliopeData;
 import model.site.ltar.LTARData;
 import model.site.neon.NeonData;
 import model.util.AnalysisUtils;

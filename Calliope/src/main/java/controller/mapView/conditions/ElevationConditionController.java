@@ -6,7 +6,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import model.elasticsearch.query.NumericComparisonOperator;
 import model.elasticsearch.query.QueryCondition;
-import model.elasticsearch.query.conditions.AltitudeCondition;
 import model.elasticsearch.query.conditions.ElevationCondition;
 import model.settings.SettingsData;
 import org.apache.commons.lang.math.NumberUtils;

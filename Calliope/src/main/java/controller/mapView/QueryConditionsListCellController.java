@@ -39,6 +39,9 @@ public class QueryConditionsListCellController extends ListCell<QueryCondition>
 	/// FXML Bound Fields End
 	///
 
+	// The current interior list cell
+	private IConditionController currentCell;
+
 	/**
 	 * There's nothing to initialize, everything is done once we get data
 	 */
@@ -64,6 +67,10 @@ public class QueryConditionsListCellController extends ListCell<QueryCondition>
 		// Set the text to null
 		this.setText(null);
 
+		// If the current cell controller is non-null clear it
+		if (this.currentCell != null)
+			this.currentCell.initializeData(null);
+
 		// If the cell is empty we have no graphic
 		if (empty && queryCondition == null)
 		{
@@ -76,8 +83,10 @@ public class QueryConditionsListCellController extends ListCell<QueryCondition>
 
 			// Load the FXML of the given data model UI
 			FXMLLoader fxml = FXMLLoaderUtils.loadFXML("mapView/conditions/" + queryCondition.getFXMLConditionEditor());
+			// Store the current cell's condition controller
+			this.currentCell = fxml.getController();
 			// Initialize the IQueryConditionController that controls the UI for the data
-			fxml.<IConditionController> getController().initializeData(queryCondition);
+			this.currentCell.initializeData(queryCondition);
 			// The root node containing the query condition
 			Node rootNode = fxml.getRoot();
 			// Set our cell to display the FXML data
@@ -95,6 +104,9 @@ public class QueryConditionsListCellController extends ListCell<QueryCondition>
 	 */
 	public void clearCondition(ActionEvent actionEvent)
 	{
+		// Destroy any connections or listeners this item opened
+		this.getItem().destroy();
+		// Remove the item
 		this.getListView().getItems().remove(this.getItem());
 		actionEvent.consume();
 	}

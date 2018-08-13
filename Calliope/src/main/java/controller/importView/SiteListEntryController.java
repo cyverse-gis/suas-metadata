@@ -5,10 +5,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 import model.CalliopeData;
-import model.site.Site;
-import model.util.AnalysisUtils;
 import model.image.UTMCoord;
 import model.settings.SettingsData;
+import model.site.Site;
+import model.util.AnalysisUtils;
 
 /**
  * Controller class for the location list cell

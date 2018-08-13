@@ -1,6 +1,5 @@
 package model.util;
 
-import model.CalliopeData;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;

@@ -3,7 +3,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Circle?>
-
 <StackPane fx:controller="controller.mapView.MapCircleController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <children>
         <Circle fx:id="crlBackground" stroke="darkgrey" strokeWidth="2" radius="20"/>

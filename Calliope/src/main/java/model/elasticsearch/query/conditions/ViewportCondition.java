@@ -1,6 +1,5 @@
 package model.elasticsearch.query.conditions;
 
-import controller.CalliopeMapController;
 import controller.mapView.LayeredMap;
 import fxmapcontrol.Location;
 import javafx.geometry.Bounds;
@@ -32,9 +31,12 @@ public class ViewportCondition extends MapQueryCondition
 		Location bottomRight = map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
 		// Set the query's viewport
-		query.setViewport(topLeft, bottomRight);
+		query.addBox(topLeft, bottomRight);
 	}
 
+	/**
+	 * @return Returns the conditional FXML file
+	 */
 	@Override
 	public String getFXMLConditionEditor()
 	{

@@ -5,7 +5,6 @@ import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import model.CalliopeData;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;

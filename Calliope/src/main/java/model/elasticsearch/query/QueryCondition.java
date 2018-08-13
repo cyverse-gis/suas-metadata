@@ -23,6 +23,11 @@ public abstract class QueryCondition
 	 */
 	public abstract String getFXMLConditionEditor();
 
+	/**
+	 * Called to destroy any listeners that this condition may have added to other view objects
+	 */
+	public void destroy() {}
+
 	///
 	/// Setters / Getters
 	///

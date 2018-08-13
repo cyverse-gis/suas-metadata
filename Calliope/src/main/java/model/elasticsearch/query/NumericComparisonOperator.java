@@ -4,7 +4,6 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Enum of numeric comparison operators

@@ -1,7 +1,6 @@
 package model.elasticsearch.query;
 
 import controller.mapView.LayeredMap;
-import javafx.beans.property.ObjectProperty;
 
 /**
  * Extended version of the query condition that contains data about a map it's referencing
