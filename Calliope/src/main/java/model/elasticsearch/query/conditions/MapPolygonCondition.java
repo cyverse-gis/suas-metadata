@@ -1,30 +1,58 @@
 package model.elasticsearch.query.conditions;
 
-import javafx.beans.Observable;
-import javafx.collections.FXCollections;
+import controller.mapView.LayeredMap;
+import controller.mapView.MapLayers;
+import fxmapcontrol.Location;
+import fxmapcontrol.MapPolygon;
 import javafx.collections.ObservableList;
 import model.elasticsearch.query.ElasticSearchQuery;
-import model.elasticsearch.query.QueryCondition;
+import model.elasticsearch.query.MapQueryCondition;
+
+import java.util.Comparator;
 
 /**
- * Data model used by the "Map Polygon filter" query condition
+ * Data model used by the "Map Box filter" query condition
  */
-public class MapPolygonCondition extends QueryCondition
+public class MapPolygonCondition extends MapQueryCondition
 {
-	// A list of polygon points that listens to lat/long changes
-	private ObservableList<ObservableLocation> points = FXCollections.observableArrayList(point -> new Observable[] { point.latitudeProperty(), point.longitudeProperty() });
+	// The polygon to edit and add to the map
+	private MapPolygon polygon = new MapPolygon();
 
 	/**
-	 * This query condition ensures only images taken inside the polygon
+	 * Initialize the polygon with a styleclass and allow clicking through the polygon
+	 */
+	public MapPolygonCondition()
+	{
+		polygon.getStyleClass().add("box-boundary");
+		polygon.setMouseTransparent(true);
+	}
+
+	/**
+	 * Setter for the map, also ensure we remove the old polygon from the map and add the new polygon to the map
+	 *
+	 * @param map The new map
+	 */
+	@Override
+	public void setMap(LayeredMap map)
+	{
+		// If we previously had a map remove the polygon from the map
+		if (this.getMap() != null)
+			this.getMap().removeChild(polygon);
+		// Set the new map
+		super.setMap(map);
+		// Add the polygon to the new map
+		map.addChild(polygon, MapLayers.QUERY_BOUNDARY);
+	}
+
+	/**
+	 * This query condition ensures only images taken inside the box
 	 *
 	 * @param query The current state of the query before the appending
 	 */
 	@Override
 	public void appendConditionToQuery(ElasticSearchQuery query)
 	{
-		// We can only append this query condition if we have at least 3 polygon points
-		if (this.points.size() >= 3)
-			query.addPolygonCondition(points);
+		query.addPolygon(polygon.getLocations());
 	}
 
 	/**
@@ -39,10 +67,19 @@ public class MapPolygonCondition extends QueryCondition
 	}
 
 	/**
-	 * @return Getter for point data
+	 * Called to destroy any listeners that this condition may have added to other view objects. In this case we remove the polygon child
 	 */
-	public ObservableList<ObservableLocation> getPoints()
+	@Override
+	public void destroy()
 	{
-		return this.points;
+		this.getMap().removeChild(polygon);
+	}
+
+	/**
+	 * @return Getter for map polygon data
+	 */
+	public MapPolygon getPolygon()
+	{
+		return this.polygon;
 	}
 }

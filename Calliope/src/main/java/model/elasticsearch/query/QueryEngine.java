@@ -35,7 +35,6 @@ public class QueryEngine
 		END_TIME_FILTER("End Date Filter", EndDateCondition::new),
 		COLLECTION_FILTER("Collection Filter", CollectionCondition::new),
 		MAP_POLYGON_FILTER("Map Polygon Filter", MapPolygonCondition::new),
-		MAP_BOX_FILTER("Map Box Filter", MapBoxCondition::new),
 		FILE_TYPE_FILTER("File Type Filter", FileTypeCondition::new),
 		VIEWPORT_CONDITION("Viewport Filter", ViewportCondition::new);
 

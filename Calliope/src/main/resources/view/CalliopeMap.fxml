@@ -49,7 +49,6 @@
                 <ToggleSwitch fx:id="tswNEON" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="1" text="NEON Sites: " maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswLTAR" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="1" text="LTAR Sites: " maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswImageCounts" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts: " maxWidth="Infinity"/>
-                <ToggleSwitch fx:id="tswQueryPolygons" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="2" text="Query Filter Polygons: " maxWidth="Infinity"/>
                 <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" maxWidth="Infinity">
                     <content>
                         <VBox spacing="5">

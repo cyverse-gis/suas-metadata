@@ -187,17 +187,6 @@ public class ElasticSearchQuery
 	}
 
 	/**
-	 * Adds a polygon given a list of positions that each image must be inside of
-	 *
-	 * @param observableLocations List of locations that can be used to make a polygon
-	 */
-	public void addPolygonCondition(List<ObservableLocation> observableLocations)
-	{
-		// Query on the image metadata's position. We need to map the ObservableLocations to GeoPoints
-		this.queryBuilder.must().add(QueryBuilders.geoPolygonQuery("imageMetadata.position", observableLocations.stream().map(observableLocation -> new GeoPoint(observableLocation.getLatitude(), observableLocation.getLongitude())).collect(Collectors.toList())).setValidationMethod(GeoValidationMethod.IGNORE_MALFORMED));
-	}
-
-	/**
 	 * Finalizes the ElasticSearch query and returns the builder
 	 *
 	 * @return The query builder ready to be executed

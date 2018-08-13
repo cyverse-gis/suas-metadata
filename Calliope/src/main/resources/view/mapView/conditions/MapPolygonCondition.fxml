@@ -3,29 +3,31 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.*?>
 <?import jfxtras.scene.control.ListView?>
-<BorderPane prefHeight="-Infinity" prefWidth="270" fx:controller="controller.mapView.conditions.MapPolygonConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
-    <top>
-        <Label text="Map Polygon Filter" BorderPane.alignment="CENTER">
-            <BorderPane.margin>
-                <Insets top="5" bottom="10"/>
-            </BorderPane.margin>
-        </Label>
-    </top>
-    <center>
-        <ListView fx:id="lvwPoints"/>
-    </center>
-    <bottom>
-        <FlowPane alignment="CENTER" hgap="5" vgap="10">
-            <padding>
-                <Insets bottom="10" left="5" right="5" top="10"/>
-            </padding>
-            <children>
-                <Button onAction="#addPoint" mnemonicParsing="false" text="Add Point"/>
-                <Button onAction="#removePoint" mnemonicParsing="false" text="Remove Point"/>
-            </children>
-        </FlowPane>
-    </bottom>
-</BorderPane>
+<?import org.controlsfx.control.MaskerPane?>
+<?import org.controlsfx.control.ToggleSwitch?>
+<StackPane prefHeight="-Infinity" prefWidth="260" fx:controller="controller.mapView.conditions.MapPolygonConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+    <BorderPane>
+        <top>
+            <Label text="Map Polygon Filter" BorderPane.alignment="CENTER">
+                <BorderPane.margin>
+                    <Insets top="5" bottom="10"/>
+                </BorderPane.margin>
+            </Label>
+        </top>
+        <center>
+            <VBox BorderPane.alignment="TOP_CENTER" alignment="TOP_CENTER" spacing="5">
+                <padding>
+                    <Insets bottom="5"/>
+                </padding>
+                <ToggleSwitch fx:id="tswShow" text="Show Polygon on Map" selected="true" maxWidth="Infinity"/>
+                <ListView fx:id="lvwCoordinates"/>
+            </VBox>
+        </center>
+        <bottom>
+            <Button fx:id="btnDraw" text="Draw Starting Box" BorderPane.alignment="CENTER" onAction="#drawBoundingBox"/>
+        </bottom>
+    </BorderPane>
+    <MaskerPane fx:id="mpnWaiting" visible="false" text="Waiting..."/>
+</StackPane>

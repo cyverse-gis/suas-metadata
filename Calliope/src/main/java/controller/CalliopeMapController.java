@@ -47,7 +47,6 @@ import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.MapQueryCondition;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.QueryEngine;
-import model.elasticsearch.query.conditions.MapPolygonCondition;
 import model.image.Vector3;
 import model.site.Boundary;
 import model.site.Site;
@@ -108,9 +107,6 @@ public class CalliopeMapController
 	// A toggle switch to enable or disable image count circles
 	@FXML
 	public ToggleSwitch tswImageCounts;
-	// A toggle switch to enable or disable query polygons
-	@FXML
-	public ToggleSwitch tswQueryPolygons;
 
 	// Bottom pane which holds the query specifics
 	@FXML
@@ -573,54 +569,6 @@ public class CalliopeMapController
 		this.lvwQueryConditions.setCellFactory(x -> FXMLLoaderUtils.loadFXML("mapView/QueryConditionsListCell.fxml").getController());
 		// Set the items in the list to be the list of possible query filters
 		this.lvwFilters.setItems(CalliopeData.getInstance().getQueryEngine().getQueryFilters());
-
-		///
-		/// Create a mapping of polygon condition to the visual polygon on the map. This will update the map if a polygon condition is created and populated
-		///
-
-		// A mapping of map polygon condition -> map polygon visual
-		Map<MapPolygonCondition, MapPolygon> modelToVisual = new HashMap<>();
-		// Add a special interaction for our MapPolygonCondition that allows us to draw on the map
-		CalliopeData.getInstance().getQueryEngine().getQueryConditions().addListener((ListChangeListener<QueryCondition>) change ->
-		{
-			while (change.next())
-				// If we added a new query condition, test if we need to add a map polygon
-				if (change.wasAdded())
-				{
-					// Iterate over all new conditions and see if they're map polygon conditions
-					for (QueryCondition addedQueryCondition : change.getAddedSubList())
-						if (addedQueryCondition instanceof MapPolygonCondition)
-						{
-							// Grab the query condition as a map polygon condition
-							MapPolygonCondition mapPolygonCondition = (MapPolygonCondition) addedQueryCondition;
-							// Create a new map polygon
-							MapPolygon mapPolygon = new MapPolygon();
-							// Hide the polygon if there's less than 3 points
-							mapPolygon.visibleProperty().bind(Bindings.size(mapPolygonCondition.getPoints()).greaterThan(2));
-							// Map the model polygon's points to the map polygon's points
-							mapPolygon.setLocations(EasyBind.map(mapPolygonCondition.getPoints(), polygonPoint -> new Location(polygonPoint.getLatitude(), polygonPoint.getLongitude())));
-							// Add a CSS attribute to all polygons so that we can style them later
-							mapPolygon.getStyleClass().add("geo-query-boundary");
-							// Make sure we can drag & drop through the polygon
-							mapPolygon.setMouseTransparent(true);
-							// Hide the map polygon if the toggle switch is off
-							mapPolygon.visibleProperty().bind(this.tswQueryPolygons.selectedProperty());
-							// Store the mapping that we can use for removal later
-							modelToVisual.put(mapPolygonCondition, mapPolygon);
-							// Add the polygon at the query boundary layer
-							this.map.addChild(mapPolygon, MapLayers.QUERY_BOUNDARY);
-						}
-				}
-				// If we remove a query condition, test if we need to remove a map polygon
-				else if (change.wasRemoved())
-					// Iterate over all new conditions and see if they're map polygon conditions
-					for (QueryCondition removedQueryCondition : change.getRemoved())
-						if (removedQueryCondition instanceof MapPolygonCondition)
-							// If it is, grab the visual element from our map and remove it
-							this.map.removeChild(modelToVisual.remove(removedQueryCondition));
-		});
-
-
 
 		///
 		/// Setup the top left box of settings
