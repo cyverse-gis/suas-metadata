@@ -41,7 +41,7 @@ public class CalliopeAuth
 	private static final String CALLIOPE_ADMIN_ENDPOINT = "/calliopeAdminLogin";
 
 	// A list of admin accounts
-	private static final List<String> CALLIOPE_ADMIN_ACCOUNTS = Arrays.asList("dslovikosky", "danielslee");
+	private static final List<String> CALLIOPE_ADMIN_ACCOUNTS = Arrays.asList("dslovikosky", "danielslee", "tswetnam");
 
 	// A username and password to be used by the calliope view program
 	private static final String CALLIOPE_VIEW_GUEST_USERNAME = "guest";
