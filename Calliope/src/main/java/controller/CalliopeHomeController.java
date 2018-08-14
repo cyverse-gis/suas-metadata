@@ -33,9 +33,9 @@ public class CalliopeHomeController
 	// The credits button
 	@FXML
 	public Button btnCredits;
-	// The logout button to disconnect from CyVerse
+	// The help button opens up the github page
 	@FXML
-	public Button btnLogout;
+	public Button btnHelp;
 	// The exit button to close the program
 	@FXML
 	public Button btnExit;
@@ -71,7 +71,7 @@ public class CalliopeHomeController
 		// Hide the logout button and text when not logged in
 		this.lblUsername.visibleProperty().bind(loggedIn);
 		this.btnCredits.visibleProperty().bind(loggedIn);
-		this.btnLogout.visibleProperty().bind(loggedIn);
+		this.btnHelp.visibleProperty().bind(loggedIn);
 		this.btnExit.visibleProperty().bind(loggedIn);
 	}
 
@@ -82,16 +82,6 @@ public class CalliopeHomeController
 	 */
 	@FXML
 	public void exitPressed(ActionEvent actionEvent)
-	{
-		System.exit(0);
-	}
-
-	/**
-	 * When the logout button is pressed
-	 *
-	 * @param actionEvent ignored
-	 */
-	public void logoutPressed(ActionEvent actionEvent)
 	{
 		System.exit(0);
 	}
@@ -178,6 +168,23 @@ public class CalliopeHomeController
 			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to see credits");
 		}
 
+		actionEvent.consume();
+	}
+
+	/**
+	 * When the help button is pressed we show the github user manual
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void helpPressed(ActionEvent actionEvent)
+	{
+		try
+		{
+			Desktop.getDesktop().browse(new URI("https://github.com/cyverse-gis/suas-metadata/tree/master/Calliope"));
+		}
+		catch (IOException | URISyntaxException ignored)
+		{
+		}
 		actionEvent.consume();
 	}
 }

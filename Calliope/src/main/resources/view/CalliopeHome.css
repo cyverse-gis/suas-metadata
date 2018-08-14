@@ -5,8 +5,8 @@
     -fx-font-size: 18px;
 }
 
-.logoutBtn {
-    -fx-background-image: url("../images/mainMenu/login.png");
+.helpBtn {
+    -fx-background-image: url("../images/mainMenu/help.png");
     -fx-background-position: 5%;
     -fx-background-repeat: no-repeat;
     -fx-font-size: 18px;

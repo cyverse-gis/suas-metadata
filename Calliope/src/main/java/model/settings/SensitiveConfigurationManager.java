@@ -1,6 +1,8 @@
 package model.settings;
 
 import controller.Calliope;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import model.util.ErrorDisplay;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.configuration2.Configuration;
@@ -22,12 +24,8 @@ public class SensitiveConfigurationManager
 	private String elasticSearchHost;
 	// The port of the ES host
 	private Integer elasticSearchPort;
-	// The IP of the elevation server host
-	private String elevationServerHost;
-	// The port of the elevation server host
-	private Integer elevationServerPort;
 	// If the configuration loaded successfully
-	private Boolean configurationValid = false;
+	private BooleanProperty configurationValid = new SimpleBooleanProperty(false);
 
 	/**
 	 * Constructor reads the configuration file and initializes fields
@@ -58,18 +56,17 @@ public class SensitiveConfigurationManager
 			this.elasticSearchHost = configuration.getString("elasticSearch.host");
 			// Read the configuration file's ES port
 			this.elasticSearchPort = configuration.getInteger("elasticSearch.port", 9200);
-			// Read the configuration file's elevation server host
-			this.elevationServerHost = configuration.getString("elevationServer.host");
-			// Read the configuration file's elevation server port
-			this.elevationServerPort = configuration.getInteger("elevationServer.port", 8080);
 
 			// Config is good to go
-			this.configurationValid = true;
+			if (this.elasticSearchHost != null)
+				this.configurationValid.setValue(true);
+			else
+				errorDisplay.notify("Invalid ElasticSearch host or port, please check `calliope.properties`!");
 		}
 		catch (ConfigurationException | IOException e)
 		{
 			// Print an error because the file may not exist
-			System.err.println("Error parsing configuration file, elastic search database connection could not be established!\n" + ExceptionUtils.getStackTrace(e));
+			errorDisplay.notify("Error parsing configuration file, elastic search database connection could not be established!\n" + ExceptionUtils.getStackTrace(e));
 		}
 		catch (ConversionException e)
 		{
@@ -94,26 +91,18 @@ public class SensitiveConfigurationManager
 	}
 
 	/**
-	 * @return Getter for the server host that supplies elevation data
-	 */
-	public String getElevationServerHost()
-	{
-		return this.elevationServerHost;
-	}
-
-	/**
-	 * @return Getter for the server port that supplies elevation data
-	 */
-	public Integer getElevationServerPort()
-	{
-		return this.elevationServerPort;
-	}
-
-	/**
 	 * @return True if the configuration was loaded successfully
 	 */
 	public Boolean isConfigurationValid()
 	{
-		return this.configurationValid;
+		return this.configurationValid.getValue();
+	}
+
+	/**
+	 * @return The configuration valid property
+	 */
+	public BooleanProperty configurationValidProperty()
+	{
+		return configurationValid;
 	}
 }

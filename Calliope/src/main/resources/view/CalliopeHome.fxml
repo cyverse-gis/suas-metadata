@@ -33,17 +33,17 @@
                         <Insets left="20" top="170" />
                     </StackPane.margin>
                 </Label>
-                <Button fx:id="btnCredits" minWidth="130" onAction="#creditsPressed" styleClass="creditsBtn" text="Credits" StackPane.alignment="TOP_LEFT">
+                <Button fx:id="btnCredits" minWidth="150" onAction="#creditsPressed" styleClass="creditsBtn" text="Credits" StackPane.alignment="TOP_LEFT">
                     <StackPane.margin>
                         <Insets left="20" top="220" />
                     </StackPane.margin>
                 </Button>
-                <Button fx:id="btnLogout" minWidth="130" onAction="#logoutPressed" styleClass="logoutBtn" text="Logout" StackPane.alignment="TOP_LEFT">
+                <Button fx:id="btnHelp" minWidth="150" onAction="#helpPressed" styleClass="helpBtn" text="Manual" StackPane.alignment="TOP_LEFT">
                     <StackPane.margin>
                         <Insets left="20" top="270" />
                     </StackPane.margin>
                 </Button>
-                <Button fx:id="btnExit" minWidth="130" onAction="#exitPressed" styleClass="exitBtn" text="Exit" StackPane.alignment="TOP_LEFT">
+                <Button fx:id="btnExit" minWidth="150" onAction="#exitPressed" styleClass="exitBtn" text="Exit" StackPane.alignment="TOP_LEFT">
                     <StackPane.margin>
                         <Insets left="20" top="320" />
                     </StackPane.margin>
