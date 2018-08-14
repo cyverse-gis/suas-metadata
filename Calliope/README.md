@@ -9,29 +9,39 @@ There are two different ways to run Calliope, either by building it from source 
 
 ### Running a Pre-Built `jar`
 
-Start by downloading: [Calliope for Java 8](./prebuilt/Calliope-1.0-SNAPSHOT-Java-8.jar) or [Calliope for Java 9/10](./prebuilt/Calliope-1.0-SNAPSHOT-Java-9-10.jar). Then, to run Calliope there are two prerequisites that you will need.
+Start by downloading: [Calliope for Java 8](./prebuilt/Calliope-1.0-SNAPSHOT-Java-8.jar) or [Calliope for Java 9/10](./prebuilt/Calliope-1.0-SNAPSHOT-Java-9-10.jar). It is highly recommended to use the Java 8 version if possible. Then, to run Calliope there are two prerequisites that you will need.
 
-Java 8/10: <br>
-http://www.oracle.com/technetwork/java/javase/downloads/
+<b>Java 8/9/10:</b><br>
+http://www.oracle.com/technetwork/java/javase/downloads/ <br>
+Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJFX.
 <br>
-ExifTool:<br>
+<b>ExifTool:</b><br>
 https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
 
-*Important:* ExifTool must be accessible in your system $PATH environment variable. Calliope will run without ExifTool so you can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
+
+ExifTool must be accessible in your system $PATH environment variable. Calliope will run without ExifTool so you can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
 ### Build from Source
 This repository should be cloned and then built using maven. All Java dependencies will be automatically fetched through maven. Please note that you will need ExifTool installed on your system as well to import images and read metadata.  
 
 #### Prerequisites
-Java 8: <br>
-http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+<b>Java 8:</b> <br>
+http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html <br>
+Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJFX.
 <br>
-Maven:<br>
+<b>Maven:</b><br>
 https://maven.apache.org/install.html<br>
-ExifTool:<br>
+<b>ExifTool:</b><br>
 https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
 
-*Important:* ExifTool must be accessible in your system $PATH environment variable. You can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
+To use Java 9 or 10, you will need to edit the [pom.xml](./pom.xml) file. Find the line `<artifactId>controlsfx</artifactId>` and replace the next line with the right version of ControlsFX.
+
+```xml
+<version>8.40.14</version> <!-- Use this for Java 8 -->
+<version>9.0.0</version> <!-- Use this for Java 9 or 10 -->
+```
+
+ExifTool must be accessible in your system $PATH environment variable. You can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
 #### Installation Commands
 
