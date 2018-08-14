@@ -13,9 +13,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.ListView;
 import library.AlignedMapNode;
@@ -23,9 +24,9 @@ import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.MapPolygonCondition;
 import model.util.AnalysisUtils;
 import model.util.FXMLLoaderUtils;
+import org.apache.commons.collections4.map.MultiKeyMap;
 import org.controlsfx.control.MaskerPane;
 import org.controlsfx.control.ToggleSwitch;
-import org.locationtech.spatial4j.distance.DistanceUtils;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -70,6 +71,7 @@ public class MapPolygonConditionController implements IConditionController
 
 	// A hash map of locations to handle map nodes
 	private java.util.Map<Location, Node> locationToHandle = new HashMap<>();
+	private MultiKeyMap<Location, MapNode> locationsToMidPoint = new MultiKeyMap<>();
 
 	/**
 	 * Initialize sets up the list view of coordinates with a cell factory
@@ -111,6 +113,8 @@ public class MapPolygonConditionController implements IConditionController
 			map.removeEventHandler(MouseEvent.MOUSE_RELEASED, onMouseReleased);
 			// And handle nodes...
 			for (Node node : this.locationToHandle.values())
+				map.removeChild(node);
+			for (Node node : this.locationsToMidPoint.values())
 				map.removeChild(node);
 		}
 
@@ -212,59 +216,17 @@ public class MapPolygonConditionController implements IConditionController
 	}
 
 	/**
-	 * When we click the add vertex button which adds a vertex to the polygon
-	 *
-	 * @param actionEvent consumed
-	 */
-	public void addVertex(ActionEvent actionEvent)
-	{
-		// References to the furthest two points
-		Location avgPoint1 = null;
-		Location avgPoint2 = null;
-		// The current
-		double currentMaxDistance = 0D;
-
-		// Grab the list of locations
-		ObservableList<Location> locations = this.mapPolygonCondition.getPolygon().getLocations();
-		// Iterate over all locations
-		for (int i = 0; i < locations.size(); i++)
-		{
-			// Grab the two adjacent locations
-			Location first  = locations.get(i);
-			// Ensure that we wrap around if we hit the end of the list...
-			Location second = (i + 1) == locations.size() ? locations.get(0) : locations.get(i + 1);
-			// Compute the distance between the points
-			double distance = AnalysisUtils.distanceBetween(first.getLatitude(), first.getLongitude(), second.getLatitude(), second.getLongitude());
-			// Test if the distance is bigger than the current max
-			if (distance > currentMaxDistance)
-			{
-				// Set the current max distance and points
-				currentMaxDistance = distance;
-				avgPoint1 = first;
-				avgPoint2 = second;
-			}
-		}
-
-		// If the max distance is non 0, add the location
-		if (currentMaxDistance > 0)
-		{
-			// Add the a new vertex in the middle of the furthest two vertices.
-			locations.add(locations.indexOf(avgPoint1) + 1, new Location((avgPoint1.getLatitude() + avgPoint2.getLatitude()) / 2, (avgPoint1.getLongitude() + avgPoint2.getLongitude()) / 2));
-			// Rebuild any handles we've created
-			this.rebuildHandles();
-		}
-
-		actionEvent.consume();
-	}
-
-	/**
 	 * Takes the current polygon and builds map handles for it
 	 */
 	private void rebuildHandles()
 	{
 		// Remove any existing handles
-		locationToHandle.values().forEach(handle -> this.mapPolygonCondition.getMap().removeChild(handle));
-		locationToHandle.clear();
+		this.locationToHandle.values().forEach(handle -> this.mapPolygonCondition.getMap().removeChild(handle));
+		this.locationToHandle.clear();
+
+		// Remove any existing mid point handles
+		this.locationsToMidPoint.values().forEach(midPoint -> this.mapPolygonCondition.getMap().removeChild(midPoint));
+		this.locationsToMidPoint.clear();
 
 		// For each location on the box, add a handle at each position
 		ObservableList<Location> locations = this.mapPolygonCondition.getPolygon().getLocations();
@@ -286,8 +248,27 @@ public class MapPolygonConditionController implements IConditionController
 			// When the location property changes we replace the location found in the polygon's location list
 			handle.locationProperty().addListener((observable, oldValue, newValue) ->
 			{
-				int oldIndex = locations.indexOf(oldValue);
-				locations.set(oldIndex, newValue);
+				// Compute the index of the changed handle
+				int index = locations.indexOf(oldValue);
+
+				// Compute the next and previous location based on the next and previous indices
+				Location nextLocation = (index + 1) == locations.size() ? locations.get(0) : locations.get(index + 1);
+				Location prevLocation = (index - 1) < 0 ? locations.get(locations.size() - 1) : locations.get(index - 1);
+
+				// Remove the reference to the old handle and store the two mid point nodes that that handle was associated with
+				MapNode nextNode = this.locationsToMidPoint.removeMultiKey(oldValue, nextLocation);
+				MapNode prevNode = this.locationsToMidPoint.removeMultiKey(prevLocation, oldValue);
+
+				// Set the new locations of those nodes based on the newly computed mid point
+				nextNode.setLocation(new Location((newValue.getLatitude() + nextLocation.getLatitude()) / 2.0, (newValue.getLongitude() + nextLocation.getLongitude()) / 2.0));
+				prevNode.setLocation(new Location((prevLocation.getLatitude() + newValue.getLatitude()) / 2.0, (prevLocation.getLongitude() + newValue.getLongitude()) / 2.0));
+
+				// Store the next and previous mid point handle references to the new location value
+				this.locationsToMidPoint.put(prevLocation, newValue, prevNode);
+				this.locationsToMidPoint.put(newValue, nextLocation, nextNode);
+
+				// Replace the existing handle location with the new location
+				locations.set(index, newValue);
 			});
 			// Hide the handle when the toggle switch is off
 			handle.visibleProperty().bind(this.tswShow.selectedProperty());
@@ -299,6 +280,41 @@ public class MapPolygonConditionController implements IConditionController
 			locationToHandle.put(location, handle);
 			// Add the child to our map
 			this.mapPolygonCondition.getMap().addChild(handle, MapLayers.QUERY_CORNER);
+		}
+
+		// For each location we grab previous and next location to that center location
+		for (int i = 0; i < locations.size(); i++)
+		{
+			// Grab references to the current and next locations
+			Location left = locations.get(i);
+			Location right = (i + 1) == locations.size() ? locations.get(0) : locations.get(i + 1);
+
+			// Create a mid point handle at the location's left facing point
+			MapNode midPoint = new AlignedMapNode(Pos.BOTTOM_RIGHT);
+			// The mid point is just a circle
+			Circle circle = new Circle();
+			circle.getStyleClass().add("mid-point-handle");
+			circle.setRadius(6.0);
+			int finalI = i;
+			// When the circle gets clicked we add a new point
+			circle.setOnMouseClicked(event ->
+			{
+				// Get the mid point's location from the MapNode
+				Location midPointLocation = midPoint.getLocation();
+				// Add the location after the current location's index so that it gets placed in the middle of 'left' and 'right'
+				locations.add((finalI + 1) == locations.size() ? 0 : finalI + 1, midPointLocation);
+				// Rebuild handles so we get a new handle
+				this.rebuildHandles();
+				event.consume();
+			});
+			// Add the circle to the MapNode
+			midPoint.getChildren().add(circle);
+			// Set the location of the mid point in the center
+			midPoint.setLocation(new Location((left.getLatitude() + right.getLatitude()) / 2.0, (left.getLongitude() + right.getLongitude()) / 2.0));
+			// Store the mid point into our map
+			locationsToMidPoint.put(left, right, midPoint);
+			// Add the mid point to the map
+			this.mapPolygonCondition.getMap().addChild(midPoint, MapLayers.QUERY_CORNER);
 		}
 	}
 }

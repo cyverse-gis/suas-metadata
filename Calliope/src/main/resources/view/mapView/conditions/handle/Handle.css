@@ -1,10 +1,10 @@
-.handleCcl {
+.handle-circle {
     -fx-fill: orange;
     -fx-stroke-width: 2px;
     -fx-stroke: darkblue;
 }
 
-.handleCcl:hover {
+.handle-circle:hover {
     -fx-fill: #ffee00;
     -fx-stroke-width: 2px;
     -fx-stroke: #0000df;

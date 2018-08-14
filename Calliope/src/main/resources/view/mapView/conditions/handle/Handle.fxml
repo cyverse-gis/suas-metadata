@@ -8,6 +8,6 @@
         <URL value="@Handle.css"/>
     </stylesheets>
     <center>
-        <Circle styleClass="handleCcl" radius="10" onMouseDragged="#mouseDragged"/>
+        <Circle styleClass="handle-circle" radius="10" onMouseDragged="#mouseDragged"/>
     </center>
 </BorderPane>

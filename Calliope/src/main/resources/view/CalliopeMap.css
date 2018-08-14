@@ -13,6 +13,18 @@
     -fx-stroke: BLACK;
 }
 
+.mid-point-handle {
+    -fx-stroke: black;
+    -fx-stroke-width: 1;
+    -fx-fill: rgba(0, 255, 255, 0.3);
+}
+
+.mid-point-handle:hover {
+    -fx-stroke: black;
+    -fx-stroke-width: 2;
+    -fx-fill: rgba(0, 255, 255, 0.6);
+}
+
 .propertiesPanel {
     -fx-fill: white;
     -fx-border-radius: 10px;

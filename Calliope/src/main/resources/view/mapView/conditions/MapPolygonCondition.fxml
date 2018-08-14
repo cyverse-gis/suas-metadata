@@ -26,10 +26,7 @@
             </VBox>
         </center>
         <bottom>
-            <HBox BorderPane.alignment="CENTER" spacing="5" alignment="CENTER">
-                <Button text="Draw Starting Box" onAction="#drawBoundingBox"/>
-                <Button text="Add Vertex" onAction="#addVertex"/>
-            </HBox>
+            <Button BorderPane.alignment="CENTER" text="Draw Starting Box" onAction="#drawBoundingBox"/>
         </bottom>
     </BorderPane>
     <MaskerPane fx:id="mpnWaiting" visible="false" text="Waiting..."/>
