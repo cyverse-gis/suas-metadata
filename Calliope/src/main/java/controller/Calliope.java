@@ -56,6 +56,8 @@ public class Calliope extends Application
                 calliopeExecutor.shutdown();
                 // Shutdown ExifTool
                 CalliopeData.getInstance().getMetadataManager().shutdown();
+                // Clear any temp files made
+                CalliopeData.getInstance().getTempDirectoryManager().shutdown();
                 // Kill the Application
                 Platform.exit();
                 // Force java exit (We need this because the map tile provider starts a thread that we don't have access to and can't be stopped

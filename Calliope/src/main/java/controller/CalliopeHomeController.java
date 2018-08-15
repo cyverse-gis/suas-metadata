@@ -1,5 +1,6 @@
 package controller;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -83,6 +84,15 @@ public class CalliopeHomeController
 	@FXML
 	public void exitPressed(ActionEvent actionEvent)
 	{
+		// Shutdown any executing threads
+		CalliopeData.getInstance().getExecutor().shutdown();
+		// Shutdown ExifTool
+		CalliopeData.getInstance().getMetadataManager().shutdown();
+		// Clear any temp files made
+		CalliopeData.getInstance().getTempDirectoryManager().shutdown();
+		// Kill the Application
+		Platform.exit();
+		// Exit JVM
 		System.exit(0);
 	}
 

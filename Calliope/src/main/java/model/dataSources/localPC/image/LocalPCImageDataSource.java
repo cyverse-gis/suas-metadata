@@ -63,16 +63,14 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 				@Override
 				protected ImageDirectory call()
 				{
-					final Long MAX_WORK = 2L;
-
-					this.updateProgress(1, MAX_WORK);
+					this.updateProgress(0.05, 1.0);
 					this.updateMessage("Loading files...");
 
 					// Convert the files to a directory
 					ImageDirectory directory = DirectoryManager.loadFiles(files);
 					directory.setDataSource(LocalPCImageDataSource.this);
 
-					this.updateProgress(2, MAX_WORK);
+					this.updateProgress(0.1, 1.0);
 					this.updateMessage("Removing empty directories...");
 
 					// Remove any directories that are empty and contain no images
@@ -81,7 +79,7 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 					// Update progress based on init progress
 					this.updateMessage("Reading image metadata...");
 					DoubleProperty progressProperty = new SimpleDoubleProperty();
-					progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
+					progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue() * 0.9 + 0.1, 1.0));
 					DirectoryManager.initImages(directory, progressProperty);
 
 					return directory;

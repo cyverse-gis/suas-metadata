@@ -38,10 +38,14 @@ public class SensitiveConfigurationManager
 		Configurations configs = new Configurations();
 		try
 		{
+			// Grab the config file from the properties file
 			File configFile = new File("./calliope.properties");
+			// If the config file does not exist yet, create a default
 			if (!configFile.exists())
 			{
+				// Create the file
 				configFile.createNewFile();
+				// Open a stream to our default
 				InputStream inputStream = Calliope.class.getResource("/calliope.properties").openStream();
 				FileOutputStream outputStream = new FileOutputStream(configFile);
 				IOUtils.copy(inputStream, outputStream);
@@ -60,6 +64,7 @@ public class SensitiveConfigurationManager
 			// Config is good to go
 			if (this.elasticSearchHost != null)
 				this.configurationValid.setValue(true);
+			// Config is not good, so show an error
 			else
 				errorDisplay.notify("Invalid ElasticSearch host or port, please check `calliope.properties`!");
 		}

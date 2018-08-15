@@ -1,5 +1,6 @@
 package model.util;
 
+import org.apache.commons.io.FileDeleteStrategy;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -51,5 +52,20 @@ public class TempDirectoryManager
 		// Delete the file when we exit
 		tempFile.deleteOnExit();
 		return tempFile;
+	}
+
+	/**
+	 * Attempts to force delete the temporary directory
+	 */
+	public void shutdown()
+	{
+		if (this.calliopeTempDir.exists())
+		{
+			try
+			{
+				FileDeleteStrategy.FORCE.delete(this.calliopeTempDir);
+			}
+			catch (IOException ignored) {}
+		}
 	}
 }

@@ -226,7 +226,7 @@ public class CalliopeMapController
 	public void initialize()
 	{
 		// Store image tiles inside of the user's home directory
-		TileImageLoader.setCache(new ImageFileCache(new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
+		TileImageLoader.setCache(new ImageFileCache(CalliopeData.getInstance().getTempDirectoryManager().createTempFile("CalliopeMapCache").toPath()));//new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
 
 		///
 		/// Make the grid pane of settings resizable

@@ -32,6 +32,7 @@ import model.util.LocalDateTimeAdapter;
 import model.util.TempDirectoryManager;
 import org.hildan.fxgson.FxGson;
 
+import javax.imageio.ImageIO;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.prefs.Preferences;
@@ -108,6 +109,8 @@ public class CalliopeData
 	 */
 	private CalliopeData()
 	{
+		ImageIO.setUseCache(false);
+
 		// Load our program settings
 		this.settings = new SettingsData();
 
