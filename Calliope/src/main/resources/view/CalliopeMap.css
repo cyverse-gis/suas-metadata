@@ -36,7 +36,7 @@
 
 .expanderBtn {
     -fx-background-radius: 32px;
-    -fx-font-size: 24px;
+    -fx-font-size: 16px;
 }
 
 .scaleRct {
@@ -54,4 +54,12 @@
 .queryConditionsLvw > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:focused .label,
 .queryConditionsLvw > .virtual-flow > .clipped-container > .sheet > .list-cell .label {
     -fx-text-fill: black;
+}
+
+.queryHbx {
+    -fx-background-color: white;
+}
+
+.queryHeaderLbl {
+    -fx-font-weight: bolder;
 }

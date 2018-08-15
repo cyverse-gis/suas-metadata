@@ -102,53 +102,38 @@
                 </Button>
             </children>
         </GridPane>
-        <SplitPane fx:id="queryPane" dividerPositions="0.5" orientation="VERTICAL" StackPane.alignment="BOTTOM_CENTER" maxHeight="100" pickOnBounds="false" opacity="0">
+        <HBox fx:id="queryPane" styleClass="queryHbx" StackPane.alignment="BOTTOM_CENTER" alignment="CENTER_LEFT" maxHeight="0" pickOnBounds="false" opacity="0">
             <padding>
                 <Insets bottom="5" left="5" right="5" top="5"/>
             </padding>
-            <items>
-                <HBox alignment="CENTER_LEFT">
-                    <VBox fx:id="vbxQuery" spacing="5" alignment="TOP_CENTER">
-                        <Label text="Create a Query" VBox.vgrow="NEVER">
-                            <font>
-                                <Font size="16"/>
-                            </font>
-                        </Label>
-                        <Label text="Select filters and add them to the query">
-                            <font>
-                                <Font size="12"/>
-                            </font>
-                        </Label>
-                        <ListView fx:id="lvwFilters" VBox.vgrow="ALWAYS" onMouseClicked="#clickedFilters"/>
-                        <Button onAction="#query" VBox.vgrow="NEVER" text="Refresh Query">
-                            <font>
-                                <Font size="16"/>
-                            </font>
-                            <graphic>
-                                <ImageView fitWidth="32" fitHeight="32">
-                                    <Image url="@../images/analysisWindow/queryIcon.png"/>
-                                </ImageView>
-                            </graphic>
-                            <VBox.margin>
-                                <Insets bottom="5"/>
-                            </VBox.margin>
-                        </Button>
-                    </VBox>
-                    <ImageViewPane onMouseClicked="#clickedAdd" onMouseEntered="#mouseEnteredArrow" onMouseExited="#mouseExitedArrow">
-                        <imageView>
-                            <ImageView fx:id="imgArrow" preserveRatio="true">
-                                <Image url="@../images/analysisWindow/arrowDivider.png"/>
-                            </ImageView>
-                        </imageView>
-                    </ImageViewPane>
-                    <ListView fx:id="lvwQueryConditions" styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" orientation="HORIZONTAL"/>
-                </HBox>
-            </items>
-        </SplitPane>
-        <Button fx:id="btnExpander" text="Query" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER"  prefWidth="170" minHeight="64" maxHeight="64">
+            <VBox fx:id="vbxQuery" spacing="5" alignment="TOP_CENTER" minHeight="0">
+                <Label text="Create a Query" styleClass="queryHeaderLbl" VBox.vgrow="NEVER"/>
+                <Label text="Double click filters and add them"/>
+                <ListView fx:id="lvwFilters" VBox.vgrow="ALWAYS" onMouseClicked="#clickedFilters"/>
+                <Button onAction="#query" VBox.vgrow="NEVER" text="Refresh Query">
+                    <graphic>
+                        <ImageView fitWidth="16" fitHeight="16">
+                            <Image url="@../images/analysisWindow/queryIcon.png"/>
+                        </ImageView>
+                    </graphic>
+                    <VBox.margin>
+                        <Insets bottom="5"/>
+                    </VBox.margin>
+                </Button>
+            </VBox>
+            <ImageViewPane onMouseClicked="#clickedAdd" onMouseEntered="#mouseEnteredArrow" onMouseExited="#mouseExitedArrow">
+                <imageView>
+                    <ImageView fx:id="imgArrow" preserveRatio="true">
+                        <Image url="@../images/analysisWindow/arrowDivider.png"/>
+                    </ImageView>
+                </imageView>
+            </ImageViewPane>
+            <ListView fx:id="lvwQueryConditions" styleClass="queryConditionsLvw" HBox.hgrow="ALWAYS" orientation="HORIZONTAL"/>
+        </HBox>
+        <Button fx:id="btnExpander" text="Query" styleClass="expanderBtn" onAction="#expandOrRetractFilters" StackPane.alignment="BOTTOM_CENTER"  prefWidth="120" minHeight="32" maxHeight="32">
             <graphic>
                 <ImageView>
-                    <Image url="@../images/mapWindow/expander64.png"/>
+                    <Image url="@../images/mapWindow/expander32.png"/>
                 </ImageView>
             </graphic>
         </Button>

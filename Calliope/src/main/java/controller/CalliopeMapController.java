@@ -110,7 +110,7 @@ public class CalliopeMapController
 
 	// Bottom pane which holds the query specifics
 	@FXML
-	public SplitPane queryPane;
+	public HBox queryPane;
 
 	// The list of query conditions
 	@FXML
@@ -495,12 +495,12 @@ public class CalliopeMapController
 
 		// How many seconds the transition will take
 		final double TRANSITION_DURATION = 0.6;
-		final double MAX_QUERY_PANE_HEIGHT = 370;
-		final double MIN_QUERY_PANE_HEIGHT = 100;
+		final double MAX_QUERY_PANE_HEIGHT = 320;
+		final double MIN_QUERY_PANE_HEIGHT = 0;
 		// Reduce the height of the pane
 		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, MAX_QUERY_PANE_HEIGHT, MIN_QUERY_PANE_HEIGHT);
 		// Reduce the opacity of the pane
-		FadeTransition fadeOutTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
+		FadeTransition fadeOutTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane);
 		fadeOutTransition.setFromValue(1.0);
 		fadeOutTransition.setToValue(0.0);
 		// Rotate the expander button 180 degrees across the X axis
@@ -510,10 +510,10 @@ public class CalliopeMapController
 		rotateUpTransition.setAxis(new Point3D(1, 0, 0));
 		// Move the expander button to the bottom
 		TranslateTransition translateDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
-		translateDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
+		translateDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT - 5);
 		translateDownTransition.setToY(0);
 		// Expand the expander button
-		Timeline maxWidthExpansion = new Timeline(new KeyFrame(Duration.seconds(TRANSITION_DURATION), new KeyValue(this.btnExpander.prefWidthProperty(), 170)));
+		Timeline maxWidthExpansion = new Timeline(new KeyFrame(Duration.seconds(TRANSITION_DURATION), new KeyValue(this.btnExpander.prefWidthProperty(), 120)));
 		// Move the scale to the bottom
 		TranslateTransition translateScaleDownTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
 		translateScaleDownTransition.setFromY(-MAX_QUERY_PANE_HEIGHT);
@@ -534,7 +534,7 @@ public class CalliopeMapController
 		// Increase the height of the pane
 		HeightTransition heightUpTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, MIN_QUERY_PANE_HEIGHT, MAX_QUERY_PANE_HEIGHT);
 		// Increase the opacity of the pane
-		FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION * 0.8), this.queryPane);
+		FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane);
 		fadeInTransition.setFromValue(0.0);
 		fadeInTransition.setToValue(1.0);
 		// Rotate the expander button 180 degrees across the X axis
@@ -545,9 +545,9 @@ public class CalliopeMapController
 		// Move the expander button to the top
 		TranslateTransition translateUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.btnExpander);
 		translateUpTransition.setFromY(0);
-		translateUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
+		translateUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT - 5);
 		// Contract the expander button
-		Timeline maxWidthContraction = new Timeline(new KeyFrame(Duration.seconds(TRANSITION_DURATION), new KeyValue(this.btnExpander.prefWidthProperty(), 64)));
+		Timeline maxWidthContraction = new Timeline(new KeyFrame(Duration.seconds(TRANSITION_DURATION), new KeyValue(this.btnExpander.prefWidthProperty(), 32)));
 		// Move the scale to the top
 		TranslateTransition translateScaleUpTransition = new TranslateTransition(Duration.seconds(TRANSITION_DURATION), this.hbxScale);
 		translateScaleUpTransition.setFromY(0);
