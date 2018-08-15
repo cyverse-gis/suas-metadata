@@ -52,6 +52,7 @@
             <groupId>org.jfxtras</groupId>
             <artifactId>jfxtras-controls</artifactId>
             <version>8.0-r5</version>
+            <!--<version>9.0-r1</version>-->
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.fxmisc.easybind/easybind -->
         <dependency>
@@ -66,8 +67,8 @@
             <artifactId>controlsfx</artifactId>
             <version>8.40.14</version>
             <!--<version>9.0.0</version>-->
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
