@@ -8,8 +8,8 @@
 
 .tab-pane {
     -fx-tab-max-width: 1000px;
-    -fx-tab-min-height: 40px;
-    -fx-tab-max-height: 40px;
+    -fx-tab-min-height: 35px;
+    -fx-tab-max-height: 35px;
 }
 
 /* Next two CSS rules taken from here: https://stackoverflow.com/questions/40864243/javafx-css-change-tabpane-tab-header-shape */

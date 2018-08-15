@@ -495,7 +495,7 @@ public class CalliopeMapController
 
 		// How many seconds the transition will take
 		final double TRANSITION_DURATION = 0.6;
-		final double MAX_QUERY_PANE_HEIGHT = 320;
+		final double MAX_QUERY_PANE_HEIGHT = 250;
 		final double MIN_QUERY_PANE_HEIGHT = 0;
 		// Reduce the height of the pane
 		HeightTransition heightDownTransition = new HeightTransition(Duration.seconds(TRANSITION_DURATION), this.queryPane, MAX_QUERY_PANE_HEIGHT, MIN_QUERY_PANE_HEIGHT);

@@ -6,7 +6,7 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
-<BorderPane prefHeight="-Infinity" prefWidth="210" fx:controller="controller.mapView.conditions.DayOfWeekConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+<BorderPane prefHeight="-Infinity" prefWidth="220" fx:controller="controller.mapView.conditions.DayOfWeekConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <top>
         <Label text="Day of Week Filter" BorderPane.alignment="CENTER">
             <BorderPane.margin>

@@ -3,8 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
-<?import jfxtras.scene.control.LocalDateTimePicker?>
-<BorderPane prefHeight="-Infinity" prefWidth="300" fx:controller="controller.mapView.conditions.StartDateConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+
+<?import jfxtras.scene.control.LocalDateTimeTextField?>
+<BorderPane prefHeight="-Infinity" prefWidth="220" fx:controller="controller.mapView.conditions.StartDateConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <top>
         <Label text="Start Date Filter" BorderPane.alignment="CENTER">
             <BorderPane.margin>
@@ -13,6 +14,6 @@
         </Label>
     </top>
     <center>
-        <LocalDateTimePicker fx:id="dtpDateTime" allowNull="false"/>
+        <LocalDateTimeTextField fx:id="txtDateTime" allowNull="false" />
     </center>
 </BorderPane>

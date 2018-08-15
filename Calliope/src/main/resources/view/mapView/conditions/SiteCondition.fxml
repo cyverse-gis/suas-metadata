@@ -4,10 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
-<BorderPane prefHeight="-Infinity" fx:controller="controller.mapView.conditions.NeonConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
-    <GridPane.margin>
-        <Insets left="5" right="5"/>
-    </GridPane.margin>
+<BorderPane prefHeight="-Infinity" minWidth="320" fx:controller="controller.mapView.conditions.SiteConditionController" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <stylesheets>
         <URL value="@SiteCondition.css"/>
     </stylesheets>
@@ -23,28 +20,22 @@
     </center>
     <bottom>
         <VBox>
-            <children>
-                <HBox spacing="5">
-                    <VBox.margin>
-                        <Insets left="5" right="5" top="10"/>
-                    </VBox.margin>
-                    <children>
-                        <TextField fx:id="txtSiteSearch" promptText="Search Sites" HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#clearSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER"/>
-                    </children>
-                </HBox>
-                <FlowPane alignment="CENTER" hgap="5" vgap="10">
-                    <padding>
-                        <Insets bottom="10" left="5" right="5" top="10"/>
-                    </padding>
-                    <children>
-                        <Button onAction="#selectAllSites" mnemonicParsing="false" text="All"/>
-                        <Button onAction="#selectNEONSites" mnemonicParsing="false" text="NEON Only"/>
-                        <Button onAction="#selectLTARSites" mnemonicParsing="false" text="LTAR Only"/>
-                        <Button onAction="#selectNoSites" mnemonicParsing="false" text="None"/>
-                    </children>
-                </FlowPane>
-            </children>
+            <HBox spacing="5">
+                <VBox.margin>
+                    <Insets left="5" right="5" top="10"/>
+                </VBox.margin>
+                <TextField fx:id="txtSiteSearch" promptText="Search Sites" HBox.hgrow="ALWAYS"/>
+                <Button onAction="#clearSiteSearch" styleClass="resetSearchBtn" HBox.hgrow="NEVER"/>
+            </HBox>
+            <FlowPane alignment="CENTER" hgap="5" vgap="10">
+                <padding>
+                    <Insets bottom="10" left="5" right="5" top="10"/>
+                </padding>
+                <Button onAction="#selectAllSites" mnemonicParsing="false" text="All"/>
+                <Button onAction="#selectNEONSites" mnemonicParsing="false" text="NEON Only"/>
+                <Button onAction="#selectLTARSites" mnemonicParsing="false" text="LTAR Only"/>
+                <Button onAction="#selectNoSites" mnemonicParsing="false" text="None"/>
+            </FlowPane>
         </VBox>
     </bottom>
 </BorderPane>

@@ -3,6 +3,7 @@ package controller.mapView.conditions;
 import controller.mapView.IConditionController;
 import javafx.fxml.FXML;
 import jfxtras.scene.control.LocalDateTimePicker;
+import jfxtras.scene.control.LocalDateTimeTextField;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.EndDateCondition;
 
@@ -17,7 +18,7 @@ public class EndDateConditionController implements IConditionController
 
 	// The date picker that selects the end date cap
 	@FXML
-	public LocalDateTimePicker dtpDateTime;
+	public LocalDateTimeTextField txtDateTime;
 
 	///
 	/// FXML Bound Fields End
@@ -33,6 +34,6 @@ public class EndDateConditionController implements IConditionController
 	{
 		if (endDateCondition instanceof EndDateCondition)
 			// Bind the date to the end condition's end date property
-			this.dtpDateTime.localDateTimeProperty().bindBidirectional(((EndDateCondition) endDateCondition).endDateProperty());
+			this.txtDateTime.localDateTimeProperty().bindBidirectional(((EndDateCondition) endDateCondition).endDateProperty());
 	}
 }

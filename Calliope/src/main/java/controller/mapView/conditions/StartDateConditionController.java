@@ -3,6 +3,7 @@ package controller.mapView.conditions;
 import controller.mapView.IConditionController;
 import javafx.fxml.FXML;
 import jfxtras.scene.control.LocalDateTimePicker;
+import jfxtras.scene.control.LocalDateTimeTextField;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.StartDateCondition;
 
@@ -17,7 +18,7 @@ public class StartDateConditionController implements IConditionController
 
 	// The date picker that selects the start date cap
 	@FXML
-	public LocalDateTimePicker dtpDateTime;
+	public LocalDateTimeTextField txtDateTime;
 
 	///
 	/// FXML Bound Fields End
@@ -40,7 +41,7 @@ public class StartDateConditionController implements IConditionController
 	{
 		if (startDateCondition instanceof StartDateCondition)
 		{
-			this.dtpDateTime.localDateTimeProperty().bindBidirectional(((StartDateCondition) startDateCondition).startDateProperty());
+			this.txtDateTime.localDateTimeProperty().bindBidirectional(((StartDateCondition) startDateCondition).startDateProperty());
 		}
 	}
 }

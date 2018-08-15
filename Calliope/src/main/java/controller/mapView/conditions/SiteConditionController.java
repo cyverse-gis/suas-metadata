@@ -16,9 +16,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Comparator;
 
 /**
- * Controller class for the NEON condition filter
+ * Controller class for the SITE condition filter
  */
-public class NeonConditionController implements IConditionController
+public class SiteConditionController implements IConditionController
 {
 	///
 	/// FXML Bound Fields Start
