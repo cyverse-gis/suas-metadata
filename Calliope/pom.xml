@@ -67,8 +67,8 @@
             <artifactId>controlsfx</artifactId>
             <version>8.40.14</version>
             <!--<version>9.0.0</version>-->
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>

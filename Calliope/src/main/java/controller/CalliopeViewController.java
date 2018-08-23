@@ -269,10 +269,11 @@ public class CalliopeViewController
 						//esConnectionManager.nukeAndRecreateCollectionsIndex();
 						//esConnectionManager.nukeAndRecreateSitesIndex();
 
-						// Then initialize the remove calliope directory
-						this.updateMessage("Initializing Calliope elastic index...");
+						// Then initialize the remove calliope and cyverse directory
+						this.updateMessage("Initializing Calliope elastic index and CyVerse directory...");
 						this.updateProgress(2, NUM_STEPS);
 						esConnectionManager.initCalliopeRemoteDirectory(username);
+						cyConnectionManager.initCalliopeRemoteDirectory();
 
 						// Pull Calliope settings from the elastic index
 						this.updateMessage("Pulling settings from elastic index...");
