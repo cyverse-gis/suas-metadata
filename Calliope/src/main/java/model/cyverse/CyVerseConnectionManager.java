@@ -132,7 +132,7 @@ public class CyVerseConnectionManager
 				IRODSFileFactory fileFactory = sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 
 				// If the main Calliope directory does not exist yet, create it
-				IRODSFile calliopeDirectory = fileFactory.instanceIRODSFile("./Calliope");
+				IRODSFile calliopeDirectory = fileFactory.instanceIRODSFile("./calliope_data");
 				if (!calliopeDirectory.exists())
 					calliopeDirectory.mkdir();
 
