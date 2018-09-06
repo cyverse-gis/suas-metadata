@@ -3,6 +3,7 @@ package model.cyverse;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
 import model.dataSources.UploadedEntry;
@@ -55,7 +56,7 @@ public class CyVerseConnectionManager
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
 	// The directory that collections are stored in
-	private static final String COLLECTIONS_DIRECTORY = "/iplant/home/dslovikosky/Calliope/Collections";
+	private static final String PUBLIC_COLLECTIONS_DIRECTORY = "/iplant/home/shared/calliope/Collections";
 	// Each user is part of the iPlant zone
 	private static final String ZONE = "iplant";
 	private static final SimpleDateFormat FOLDER_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss") ;
@@ -76,7 +77,7 @@ public class CyVerseConnectionManager
 	{
 		try
 		{
-			// Create a new CyVerse account given the host address, port, username, password, homedirectory, and one field I have no idea what it does..., however leaving it as empty string makes file creation work!
+			// Create a new CyVerse account given the host address, port, username, password, home directory, and one field I have no idea what it does..., however leaving it as empty string makes file creation work!
 			IRODSAccount account = IRODSAccount.instance(CYVERSE_HOST, CYVERSE_PORT, username, password, HOME_DIRECTORY + username, ZONE, "", AuthScheme.STANDARD);
 			// Create a new session
 			IRODSSession session = IRODSSession.instance(IRODSSimpleProtocolManager.instance());
@@ -119,6 +120,37 @@ public class CyVerseConnectionManager
 	}
 
 	/**
+	 * Initializes the calliope remote directory by creating a /Calliope/Collections/ folder
+	 */
+	public void initCalliopeRemoteDirectory()
+	{
+		// Open a CyVerse connection
+		if (this.sessionManager.openSession())
+		{
+			try
+			{
+				IRODSFileFactory fileFactory = sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
+
+				// If the main Calliope directory does not exist yet, create it
+				IRODSFile calliopeDirectory = fileFactory.instanceIRODSFile("./calliope_data");
+				if (!calliopeDirectory.exists())
+					calliopeDirectory.mkdir();
+
+				// If the collections directory does not exist yet, create it
+				IRODSFile calliopeCollectionsDirectory = fileFactory.instanceIRODSFile("./calliope_data/collections");
+				if (!calliopeCollectionsDirectory.exists())
+					calliopeCollectionsDirectory.mkdir();
+			}
+			catch (JargonException e)
+			{
+				// Print an error if something went wrong
+				CalliopeData.getInstance().getErrorDisplay().notify( "Could not initialize the CyVerse directories!\n" + ExceptionUtils.getStackTrace(e));
+			}
+			sessionManager.closeSession();
+		}
+	}
+
+	/**
 	 * Connects to CyVerse and uploads the given collection to CyVerse's data store
 	 *
 	 * @param collection The list of new species to upload
@@ -136,7 +168,7 @@ public class CyVerseConnectionManager
 					IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 
 					// The name of the collection directory is the UUID of the collection
-					String collectionDirName = COLLECTIONS_DIRECTORY + "/" + collection.getID().toString();
+					String collectionDirName = HOME_DIRECTORY + CalliopeData.getInstance().getUsername() + "/calliope_data/collections/" + collection.getID().toString();
 
 					// Create the directory, and set the permissions appropriately
 					IRODSFile collectionDir = fileFactory.instanceIRODSFile(collectionDirName);
@@ -148,7 +180,7 @@ public class CyVerseConnectionManager
 						messageCallback.setValue("Writing collection Uploads directory...");
 
 					// Create the folder containing uploads, and set its permissions
-					IRODSFile collectionDirUploads = fileFactory.instanceIRODSFile(collectionDirName + "/Uploads");
+					IRODSFile collectionDirUploads = fileFactory.instanceIRODSFile(collectionDirName + "/uploads");
 					if (!collectionDirUploads.exists())
 						collectionDirUploads.mkdir();
 					this.setFilePermissions(collectionDirUploads.getAbsolutePath(), collection.getPermissions(), true);
@@ -306,7 +338,7 @@ public class CyVerseConnectionManager
 			try
 			{
 				// Grab the uploads folder for a given collection
-				String collectionUploadDirStr = COLLECTIONS_DIRECTORY + "/" + collection.getID().toString() + "/Uploads";
+				String collectionUploadDirStr = HOME_DIRECTORY + CalliopeData.getInstance().getUsername() + "/calliope_data/collections/" + collection.getID().toString() + "/uploads";
 				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
 				IRODSFile collectionUploadDir = fileFactory.instanceIRODSFile(collectionUploadDirStr);
 				// If the uploads directory exists and we can write to it, upload
