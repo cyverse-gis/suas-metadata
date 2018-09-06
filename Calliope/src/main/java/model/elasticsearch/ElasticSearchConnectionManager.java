@@ -16,6 +16,7 @@ import model.site.Boundary;
 import model.site.Site;
 import model.site.ltar.LTARSite;
 import model.site.neon.NEONSite;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -71,6 +72,7 @@ import org.locationtech.jts.geom.Coordinate;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -1535,22 +1537,26 @@ public class ElasticSearchConnectionManager
 										String collectionID = sourceAsMap.get("collectionID").toString();
 										// Add a new GeoImageResult to return. Convert relevant fields to a usable format
 										QueryImageEntry imageEntry = new QueryImageEntry();
-										imageEntry.setIrodsAbsolutePath(sourceAsMap.get("storagePath").toString());
+
+										// Use optionals to map non-nulls to data, and ignore nulls
+										imageEntry.setIrodsAbsolutePath(Optional.ofNullable(sourceAsMap.get("storagePath")).map(Object::toString).orElse(""));
 										imageEntry.setImageCollection(CalliopeData.getInstance().getCollectionList().stream().filter(collection -> collection.getID().toString().equals(collectionID)).findFirst().orElse(null));
-										imageEntry.setAltitude(NumberUtils.toDouble(metadataMap.get("altitude").toString(), Double.NaN));
-										imageEntry.setCameraModel(metadataMap.get("cameraModel").toString());
-										imageEntry.setDateTaken(ZonedDateTime.parse(metadataMap.get("dateTaken").toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime());
-										imageEntry.setDroneMaker(metadataMap.get("droneMaker").toString());
-										String[] longAndLat = metadataMap.get("position").toString().split(", ");
+										imageEntry.setAltitude(Optional.ofNullable(metadataMap.get("altitude")).map(altitude -> NumberUtils.toDouble(altitude.toString())).orElse(Double.NaN));
+										imageEntry.setCameraModel(Optional.ofNullable(metadataMap.get("cameraModel")).map(Object::toString).orElse(""));
+										imageEntry.setDateTaken(Optional.ofNullable(metadataMap.get("dateTaken")).map(dateTaken -> ZonedDateTime.parse(dateTaken.toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime()).orElse(LocalDateTime.MIN));
+										imageEntry.setDroneMaker(Optional.ofNullable(metadataMap.get("droneMaker")).map(Object::toString).orElse(""));
+										String[] longAndLat = Optional.ofNullable(metadataMap.get("position")).map(rawLongAndLat -> rawLongAndLat.toString().split(", ")).orElse(ArrayUtils.EMPTY_STRING_ARRAY);
 										if (longAndLat.length == 2)
 											imageEntry.setPositionTaken(new Position(NumberUtils.toDouble(longAndLat[1], Double.NaN), NumberUtils.toDouble(longAndLat[0], Double.NaN), NumberUtils.toDouble(metadataMap.get("elevation").toString(), Double.NaN)));
-										imageEntry.setFileType(metadataMap.get("fileType").toString());
-										imageEntry.setFocalLength(NumberUtils.toDouble(metadataMap.get("focalLength").toString(), Double.NaN));
-										imageEntry.setWidth(NumberUtils.toDouble(metadataMap.get("width").toString(), Double.NaN));
-										imageEntry.setHeight(NumberUtils.toDouble(metadataMap.get("height").toString(), Double.NaN));
-										imageEntry.setSiteTaken(CalliopeData.getInstance().getSiteManager().getSiteByCode(metadataMap.get("siteCode").toString()));
-										imageEntry.setSpeed(new Vector3(NumberUtils.toDouble(speedMap.get("x").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("y").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("z").toString(), Double.NaN)));
-										imageEntry.setRotation(new Vector3(NumberUtils.toDouble(rotationMap.get("roll").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("pitch").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("yaw").toString(), Double.NaN)));
+										imageEntry.setFileType(Optional.ofNullable(metadataMap.get("fileType")).map(Object::toString).orElse(""));
+										imageEntry.setFocalLength(Optional.ofNullable(metadataMap.get("focalLength")).map(focalLength -> NumberUtils.toDouble(focalLength.toString())).orElse(Double.NaN));
+										imageEntry.setWidth(Optional.ofNullable(metadataMap.get("width")).map(width -> NumberUtils.toDouble(width.toString())).orElse(Double.NaN));
+										imageEntry.setHeight(Optional.ofNullable(metadataMap.get("height")).map(height -> NumberUtils.toDouble(height.toString())).orElse(Double.NaN));
+										imageEntry.setSiteTaken(Optional.ofNullable(metadataMap.get("siteCode")).map(siteCode -> CalliopeData.getInstance().getSiteManager().getSiteByCode(siteCode.toString())).orElse(null));
+										if (speedMap.get("x") != null && speedMap.get("y") != null && speedMap.get("z") != null)
+											imageEntry.setSpeed(new Vector3(NumberUtils.toDouble(speedMap.get("x").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("y").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("z").toString(), Double.NaN)));
+										if (rotationMap.get("roll") != null && rotationMap.get("speed") != null && rotationMap.get("yaw") != null)
+											imageEntry.setRotation(new Vector3(NumberUtils.toDouble(rotationMap.get("roll").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("pitch").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("yaw").toString(), Double.NaN)));
 										toReturn.add(imageEntry);
 									}
 								}
