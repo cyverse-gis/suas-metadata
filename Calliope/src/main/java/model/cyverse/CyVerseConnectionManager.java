@@ -367,7 +367,7 @@ public class CyVerseConnectionManager
 					String localDirName = directoryToWrite.getFile().getName();
 
 					// Make a set of tar files from the image files. Don't use a single tar file because we may have > 1000 images in each
-					File[] tarsToWrite = DirectoryManager.directoryToTars(directoryToWrite, 300);
+					File[] tarsToWrite = DirectoryManager.directoryToTars(directoryToWrite, 50);
 
 					// For each tar part, upload
 					for (int tarPart = 0; tarPart < tarsToWrite.length; tarPart++)

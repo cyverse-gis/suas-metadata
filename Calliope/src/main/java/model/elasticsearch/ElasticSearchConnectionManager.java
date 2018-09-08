@@ -1539,25 +1539,69 @@ public class ElasticSearchConnectionManager
 										// Add a new GeoImageResult to return. Convert relevant fields to a usable format
 										QueryImageEntry imageEntry = new QueryImageEntry();
 
-										// Use optionals to map non-nulls to data, and ignore nulls
-										imageEntry.setIrodsAbsolutePath(Optional.ofNullable(sourceAsMap.get("storagePath")).map(Object::toString).orElse(""));
+										// Default string for unspecified
+										String UNSPECIFIED = "unspecified";
+
+										// For each data pieces we want, test if it's null, if not, store it
+										if (sourceAsMap.get("storagePath") != null)
+											imageEntry.setIrodsAbsolutePath(sourceAsMap.get("storagePath").toString());
+										else
+											imageEntry.setIrodsAbsolutePath(UNSPECIFIED);
 										imageEntry.setImageCollection(CalliopeData.getInstance().getCollectionList().stream().filter(collection -> collection.getID().toString().equals(collectionID)).findFirst().orElse(null));
-										imageEntry.setAltitude(Optional.ofNullable(metadataMap.get("altitude")).map(altitude -> NumberUtils.toDouble(altitude.toString())).orElse(Double.NaN));
-										imageEntry.setCameraModel(Optional.ofNullable(metadataMap.get("cameraModel")).map(Object::toString).orElse(""));
-										imageEntry.setDateTaken(Optional.ofNullable(metadataMap.get("dateTaken")).map(dateTaken -> ZonedDateTime.parse(dateTaken.toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime()).orElse(LocalDateTime.MIN));
-										imageEntry.setDroneMaker(Optional.ofNullable(metadataMap.get("droneMaker")).map(Object::toString).orElse(""));
-										String[] longAndLat = Optional.ofNullable(metadataMap.get("position")).map(rawLongAndLat -> rawLongAndLat.toString().split(", ")).orElse(ArrayUtils.EMPTY_STRING_ARRAY);
-										if (longAndLat.length == 2)
-											imageEntry.setPositionTaken(new Position(NumberUtils.toDouble(longAndLat[1], Double.NaN), NumberUtils.toDouble(longAndLat[0], Double.NaN), NumberUtils.toDouble(metadataMap.get("elevation").toString(), Double.NaN)));
-										imageEntry.setFileType(Optional.ofNullable(metadataMap.get("fileType")).map(Object::toString).orElse(""));
-										imageEntry.setFocalLength(Optional.ofNullable(metadataMap.get("focalLength")).map(focalLength -> NumberUtils.toDouble(focalLength.toString())).orElse(Double.NaN));
-										imageEntry.setWidth(Optional.ofNullable(metadataMap.get("width")).map(width -> NumberUtils.toDouble(width.toString())).orElse(Double.NaN));
-										imageEntry.setHeight(Optional.ofNullable(metadataMap.get("height")).map(height -> NumberUtils.toDouble(height.toString())).orElse(Double.NaN));
-										imageEntry.setSiteTaken(Optional.ofNullable(metadataMap.get("siteCode")).map(siteCode -> CalliopeData.getInstance().getSiteManager().getSiteByCode(siteCode.toString())).orElse(null));
+										if (sourceAsMap.get("altitude") != null)
+											imageEntry.setAltitude(NumberUtils.toDouble(sourceAsMap.get("altitude").toString(), Double.NaN));
+										else
+											imageEntry.setAltitude(Double.NaN);
+										if (sourceAsMap.get("cameraModel") != null)
+											imageEntry.setCameraModel(metadataMap.get("cameraModel").toString());
+										else
+											imageEntry.setCameraModel(UNSPECIFIED);
+										if (sourceAsMap.get("dateTaken") != null)
+											imageEntry.setDateTaken(ZonedDateTime.parse(metadataMap.get("dateTaken").toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime());
+										else
+											imageEntry.setDateTaken(LocalDateTime.MIN);
+										if (sourceAsMap.get("droneMaker") != null)
+											imageEntry.setDroneMaker(metadataMap.get("droneMaker").toString());
+										else
+											imageEntry.setDroneMaker(UNSPECIFIED);
+										if (metadataMap.get("position") != null)
+										{
+											String[] longAndLat = metadataMap.get("position").toString().split(", ");
+											if (longAndLat.length == 2)
+												imageEntry.setPositionTaken(new Position(NumberUtils.toDouble(longAndLat[1], Double.NaN), NumberUtils.toDouble(longAndLat[0], Double.NaN), NumberUtils.toDouble(metadataMap.get("elevation").toString(), Double.NaN)));
+										}
+										else
+											imageEntry.setPositionTaken(new Position());
+										if (sourceAsMap.get("fileType") != null)
+											imageEntry.setFileType(sourceAsMap.get("fileType").toString());
+										else
+											imageEntry.setFileType(UNSPECIFIED);
+										if (sourceAsMap.get("focalLength") != null)
+											imageEntry.setFocalLength(NumberUtils.toDouble(sourceAsMap.get("focalLength").toString(), Double.NaN));
+										else
+											imageEntry.setFocalLength(Double.NaN);
+										if (sourceAsMap.get("width") != null)
+											imageEntry.setWidth(NumberUtils.toDouble(sourceAsMap.get("width").toString(), Double.NaN));
+										else
+											imageEntry.setWidth(Double.NaN);
+										if (sourceAsMap.get("height") != null)
+											imageEntry.setHeight(NumberUtils.toDouble(sourceAsMap.get("height").toString(), Double.NaN));
+										else
+											imageEntry.setHeight(Double.NaN);
+										if (sourceAsMap.get("siteCode") != null)
+											imageEntry.setSiteTaken(CalliopeData.getInstance().getSiteManager().getSiteByCode(metadataMap.get("siteCode").toString()));
+										else
+											imageEntry.setSiteTaken(null);
 										if (speedMap.get("x") != null && speedMap.get("y") != null && speedMap.get("z") != null)
-											imageEntry.setSpeed(new Vector3(NumberUtils.toDouble(speedMap.get("x").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("y").toString(), Double.NaN), NumberUtils.toDouble(speedMap.get("z").toString(), Double.NaN)));
+											imageEntry.setSpeed(new Vector3(
+													NumberUtils.toDouble(speedMap.get("x").toString(), Double.NaN),
+													NumberUtils.toDouble(speedMap.get("y").toString(), Double.NaN),
+													NumberUtils.toDouble(speedMap.get("z").toString(), Double.NaN)));
 										if (rotationMap.get("roll") != null && rotationMap.get("speed") != null && rotationMap.get("yaw") != null)
-											imageEntry.setRotation(new Vector3(NumberUtils.toDouble(rotationMap.get("roll").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("pitch").toString(), Double.NaN), NumberUtils.toDouble(rotationMap.get("yaw").toString(), Double.NaN)));
+											imageEntry.setRotation(new Vector3(
+													NumberUtils.toDouble(rotationMap.get("roll").toString(), Double.NaN),
+													NumberUtils.toDouble(rotationMap.get("pitch").toString(), Double.NaN),
+													NumberUtils.toDouble(rotationMap.get("yaw").toString(), Double.NaN)));
 										toReturn.add(imageEntry);
 									}
 								}

@@ -802,19 +802,21 @@ public class CalliopeMapController
 	private Integer depthForCurrentZoom()
 	{
 		// Get the map's current zoom level
-		Double zoom = this.map.getZoomLevel();
+		double zoom = this.map.getZoomLevel();
 		// Based on that zoom level, return an appropriate amount of aggregation
 		if (zoom <= 5)
 			return 1;
-		else if (zoom <= 8)
-			return 2;
-		else if (zoom <= 10)
-			return 3;
-		else if (zoom <= 12)
+		else if (zoom <= 6)
 			return 4;
+		else if (zoom <= 8)
+			return 5;
+		else if (zoom <= 10)
+			return 5;
+		else if (zoom <= 12)
+			return 5;
 		else if (zoom <= 14)
 			return 5;
-		else if (zoom <= 16)
+		else if (zoom <= 15)
 			return 6;
 		else if (zoom <= 18)
 			return 7;
