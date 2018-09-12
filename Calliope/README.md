@@ -1,40 +1,46 @@
 # Calliope User Manual
 
-Calliope is a program developed by CyVerse for the School of Natural Resources and the Environment. It allows users to tag drone metadata, transfer it onto a database for safe keeping, and then query using a map based interface.
+Calliope is a program developed by [CyVerse](https://www.cyverse.org/) for the University of Arizona [School of Natural Resources and the Environment](https://snre.arizona.edu/) and [Agricultural Research Service Southwest Watershed Research Center](https://www.ars.usda.gov/pacific-west-area/tucson-az/southwest-watershed-research-center/). Calliope allows users to tag drone metadata, transfer it onto a database for safe keeping, and then query using a map based interface.
 
 ## Installation
 
-### Getting Started
-There are two different ways to run Calliope, either by building it from source or running a pre-built `jar` file. Running a pre-built `jar` file is the easiest option, but building from source allows for additional customization and tweaking. Both options are described below.
+There are two different ways to run Calliope, either by building it from source using the contenst of this Git repo, or running a pre-built `jar` file, located in the `/Calliope/prebuild` directory.
 
-### Running a Pre-Built `jar`
+Running a pre-built `jar` file is the easiest option, but building from source allows for additional customization and tweaking. 
 
-Start by downloading: [Calliope for Java 8](./prebuilt/Calliope-1.0-SNAPSHOT-Java-8.jar) or [Calliope for Java 9/10](./prebuilt/Calliope-1.0-SNAPSHOT-Java-9-10.jar). It is highly recommended to use the Java 8 version if possible. Then, to run Calliope there are two prerequisites that you will need.
+Both options are described below.
 
-<b>Java 8/9/10:</b><br>
-http://www.oracle.com/technetwork/java/javase/downloads/ <br>
+#### Dependencies
+
+To run Calliope there are two prerequisite dependencies that you will need to install first on your laptop or desktop.
+
+**[Java 8/9/10](http://www.oracle.com/technetwork/java/javase/downloads/)**
+
 Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJFX.
-<br>
-<b>ExifTool:</b><br>
-https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
 
+**[ExifTool](https://www.sno.phy.queensu.ca/~phil/exiftool/)**
 
 ExifTool must be accessible in your system $PATH environment variable. Calliope will run without ExifTool so you can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
-Finally, run the Calliope by double clicking on the file or using the command: `java -jar Calliope-XX-SNAPSHOT-Java-XX.jar`
+### Running a Pre-Built `jar`
+
+Download the [Calliope for Java 8](./prebuilt/Calliope-1.0-SNAPSHOT-Java-8.jar) or [Calliope for Java 9/10](./prebuilt/Calliope-1.0-SNAPSHOT-Java-9-10.jar). It is highly recommended to use the Java 8 version if possible. 
+
+Run the Calliope by double clicking on the file or using the command: `java -jar Calliope-XX-SNAPSHOT-Java-XX.jar`
 
 ### Build from Source
+
 This repository should be cloned and then built using maven. All Java dependencies will be automatically fetched through maven. Please note that you will need ExifTool installed on your system as well to import images and read metadata.  
 
-#### Prerequisites
-<b>Java 8:</b> <br>
-http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html <br>
+#### Dependencies
+
+**Java 8**
+
 Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJFX.
-<br>
-<b>Maven:</b><br>
-https://maven.apache.org/install.html<br>
-<b>ExifTool:</b><br>
-https://www.sno.phy.queensu.ca/~phil/exiftool/<br>
+
+**ExifTool**
+
+**[Maven]()https://maven.apache.org/install.html)**
 
 To use Java 9 or 10, you will need to edit the [pom.xml](./pom.xml) file. Find the line `<artifactId>controlsfx</artifactId>` and replace the next line with the right version of ControlsFX.
 
