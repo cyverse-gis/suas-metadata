@@ -1,5 +1,6 @@
 package model.cyverse;
 
+import controller.Calliope;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
@@ -12,8 +13,10 @@ import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.util.AnalysisUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.irods.jargon.core.connection.AuthScheme;
@@ -36,8 +39,14 @@ import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.Authenticator;
+import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -55,8 +64,8 @@ public class CyVerseConnectionManager
 	private static final Integer CYVERSE_PORT = 1247;
 	// The directory that each user has as their home directory
 	private static final String HOME_DIRECTORY = "/iplant/home/";
-	// The directory that collections are stored in
-	private static final String PUBLIC_COLLECTIONS_DIRECTORY = "/iplant/home/shared/calliope/Collections";
+	// Base URL used to download files from dav rods
+	private static final String DAVRODS_URL = "https://davrods.cyverse.org/dav";
 	// Each user is part of the iPlant zone
 	private static final String ZONE = "iplant";
 	private static final SimpleDateFormat FOLDER_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss") ;
@@ -412,54 +421,29 @@ public class CyVerseConnectionManager
 	 */
 	public void downloadImages(List<String> absoluteIRODSImagePaths, File dirToSaveTo, DoubleProperty progressCallback)
 	{
-		// Open a session as usual
-		if (this.sessionManager.openSession())
+		List<String> absoluteLocalFilePaths = absoluteIRODSImagePaths.stream().map(absoluteImagePath -> dirToSaveTo.getAbsolutePath() + File.separator + FilenameUtils.getName(absoluteImagePath)).collect(Collectors.toList());
+		for (int i = 0; i < absoluteIRODSImagePaths.size(); i++)
 		{
+			String absoluteIRODSImagePath = absoluteIRODSImagePaths.get(i);
+			String absoluteLocalFilePath = absoluteLocalFilePaths.get(i);
+			File localFile = new File(absoluteLocalFilePath);
+
+			// While the file exists, we update the path to have a new file name, and then re-create the local file
+			while (localFile.exists())
+			{
+				// Use a random alphabetic character at the end of the file name to make sure the file name is unique
+				absoluteLocalFilePath = absoluteLocalFilePath.replace(".", RandomStringUtils.randomAlphabetic(1) + ".");
+				localFile = new File(absoluteLocalFilePath);
+			}
+			String webPathToDownload = StringEscapeUtils.escapeHtml(DAVRODS_URL + "/" + StringUtils.substringAfter(absoluteIRODSImagePath, "/iplant/")).replace(" ", "%20");
 			try
 			{
-				// Create the required data transfer operation object ot perform get requests
-				DataTransferOperations dataTransferOperations = this.sessionManager.getCurrentAO().getDataTransferOperations(this.authenticatedAccount);
-				// Absolute path of the directory
-				String dirToSaveToAbsolutePath = dirToSaveTo.getAbsolutePath();
-				// Create a file factory used to create IRODSFiles
-				IRODSFileFactory irodsFileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
-
-				// Map the iRODS file paths to local file paths based on the directory to download into. We later abuse the fact that this list is parallel to
-				// the input list of IRODS paths
-				List<String> absoluteLocalFilePaths = absoluteIRODSImagePaths.stream().map(absoluteImagePath -> dirToSaveToAbsolutePath + File.separator + FilenameUtils.getName(absoluteImagePath)).collect(Collectors.toList());
-				// Iterate over the parallel lists
-				for (int i = 0; i < absoluteIRODSImagePaths.size() && i < absoluteLocalFilePaths.size(); i++)
-				{
-					// Every 5 uploads update the progress
-					if (i % 5 == 0)
-						progressCallback.setValue(i / (double) absoluteIRODSImagePaths.size());
-
-					// Read both parallel lists and grab one element from both
-					String irodsAbsolutePath = absoluteIRODSImagePaths.get(i);
-					String localAbsolutePath = absoluteLocalFilePaths.get(i);
-
-					// Convert both paths into files
-					IRODSFile irodsFile = irodsFileFactory.instanceIRODSFile(irodsAbsolutePath);
-					File localFile = new File(localAbsolutePath);
-
-					// While the file exists, we update the path to have a new file name, and then re-create the local file
-					while (localFile.exists())
-					{
-						// Use a random alphabetic character at the end of the file name to make sure the file name is unique
-						localAbsolutePath = localAbsolutePath.replace(".", RandomStringUtils.randomAlphabetic(1) + ".");
-						localFile = new File(localAbsolutePath);
-					}
-
-					// Perform the get operation
-					dataTransferOperations.getOperation(irodsFile, localFile, null, null);
-				}
+				FileUtils.copyURLToFile(new URL(webPathToDownload), localFile, 30000, 30000);
 			}
-			catch (JargonException e)
+			catch (IOException e)
 			{
-				// Print out an error message if something goes wrong
-				CalliopeData.getInstance().getErrorDisplay().notify("Error downloading images from CyVerse\n" + ExceptionUtils.getStackTrace(e));
+				System.out.println("There was an error downloading the image file, error was:\n" + ExceptionUtils.getStackTrace(e));
 			}
-			this.sessionManager.closeSession();
 		}
 	}
 

@@ -36,6 +36,8 @@ import org.controlsfx.validation.Validator;
 
 import java.awt.*;
 import java.io.IOException;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -257,6 +259,16 @@ public class CalliopeViewController
 
 					if (loginSuccessful)
 					{
+						// Set the authenticator for any HTTP request to use this username and password
+						Authenticator.setDefault(new Authenticator()
+						{
+							@Override
+							protected PasswordAuthentication getPasswordAuthentication()
+							{
+								return new PasswordAuthentication(username, password.toCharArray());
+							}
+						});
+
 						Platform.runLater(() ->
 						{
 							CalliopeData.getInstance().setUsername(username);
