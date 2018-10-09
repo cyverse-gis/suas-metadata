@@ -1,3 +1,14 @@
+@font-face {
+    src: url("../fonts/TextraLTBook.ttf");
+}
+
+/*
+Use Textra Font
+.root {
+    -fx-font-family: "Textra LT Book";
+}
+*/
+
 .tab .tab-label {
     -fx-skin: "com.sun.javafx.scene.control.skin.LabelSkin";
     -fx-background-color: transparent;

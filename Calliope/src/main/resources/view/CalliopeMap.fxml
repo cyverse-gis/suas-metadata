@@ -54,7 +54,7 @@
                         <VBox spacing="5">
                             <HBox alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
                                 <Label text="Maximum Selection Results:" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                                <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="5000" initialValue="100" amountToStepBy="10" HBox.hgrow="NEVER" />
+                                <Spinner fx:id="spnMaxImagesPerBucket" min="1" max="5000" initialValue="100" amountToStepBy="25" HBox.hgrow="NEVER" />
                             </HBox>
                             <HBox fx:id="hbxColumns" alignment="CENTER_LEFT" spacing="5" maxWidth="Infinity">
                                 <Label text="Columns:"  minWidth="60" maxWidth="60"/>
