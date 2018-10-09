@@ -1,6 +1,5 @@
 package model.site.ltar;
 
-import com.vividsolutions.jts.geom.*;
 import model.CalliopeData;
 import model.site.Boundary;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -10,6 +9,7 @@ import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureSource;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.locationtech.jts.geom.*;
 import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
 import org.opengis.feature.type.Name;
