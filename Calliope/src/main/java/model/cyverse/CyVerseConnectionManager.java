@@ -444,6 +444,9 @@ public class CyVerseConnectionManager
 			{
 				System.out.println("There was an error downloading the image file, error was:\n" + ExceptionUtils.getStackTrace(e));
 			}
+
+			if (i % 10 == 0)
+				progressCallback.setValue((double) i / absoluteIRODSImagePaths.size());
 		}
 	}
 
