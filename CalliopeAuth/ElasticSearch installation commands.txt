@@ -1,23 +1,19 @@
-Download elasticsearch image:
+#Download elasticsearch image
+#docker pull docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
 
-docker pull docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
-
-(2019-02-01 update)
+#(2019-02-01 update)
 docker pull docker.elastic.co/elasticsearch/elasticsearch-oss:6.6.0
 
-Download kibana image:
+#Download kibana image:
+#docker pull docker.elastic.co/kibana/kibana-oss:6.2.4
 
-docker pull docker.elastic.co/kibana/kibana-oss:6.2.4
-
-(2019-02-01 update)
+#(2019-02-01 update)
 docker pull docker.elastic.co/kibana/kibana-oss:6.6.0
 
-Run & Install ElasticSearch:
-
-(2019-02-01 update)
+#Run & Install ElasticSearch:
+#(2019-02-01 update)
 docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch-oss:6.6.0
 
-Run & Install kibana:
-
-(2019-02-01 update)
+#Run & Install kibana:
+#(2019-02-01 update)
 docker run -d --net=host -e "ELASTICSEARCH_URL=http://localhost:9200" docker.elastic.co/kibana/kibana-oss:6.6.0
