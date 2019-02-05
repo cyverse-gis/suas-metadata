@@ -6,7 +6,7 @@ import sys
 import datetime
 
 # The address of the host of ElasticSearch
-ELASTIC_HOST = "128.196.38.73"
+ELASTIC_HOST = "calliope.cyverse.org"
 # The index name to store metadata in
 DRONE_INDEX_NAME = "drone"
 
