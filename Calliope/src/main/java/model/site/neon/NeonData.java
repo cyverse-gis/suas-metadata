@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class NeonData
 {
 	// Base URL for the NEON api
-	private static final String NEON_API_URL = "http://data.neonscience.org/api/v0/";
+	private static final String NEON_API_URL = "http://data.neonscience.org/api/v0";
 	// A hard coded link to the NEON KMZ file containing all locations + boundaries
 	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-v16_1.kmz";
 
