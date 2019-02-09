@@ -276,10 +276,11 @@ public class CalliopeViewController
 							CalliopeData.getInstance().getErrorDisplay().setNotificationPane(notificationPane);
 						});
 
-						//esConnectionManager.nukeAndRecreateUserIndex();
-						//esConnectionManager.nukeAndRecreateMetadataIndex();
-						//esConnectionManager.nukeAndRecreateCollectionsIndex();
-						//esConnectionManager.nukeAndRecreateSitesIndex();
+						// Uncomment to destroy and recreate the ElasticSearch Index
+						// esConnectionManager.nukeAndRecreateUserIndex();
+						// esConnectionManager.nukeAndRecreateMetadataIndex();
+						// esConnectionManager.nukeAndRecreateCollectionsIndex();
+                                                // esConnectionManager.nukeAndRecreateSitesIndex();
 
 						// Then initialize the remove calliope and cyverse directory
 						this.updateMessage("Initializing Calliope elastic index and CyVerse directory...");
