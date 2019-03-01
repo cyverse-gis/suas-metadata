@@ -5,7 +5,9 @@ COPY readonlyrest-1.17.0_es6.6.0.zip /usr/share/elasticsearch/readonlyrest-1.17.
 COPY readonlyrest.yml /usr/share/elasticsearch/configs/readonlyrest.yml
 
 #Install ReadOnlyRest
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install -b file:///readonlyrest-1.17.0_es6.6.0.zip
+RUN cd /usr/share/elasticsearch && \
+    bin/elasticsearch-plugin install -b file:///usr/share/elasticsearch/readonlyrest-1.17.0_es6.6.0.zip
 
 # Append XPACK security update to elasticsearch yaml
 RUN echo "xpack.security.enabled: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
+
