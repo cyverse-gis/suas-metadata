@@ -13,8 +13,8 @@ This repository should be cloned and then built using maven. All Java dependenci
 Building CalliopeAuth with docker is much easier than building from source because all dependencies are handled for you. Start by downloading the `Dockerfile` in `/suas-metadata/CalliopeAuth/` and then execute:
 
 ```shell
-docker build -t dslovikosky/calliopeAuth:1 .
-docker run -d -p 5235:5235 dslovikosky/calliopeAuth:1 
+docker build -t calliope-auth:latest .
+docker run -d -p 5235:5235 calliope-auth:latest 
 ```
 
 ### Building from Source
