@@ -64,6 +64,15 @@ Build the project into an executable JAR file to run:
 cd '<directory>/Calliope/'
 mvn -U compile package
 ```
+
+##### Make sure to set Java version to 8
+
+On Mac OSX:
+```
+alias j8="export JAVA_HOME=`/usr/libexec/java_home -v 1.8`; java -version"
+j8
+```
+
 Run the program:
 ```shell
 java -jar '<directory>/Calliope/target/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar'
@@ -74,6 +83,7 @@ java -jar '<directory>/Calliope/target/Calliope-1.0-SNAPSHOT-jar-with-dependenci
 ### First Time Calliope Execution
 
 When first running Calliope you will most likely see a warning popup that says, `Invalid ElasticSearch host or port, please check 'calliope.properties'!`. A `calliope.properties` file will appear next to the `Calliope-*.jar` file that was executed. This file will need to be edited to be so that Calliope knows what ElasticSearch cluster to talk to. You will need to ask the project administrator for the ElasticSearch host IP and port number. If you are a system administrator you can also setup your own ElasticSearch index and use that if you desire.
+
 
 ### Logging In
 
