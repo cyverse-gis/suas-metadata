@@ -11,5 +11,5 @@ RUN cd /usr/share/elasticsearch && \
 COPY readonlyrest.yml /usr/share/elasticsearch/config/readonlyrest.yml
 
 # Append XPACK security update to elasticsearch yaml
-RUN echo "xpack.security.enabled: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
-RUN echo "tribe.cluster1.xpack.security.enabled: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
+# RUN echo "xpack.security.enabled: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
+# RUN echo "tribe.cluster1.xpack.security.enabled: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
