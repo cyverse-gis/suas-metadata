@@ -1,6 +1,34 @@
 readonlyrest:
     access_control_rules:
 
-    - name: "Require HTTP Basic Auth"
+    - name: "Calliope Admin Login"
       type: allow
-      auth_key: user:password 
+      methods: GET
+      actions: ["*"]
+      #actions: ["cluster:monitor/main","indices:admin/types/exists","indices:data/read/*","indices:data/write/*","indices:admin/template/*","indices:admin/create"]
+      indices: ["user","collections","metadata","sites"]
+      external_authentication: "calliopeAdminLogin"
+    
+    - name: "Calliope User Login"
+      type: allow
+      methods: GET
+      indices: ["user","collections","metadata","sites"]
+      actions: ["indices:data/read/*","indices:data/write/*"]
+      external_authentication: "calliopeUserLogin"
+
+    - name: "Block 1 - Allowing anything from localhost"
+      type: allow
+
+    external_authentication_service_configs:
+
+    - name: "calliopeAdminLogin"
+      authentication_endpoint: "http://calliope.cyverse.org:5235/calliopeAdminLogin"
+      success_status_code: 200
+      cache_ttl_in_sec: 60
+      validate: false
+
+    - name: "calliopeUserLogin"
+      authentication_endpoint: "http://calliope.cyverse.org:5235/calliopeUserLogin"
+      success_status_code: 200
+      cache_ttl_in_sec: 60
+      validate: false
