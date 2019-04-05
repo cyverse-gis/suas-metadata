@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class NeonData
 {
 	// Base URL for the NEON api
-	private static final String NEON_API_URL = "http://data.neonscience.org/api/v0";
+	private static final String NEON_API_URL = "https://data.neonscience.org/api/v0";
 	// A hard coded link to the NEON KMZ file containing all locations + boundaries
 	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-v16_1.kmz";
 
@@ -58,7 +58,7 @@ public class NeonData
 		{
 			// The top level directory contains a single directory which should have NEON project locations. Check that here
 			Feature lvl0Feature = kml.getFeature();
-			if (lvl0Feature.getName().equals("NEON-Project-Locations-v16_1") && lvl0Feature instanceof Folder)
+			if (lvl0Feature.getName().equals("NEON Project Locations (v16)") && lvl0Feature instanceof Folder)
 			{
 				// Cast the feature into a folder since we tested above
 				Folder topFolder = (Folder) lvl0Feature;
@@ -73,7 +73,7 @@ public class NeonData
 						// This document should have two features, one list of names & positions and the other a list of boundaries
 						// Grab both features
 						Feature lvl2FeaturePoly = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Features")).findFirst().get();
-						Feature lvl2FeatureLabl = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Feature Labels (Name)")).findFirst().get();
+						Feature lvl2FeatureLabl = fieldSamplingBoundaries.getFeature().stream().filter(lvl2Feature -> lvl2Feature.getName().equals("Feature Labels (siteName)")).findFirst().get();
 						// Test if they are non-null and the right type
 						if (lvl2FeaturePoly instanceof Folder && lvl2FeatureLabl instanceof Folder)
 						{
