@@ -1,0 +1,42 @@
+version: '3.7'                                                                                                                                   
+services:                                                                                                                                        
+  es-readonlyrest:                                                                                                                               
+    image: tswetnam/elastic-readonlyrest:6.5.4                                                                                                   
+    container_name: es-readonlyrest                                                                                                              
+    ulimits:                                                                                                                                     
+      memlock:                                                                                                                                   
+        soft: -1                                                                                                                                 
+        hard: -1                                                                                                                                 
+    volumes:                                                                                                                                     
+      - es-data1:/usr/share/elasticsearch/data                                                                                                   
+    environment:                                                                                                                                 
+      - "discovery.type=single-node"                                                                                                             
+    ports:                                                                                                                                       
+      - "9200:9200"                                                                                                                              
+      - "9300:9300"                                                                                                                              
+    networks:                                                                                                                                    
+      - host                                                                                                                                     
+  calliope-auth:                                                                                                                                 
+    image: tswetnam/calliopeauth:latest                                                                                                          
+    container_name: calliope-auth                                                                                                                
+    ports:                                                                                                                                       
+      - "5235:5235"                                                                                                                              
+    expose:                                                                                                                                      
+      - "5235"                                                                                                                                   
+  kibana:                                                                                                                                        
+    image: docker.elastic.co/kibana/kibana-oss:6.5.4                                                                                             
+    container_name: es-kibana                                                                                                                    
+    ports:                                                                                                                                       
+      - "5601:5601"                                                                                                                              
+    expose:                                                                                                                                      
+      - "5601"                                                                                                                                   
+    environment:                                                                                                                                 
+      - "ELASTICSEARCH_URL=http://localhost:9200"                                                                                                
+    networks:                                                                                                                                    
+      - host                                                                                                                                     
+                                                                                                                                                 
+volumes:                                                                                                                                         
+  es-data1:                                                                                                                                      
+                                                                                                                                                 
+networks:                                                                                                                                        
+  host:               
