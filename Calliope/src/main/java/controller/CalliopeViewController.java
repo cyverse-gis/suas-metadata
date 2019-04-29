@@ -280,7 +280,7 @@ public class CalliopeViewController
 						// esConnectionManager.nukeAndRecreateUserIndex();
 						// esConnectionManager.nukeAndRecreateMetadataIndex();
 						// esConnectionManager.nukeAndRecreateCollectionsIndex();
-                        // esConnectionManager.nukeAndRecreateSitesIndex();
+						// esConnectionManager.nukeAndRecreateSitesIndex();
 
 						// Then initialize the remove calliope and cyverse directory
 						this.updateMessage("Initializing Calliope elastic index and CyVerse directory...");

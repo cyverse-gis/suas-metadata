@@ -1,5 +1,6 @@
 package model.site.ltar;
 
+import com.vividsolutions.jts.geom.*;
 import model.CalliopeData;
 import model.site.Boundary;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -9,12 +10,10 @@ import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureSource;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
-import com.vividsolutions.jts.geom.*;
 import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
 import org.opengis.feature.type.Name;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,12 +36,12 @@ public class LTARData
 		try
 		{
 			// Grab the polygon shape file
-			File shapeFile = new File(LTARData.class.getResource("/files/ltar_data/ltar_site_polygon.shp").getFile());
+			String shapeFilePath = LTARData.class.getResource( "/files/ltar_data/ltar_site_polygon.shp").toString();
 
 			// Create a connection map that is used by the datastore finder to open the shape file
 			Map<String, String> connect = new HashMap<>();
 			// The URL value is just a reference to our shape file
-			connect.put("url", shapeFile.toURI().toString());
+			connect.put("url", shapeFilePath);
 
 			// 'Connect' to the file by opening the local file
 			DataStore dataStore = DataStoreFinder.getDataStore(connect);
