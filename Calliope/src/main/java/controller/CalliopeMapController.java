@@ -205,7 +205,7 @@ public class CalliopeMapController
 	// A parallel list of controllers to that list of pins
 	private List<MapCircleController> currentCircleControllers = new ArrayList<>();
 	// The zoom threshold where we start to render polygons instead of pins
-	private static final Double PIN_TO_POLY_THRESHOLD = 10D;
+	private static final Double PIN_TO_POLY_THRESHOLD = 11D;
 
 	// Flag telling us if the query box is currently expanded or contracted
 	private Boolean expandedQuery = false;
@@ -349,12 +349,20 @@ public class CalliopeMapController
 						mapPolygon.setLocation(centerPoint);
 						// Add a CSS attribute to all polygons so that we can style them later
 						mapPolygon.getStyleClass().add("site-boundary");
-						// Make sure we can drag & drop through the polygon
-						mapPolygon.setMouseTransparent(true);
 						// Hide the polygon if the toggle switch is off
 						mapPolygon.visibleProperty().bind(
 								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
 							.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+						// When we click a polygon, display the popover
+						mapPolygon.setOnMouseClicked(event ->
+						{
+							// Call our controller's update method and then show the popup
+							sitePopOverController.updateSite(site);
+							popOver.show(mapPolygon);
+							event.consume();
+						});
+						// Pass events through to the map so you can drag and drop through the polygon
+						mapPolygon.addEventHandler(MouseEvent.ANY, event -> javafx.event.Event.fireEvent(this.map, event));
 
 						mapSiteNodes.add(mapPolygon);
 						this.map.addChild(mapPolygon, MapLayers.BORDER_POLYGON);
