@@ -15,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
@@ -286,6 +287,8 @@ public class CalliopeMapController
 		popOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
 		popOver.setArrowSize(20);
 		popOver.setCloseButtonEnabled(true);
+		// To avoid flickering when switching
+		popOver.setFadeOutDuration(Duration.millis(0));
 		// Load the content of the popover from the FXML file once and store it
 		FXMLLoader fxmlLoader = FXMLLoaderUtils.loadFXML("importView/SitePopOver.fxml");
 		// Grab the controller for use later
