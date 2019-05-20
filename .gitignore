@@ -13,6 +13,7 @@
 /Calliope/gradlew.bat
 /Calliope/calliope.properties
 /Calliope/exiftool.exe
+/Calliope/prebuilt/exiftool.exe
 /Calliope/*.las
 
 /Java Metadata Processor/.idea/*
@@ -38,3 +39,5 @@
 /PythonSandbox/.idea/*
 /PythonSandbox/venv/*
 /PythonSandbox/__pycache__
+
+.idea/*
