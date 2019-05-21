@@ -47,7 +47,7 @@ public class MetadataManager
 				{
 					// Create a new exiftool executable
 					exiftoolFile.createNewFile();
-					// Copy our original exiftool copy fron side of the JAR to the outside file ready to be executed
+					// Copy our original exiftool copy from inside of the JAR to the outside file ready to be executed
 					InputStream inputStream = MetadataManager.class.getResource("/files/exiftool.exe").openStream();
 					FileOutputStream outputStream = new FileOutputStream(exiftoolFile);
 					IOUtils.copy(inputStream, outputStream);
