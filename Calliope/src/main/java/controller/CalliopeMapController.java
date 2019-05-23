@@ -105,6 +105,9 @@ public class CalliopeMapController
 	// A toggle switch to enable or disable NEON site boundaries
 	@FXML
 	public ToggleSwitch tswLTAR;
+	// A toggle switch to enable or disable USFS site boundaries
+	@FXML
+	public ToggleSwitch tswUSFS;
 	// A toggle switch to enable or disable image count circles
 	@FXML
 	public ToggleSwitch tswImageCounts;
@@ -206,7 +209,7 @@ public class CalliopeMapController
 	// A parallel list of controllers to that list of pins
 	private List<MapCircleController> currentCircleControllers = new ArrayList<>();
 	// The zoom threshold where we start to render polygons instead of pins
-	private static final Double PIN_TO_POLY_THRESHOLD = 11D;
+	private static final Double PIN_TO_POLY_THRESHOLD = 10D;
 
 	// Flag telling us if the query box is currently expanded or contracted
 	private Boolean expandedQuery = false;
@@ -355,7 +358,8 @@ public class CalliopeMapController
 						// Hide the polygon if the toggle switch is off
 						mapPolygon.visibleProperty().bind(
 								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
-							.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+										.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
+										.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 						// When we click a polygon, display the popover
 						mapPolygon.setOnMouseClicked(event ->
 						{
@@ -394,7 +398,8 @@ public class CalliopeMapController
 						// Hide/Show pins when the toggle switches are toggled
 						mapPin.visibleProperty().bind(
 								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
-						    .or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+										.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
+									    .or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 
 						mapSiteNodes.add(mapPin);
 						this.map.addChild(mapPin, MapLayers.SITE_PINS);
