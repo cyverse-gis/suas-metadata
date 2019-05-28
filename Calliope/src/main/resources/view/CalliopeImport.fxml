@@ -45,6 +45,16 @@
                 <Tab closable="false" text="Raw Metadata">
                     <PropertySheet fx:id="pstMetadata"/>
                 </Tab>
+                <Tab closable="false" text="Import">
+                    <FlowPane alignment="TOP_CENTER" hgap="5" vgap="10">
+                        <padding>
+                            <Insets bottom="20" left="5" right="5" top="20" />
+                        </padding>
+                        <children>
+                            <ComboBox fx:id="cbxImport" prefWidth="150" styleClass="importCbx" promptText="Import Images"/>
+                        </children>
+                    </FlowPane>
+                </Tab>
             </tabs>
         </TabPane>
         <SplitPane dividerPositions="0.80" orientation="VERTICAL">
@@ -171,7 +181,6 @@
                         <Insets bottom="20" left="5" right="5" top="20" />
                     </padding>
                     <children>
-                        <ComboBox fx:id="cbxImport" prefWidth="150" styleClass="importCbx" promptText="Import Images"/>
                         <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#deleteImages" styleClass="deleteBtn" text="Delete" />
                     </children>
                 </FlowPane>
