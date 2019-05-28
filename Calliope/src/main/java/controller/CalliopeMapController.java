@@ -14,6 +14,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
@@ -57,10 +58,7 @@ import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.CheckComboBox;
-import org.controlsfx.control.HyperlinkLabel;
-import org.controlsfx.control.PopOver;
-import org.controlsfx.control.ToggleSwitch;
+import org.controlsfx.control.*;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.fxmisc.easybind.EasyBind;
@@ -196,6 +194,10 @@ public class CalliopeMapController
 	@FXML
 	public HyperlinkLabel lblMapCredits;
 
+	// A list of tasks currently running
+	@FXML
+	public TaskProgressView<Task<?>> mapTasks;
+
 	///
 	/// FXML bound fields end
 	///
@@ -229,6 +231,10 @@ public class CalliopeMapController
 	@FXML
 	public void initialize()
 	{
+		// Set up task window
+		ObservableList<Task<?>> activeTasks = CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveDisplayedTasks();
+		EasyBind.listBind(this.mapTasks.getTasks(), activeTasks);
+
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(CalliopeData.getInstance().getTempDirectoryManager().createTempFile("CalliopeMapCache").toPath()));//new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
 
@@ -1105,5 +1111,13 @@ public class CalliopeMapController
 			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to specify where to download the CSV to.");
 		}
 		actionEvent.consume();
+	}
+
+	@FXML
+	private void cancelDownload(ActionEvent event) {
+		// Just stop all tasks on the immediate executor... not sure if this is a good idea
+		for (Task t : CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveTasks()) {
+			t.cancel();
+		}
 	}
 }
