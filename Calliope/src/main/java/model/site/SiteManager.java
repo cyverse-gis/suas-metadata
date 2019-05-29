@@ -1,11 +1,13 @@
 package model.site;
 
 import javafx.beans.Observable;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import model.site.ltar.LTARData;
 import model.site.neon.NeonData;
+import model.site.usfs.USFSData;
 import model.util.AnalysisUtils;
 
 import java.util.HashMap;
@@ -30,6 +32,11 @@ public class SiteManager
 
 	// A ltar data source that is used to download ltar data
 	private final LTARData ltarData = new LTARData();
+
+	// A usfs data source that is used to download usfs data
+	private final USFSData usfsData = new USFSData();
+
+	private SimpleBooleanProperty retrievalDone = new SimpleBooleanProperty(false);
 
 	/**
 	 * Constructor initializes the site list
@@ -97,7 +104,8 @@ public class SiteManager
 	 */
 	public List<? extends Site> downloadSites()
 	{
-		return Stream.concat(this.neonData.retrieveSites().stream(), this.ltarData.retrieveSites().stream()).collect(Collectors.toList());
+		//return Stream.concat(this.neonData.retrieveSites().stream(), this.ltarData.retrieveSites().stream()).collect(Collectors.toList());
+		return Stream.concat(Stream.concat(this.neonData.retrieveSites().stream(), this.ltarData.retrieveSites().stream()), this.usfsData.retrieveSites().stream()).collect(Collectors.toList());
 	}
 
 	/**
@@ -113,5 +121,13 @@ public class SiteManager
 	public Site getSiteByCode(String siteCode)
 	{
 		return this.codeToSite.get(siteCode);
+	}
+
+	public void setRetrievalDone() {
+		retrievalDone.setValue(true);
+	}
+
+	public SimpleBooleanProperty getRetrievalDone() {
+		return retrievalDone;
 	}
 }

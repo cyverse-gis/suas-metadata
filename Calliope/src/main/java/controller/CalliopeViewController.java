@@ -302,7 +302,10 @@ public class CalliopeViewController
 						List<Site> sites = esConnectionManager.pullRemoteSites();
 
 						// Set the location list to be these locations
-						Platform.runLater(() -> CalliopeData.getInstance().getSiteManager().getSites().addAll(sites));
+						Platform.runLater(() ->  {
+							CalliopeData.getInstance().getSiteManager().getSites().addAll(sites);
+							CalliopeData.getInstance().getSiteManager().setRetrievalDone();
+						});
 
 						// Pull any collections from the elastic index
 						this.updateMessage("Pulling collections from elastic index...");
