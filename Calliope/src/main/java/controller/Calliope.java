@@ -1,10 +1,24 @@
 package controller;
 
+import com.sun.javafx.geom.transform.Affine3D;
+import com.sun.javafx.geom.transform.BaseTransform;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
+import javafx.scene.transform.Transform;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import model.CalliopeData;
 import model.threading.CalliopeExecutor;
@@ -31,9 +45,11 @@ public class Calliope extends Application
         Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
         // Load the FXML document
-        FXMLLoader root = FXMLLoaderUtils.loadFXML("CalliopeView.fxml");
+        FXMLLoader loader = FXMLLoaderUtils.loadFXML("CalliopeView.fxml");
         // Create the scene
-        Scene scene = new Scene(root.getRoot());
+        Parent root = loader.getRoot();
+        assert root instanceof Pane : "ERROR: Base layer of CalliopeView must be a Pane for scaling purposes.";
+        Scene scene = new Scene(new Group((Pane)root));
 
         // Put the scene on the stage
         primaryStage.setScene(scene);
@@ -64,9 +80,21 @@ public class Calliope extends Application
                 System.exit(0);
             }
         });
-        primaryStage.setMaximized(true);
-        // When we exit the window exit the program
+
+        Platform.runLater(() -> letterbox(scene, (Pane)root));
+
         // Show it
+        //primaryStage.setMaximized(true);
         primaryStage.show();
+    }
+
+    private void letterbox(final Scene scene, final Pane contentPane) {
+        final double initWidth  = scene.getWidth();
+        final double initHeight = scene.getHeight();
+
+        Scale scale = new Scale(1,1,0,0);
+        scale.xProperty().bind(scene.widthProperty().divide(initWidth));
+        scale.yProperty().bind(scene.heightProperty().divide(initHeight));
+        contentPane.getTransforms().addAll(scale, new Translate(0,0));
     }
 }
