@@ -49,7 +49,7 @@ public class Calliope extends Application
         // Create the scene
         Parent root = loader.getRoot();
         assert root instanceof Pane : "ERROR: Base layer of CalliopeView must be a Pane for scaling purposes.";
-        Scene scene = new Scene(new Group((Pane)root));
+        Scene scene = new Scene(new Group(root));
 
         // Put the scene on the stage
         primaryStage.setScene(scene);
@@ -81,20 +81,37 @@ public class Calliope extends Application
             }
         });
 
-        Platform.runLater(() -> letterbox(scene, (Pane)root));
+        // Set the scaling function to be run after the scene has been initialized
+        Platform.runLater(() -> letterbox(scene, (Pane)root, primaryStage));
 
         // Show it
         //primaryStage.setMaximized(true);
         primaryStage.show();
     }
 
-    private void letterbox(final Scene scene, final Pane contentPane) {
-        final double initWidth  = scene.getWidth();
-        final double initHeight = scene.getHeight();
-
+    private void letterbox(final Scene scene, final Pane contentPane, final Stage primaryStage) {
         Scale scale = new Scale(1,1,0,0);
-        scale.xProperty().bind(scene.widthProperty().divide(initWidth));
-        scale.yProperty().bind(scene.heightProperty().divide(initHeight));
-        contentPane.getTransforms().addAll(scale, new Translate(0,0));
+        Translate translate = new Translate(0, 0);
+        // Add listener to the scale setting
+        CalliopeData.getInstance().getSettings().scalePercentProperty().addListener((observable, oldValue, newValue) -> {
+            Double scaleFactor = newValue.scaleFactor();
+            scale.setX(scaleFactor);
+            scale.setY(scaleFactor);
+            contentPane.setPrefWidth(scene.getWidth() * 1/scaleFactor);
+            contentPane.setPrefHeight(scene.getHeight() * 1/scaleFactor);
+        });
+        // Add listeners to scene dimensions
+        scene.widthProperty().addListener(observable -> {
+            Double scaleFactor = CalliopeData.getInstance().getSettings().getScalePercent().scaleFactor();
+            contentPane.setPrefWidth(scene.getWidth() * 1/scaleFactor);
+        });
+        scene.heightProperty().addListener(observable -> {
+            Double scaleFactor = CalliopeData.getInstance().getSettings().getScalePercent().scaleFactor();
+            contentPane.setPrefHeight(scene.getHeight() * 1/scaleFactor);
+        });
+        primaryStage.maximizedProperty().addListener(observable -> {
+        });
+
+        contentPane.getTransforms().addAll(scale, translate);
     }
 }

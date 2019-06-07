@@ -26,6 +26,7 @@ public class SettingsData
 	private ObjectProperty<DistanceUnits> distanceUnits = new SimpleObjectProperty<>(DistanceUnits.Meters);
 	private ObjectProperty<Double> popupDelaySec = new SimpleDoubleProperty(10).asObject();
 	private BooleanProperty disablePopups = new SimpleBooleanProperty(false);
+	private ObjectProperty<ScalePercent> scalePercent = new SimpleObjectProperty<>(ScalePercent.Scale100);
 
 	/**
 	 * Constructor adds all settings Calliope will use to the dictionary
@@ -48,6 +49,7 @@ public class SettingsData
 		this.distanceUnits.setValue(otherSettings.getDistanceUnits());
 		this.popupDelaySec.setValue(otherSettings.getPopupDelaySec());
 		this.disablePopups.setValue(otherSettings.getDisablePopups());
+		this.scalePercent.setValue(otherSettings.getScalePercent());
 	}
 
 	/**
@@ -61,6 +63,7 @@ public class SettingsData
 		settingList.add(new CustomPropertyItem<>("Distance Units: ", "Units", "The units to be used by the program", distanceUnits, DistanceUnits.class));
 		settingList.add(new CustomPropertyItem<>("Popup Hide Delay (in seconds): ", "Options", "How many seconds the popup should wait before disappearing", popupDelaySec, Double.class));
 		settingList.add(new CustomPropertyItem<>("Disable Popups: ", "Options", "Lose some program functionality to avoid popups at all costs", disablePopups, Boolean.class));
+		settingList.add(new CustomPropertyItem<>("UI Scaling: ", "Options", "Determine the size of all UI elements", scalePercent, ScalePercent.class));
 	}
 
 	/**
@@ -160,6 +163,36 @@ public class SettingsData
 		{
 			return date.format(formatter);
 		}
+	}
+
+	/**
+	 * ScalePercent specifies possible scaling options for UI
+	 */
+	public enum ScalePercent
+	{
+		Scale75("75%", .75),
+		Scale100("100% (1080p)", 1.0),
+		Scale150("150%", 1.5),
+		Scale200("200%", 2.0),
+		Scale400("400% (4k)", 4.0);
+
+		// Display name of the scale
+		private String stringValue;
+		// Display the multiplier to be applied with each scale
+		private Double scaleFactor;
+
+		ScalePercent(String stringValue, Double scaleFactor) {
+			this.stringValue = stringValue;
+			this.scaleFactor = scaleFactor;
+		}
+
+		@Override
+		public String toString()
+		{
+			return this.stringValue;
+		}
+
+		public Double scaleFactor() { return this.scaleFactor; }
 	}
 
 	/**
@@ -401,5 +434,20 @@ public class SettingsData
 	public BooleanProperty disablePopupsProperty()
 	{
 		return disablePopups;
+	}
+
+	public void setScalePercent(ScalePercent scalePercent)
+	{
+		this.scalePercent.setValue(scalePercent);
+	}
+
+	public ScalePercent getScalePercent()
+	{
+		return this.scalePercent.get();
+	}
+
+	public ObjectProperty<ScalePercent> scalePercentProperty()
+	{
+		return scalePercent;
 	}
 }
