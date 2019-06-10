@@ -49,7 +49,8 @@ public class SettingsData
 		this.distanceUnits.setValue(otherSettings.getDistanceUnits());
 		this.popupDelaySec.setValue(otherSettings.getPopupDelaySec());
 		this.disablePopups.setValue(otherSettings.getDisablePopups());
-		this.scalePercent.setValue(otherSettings.getScalePercent());
+		// DOES NOT copy scale percent from cloud settings because scale is determined on a per screen basis, not per user
+		//this.scalePercent.setValue(otherSettings.getScalePercent());
 	}
 
 	/**
