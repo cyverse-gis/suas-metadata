@@ -173,8 +173,8 @@ public class SettingsData
 		Scale75("75%", .75),
 		Scale100("100% (1080p)", 1.0),
 		Scale150("150%", 1.5),
-		Scale200("200%", 2.0),
-		Scale400("400% (4k)", 4.0);
+		Scale200("200% (4k)", 2.0),
+		Scale400("300%", 3.0);
 
 		// Display name of the scale
 		private String stringValue;
