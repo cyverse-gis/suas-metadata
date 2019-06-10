@@ -130,19 +130,16 @@ public class Calliope extends Application
         contentPane.getTransforms().addAll(scale, translate);
         // Set defaults depending on primary screen resolution
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
-        switch ((int) primaryScreenBounds.getWidth()) {
-            case 720:
-                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale75);
-                break;
-            case 1080:
-                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale100);
-                break;
-            case 1440:
-                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale150);
-                break;
-            case 2160:
-                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale200);
-                break;
+        Integer height = (int) primaryScreenBounds.getHeight();
+        if (height > 2000) {
+            // 4k+
+            CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale200);
+        } else if (height > 1000) {
+            // 1080p+
+            CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale100);
+        } else {
+            // Smaller or nonstandard
+            CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale75);
         }
     }
 }
