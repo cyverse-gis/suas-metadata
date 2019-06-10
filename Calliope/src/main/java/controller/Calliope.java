@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -19,8 +20,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Transform;
 import javafx.scene.transform.Translate;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import model.CalliopeData;
+import model.settings.SettingsData;
 import model.threading.CalliopeExecutor;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.action.Action;
@@ -81,15 +84,25 @@ public class Calliope extends Application
             }
         });
 
-        // Set the scaling function to be run after the scene has been initialized
-        Platform.runLater(() -> letterbox(scene, (Pane)root, primaryStage));
-
         // Show it
-        //primaryStage.setMaximized(true);
         primaryStage.show();
+
+        // Set the scaling function after the scene has been initialized
+        setScale(scene, (Pane)root, primaryStage);
+
+        // Maximize the screen
+        primaryStage.setMaximized(true);
     }
 
-    private void letterbox(final Scene scene, final Pane contentPane, final Stage primaryStage) {
+    /**
+     * setScale
+     * Implements UI scaling for Calliope, setting the default according to screen resolution.
+     *
+     * @param scene
+     * @param contentPane
+     * @param primaryStage
+     */
+    private void setScale(final Scene scene, final Pane contentPane, final Stage primaryStage) {
         Scale scale = new Scale(1,1,0,0);
         Translate translate = new Translate(0, 0);
         // Add listener to the scale setting
@@ -101,17 +114,35 @@ public class Calliope extends Application
             contentPane.setPrefHeight(scene.getHeight() * 1/scaleFactor);
         });
         // Add listeners to scene dimensions
-        scene.widthProperty().addListener(observable -> {
+        scene.widthProperty().addListener((observable, newVal, oldVal) -> {
             Double scaleFactor = CalliopeData.getInstance().getSettings().getScalePercent().scaleFactor();
-            contentPane.setPrefWidth(scene.getWidth() * 1/scaleFactor);
+            contentPane.setPrefWidth(scene.getWidth() * 1 / scaleFactor);
         });
-        scene.heightProperty().addListener(observable -> {
+        scene.heightProperty().addListener((observable, newVal, oldVal) -> {
             Double scaleFactor = CalliopeData.getInstance().getSettings().getScalePercent().scaleFactor();
-            contentPane.setPrefHeight(scene.getHeight() * 1/scaleFactor);
+            contentPane.setPrefHeight(scene.getHeight() * 1 / scaleFactor);
         });
-        primaryStage.maximizedProperty().addListener(observable -> {
+        primaryStage.maximizedProperty().addListener((observable, newVal, oldVal) -> {
+            // Reset transforms when maximized
+            contentPane.getTransforms().setAll(scale, translate);
         });
-
+        // Set transforms
         contentPane.getTransforms().addAll(scale, translate);
+        // Set defaults depending on primary screen resolution
+        Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+        switch ((int) primaryScreenBounds.getWidth()) {
+            case 720:
+                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale75);
+                break;
+            case 1080:
+                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale100);
+                break;
+            case 1440:
+                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale150);
+                break;
+            case 2160:
+                CalliopeData.getInstance().getSettings().setScalePercent(SettingsData.ScalePercent.Scale200);
+                break;
+        }
     }
 }
