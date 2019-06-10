@@ -24,6 +24,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
@@ -741,76 +742,84 @@ public class CalliopeMapController
 
 		CalliopeData.getInstance().getSiteManager().getRetrievalDone().addListener((observable, oldValue, newValue) -> {
 			if (newValue.booleanValue()) {
-				codesToMap = new HashMap<>();
-				List<String> codes = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
-						90.0, -180.0, -90.0, 180.0);
-				for (Site site : CalliopeData.getInstance().getSiteManager().getSites()) {
-					if (site != null) {
-						// Convert the site's center to a location
-						Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
+				Platform.runLater(() -> {
+					codesToMap = new HashMap<>();
+					List<String> codes = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
+							90.0, -180.0, -90.0, 180.0);
+					for (Site site : CalliopeData.getInstance().getSiteManager().getSites()) {
+						if (site != null) {
+							// Convert the site's center to a location
+							Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
 
-						// CREATE POLYGON
+							// CREATE POLYGON
 
-						// Grab the polygon representing the boundary of this site
-						Boundary polygon = site.getBoundary();
-						// Create a map polygon to render this site's boundary
-						MapPolygon mapPolygon = new MapPolygon();
-						// Setup the polygon's boundary
-						mapPolygon.getLocations().addAll(polygon.getOuterBoundary().stream().map(coordinate -> new Location(coordinate.getLat(), coordinate.getLon())).collect(Collectors.toList()));
-						// Setup the polygon's center location point
-						mapPolygon.setLocation(centerPoint);
-						// Add a CSS attribute to all polygons so that we can style them later
-						mapPolygon.getStyleClass().add("site-boundary");
-						// Hide the polygon if the toggle switch is off
-						mapPolygon.visibleProperty().bind(
-								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
-										.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
-										.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
-						// When we click a polygon, display the popover
-						mapPolygon.setOnMouseClicked(event ->
-						{
-							// Call our controller's update method and then show the popup
-							sitePopOverController.updateSite(site);
-							popOver.show(mapPolygon);
-							event.consume();
-						});
-						// Pass events through to the map so you can drag and drop through the polygon
-						mapPolygon.addEventHandler(MouseEvent.ANY, event -> javafx.event.Event.fireEvent(this.map, event));
+							// Grab the polygon representing the boundary of this site
+							Boundary polygon = site.getBoundary();
+							// Create a map polygon to render this site's boundary
+							MapPolygon mapPolygon = new MapPolygon();
+							// Setup the polygon's boundary
+							mapPolygon.getLocations().addAll(polygon.getOuterBoundary().stream().map(coordinate -> new Location(coordinate.getLat(), coordinate.getLon())).collect(Collectors.toList()));
+							// Setup the polygon's center location point
+							mapPolygon.setLocation(centerPoint);
+							// Add a CSS attribute to all polygons so that we can style them later
+							mapPolygon.getStyleClass().add("site-boundary");
+							// Hide the polygon if the toggle switch is off
+							mapPolygon.visibleProperty().bind(
+									this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
+											.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
+											.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+							// When we click a polygon, display the popover
+							mapPolygon.setOnMouseClicked(event ->
+							{
+								// Call our controller's update method and then show the popup
+								sitePopOverController.updateSite(site);
+								popOver.show(mapPolygon);
+								event.consume();
+							});
+							// Performance Tweaks
+							mapPolygon.setCache(true);
+							mapPolygon.setCacheHint(CacheHint.SPEED);
+							// Pass events through to the map so you can drag and drop through the polygon
+							mapPolygon.addEventHandler(MouseEvent.ANY, event -> javafx.event.Event.fireEvent(this.map, event));
 
-						// CREATE PIN
+							// CREATE PIN
 
-						// Create a map pin to render the site's center point when zoomed out
-						MapNode mapPin = new AlignedMapNode(Pos.CENTER);
-						// Set the pin's center to be the node's center
-						mapPin.setLocation(centerPoint);
-						// Add a new imageview to the pin
-						ImageView pinImageView = new ImageView();
-						// Make sure the image represents if the pin is hovered or not
-						pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(site::getIcon));
-						// Add the image to the pin
-						mapPin.getChildren().add(pinImageView);
-						// When we click a pin, show the popover
-						mapPin.setOnMouseClicked(event ->
-						{
-							// Call our controller's update method and then show the popup
-							sitePopOverController.updateSite(site);
-							popOver.show(mapPin);
-							event.consume();
-						});
+							// Create a map pin to render the site's center point when zoomed out
+							MapNode mapPin = new AlignedMapNode(Pos.CENTER);
+							// Set the pin's center to be the node's center
+							mapPin.setLocation(centerPoint);
+							// Add a new imageview to the pin
+							ImageView pinImageView = new ImageView();
+							// Make sure the image represents if the pin is hovered or not
+							pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(site::getIcon));
+							// Add the image to the pin
+							mapPin.getChildren().add(pinImageView);
+							// When we click a pin, show the popover
+							mapPin.setOnMouseClicked(event ->
+							{
+								// Call our controller's update method and then show the popup
+								sitePopOverController.updateSite(site);
+								popOver.show(mapPin);
+								event.consume();
+							});
 
-						// Hide/Show pins when the toggle switches are toggled
-						mapPin.visibleProperty().bind(
-								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
-										.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
-										.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+							// Hide/Show pins when the toggle switches are toggled
+							mapPin.visibleProperty().bind(
+									this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
+											.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
+											.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
 
-						// MAP SITECODE TO BOTH
+							// Performance Tweaks
+							mapPin.setCache(true);
+							mapPin.setCacheHint(CacheHint.SPEED);
 
-						codesToMap.put(site.getCode(), new Pair<MapPolygon, MapNode>(mapPolygon, mapPin));
+							// MAP SITECODE TO BOTH
+
+							codesToMap.put(site.getCode(), new Pair<MapPolygon, MapNode>(mapPolygon, mapPin));
+						}
 					}
-				}
+				});
 			}
-			System.out.println(codesToMap.size());
 		});
 	}
 
