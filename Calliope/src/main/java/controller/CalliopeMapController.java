@@ -134,6 +134,14 @@ public class CalliopeMapController
 	@FXML
 	public Button btnExpander;
 
+	// A button to expand the task view
+	@FXML
+	public Button btnTaskExpander;
+
+	// Task View Pane
+	@FXML
+	public GridPane taskPane;
+
 	// A titled pane which can hide our metadata entries
 	@FXML
 	public TitledPane tpnCircleMetadata;
@@ -529,6 +537,10 @@ public class CalliopeMapController
 		translateCreditsUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
 		// Setup the parallel transition
 		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition, translateCreditsUpTransition, maxWidthContraction);
+		// Tasks start hidden
+		this.btnTaskExpander.setVisible(true);
+		this.taskPane.setVisible(false);
+
 
 		///
 		/// Setup the query panel on the bottom of the screen
@@ -1150,5 +1162,30 @@ public class CalliopeMapController
 		for (Task t : CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveTasks()) {
 			t.cancel();
 		}
+	}
+
+	/**
+	 * Called whenever the Tasks button is pressed.
+	 *
+	 * @param event
+	 */
+	@FXML
+	private void expandTasks(ActionEvent event) {
+		this.btnTaskExpander.setVisible(false);
+		this.taskPane.setVisible(true);
+
+		event.consume();
+	}
+
+	/**
+	 * Called whenever the X on the taskPane is pressed.
+	 * @param event
+	 */
+	@FXML
+	private void closeTasks(ActionEvent event) {
+		this.btnTaskExpander.setVisible(true);
+		this.taskPane.setVisible(false);
+
+		event.consume();
 	}
 }
