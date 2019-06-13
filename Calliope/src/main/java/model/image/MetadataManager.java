@@ -84,7 +84,10 @@ public class MetadataManager
 		SPEED_X("SpeedX", Type.DOUBLE),
 		SPEED_Y("SpeedY", Type.DOUBLE),
 		SPEED_Z("SpeedZ", Type.DOUBLE),
-		CAMERA_MODEL_NAME("Model", Type.STRING);
+		CAMERA_MODEL_NAME("Model", Type.STRING),
+		// Special tag used by ExifTool to return all available metadata information
+		// Citation: https://www.sno.phy.queensu.ca/~phil/exiftool/
+		ALL_METADATA("All", Type.STRING);
 
 		/**
 		 * Used to get the name of the tag (e.g. "Orientation", "ISO", etc.).
