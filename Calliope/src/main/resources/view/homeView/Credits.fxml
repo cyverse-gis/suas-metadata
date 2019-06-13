@@ -35,10 +35,14 @@
             </rowConstraints>
             <Label GridPane.columnIndex="0" GridPane.rowIndex="0" text="Project Lead:"/>
             <Label GridPane.columnIndex="1" GridPane.rowIndex="0" text="Tyson Swetnam"/>
-            <Label GridPane.columnIndex="0" GridPane.rowIndex="1" text="Calliope Developer:"/>
+            <Label GridPane.columnIndex="0" GridPane.rowIndex="1" text="Creator and Past Developer:"/>
             <Label GridPane.columnIndex="1" GridPane.rowIndex="1" text="David Slovikosky"/>
-            <Label GridPane.columnIndex="0" GridPane.rowIndex="2" text="Backend Research and Developer:"/>
+            <Label GridPane.columnIndex="0" GridPane.rowIndex="2" text="Backend Research and Past Developer:"/>
             <Label GridPane.columnIndex="1" GridPane.rowIndex="2" text="Pooja Narayan"/>
+            <Label GridPane.columnIndex="0" GridPane.rowIndex="3" text="Current Developer:"/>
+            <Label GridPane.columnIndex="1" GridPane.rowIndex="3" text="Caleb Prigge"/>
+            <Label GridPane.columnIndex="0" GridPane.rowIndex="4" text="Current Backend Developer:"/>
+            <Label GridPane.columnIndex="1" GridPane.rowIndex="4" text="Jackson Lindsay"/>
         </GridPane>
     </center>
 </BorderPane>
