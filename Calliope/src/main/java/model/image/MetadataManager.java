@@ -15,10 +15,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class containing utils for writing & reading metadata
@@ -85,9 +82,8 @@ public class MetadataManager
 		SPEED_Y("SpeedY", Type.DOUBLE),
 		SPEED_Z("SpeedZ", Type.DOUBLE),
 		CAMERA_MODEL_NAME("Model", Type.STRING),
-		// Special tag used by ExifTool to return all available metadata information
-		// Citation: https://www.sno.phy.queensu.ca/~phil/exiftool/
-		ALL_METADATA("All", Type.STRING);
+		ALL_METADATA("AllMetadata", Type.STRING);
+
 
 		/**
 		 * Used to get the name of the tag (e.g. "Orientation", "ISO", etc.).
@@ -119,6 +115,15 @@ public class MetadataManager
 		 */
 		@Override
 		public String getName()
+		{
+			return name;
+		}
+
+		/*
+			Implements the "getDisplayName" function in Tag.
+			Added after upgrading to ExifTool Java Integration 2.5.0
+		 */
+		public String getDisplayName()
 		{
 			return name;
 		}
@@ -194,7 +199,20 @@ public class MetadataManager
 		// Add our custom tags
 		tags.addAll(Arrays.asList(CustomTags.values()));
 		// Ask exiftool to get our image's metadata
-		return this.exifTool.getImageMeta(imageFile, tags);
+		// The map returned by this call is unmodifiable. Dunno why.
+		Map<Tag, String> unmodifiableMap = this.exifTool.getImageMeta(imageFile, tags);
+
+		// Add a special tag to retval which contains all metadata found in the image.
+		Tag allMeta = CustomTags.ALL_METADATA;
+		String allData = this.exifTool.getImageMeta(imageFile).toString();
+
+		// Create a modifiable copy of what exifTool returned, and add a string containing all the metadata to it.
+		// TODO: Better choice than Hashtable?
+		Map<Tag, String> retval = new Hashtable<>();
+		retval.putAll(unmodifiableMap);
+		retval.put(allMeta, allData);
+
+		return retval;
 	}
 
 	/**

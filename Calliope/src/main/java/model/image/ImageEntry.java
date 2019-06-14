@@ -66,6 +66,8 @@ public class ImageEntry extends ImageContainer
 	// The width and height of the image
 	private final DoubleProperty width = new SimpleDoubleProperty(-1);
 	private final DoubleProperty height = new SimpleDoubleProperty(-1);
+	// All metadata that exiftool was able to read
+	private final StringProperty allMetadata = new SimpleStringProperty(null);
 
 	// The raw metadata entries without any modifications
 	private transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
@@ -154,6 +156,9 @@ public class ImageEntry extends ImageContainer
 		this.focalLength.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.FOCAL_LENGTH, "0")));
 		this.width.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_WIDTH, "0")));
 		this.height.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_HEIGHT, "0")));
+
+		// Store all the metadata as one string
+		this.allMetadata.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ALL_METADATA, UNSPECIFIED));
 	}
 
 	/**
@@ -424,6 +429,23 @@ public class ImageEntry extends ImageContainer
 	public DoubleProperty heightProperty()
 	{
 		return this.height;
+	}
+
+	// TODO: Is this needed? I can't think of an instance where we would want to set the metadata read to something else...
+
+	public void setAllMetadata(String allMeta)
+	{
+		this.allMetadata.setValue(allMeta);
+	}
+
+	public String getAllMetadata()
+	{
+		return this.allMetadata.getValue();
+	}
+
+	public StringProperty allMetadataProperty()
+	{
+		return this.fileType;
 	}
 
 	@Override
