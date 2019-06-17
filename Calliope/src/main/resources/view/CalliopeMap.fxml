@@ -16,6 +16,12 @@
     </stylesheets>
     <children>
         <LayeredMap fx:id="map" StackPane.alignment="CENTER" onDragDropped="#dragDropped" onDragOver="#dragOver" zoomLevel="5" maxZoomLevel="20" center="32.2226, -110.9747"/>
+        <GridPane fx:id="taskPane" StackPane.alignment="TOP_RIGHT" vgap="5" hgap="5" styleClass="propertiesPanel" maxWidth="-Infinity" maxHeight="-Infinity">
+            <Button text="X" GridPane.halignment="RIGHT" GridPane.rowIndex="0" GridPane.columnIndex="0" onAction="#closeTasks"/>
+            <TaskProgressView GridPane.rowIndex="1" GridPane.columnIndex="0" fx:id="mapTasks"/>
+            <Button text="Cancel Running Tasks" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.columnIndex="0" onAction="#cancelDownload"/>
+        </GridPane>
+        <Button fx:id="btnTaskExpander" text="Tasks" styleClass="expanderBtn" onAction="#expandTasks" StackPane.alignment="TOP_RIGHT"  prefWidth="120" minHeight="32" maxHeight="32"/>
         <HBox fx:id="hbxScale" StackPane.alignment="BOTTOM_LEFT" alignment="CENTER_LEFT" styleClass="scaleRct" minHeight="30" maxHeight="30" minWidth="100" maxWidth="100">
             <StackPane.margin>
                 <Insets left="5" bottom="5"/>
@@ -48,6 +54,7 @@
                 <ComboBox fx:id="cbxMapProvider" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" maxWidth="Infinity" />
                 <ToggleSwitch fx:id="tswNEON" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="1" text="NEON Sites: " maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswLTAR" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="1" text="LTAR Sites: " maxWidth="Infinity"/>
+                <ToggleSwitch fx:id="tswUSFS" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="2" text="USFS Sites: " maxWidth="Infinity"/>
                 <ToggleSwitch fx:id="tswImageCounts" selected="true" GridPane.columnIndex="0" GridPane.rowIndex="2" text="Site Image Counts: " maxWidth="Infinity"/>
                 <TitledPane fx:id="tpnCircleMetadata" text="Selected Circle Metadata" expanded="false" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" maxWidth="Infinity">
                     <content>

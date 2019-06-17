@@ -2,6 +2,7 @@ package model.elasticsearch;
 
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
@@ -16,6 +17,7 @@ import model.site.Boundary;
 import model.site.Site;
 import model.site.ltar.LTARSite;
 import model.site.neon.NEONSite;
+import model.site.usfs.USFSSite;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -132,6 +134,9 @@ public class ElasticSearchConnectionManager
 	// Create a new elastic search schema manager
 	private ElasticSearchSchemaManager elasticSearchSchemaManager;
 
+	// Property that changes when ES is up and running
+	private SimpleBooleanProperty active = new SimpleBooleanProperty(false);
+
 	/**
 	 * Given a username and password, this method logs a cyverse user in
 	 *
@@ -179,6 +184,7 @@ public class ElasticSearchConnectionManager
 			{
 				if (this.elasticSearchClient.ping())
 				{
+					active.setValue(true);
 					this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
 					return true;
 				}
@@ -279,6 +285,7 @@ public class ElasticSearchConnectionManager
 
 			// Use a bulk insert
 			BulkRequest bulkRequest = new BulkRequest();
+			BulkResponse bulkResponse = null;
 
 			// Download the list of sites from all sources
 			List<? extends Site> sites = CalliopeData.getInstance().getSiteManager().downloadSites();
@@ -298,6 +305,7 @@ public class ElasticSearchConnectionManager
 			});
 
 			// Iterate over each of the sites
+			Integer siteCount = 0;
 			for (Site site : sites)
 			{
 				XContentBuilder xContentBuilder = this.elasticSearchSchemaManager.makeCreateSite(site);
@@ -307,39 +315,48 @@ public class ElasticSearchConnectionManager
 						.type(INDEX_CALLIOPE_SITES_TYPE)
 						.source(xContentBuilder);
 				bulkRequest.add(indexRequest);
-			}
+				siteCount++;
 
-			bulkRequest.timeout(TimeValue.timeValueMinutes(15));
+				if (siteCount == 100 || sites.indexOf(site) == sites.size()) {
+					// Process a batch of 100, or just whatever is left
+					bulkRequest.timeout(TimeValue.timeValueMinutes(15));
 
-			// Store the response of the bulk insert
-			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
-			// Make sure it was OK, if not, print an error
-			if (bulkResponse.status() != RestStatus.OK)
-				CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk site insert! Status = " + bulkResponse.status());
+					// Store the response of the bulk insert
+					bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+					// Make sure it was OK, if not, print an error
+					if (bulkResponse.status() != RestStatus.OK)
+						CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk site insert! Status = " + bulkResponse.status());
 
-			Integer failureCount = 0;
-			// If there were any errors in the bulk insertion show them
-			if (bulkResponse.hasFailures())
-			{
-				// A list of response responses
-				BulkItemResponse[] responses = bulkResponse.getItems();
-				for (int i = 0; i < responses.length; i++)
-				{
-					// Grab the response
-					BulkItemResponse response = responses[i];
-					// If it failed, print out the failure
-					if (response.isFailed())
+					Integer failureCount = 0;
+					// If there were any errors in the bulk insertion show them
+					if (bulkResponse.hasFailures())
 					{
-						System.out.println("Site '" + sites.get(i).toString() + "' indexing failed: " + response.getFailureMessage());
-						failureCount++;
+						// A list of response responses
+						BulkItemResponse[] responses = bulkResponse.getItems();
+						for (int i = 0; i < responses.length; i++)
+						{
+							// Grab the response
+							BulkItemResponse response = responses[i];
+							// If it failed, print out the failure
+							if (response.isFailed())
+							{
+								System.out.println("Site '" + sites.get(i).toString() + "' indexing failed: " + response.getFailureMessage());
+								failureCount++;
+							}
+						}
 					}
+					// If we had any errors print out how many failed
+					if (failureCount > 0)
+					{
+						CalliopeData.getInstance().getErrorDisplay().printError(failureCount.toString() + " out of " + sites.size() + " had invalid geometries!");
+					}
+					// Clean-up for next batch
+					siteCount = 0;
+					bulkRequest = new BulkRequest();
 				}
 			}
-			// If we had any errors print out how many failed
-			if (failureCount > 0)
-			{
-				CalliopeData.getInstance().getErrorDisplay().printError(failureCount.toString() + " out of " + sites.size() + " had invalid geometries!");
-			}
+
+
 		}
 		catch (IOException e)
 		{
@@ -362,7 +379,7 @@ public class ElasticSearchConnectionManager
 		}
 		catch (IOException e)
 		{
-			// If the delete fa	ils just print out an error message
+			// If the delete fails just print out an error message
 			CalliopeData.getInstance().getErrorDisplay().notify("Error deleting '" + index + "' from the ElasticSearch index: \n" + ExceptionUtils.getStackTrace(e));
 		}
 		catch (ElasticsearchStatusException e)
@@ -541,8 +558,8 @@ public class ElasticSearchConnectionManager
 				.types(INDEX_CALLIOPE_SITES_TYPE)
 				.scroll(scroll)
 				.source(new SearchSourceBuilder()
-						// Fetch results 10 at a time, and use a query that matches everything
-						.size(10)
+						// Fetch results 5000 at a time, and use a query that matches everything
+						.size(5000)
 						.fetchSource(true)
 						.query(QueryBuilders.matchAllQuery()));
 
@@ -555,9 +572,13 @@ public class ElasticSearchConnectionManager
 			// Get a list of sites (hits)
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
 
+
 			// Iterate while there are more collections to be read
 			while (searchHits != null && searchHits.length > 0)
 			{
+				// DEBUG
+                //System.out.println(searchHits.length);
+
 				// Iterate over all current results
 				for (SearchHit searchHit : searchHits)
 				{
@@ -612,6 +633,13 @@ public class ElasticSearchConnectionManager
 										this.injectDetailsIntoLTARSite(site, details);
 										toReturn.add(site);
 									}
+									else if (type.equalsIgnoreCase("usfs"))
+									{
+										// Make a USFS site and then parse the details, add it to be returned
+										USFSSite site = new USFSSite(name, code, boundary);
+										this.injectDetailsIntoUSFSSite(site, details);
+										toReturn.add(site);
+									}
 								}
 							}
 						}
@@ -630,6 +658,9 @@ public class ElasticSearchConnectionManager
 				scrollID = searchResponse.getScrollId();
 				searchHits = searchResponse.getHits().getHits();
 			}
+
+			// DEBUG
+			//System.out.println("done");
 
 			// Finish off the scroll request
 			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
@@ -747,6 +778,38 @@ public class ElasticSearchConnectionManager
 				default:
 					break;
 			}
+		});
+	}
+
+	/**
+	 * Attempts to parse the details and adds them to the USFS site
+	 *
+	 * @param usfsSite The site to add details to
+	 * @param details The details to add to the site
+	 */
+	private void injectDetailsIntoUSFSSite(USFSSite usfsSite, List<String> details)
+	{
+		// Iterate over each detail
+		details.forEach(detail ->
+		{
+			// Grab the key and value which are separated by the first ':'
+			String key = StringUtils.substringBefore(detail, ":");
+			String value = StringUtils.substringAfter(detail, ":");
+			// Based on the key, set the right field
+			switch(key.toUpperCase())
+			{
+				case "FORESTNAME":
+					usfsSite.setForestName(value);
+					break;
+				case "REGION":
+					usfsSite.setRegion(value);
+					break;
+				default:
+					break;
+			}
+			// Switch name to include the forestname
+			if (!usfsSite.getName().startsWith(usfsSite.getForestName()))
+				usfsSite.setName(usfsSite.getForestName() + usfsSite.getName());
 		});
 	}
 
@@ -1403,15 +1466,17 @@ public class ElasticSearchConnectionManager
 					.types(INDEX_CALLIOPE_SITES_TYPE)
 					.scroll(scroll)
 					.source(new SearchSourceBuilder()
-							// Fetch results 100 at a time, and use a query that matches everything
-							.size(100)
+							// Fetch results 5000 at a time, and use a query that matches everything
+							.size(5000)
 							.fetchSource(new FetchSourceContext(true, new String[] { "code" }, null))
 							// We use a geo-intersection query that tests if our viewport intersects the site's boundary
 							.query(QueryBuilders.geoIntersectionQuery("boundary", new EnvelopeBuilder(new Coordinate(topLeftLong, topLeftLat), new Coordinate(bottomRightLong, bottomRightLat)))));
 
 
 			// Grab the search results
+            Long time = System.currentTimeMillis();
 			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			System.out.println("ES Time: " + (System.currentTimeMillis() - time));
 			// Store the scroll id that was returned because we specified a scroll in the search request
 			String scrollID = searchResponse.getScrollId();
 			// Get a list of sites (hits)
@@ -1420,6 +1485,9 @@ public class ElasticSearchConnectionManager
 			// Iterate while there are more collections to be read
 			while (searchHits != null && searchHits.length > 0)
 			{
+				//DEBUG
+				//System.out.println(searchHits.length);
+
 				// Iterate over all current results
 				for (SearchHit searchHit : searchHits)
 				{
@@ -1737,6 +1805,11 @@ public class ElasticSearchConnectionManager
 		}
 
 		return toReturn;
+	}
+
+	// Getter for the 'active' property
+	public SimpleBooleanProperty getActive() {
+		return active;
 	}
 
 	/**

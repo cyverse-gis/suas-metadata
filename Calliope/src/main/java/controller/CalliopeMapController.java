@@ -6,6 +6,7 @@ import controller.mapView.MapCircleController;
 import controller.mapView.MapLayers;
 import fxmapcontrol.*;
 import javafx.animation.*;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -14,13 +15,16 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.*;
@@ -34,6 +38,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
+import javafx.util.Pair;
 import javafx.util.StringConverter;
 import library.AlignedMapNode;
 import library.DragResizer;
@@ -56,10 +61,7 @@ import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.CheckComboBox;
-import org.controlsfx.control.HyperlinkLabel;
-import org.controlsfx.control.PopOver;
-import org.controlsfx.control.ToggleSwitch;
+import org.controlsfx.control.*;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.fxmisc.easybind.EasyBind;
@@ -104,6 +106,9 @@ public class CalliopeMapController
 	// A toggle switch to enable or disable NEON site boundaries
 	@FXML
 	public ToggleSwitch tswLTAR;
+	// A toggle switch to enable or disable USFS site boundaries
+	@FXML
+	public ToggleSwitch tswUSFS;
 	// A toggle switch to enable or disable image count circles
 	@FXML
 	public ToggleSwitch tswImageCounts;
@@ -128,6 +133,14 @@ public class CalliopeMapController
 	// A button to expand or contract the query
 	@FXML
 	public Button btnExpander;
+
+	// A button to expand the task view
+	@FXML
+	public Button btnTaskExpander;
+
+	// Task View Pane
+	@FXML
+	public GridPane taskPane;
 
 	// A titled pane which can hide our metadata entries
 	@FXML
@@ -192,6 +205,10 @@ public class CalliopeMapController
 	@FXML
 	public HyperlinkLabel lblMapCredits;
 
+	// A list of tasks currently running
+	@FXML
+	public TaskProgressView<Task<?>> mapTasks;
+
 	///
 	/// FXML bound fields end
 	///
@@ -219,12 +236,19 @@ public class CalliopeMapController
 	// The currently selected circle
 	private ObjectProperty<MapCircleController> selectedCircle = new SimpleObjectProperty<>();
 
+	// Mapping of site codes to map objects
+	private Map<String, Pair<MapPolygon, MapNode>> codesToMap;
+
 	/**
 	 * Initialize sets up the analysis window and bindings
 	 */
 	@FXML
 	public void initialize()
 	{
+		// Set up task window
+		ObservableList<Task<?>> activeTasks = CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveDisplayedTasks();
+		EasyBind.listBind(this.mapTasks.getTasks(), activeTasks);
+
 		// Store image tiles inside of the user's home directory
 		TileImageLoader.setCache(new ImageFileCache(CalliopeData.getInstance().getTempDirectoryManager().createTempFile("CalliopeMapCache").toPath()));//new File(System.getProperty("user.home") + File.separator + "CalliopeMapCache").toPath()));
 
@@ -286,6 +310,8 @@ public class CalliopeMapController
 		popOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
 		popOver.setArrowSize(20);
 		popOver.setCloseButtonEnabled(true);
+		// To avoid flickering when switching
+		popOver.setFadeOutDuration(Duration.millis(0));
 		// Load the content of the popover from the FXML file once and store it
 		FXMLLoader fxmlLoader = FXMLLoaderUtils.loadFXML("importView/SitePopOver.fxml");
 		// Grab the controller for use later
@@ -312,12 +338,15 @@ public class CalliopeMapController
 					Location topLeft = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
 					Location bottomRight = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
-					// This is the important line. We call ES to grab all site codes within our viewport
-					return CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
+					Long time = System.currentTimeMillis();
+					List<String> temp = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
 							MathUtil.clamp(topLeft.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(topLeft.getLongitude(), -180.0, 180.0),
 							MathUtil.clamp(bottomRight.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(bottomRight.getLongitude(), -180.0, 180.0));
+					// This is the important line. We call ES to grab all site codes within our viewport
+					System.out.println(System.currentTimeMillis() - time);
+					return temp;
 				}
 			};
 		});
@@ -329,64 +358,14 @@ public class CalliopeMapController
 			// For each of the returned site codes....
 			for (String siteCode : siteCodesToDraw)
 			{
-				// ... find the corresponding site and process it
-				Site site = CalliopeData.getInstance().getSiteManager().getSiteByCode(siteCode);
-				if (site != null)
-				{
-					// Convert the site's center to a location
-					Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
-
+				if (codesToMap.containsKey(siteCode)) {
 					// If we're zoomed in far enough, show the polygon, otherwise show the pin
-					if (this.map.getZoomLevel() > PIN_TO_POLY_THRESHOLD)
-					{
-						// Grab the polygon representing the boundary of this site
-						Boundary polygon = site.getBoundary();
-						// Create a map polygon to render this site's boundary
-						MapPolygon mapPolygon = new MapPolygon();
-						// Setup the polygon's boundary
-						mapPolygon.getLocations().addAll(polygon.getOuterBoundary().stream().map(coordinate -> new Location(coordinate.getLat(), coordinate.getLon())).collect(Collectors.toList()));
-						// Setup the polygon's center location point
-						mapPolygon.setLocation(centerPoint);
-						// Add a CSS attribute to all polygons so that we can style them later
-						mapPolygon.getStyleClass().add("site-boundary");
-						// Make sure we can drag & drop through the polygon
-						mapPolygon.setMouseTransparent(true);
-						// Hide the polygon if the toggle switch is off
-						mapPolygon.visibleProperty().bind(
-								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
-							.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
-
-						mapSiteNodes.add(mapPolygon);
-						this.map.addChild(mapPolygon, MapLayers.BORDER_POLYGON);
-					}
-					else
-					{
-						// Create a map pin to render the site's center point when zoomed out
-						MapNode mapPin = new AlignedMapNode(Pos.CENTER);
-						// Set the pin's center to be the node's center
-						mapPin.setLocation(centerPoint);
-						// Add a new imageview to the pin
-						ImageView pinImageView = new ImageView();
-						// Make sure the image represents if the pin is hovered or not
-						pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(site::getIcon));
-						// Add the image to the pin
-						mapPin.getChildren().add(pinImageView);
-						// When we click a pin, show the popover
-						mapPin.setOnMouseClicked(event ->
-						{
-							// Call our controller's update method and then show the popup
-							sitePopOverController.updateSite(site);
-							popOver.show(mapPin);
-							event.consume();
-						});
-
-						// Hide/Show pins when the toggle switches are toggled
-						mapPin.visibleProperty().bind(
-								this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
-						    .or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
-
-						mapSiteNodes.add(mapPin);
-						this.map.addChild(mapPin, MapLayers.SITE_PINS);
+					if (this.map.getZoomLevel() > PIN_TO_POLY_THRESHOLD) {
+						mapSiteNodes.add(codesToMap.get(siteCode).getKey());
+						this.map.addChild(codesToMap.get(siteCode).getKey(), MapLayers.BORDER_POLYGON);
+					} else {
+						mapSiteNodes.add(codesToMap.get(siteCode).getValue());
+						this.map.addChild(codesToMap.get(siteCode).getValue(), MapLayers.SITE_PINS);
 					}
 				}
 			}
@@ -558,6 +537,10 @@ public class CalliopeMapController
 		translateCreditsUpTransition.setToY(-MAX_QUERY_PANE_HEIGHT);
 		// Setup the parallel transition
 		this.fadeQueryIn = new ParallelTransition(fadeInTransition, heightUpTransition, rotateDownTransition, translateUpTransition, translateScaleUpTransition, translateCreditsUpTransition, maxWidthContraction);
+		// Tasks start hidden
+		this.btnTaskExpander.setVisible(true);
+		this.taskPane.setVisible(false);
+
 
 		///
 		/// Setup the query panel on the bottom of the screen
@@ -749,7 +732,7 @@ public class CalliopeMapController
 					if (pixelsPerPowerOf10 < MAX_SIZE)
 					{
 						// Set the text based on if it's KM or M
-						this.lblScale.setText(willUseKM ? Long.toString(scale / 1000) + " km" : Long.toString(scale) + " m");
+						this.lblScale.setText(willUseKM ? scale / 1000 + " km" : scale + " m");
 						// Force the HBox width
 						this.hbxScale.setMinWidth(pixelsPerPowerOf10);
 						this.hbxScale.setMaxWidth(pixelsPerPowerOf10);
@@ -757,7 +740,7 @@ public class CalliopeMapController
 					else
 					{
 						// Set the text based on if it's KM or M. We divide by 2 to ensure it's not too large
-						this.lblScale.setText(willUseKM ? Long.toString(scale / 2000) + " km" : Long.toString(scale / 2) + " m");
+						this.lblScale.setText(willUseKM ? scale / 2000 + " km" : scale / 2 + " m");
 						// Force the HBox width
 						this.hbxScale.setMinWidth(pixelsPerPowerOf10 / 2);
 						this.hbxScale.setMaxWidth(pixelsPerPowerOf10 / 2);
@@ -766,6 +749,88 @@ public class CalliopeMapController
 				}
 				// Increment pixels by a power of 10
 				pixelsPerPowerOf10 = pixelsPerPowerOf10 * 10;
+			}
+		});
+
+		CalliopeData.getInstance().getSiteManager().getRetrievalDone().addListener((observable, oldValue, newValue) -> {
+			if (newValue.booleanValue()) {
+				Platform.runLater(() -> {
+					codesToMap = new HashMap<>();
+					List<String> codes = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
+							90.0, -180.0, -90.0, 180.0);
+					for (Site site : CalliopeData.getInstance().getSiteManager().getSites()) {
+						if (site != null) {
+							// Convert the site's center to a location
+							Location centerPoint = new Location(site.getCenter().getLat(), site.getCenter().getLon());
+
+							// CREATE POLYGON
+
+							// Grab the polygon representing the boundary of this site
+							Boundary polygon = site.getBoundary();
+							// Create a map polygon to render this site's boundary
+							MapPolygon mapPolygon = new MapPolygon();
+							// Setup the polygon's boundary
+							mapPolygon.getLocations().addAll(polygon.getOuterBoundary().stream().map(coordinate -> new Location(coordinate.getLat(), coordinate.getLon())).collect(Collectors.toList()));
+							// Setup the polygon's center location point
+							mapPolygon.setLocation(centerPoint);
+							// Add a CSS attribute to all polygons so that we can style them later
+							mapPolygon.getStyleClass().add("site-boundary");
+							// Hide the polygon if the toggle switch is off
+							mapPolygon.visibleProperty().bind(
+									this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
+											.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
+											.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+							// When we click a polygon, display the popover
+							mapPolygon.setOnMouseClicked(event ->
+							{
+								// Call our controller's update method and then show the popup
+								sitePopOverController.updateSite(site);
+								popOver.show(mapPolygon);
+								event.consume();
+							});
+							// Performance Tweaks
+							mapPolygon.setCache(true);
+							mapPolygon.setCacheHint(CacheHint.SPEED);
+							// Pass events through to the map so you can drag and drop through the polygon
+							mapPolygon.addEventHandler(MouseEvent.ANY, event -> javafx.event.Event.fireEvent(this.map, event));
+
+							// CREATE PIN
+
+							// Create a map pin to render the site's center point when zoomed out
+							MapNode mapPin = new AlignedMapNode(Pos.CENTER);
+							// Set the pin's center to be the node's center
+							mapPin.setLocation(centerPoint);
+							// Add a new imageview to the pin
+							ImageView pinImageView = new ImageView();
+							// Make sure the image represents if the pin is hovered or not
+							pinImageView.imageProperty().bind(EasyBind.monadic(mapPin.hoverProperty()).map(site::getIcon));
+							// Add the image to the pin
+							mapPin.getChildren().add(pinImageView);
+							// When we click a pin, show the popover
+							mapPin.setOnMouseClicked(event ->
+							{
+								// Call our controller's update method and then show the popup
+								sitePopOverController.updateSite(site);
+								popOver.show(mapPin);
+								event.consume();
+							});
+
+							// Hide/Show pins when the toggle switches are toggled
+							mapPin.visibleProperty().bind(
+									this.tswNEON.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "NEON"), site.nameProperty()))
+											.or(this.tswUSFS.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "USFS"), site.nameProperty())))
+											.or(this.tswLTAR.selectedProperty().and(Bindings.createBooleanBinding(() -> StringUtils.startsWithIgnoreCase(site.getCode(), "LTAR"), site.nameProperty()))));
+
+							// Performance Tweaks
+							mapPin.setCache(true);
+							mapPin.setCacheHint(CacheHint.SPEED);
+
+							// MAP SITECODE TO BOTH
+
+							codesToMap.put(site.getCode(), new Pair<MapPolygon, MapNode>(mapPolygon, mapPin));
+						}
+					}
+				});
 			}
 		});
 	}
@@ -1089,5 +1154,38 @@ public class CalliopeMapController
 			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to specify where to download the CSV to.");
 		}
 		actionEvent.consume();
+	}
+
+	@FXML
+	private void cancelDownload(ActionEvent event) {
+		// Just stop all tasks on the immediate executor... not sure if this is a good idea
+		for (Task t : CalliopeData.getInstance().getExecutor().getImmediateExecutor().getActiveTasks()) {
+			t.cancel();
+		}
+	}
+
+	/**
+	 * Called whenever the Tasks button is pressed.
+	 *
+	 * @param event
+	 */
+	@FXML
+	private void expandTasks(ActionEvent event) {
+		this.btnTaskExpander.setVisible(false);
+		this.taskPane.setVisible(true);
+
+		event.consume();
+	}
+
+	/**
+	 * Called whenever the X on the taskPane is pressed.
+	 * @param event
+	 */
+	@FXML
+	private void closeTasks(ActionEvent event) {
+		this.btnTaskExpander.setVisible(true);
+		this.taskPane.setVisible(false);
+
+		event.consume();
 	}
 }
