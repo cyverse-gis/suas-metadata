@@ -50,14 +50,14 @@
                 </Button>
             </children>
         </StackPane>
-        <ImageView fitHeight="80" onMouseClicked="#showCyverseWebsite" preserveRatio="true" styleClass="imgCyverse" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="10">
-            <Image url="@../images/mainMenu/poweredByCyverse.png" />
+        <ImageView fitHeight="60" onMouseClicked="#showCyverseWebsite" preserveRatio="true" styleClass="imgCyverse" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="10">
+            <Image url="@../images/mainMenu/poweredByCyverseSquare.png" />
         </ImageView>
-        <ImageView fitHeight="80" onMouseClicked="#showSNREWebsite" preserveRatio="true" styleClass="imgSNRE" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="10">
-            <Image url="@../images/mainMenu/snre.PNG" />
+        <ImageView fitHeight="60" onMouseClicked="#showSNREWebsite" preserveRatio="true" styleClass="imgSNRE" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="10">
+            <Image url="@../images/mainMenu/UofA.png" />
         </ImageView>
-        <ImageView fitHeight="80" onMouseClicked="#showARSWebsite" preserveRatio="true" styleClass="imgARS" AnchorPane.bottomAnchor="100" AnchorPane.leftAnchor="10">
-            <Image url="@../images/mainMenu/ars.png" />
+        <ImageView fitHeight="60" onMouseClicked="#showARSWebsite" preserveRatio="true" styleClass="imgARS" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="90">
+            <Image url="@../images/mainMenu/USDAARSwhite.png" />
         </ImageView>
     </children>
 </AnchorPane>
