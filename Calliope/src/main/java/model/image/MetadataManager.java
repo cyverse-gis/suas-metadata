@@ -82,7 +82,7 @@ public class MetadataManager
 		SPEED_Y("SpeedY", Type.DOUBLE),
 		SPEED_Z("SpeedZ", Type.DOUBLE),
 		CAMERA_MODEL_NAME("Model", Type.STRING),
-		ALL_METADATA("AllMetadata", Type.STRING);
+		ALL_METADATA_STRING("AllMetadataString", Type.STRING);
 
 
 		/**
@@ -203,7 +203,7 @@ public class MetadataManager
 		Map<Tag, String> unmodifiableMap = this.exifTool.getImageMeta(imageFile, tags);
 
 		// Add a special tag to retval which contains all metadata found in the image.
-		Tag allMeta = CustomTags.ALL_METADATA;
+		Tag allMeta = CustomTags.ALL_METADATA_STRING;
 		String allData = this.exifTool.getImageMeta(imageFile).toString();
 
 		// Create a modifiable copy of what exifTool returned, and add a string containing all the metadata to it.
@@ -214,6 +214,7 @@ public class MetadataManager
 
 		return retval;
 	}
+	// Don't create a separate function for getting all the metadata, since there's no place it could be used effectively.
 
 	/**
 	 * @return True if exiftool is found, or false otherwise

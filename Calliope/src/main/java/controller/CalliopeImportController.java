@@ -164,9 +164,13 @@ public class CalliopeImportController
 	@FXML
 	public TabPane leftTabPane;
 
-	// The propertysheet used by the left tab pane to show metadata
+	// The propertysheet used by the left tab pane to show standard metadata
 	@FXML
 	public PropertySheet pstMetadata;
+
+	// Located below pstMetadata, shows all metadata found in the file
+	@FXML
+	public TitledPane allMetadata;
 
 	// A list of possible import options when adding data to the program
 	@FXML
@@ -454,7 +458,10 @@ public class CalliopeImportController
 		// Setup the metadata property sheet
 
 		// When we click a new image then load new metadata
-		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> { if (newValue != null) this.pstMetadata.getItems().setAll(newValue.getRawMetadata()); });
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> {
+			if (newValue != null)
+				this.pstMetadata.getItems().setAll(newValue.getRawMetadata());
+		});
 		// Create a default factory
 		DefaultPropertyEditorFactory defaultFactory = new DefaultPropertyEditorFactory();
 		// Ensure that our editors are non-editable since metadata isn't editable
@@ -465,11 +472,36 @@ public class CalliopeImportController
 			// If it returns a text field, make sure we can't edit it
 			if (toReturn.getEditor() instanceof TextField)
 				((TextField) toReturn.getEditor()).setEditable(false);
-			// If this is the all-metadata tag, make it look distinct
-			if (item.getName().compareTo("AllMetadata") == 0)
-				((TextField) toReturn.getEditor()).setMinHeight(50);
+			// If this is the all-metadata tag, hide it so the user doesn't have to look at it.
+			if (item.getName().compareTo("AllMetadataString") == 0)
+				((TextField) toReturn.getEditor()).setVisible(false);
 			return toReturn;
 		});
+
+		// Setup the all-metadata Accordion/TitledPane
+
+		this.allMetadata.setText("All Metadata");
+		this.allMetadata.setVisible(false);
+		PropertySheet allMetadataPS = new PropertySheet();
+		allMetadataPS.setModeSwitcherVisible(false);
+		this.allMetadata.setContent(allMetadataPS);
+		// When we click a new image then load new metadata
+		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> {
+			if (newValue != null) {
+				this.allMetadata.setVisible(true);
+				allMetadataPS.getItems().setAll(newValue.getAllMetadata());
+			}
+		});
+		allMetadataPS.setPropertyEditorFactory(item ->
+		{
+			// Call the default factory
+			PropertyEditor<?> toReturn = defaultFactory.call(item);
+			// If it returns a text field, make sure we can't edit it
+			if (toReturn.getEditor() instanceof TextField)
+				((TextField) toReturn.getEditor()).setEditable(false);
+			return toReturn;
+		});
+
 
 		// Setup the import combo-box
 
@@ -748,6 +780,17 @@ public class CalliopeImportController
 	public void resetSiteSearch(ActionEvent actionEvent)
 	{
 		this.txtSiteSearch.clear();
+		actionEvent.consume();
+	}
+
+	/**
+	 * Reveal all possible metadata for the file
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void showAllMetadata(ActionEvent actionEvent)
+	{
+
 		actionEvent.consume();
 	}
 

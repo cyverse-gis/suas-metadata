@@ -43,7 +43,12 @@
                     </VBox>
                 </Tab>
                 <Tab closable="false" text="Raw Metadata">
-                    <PropertySheet fx:id="pstMetadata"/>
+                    <VBox>
+                        <children>
+                            <PropertySheet fx:id="pstMetadata"/>
+                            <TitledPane fx:id="allMetadata" animated="true"/>
+                        </children>
+                    </VBox>
                 </Tab>
             </tabs>
         </TabPane>

@@ -20,10 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -66,11 +64,11 @@ public class ImageEntry extends ImageContainer
 	// The width and height of the image
 	private final DoubleProperty width = new SimpleDoubleProperty(-1);
 	private final DoubleProperty height = new SimpleDoubleProperty(-1);
-	// All metadata that exiftool was able to read
-	private final StringProperty allMetadata = new SimpleStringProperty(null);
 
 	// The raw metadata entries without any modifications
 	private transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
+	// All metadata that exiftool was able to read
+	private transient final List<MetadataCustomItem> allMetadata = new ArrayList<>();
 
 	// If the image entry's metadata is currently ready to be edited
 	protected transient final SimpleBooleanProperty metadataEditable = new SimpleBooleanProperty(true);
@@ -124,6 +122,15 @@ public class ImageEntry extends ImageContainer
 		// Sort the raw metadata by name for convenience
 		this.rawMetadata.sort(Comparator.comparing(CustomPropertyItem::getName));
 
+		// Decode the all-metadata string and store its contents into the allMetadata list
+		// NOTE: Since all the metadata has to be encoded as a string in order to allow it to be uploaded to CyVerse,
+		//       we choose to decode what is already present instead of making another call to ExifTool.
+		this.allMetadata.clear();
+		Map<String, String> allMetaMap = decodeAllMetadataString(imageMetadataMap.get(MetadataManager.CustomTags.ALL_METADATA_STRING));
+		for (Map.Entry<String, String> entry : allMetaMap.entrySet())
+			this.allMetadata.add(new MetadataCustomItem(entry.getKey(), entry.getValue()));
+		this.allMetadata.sort(Comparator.comparing(CustomPropertyItem::getName));
+
 		// Now we parse the raw metadata into something useful to index
 
 		// Starting with date taken, convert the raw date taken as a string into an object
@@ -156,9 +163,38 @@ public class ImageEntry extends ImageContainer
 		this.focalLength.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.FOCAL_LENGTH, "0")));
 		this.width.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_WIDTH, "0")));
 		this.height.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_HEIGHT, "0")));
+	}
 
-		// Store all the metadata as one string
-		this.allMetadata.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ALL_METADATA, UNSPECIFIED));
+	/**
+	 * Given the all-metadata string produced
+	 *
+	 */
+	protected Map<String, String> decodeAllMetadataString(String allMetadataString)
+	{
+		Map<String, String> retval = new HashMap<>();
+
+		// Don't do a split by commas, since metadata can contain commas.
+		String[] allPairs = allMetadataString.split("UnspecifiedTag");
+
+		// Form of result: {name: "TAG_NAME_HERE"}=TAG_VALUE_HERE,
+
+		int i;
+		// Skip the first result, since it's just a bracket.
+		for(i = 1; i < allPairs.length; i++)
+		{
+			String currPair = allPairs[i];
+			// Assume that no tag is going to have a key or value of "}= because that would be weird
+			String currKey = currPair.substring(currPair.indexOf('"')+1, currPair.indexOf("\"}="));
+			// TODO: Find way to make this prettier
+			String currValue;
+			if(i == allPairs.length-1)
+				currValue = currPair.substring(currPair.indexOf("\"}=")+3, currPair.lastIndexOf('}'));
+			else
+				currValue = currPair.substring(currPair.indexOf("\"}=")+3, currPair.lastIndexOf(','));
+			retval.put(currKey, currValue);
+		}
+
+		return retval;
 	}
 
 	/**
@@ -431,23 +467,6 @@ public class ImageEntry extends ImageContainer
 		return this.height;
 	}
 
-	// TODO: Is this needed? I can't think of an instance where we would want to set the metadata read to something else...
-
-	public void setAllMetadata(String allMeta)
-	{
-		this.allMetadata.setValue(allMeta);
-	}
-
-	public String getAllMetadata()
-	{
-		return this.allMetadata.getValue();
-	}
-
-	public StringProperty allMetadataProperty()
-	{
-		return this.fileType;
-	}
-
 	@Override
 	public void setSiteTaken(Site siteTaken)
 	{
@@ -467,6 +486,11 @@ public class ImageEntry extends ImageContainer
 	public List<MetadataCustomItem> getRawMetadata()
 	{
 		return rawMetadata;
+	}
+
+	public List<MetadataCustomItem> getAllMetadata()
+	{
+		return allMetadata;
 	}
 
 	public boolean isMetadataEditable()
