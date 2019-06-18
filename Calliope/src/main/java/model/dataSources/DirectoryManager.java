@@ -98,7 +98,7 @@ public class DirectoryManager
 			// Return the directory
 			return imageDirectory;
 		}
-		return null;
+		return new ImageDirectory(null);
 	}
 
 	/**
