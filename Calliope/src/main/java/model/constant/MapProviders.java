@@ -7,11 +7,13 @@ import fxmapcontrol.MapTileLayer;
  */
 public enum MapProviders
 {
-	OpenStreetMaps("Open Street Map", "https://www.openstreetmap.org/", MapTileLayer.getOpenStreetMapLayer()),
+	CartoLight("Carto Light (OSM)", "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.", new MapTileLayer("CartoLight", "https://cartodb-basemaps-{c}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png", 0, 19)),
+	CartoDark("Carto Dark (OSM)", "Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.", new MapTileLayer("CartoDark", "https://cartodb-basemaps-{c}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png", 0, 19)),
+	//OpenStreetMaps("Open Street Map", "https://www.openstreetmap.org/", MapTileLayer.getOpenStreetMapLayer()),
 	OpenTopoMap("Open Topo Map", "https://opentopomap.org/about", new MapTileLayer("OpenTopoMap", "https://{c}.tile.opentopomap.org/{z}/{x}/{y}.png", 0, 17)),
 	GoogleTerrain("Google Terrain", "https://google.com/maps/", new MapTileLayer("GoogleTerrain", "http://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}", 0, 19)),
-	GoogleSatelliteHybrid("Google Satellite Hybrid","https://google.com/maps/", new MapTileLayer("GoogleHybrid", "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", 0, 19));
-	//EsriWorldImagery("Esri World Imagery", "https://www.esri.com/en-us/home", new MapTileLayer("EsriWorldImagery", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 0, 19));
+	GoogleSatelliteHybrid("Google Satellite Hybrid","https://google.com/maps/", new MapTileLayer("GoogleHybrid", "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", 0, 19)),
+	EsriWorldImagery("Esri World Imagery", "https://www.esri.com/en-us/home", new MapTileLayer("EsriWorldImagery", "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", 0, 19));
 
 	// The user-friendly name of the provider
 	private String name;

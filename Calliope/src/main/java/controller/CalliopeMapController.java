@@ -276,11 +276,13 @@ public class CalliopeMapController
 		///
 
 		// Add the default tile layer to the background, use OpenStreetMap by default
-		this.map.addChild(MapProviders.OpenStreetMaps.getMapTileProvider(), MapLayers.TILE_PROVIDER);
+		//this.map.addChild(MapProviders.OpenStreetMaps.getMapTileProvider(), MapLayers.TILE_PROVIDER);
+		// Use carto light instead! OSM is NOT meant for heavy use.
+		this.map.addChild(MapProviders.CartoLight.getMapTileProvider(), MapLayers.TILE_PROVIDER);
 		// Setup our map provider combobox, first set the items to be an unmodifiable list of enums
 		this.cbxMapProvider.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(MapProviders.values())));
-		// Select OSM as the default map provider
-		this.cbxMapProvider.getSelectionModel().select(MapProviders.OpenStreetMaps);
+		// Select CartoLight as the default map provider
+		this.cbxMapProvider.getSelectionModel().select(MapProviders.CartoLight);
 		// When we select a new map provider, swap tile providers
 		this.cbxMapProvider.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
 		{
