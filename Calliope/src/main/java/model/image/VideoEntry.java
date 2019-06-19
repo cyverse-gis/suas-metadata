@@ -6,6 +6,7 @@ import javafx.beans.property.*;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
+import javafx.scene.media.Media;
 import model.CalliopeData;
 import model.settings.MetadataCustomItem;
 import model.site.Site;
@@ -32,16 +33,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @author David Slovikosky
  */
-public class ImageEntry extends DataContainer
+public class VideoEntry extends DataContainer
 {
 	private static final DateTimeFormatter DATE_FORMAT_FOR_DISK = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 
 	// The icon to use for all images at the moment
-	private static final Image DEFAULT_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
+	private static final Image DEFAULT_IMAGE_ICON = new Image(VideoEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
 
 	// A property to wrap the currently selected image property. Must not be static!
 	private transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
-	// The actual file 
+	// The actual file
 	private final ObjectProperty<File> imageFile = new SimpleObjectProperty<File>();
 	// The date that the image was taken
 	private final ObjectProperty<LocalDateTime> dateTaken = new SimpleObjectProperty<>();
@@ -77,12 +78,12 @@ public class ImageEntry extends DataContainer
 	private transient final AtomicBoolean gotIcon = new AtomicBoolean(false);
 
 	/**
-	 * Create a new image entry with an image file
-	 * 
+	 * Create a new video entry with a video file
+	 *
 	 * @param file
-	 *            The file (must be an image file)
+	 *            The file (must be a video file)
 	 */
-	public ImageEntry(File file)
+	public VideoEntry(File file)
 	{
 		this.imageFile.setValue(file);
 	}
@@ -90,11 +91,11 @@ public class ImageEntry extends DataContainer
 	/**
 	 * Reads the file metadata and initializes fields
 	 */
-	public void readFileMetadataFromImage()
+	public void readFileMetadataFromVideo()
 	{
 		try
 		{
-			// Read the metadata off of the image
+			// Read the metadata off of the video
 			Map<Tag, String> imageMetadataMap = CalliopeData.getInstance().getMetadataManager().readImageMetadata(this.getFile());
 			this.readFileMetadataFromMap(imageMetadataMap);
 		}
@@ -157,39 +158,14 @@ public class ImageEntry extends DataContainer
 	}
 
 	/**
-	 * Downloads the image file into a buffered image
+	 * Creates a displayable video from a local file by reading it off the disk
 	 *
-	 * @return A buffered image representing the image file
+	 * @return A video in memory representing the file on disk
 	 */
-	protected BufferedImage retrieveRawImage()
+	public Media buildIntoMedia()
 	{
-		try
-		{
-			// Read the file into an bufferedImage
-			return ImageIO.read(this.getFile());
-		}
-		catch (IOException e)
-		{
-			// If an error occurs, print it out
-			CalliopeData.getInstance().getErrorDisplay().notify("Error loading image file '" + this.getFile().getAbsolutePath() + "'\n" + ExceptionUtils.getStackTrace(e));
-		}
-		return null;
-	}
-
-	/**
-	 * Creates a displayable image from a local file by reading it off the disk
-	 *
-	 * @return An image in memory representing the file on disk
-	 */
-	public Image buildIntoImage()
-	{
-		// Read the file into an bufferedImage
-		BufferedImage bufferedImage = this.retrieveRawImage();
-		// Return null if the bufferedImage did not read properly
-		if (bufferedImage == null)
-			return null;
-		// Can't use 'new Image(file.toURI().toString())' because it doesn't support tiffs, sad day
-		return SwingFXUtils.toFXImage(bufferedImage, null);
+		File file = this.getFile();
+		return new Media(file.toURI().toString());
 	}
 
 	/**
@@ -208,35 +184,13 @@ public class ImageEntry extends DataContainer
 			@Override
 			protected Image call()
 			{
-				// Read the file into an bufferedImage
-				BufferedImage bufferedImage = ImageEntry.this.retrieveRawImage();
-				// Make sure the file was readable
-				if (bufferedImage != null)
-				{
-					// Downsize the image to icon size
-					java.awt.Image scaledInstance = bufferedImage.getScaledInstance(32, 32, BufferedImage.SCALE_REPLICATE);
-
-					// Grab the width and height of the image
-					Integer width = scaledInstance.getWidth(null);
-					Integer height = scaledInstance.getHeight(null);
-
-					// Convert the java.awt.Image to a BufferedImage, and then to a JavaFX Image
-					BufferedImage icon = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-					// Grab the graphics of the image and draw the icon to it
-					Graphics graphics = icon.getGraphics();
-					graphics.drawImage(scaledInstance, 0, 0, null);
-					graphics.dispose();
-
-					// Store the result
-					return SwingFXUtils.toFXImage(icon, null);
-				}
+				// Use ffmpeg here to get an icon?
 				return null;
 			}
 		};
 		// Once this finishes, set the icon
 		iconBuilder.setOnSucceeded(event -> this.icon.setValue(iconBuilder.getValue()));
-		// Execute the
+		// Execute the task
 		CalliopeData.getInstance().getExecutor().getBackgroundExecutor().addTask(iconBuilder);
 	}
 

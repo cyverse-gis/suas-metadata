@@ -21,7 +21,7 @@ import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.dataSources.UploadedEntry;
-import model.image.ImageContainer;
+import model.image.DataContainer;
 import model.image.ImageEntry;
 import model.threading.ErrorTask;
 import model.util.FXMLLoaderUtils;
@@ -80,7 +80,7 @@ public class CalliopeUploadController
 
 	// The tree view of uploadable images
 	@FXML
-	public TreeViewAutomatic<ImageContainer> imageTree;
+	public TreeViewAutomatic<DataContainer> imageTree;
 
 	// A list of upload tasks currently running
 	@FXML
@@ -146,7 +146,7 @@ public class CalliopeUploadController
 		// This is because a treeview must have ONE root.
 
 		// Create a fake invisible root node whos children
-		final TreeItem<ImageContainer> ROOT = new TreeItem<>(CalliopeData.getInstance().getImageTree());
+		final TreeItem<DataContainer> ROOT = new TreeItem<>(CalliopeData.getInstance().getImageTree());
 		// Hide the fake invisible root
 		this.imageTree.setShowRoot(false);
 		// Set the fake invisible root

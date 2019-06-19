@@ -10,7 +10,7 @@ import java.io.File;
 /**
  * A recursive datatype containing more image containers
  */
-public abstract class ImageContainer implements HierarchyData<ImageContainer>
+public abstract class DataContainer implements HierarchyData<DataContainer>
 {
 	// The file that this container represents. May be a directory or file
 	public abstract File getFile();
@@ -34,7 +34,7 @@ public abstract class ImageContainer implements HierarchyData<ImageContainer>
 	 * @return A list of children which makes this datatype recursive
 	 */
 	@Override
-	public ObservableList<ImageContainer> getChildren()
+	public ObservableList<DataContainer> getChildren()
 	{
 		return FXCollections.emptyObservableList();
 	}

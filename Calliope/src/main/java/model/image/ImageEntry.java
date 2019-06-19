@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @author David Slovikosky
  */
-public class ImageEntry extends ImageContainer
+public class ImageEntry extends DataContainer
 {
 	private static final DateTimeFormatter DATE_FORMAT_FOR_DISK = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 

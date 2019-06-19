@@ -6,7 +6,7 @@ import javafx.concurrent.Task;
 import javafx.scene.image.Image;
 import javafx.stage.Window;
 import model.cyverse.ImageCollection;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 
 /**
  * Interface used by any data source providing images to Calliope
@@ -21,7 +21,7 @@ public interface IDataSource
 	 * @param importWindow The window calling this method, may be locked by this method by popups if necessary
 	 * @return A task that when executed pulls the image directory from the data source or null if the data source could not be retrieved
 	 */
-	Task<ImageDirectory> makeImportTask(Window importWindow);
+	Task<DataDirectory> makeImportTask(Window importWindow);
 
 	/**
 	 * Very important method in the interface. It accepts a directory as a parameter and
@@ -31,7 +31,7 @@ public interface IDataSource
 	 * @param directoryToIndex The directory to save/index
 	 * @return A task that when executed saves the image directory to the data source and indexes its images into ES
 	 */
-	Task<Void> makeIndexTask(ImageCollection imageCollection, ImageDirectory directoryToIndex);
+	Task<Void> makeIndexTask(ImageCollection imageCollection, DataDirectory directoryToIndex);
 
 	/**
 	 * @return Getter for the user-friendly name of the data source

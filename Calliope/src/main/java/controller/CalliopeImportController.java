@@ -76,7 +76,7 @@ public class CalliopeImportController
 
 	// The tree view containing all the images and folders
 	@FXML
-	public TreeViewAutomatic<ImageContainer> imageTree;
+	public TreeViewAutomatic<DataContainer> imageTree;
 
 	// The list view containing all locations
 	@FXML
@@ -179,7 +179,7 @@ public class CalliopeImportController
 
 	// Fields to hold the currently selected image entry and image directory
 	private ObjectProperty<ImageEntry> currentlySelectedImage = new SimpleObjectProperty<>(null);
-	private ObjectProperty<ImageDirectory> currentlySelectedDirectory = new SimpleObjectProperty<>(null);
+	private ObjectProperty<DataDirectory> currentlySelectedDirectory = new SimpleObjectProperty<>(null);
 	// Use fade transitions to fade the species list in and out
 	private FadeTransition fadeLocationIn;
 	private FadeTransition fadeLocationOut;
@@ -238,7 +238,7 @@ public class CalliopeImportController
 		// This is because a treeview must have ONE root.
 
 		// Create a fake invisible root node whos children
-		final TreeItem<ImageContainer> ROOT = new TreeItem<>(CalliopeData.getInstance().getImageTree());
+		final TreeItem<DataContainer> ROOT = new TreeItem<>(CalliopeData.getInstance().getImageTree());
 		// Hide the fake invisible root
 		this.imageTree.setShowRoot(false);
 		// Set the fake invisible root
@@ -254,18 +254,18 @@ public class CalliopeImportController
 			if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.DOWN)
 			{
 				// Grab the selected tree node
-				TreeItem<ImageContainer> selectedItem = this.imageTree.getSelectionModel().getSelectedItem();
+				TreeItem<DataContainer> selectedItem = this.imageTree.getSelectionModel().getSelectedItem();
 				if (selectedItem != null)
 				{
 					// Grab the next node
-					TreeItem<ImageContainer> next = event.getCode() == KeyCode.UP ? selectedItem.previousSibling() : selectedItem.nextSibling();
+					TreeItem<DataContainer> next = event.getCode() == KeyCode.UP ? selectedItem.previousSibling() : selectedItem.nextSibling();
 					// Make sure the next node has a value
 					if (next != null && next.getValue() != null)
 					{
 						// Grab the next tree entries image container
-						ImageContainer value = next.getValue();
+						DataContainer value = next.getValue();
 						// If the image container is a directory being uploaded consome the key press
-						if (value instanceof ImageDirectory && ((ImageDirectory) value).getUploadProgress() != -1)
+						if (value instanceof DataDirectory && ((DataDirectory) value).getUploadProgress() != -1)
 						{
 							event.consume();
 						}
@@ -275,12 +275,12 @@ public class CalliopeImportController
 		});
 
 		// When a new image is selected... we perform a bunch of actions below
-		MonadicBinding<ImageContainer> selectedImage = EasyBind.monadic(this.imageTree.getSelectionModel().selectedItemProperty()).map(TreeItem::getValue);
+		MonadicBinding<DataContainer> selectedImage = EasyBind.monadic(this.imageTree.getSelectionModel().selectedItemProperty()).map(TreeItem::getValue);
 		// Clear the preview pane if there is a preview'd image
 		selectedImage.addListener((observable, oldValue, newValue) -> this.speciesPreviewImage.setValue(null));
 		// Update the currently selected image and directory
 		currentlySelectedImage.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageEntry) ? (ImageEntry) imageContainer : null));
-		currentlySelectedDirectory.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageDirectory) ? (ImageDirectory) imageContainer : null));
+		currentlySelectedDirectory.bind(selectedImage.map(imageContainer -> (imageContainer instanceof DataDirectory) ? (DataDirectory) imageContainer : null));
 
 		// Hide the delete button when nothing is selected
 		this.btnDelete.disableProperty().bind(this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1));
@@ -495,7 +495,7 @@ public class CalliopeImportController
 			if (newValue != null)
 			{
 				// Create the import task from the enum
-				Task<ImageDirectory> importTask = newValue.makeImportTask(this.imageTree.getScene().getWindow());
+				Task<DataDirectory> importTask = newValue.makeImportTask(this.imageTree.getScene().getWindow());
 				// Make sure the task is not null
 				if (importTask != null)
 				{
@@ -523,7 +523,7 @@ public class CalliopeImportController
 			}
 		});
 
-		cache(EasyBind.monadic(this.currentlySelectedDirectory).selectProperty(ImageDirectory::uploadProgressProperty)).addListener((observable, oldValue, newValue) ->
+		cache(EasyBind.monadic(this.currentlySelectedDirectory).selectProperty(DataDirectory::uploadProgressProperty)).addListener((observable, oldValue, newValue) ->
 		{
 			if (newValue != null && newValue.doubleValue() != -1.0)
 				Platform.runLater(() -> this.imageTree.getSelectionModel().clearSelection());
@@ -603,7 +603,7 @@ public class CalliopeImportController
 	public void deleteImages(ActionEvent actionEvent)
 	{
 		// Grab the selected item
-		TreeItem<ImageContainer> item = this.imageTree.getSelectionModel().getSelectedItem();
+		TreeItem<DataContainer> item = this.imageTree.getSelectionModel().getSelectedItem();
 		// Remove that item from the image tree
 		CalliopeData.getInstance().getImageTree().removeChildRecursive(item.getValue());
 		// Make sure to clear the selection in the tree. This ensures that our left & right arrows will properly hide themselves if no more directories are present

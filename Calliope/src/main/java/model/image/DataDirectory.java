@@ -19,14 +19,14 @@ import java.util.stream.Stream;
  * 
  * @author David Slovikosky
  */
-public class ImageDirectory extends ImageContainer
+public class DataDirectory extends DataContainer
 {
 	// The icon to use for all images at the moment
 	private static final Image DEFAULT_DIR_IMAGE = new Image(ImageEntry.class.getResource("/images/importWindow/directoryIcon.png").toString());
 	// The icon that is currently selected to be displayed
 	private final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_DIR_IMAGE);
 	// List of sub-files and directories
-	private final ObservableList<ImageContainer> children = FXCollections.observableArrayList(imageContainer ->
+	private final ObservableList<DataContainer> children = FXCollections.observableArrayList(imageContainer ->
 	{
 		if (imageContainer instanceof ImageEntry)
 		{
@@ -43,9 +43,9 @@ public class ImageDirectory extends ImageContainer
 				image.rotationProperty()
 			};
 		}
-		else if (imageContainer instanceof ImageDirectory)
+		else if (imageContainer instanceof DataDirectory)
 		{
-			ImageDirectory directory = (ImageDirectory) imageContainer;
+			DataDirectory directory = (DataDirectory) imageContainer;
 			return new Observable[]
 			{
 				directory.getFileProperty(),
@@ -69,7 +69,7 @@ public class ImageDirectory extends ImageContainer
 	 * @param directory
 	 *            The file that represents the directoryProperty
 	 */
-	public ImageDirectory(File directory)
+	public DataDirectory(File directory)
 	{
 		if (directory != null)
 		{
@@ -96,7 +96,7 @@ public class ImageDirectory extends ImageContainer
 	 * @return List of sub images and directories
 	 */
 	@Override
-	public ObservableList<ImageContainer> getChildren()
+	public ObservableList<DataContainer> getChildren()
 	{
 		return this.children;
 	}
@@ -106,19 +106,19 @@ public class ImageDirectory extends ImageContainer
 	 *
 	 * @return A flat list of all image directories and image entries found in the recursive data structure
 	 */
-	public Stream<ImageContainer> flattened()
+	public Stream<DataContainer> flattened()
 	{
 		return Stream.concat(
 			Stream.of(this),
 			Stream.concat(
 				this.getChildren()
 					.stream()
-					.filter(child -> !(child instanceof ImageDirectory)),
+					.filter(child -> !(child instanceof DataDirectory)),
 				this.getChildren()
 					.stream()
-					.filter(child -> child instanceof ImageDirectory)
-					.map(child -> (ImageDirectory) child)
-					.flatMap(ImageDirectory::flattened)));
+					.filter(child -> child instanceof DataDirectory)
+					.map(child -> (DataDirectory) child)
+					.flatMap(DataDirectory::flattened)));
 	}
 
 	/**
@@ -126,7 +126,7 @@ public class ImageDirectory extends ImageContainer
 	 *
 	 * @param container The container to add
 	 */
-	public void addChild(ImageContainer container)
+	public void addChild(DataContainer container)
 	{
 		this.children.add(container);
 	}
@@ -137,14 +137,14 @@ public class ImageDirectory extends ImageContainer
 	 * @param container The container to remove
 	 * @return True if the removal was successful
 	 */
-	public Boolean removeChildRecursive(ImageContainer container)
+	public Boolean removeChildRecursive(DataContainer container)
 	{
 		// If the children list successfully removes the item we return
 		if (this.children.remove(container))
 			return true;
 
-		for (ImageContainer containerInList : this.children)
-			if (containerInList instanceof ImageDirectory && ((ImageDirectory) containerInList).removeChildRecursive(container))
+		for (DataContainer containerInList : this.children)
+			if (containerInList instanceof DataDirectory && ((DataDirectory) containerInList).removeChildRecursive(container))
 				return true;
 		return false;
 	}
@@ -209,7 +209,7 @@ public class ImageDirectory extends ImageContainer
 		this.getChildren().forEach(child ->
 		{
 			// If our child is a currently uploading image directory we don't want to modify it, so ignore it
-			if (child instanceof ImageDirectory && ((ImageDirectory) child).getUploadProgress() != -1)
+			if (child instanceof DataDirectory && ((DataDirectory) child).getUploadProgress() != -1)
 				return;
 			child.setSiteTaken(site);
 		});
@@ -225,9 +225,9 @@ public class ImageDirectory extends ImageContainer
 		// Set the data source value
 		this.dataSource.setValue(dataSource);
 		// For each child, if it's a directory set its data source too
-		for (ImageContainer containerInList : this.children)
-			if (containerInList instanceof ImageDirectory)
-				((ImageDirectory) containerInList).setDataSource(dataSource);
+		for (DataContainer containerInList : this.children)
+			if (containerInList instanceof DataDirectory)
+				((DataDirectory) containerInList).setDataSource(dataSource);
 	}
 
 	/**

@@ -1,16 +1,14 @@
 package model.cyverse;
 
-import controller.Calliope;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
 import model.dataSources.UploadedEntry;
-import model.dataSources.cyverseDataStore.CyVerseDSImageDirectory;
+import model.dataSources.cyverseDataStore.CyVerseDSDataDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.util.AnalysisUtils;
 import org.apache.commons.io.FileUtils;
@@ -39,13 +37,8 @@ import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.Authenticator;
-import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -340,7 +333,7 @@ public class CyVerseConnectionManager
 	 * @param transferCallback The callback that will receive callbacks if the transfer is in progress
 	 * @param messageCallback Optional message callback that will show what is currently going on
 	 */
-	public void uploadAndIndexImages(ImageCollection collection, ImageDirectory directoryToWrite, TransferStatusCallbackListener transferCallback, StringProperty messageCallback)
+	public void uploadAndIndexImages(ImageCollection collection, DataDirectory directoryToWrite, TransferStatusCallbackListener transferCallback, StringProperty messageCallback)
 	{
 		if (this.sessionManager.openSession())
 		{
@@ -499,7 +492,7 @@ public class CyVerseConnectionManager
 	 * @param absolutePathToFiles The absolute path to the files to index
 	 * @return An image directory representing the CyVerse datastore absolute path
 	 */
-	public CyVerseDSImageDirectory prepareExistingImagesForIndexing(String absolutePathToFiles)
+	public CyVerseDSDataDirectory prepareExistingImagesForIndexing(String absolutePathToFiles)
 	{
 		// Open a session as usual
 		if (this.sessionManager.openSession())
@@ -514,7 +507,7 @@ public class CyVerseConnectionManager
 				if (topLevelDirectory.exists() && topLevelDirectory.canRead() && topLevelDirectory.isDirectory())
 				{
 					// Create a new CyVerse datastore image directory representing the image
-					CyVerseDSImageDirectory imageDirectory = new CyVerseDSImageDirectory(topLevelDirectory);
+					CyVerseDSDataDirectory imageDirectory = new CyVerseDSDataDirectory(topLevelDirectory);
 					// Download the image directory for editing using a recursive call
 					this.createDirectoryAndImageTree(imageDirectory);
 					// Return the directory
@@ -540,7 +533,7 @@ public class CyVerseConnectionManager
 	 *
 	 * @param currentDirectory The directory to recursively add sub-directories and images to
 	 */
-	private void createDirectoryAndImageTree(CyVerseDSImageDirectory currentDirectory)
+	private void createDirectoryAndImageTree(CyVerseDSDataDirectory currentDirectory)
 	{
 		// Get all directory sub-files
 		IRODSFileImpl[] subFiles = (IRODSFileImpl[]) currentDirectory.getCyverseFile().listFiles();
@@ -563,7 +556,7 @@ public class CyVerseConnectionManager
 				else
 				{
 					// Grab the sub-directory
-					CyVerseDSImageDirectory subDirectory = new CyVerseDSImageDirectory(file);
+					CyVerseDSDataDirectory subDirectory = new CyVerseDSDataDirectory(file);
 					// Store the sub-directory
 					currentDirectory.addChild(subDirectory);
 					// Recursively read the sub-directory

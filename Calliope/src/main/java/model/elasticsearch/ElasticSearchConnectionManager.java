@@ -7,7 +7,7 @@ import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.dataSources.UploadedEntry;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.image.Position;
 import model.image.Vector3;
@@ -18,7 +18,6 @@ import model.site.Site;
 import model.site.ltar.LTARSite;
 import model.site.neon.NEONSite;
 import model.site.usfs.USFSSite;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -28,7 +27,6 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.controlsfx.control.WorldMapView;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -1142,7 +1140,7 @@ public class ElasticSearchConnectionManager
 	 * @param absolutePathCreator A function that accepts an image file as input and returns the absolute path (on the storage medium) of the image file as output
 	 */
 	@SuppressWarnings("unchecked")
-	public void indexImages(ImageDirectory directory, UploadedEntry uploadEntry, String collectionID, Function<ImageEntry, String> absolutePathCreator)
+	public void indexImages(DataDirectory directory, UploadedEntry uploadEntry, String collectionID, Function<ImageEntry, String> absolutePathCreator)
 	{
 		// List of images to be uploaded
 		List<ImageEntry> imageEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());

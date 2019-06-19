@@ -2,8 +2,8 @@ package model.dataSources;
 
 import javafx.beans.property.DoubleProperty;
 import model.CalliopeData;
-import model.image.ImageContainer;
-import model.image.ImageDirectory;
+import model.image.DataContainer;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.util.AnalysisUtils;
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -29,20 +29,20 @@ public class DirectoryManager
 	 *
 	 * @param directory The directory to remove empty sub-directories from
 	 */
-	public static void removeEmptyDirectories(ImageContainer directory)
+	public static void removeEmptyDirectories(DataContainer directory)
 	{
 		// Go through each child
 		for (int i = 0; i < directory.getChildren().size(); i++)
 		{
 			// Grab the current image container
-			ImageContainer imageContainer = directory.getChildren().get(i);
+			DataContainer dataContainer = directory.getChildren().get(i);
 			// If the container is a directory, check if it's empty
-			if (imageContainer instanceof ImageDirectory)
+			if (dataContainer instanceof DataDirectory)
 			{
 				// Remove empty directories from this directory
-				DirectoryManager.removeEmptyDirectories(imageContainer);
+				DirectoryManager.removeEmptyDirectories(dataContainer);
 				// If it's empty, remove this directory and reduce I since we don't want to get an index out of bounds exception
-				if (imageContainer.getChildren().isEmpty())
+				if (dataContainer.getChildren().isEmpty())
 				{
 					directory.getChildren().remove(i);
 					i--;
@@ -54,13 +54,13 @@ public class DirectoryManager
 	/**
 	 * Initializes all images in a directory, we do this so we can get a progress bar
 	 *
-	 * @param imageDirectory The directory containing images that need initializing
+	 * @param dataDirectory The directory containing images that need initializing
 	 * @param progressProperty How many images we've parsed so far
 	 */
-	public static void initImages(ImageDirectory imageDirectory, DoubleProperty progressProperty)
+	public static void initImages(DataDirectory dataDirectory, DoubleProperty progressProperty)
 	{
 		// List of images to init
-		List<ImageEntry> imageEntries = imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+		List<ImageEntry> imageEntries = dataDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
 		// The total number of images in the list
 		Integer imageCount = imageEntries.size();
 		for (Integer i = 0; i < imageCount; i++)
@@ -79,7 +79,7 @@ public class DirectoryManager
 	 * @param files
 	 *            The files to make into a directory. We assume all files are in the same directory
 	 */
-	public static ImageDirectory loadFiles(List<File> files)
+	public static DataDirectory loadFiles(List<File> files)
 	{
 		// Map our input to a list of images only
 		List<File> validImages = files.stream().filter(AnalysisUtils::fileIsImage).collect(Collectors.toList());
@@ -87,16 +87,16 @@ public class DirectoryManager
 		if (!validImages.isEmpty())
 		{
 			// All files are in the same directory, so grab the first file's parent directory
-			ImageDirectory imageDirectory = new ImageDirectory(files.get(0).getParentFile());
+			DataDirectory dataDirectory = new DataDirectory(files.get(0).getParentFile());
 			// Iterate over the images
 			for (File validImage : validImages)
 			{
 				// Load the image file and metadata and add it to the directory
 				ImageEntry imageEntry = new ImageEntry(validImage);
-				imageDirectory.addChild(imageEntry);
+				dataDirectory.addChild(imageEntry);
 			}
 			// Return the directory
-			return imageDirectory;
+			return dataDirectory;
 		}
 		return null;
 	}
@@ -107,20 +107,20 @@ public class DirectoryManager
 	 * @param imageOrLocation
 	 *            The file to make into a directory
 	 */
-	public static ImageDirectory loadDirectory(File imageOrLocation)
+	public static DataDirectory loadDirectory(File imageOrLocation)
 	{
-		ImageDirectory toReturn;
+		DataDirectory toReturn;
 		if (!imageOrLocation.isDirectory())
 		{
 			// If it's not a directory, then just add the image
-			toReturn = new ImageDirectory(imageOrLocation.getParentFile());
+			toReturn = new DataDirectory(imageOrLocation.getParentFile());
 			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
 			toReturn.addChild(imageEntry);
 		}
 		else
 		{
 			// If it is a directory, recursively create it
-			toReturn = new ImageDirectory(imageOrLocation);
+			toReturn = new DataDirectory(imageOrLocation);
 			DirectoryManager.createDirectoryAndImageTree(toReturn);
 		}
 		return toReturn;
@@ -132,7 +132,7 @@ public class DirectoryManager
 	 * @param current
 	 *            The current directory to work on
 	 */
-	private static void createDirectoryAndImageTree(ImageDirectory current)
+	private static void createDirectoryAndImageTree(DataDirectory current)
 	{
 		File[] subFiles = current.getFile().listFiles();
 
@@ -150,7 +150,7 @@ public class DirectoryManager
 				// Add all subdirectories to the directory
 				else if (file.isDirectory())
 				{
-					ImageDirectory subDirectory = new ImageDirectory(file);
+					DataDirectory subDirectory = new DataDirectory(file);
 					current.addChild(subDirectory);
 					DirectoryManager.createDirectoryAndImageTree(subDirectory);
 				}
@@ -164,7 +164,7 @@ public class DirectoryManager
 	 * @param directory The image directory to TAR
 	 * @return The TAR file
 	 */
-	public static File[] directoryToTars(ImageDirectory directory, Integer maxImagesPerTar)
+	public static File[] directoryToTars(DataDirectory directory, Integer maxImagesPerTar)
 	{
 		maxImagesPerTar = maxImagesPerTar - 1;
 		try

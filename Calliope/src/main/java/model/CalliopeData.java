@@ -18,7 +18,7 @@ import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.elasticsearch.ElasticSearchConnectionManager;
 import model.elasticsearch.query.QueryEngine;
 import model.elevationAPI.ElevationData;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.MetadataManager;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
@@ -58,7 +58,7 @@ public class CalliopeData
 	private final ObservableList<ImageCollection> collectionList;
 
 	// A base directory to which we add all extra directories
-	private final ImageDirectory imageTree;
+	private final DataDirectory imageTree;
 
 	// A username property which we can bind to in the rest of the program
 	private StringProperty usernameProperty;
@@ -158,7 +158,7 @@ public class CalliopeData
 		this.collectionList = FXCollections.synchronizedObservableList(FXCollections.observableArrayList(collection -> new Observable[]{collection.nameProperty(), collection.getPermissions(), collection.organizationProperty(), collection.contactInfoProperty(), collection.descriptionProperty(), collection.idProperty() }));
 
 		// The tree just starts in the current directory which is a dummy directory
-		this.imageTree = new ImageDirectory(new File("./"));
+		this.imageTree = new DataDirectory(new File("./"));
 
 		// When the settings change, we sync them
 		this.setupAutoSettingsSync();
@@ -213,7 +213,7 @@ public class CalliopeData
 	/**
 	 * @return The root of the data tree
 	 */
-	public ImageDirectory getImageTree()
+	public DataDirectory getImageTree()
 	{
 		return imageTree;
 	}

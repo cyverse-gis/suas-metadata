@@ -11,8 +11,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
-import model.image.ImageContainer;
-import model.image.ImageDirectory;
+import model.image.DataContainer;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.site.Site;
 
@@ -23,7 +23,7 @@ import static model.constant.CalliopeDataFormats.SITE_CODE_FORMAT;
 /**
  * Controller class for the image tree cells
  */
-public class ImageTreeCellController extends TreeCell<ImageContainer>
+public class ImageTreeCellController extends TreeCell<DataContainer>
 {
 	///
 	/// FXML Bound Fields start
@@ -87,12 +87,12 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	 * @param empty If the item is empty
 	 */
 	@Override
-	protected void updateItem(ImageContainer item, boolean empty)
+	protected void updateItem(DataContainer item, boolean empty)
 	{
 		// Remove the previous listener if there was one
-		if (this.getItem() instanceof ImageDirectory)
+		if (this.getItem() instanceof DataDirectory)
 		{
-			((ImageDirectory) this.getItem()).uploadProgressProperty().removeListener(expandedListener);
+			((DataDirectory) this.getItem()).uploadProgressProperty().removeListener(expandedListener);
 			this.disableProperty().unbind();
 			this.setDisable(false);
 		}
@@ -117,11 +117,11 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 			this.lblText.setText(item.toString());
 
 			// If the item is a directory, we disable the node if it is being uploaded
-			if (item instanceof ImageDirectory)
+			if (item instanceof DataDirectory)
 			{
-				ImageDirectory imageDirectory = (ImageDirectory) item;
-				this.disableProperty().bind(imageDirectory.uploadProgressProperty().isNotEqualTo(-1));
-				imageDirectory.uploadProgressProperty().addListener(expandedListener);
+				DataDirectory dataDirectory = (DataDirectory) item;
+				this.disableProperty().bind(dataDirectory.uploadProgressProperty().isNotEqualTo(-1));
+				dataDirectory.uploadProgressProperty().addListener(expandedListener);
 			}
 			else if (item instanceof ImageEntry)
 				((ImageEntry) item).buildAndStoreIcon();
@@ -140,7 +140,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
+		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof DataDirectory))
 			dragEvent.acceptTransferModes(TransferMode.COPY);
 		dragEvent.consume();
 	}
@@ -154,7 +154,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
+		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof DataDirectory))
 			if (!this.mainPane.getStyleClass().contains("draggedOver"))
 				this.mainPane.getStyleClass().add("draggedOver");
 		dragEvent.consume();
@@ -169,7 +169,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the species or location view and the dragboard has a string we play the fade animation and consume the event
-		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof ImageDirectory))
+		if (dragboard.hasContent(SITE_CODE_FORMAT) && (this.getItem() instanceof ImageEntry || this.getItem() instanceof DataDirectory))
 			this.mainPane.getStyleClass().remove("draggedOver");
 		dragEvent.consume();
 	}
