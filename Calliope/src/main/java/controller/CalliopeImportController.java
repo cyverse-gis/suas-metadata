@@ -16,16 +16,15 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -457,6 +456,7 @@ public class CalliopeImportController
 
 		// Setup the metadata property sheet
 
+		this.pstMetadata.setMinHeight(275); // Prevent allMetadata from encroaching on too much space
 		// When we click a new image then load new metadata
 		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> {
 			if (newValue != null)
@@ -472,20 +472,24 @@ public class CalliopeImportController
 			// If it returns a text field, make sure we can't edit it
 			if (toReturn.getEditor() instanceof TextField)
 				((TextField) toReturn.getEditor()).setEditable(false);
-			// If this is the all-metadata tag, hide it so the user doesn't have to look at it.
+			// If this is the all-metadata tag, remove it so the user doesn't have to look at it.
 			if (item.getName().compareTo("AllMetadataString") == 0)
-				((TextField) toReturn.getEditor()).setVisible(false);
+				this.pstMetadata.getItems().remove(item);
 			return toReturn;
 		});
 
-		// Setup the all-metadata Accordion/TitledPane
+		// Setup the all-metadata TitledPane
 
 		this.allMetadata.setText("All Metadata");
-		this.allMetadata.setVisible(false);
+		this.allMetadata.setAlignment(Pos.BOTTOM_CENTER); // Put right below pstMetadata
+		this.allMetadata.setTextAlignment(TextAlignment.LEFT); // Make text alignment of pstMetadata
+		this.allMetadata.setVisible(false); // Invisible on load
+		this.allMetadata.setExpanded(false); // Starts compressed
+		// PropertySheet to store the all-Metadata text boxes
 		PropertySheet allMetadataPS = new PropertySheet();
-		allMetadataPS.setModeSwitcherVisible(false);
+		allMetadataPS.setModeSwitcherVisible(false); // Can't switch to titledpane-view within propertysheet
 		this.allMetadata.setContent(allMetadataPS);
-		// When we click a new image then load new metadata
+		// Copied from pstMetadata above
 		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) {
 				this.allMetadata.setVisible(true);
