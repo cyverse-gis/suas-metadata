@@ -172,25 +172,24 @@ public class ImageEntry extends ImageContainer
 	protected Map<String, String> decodeAllMetadataString(String allMetadataString)
 	{
 		Map<String, String> retval = new HashMap<>();
-
 		// Don't do a split by commas, since metadata can contain commas.
-		String[] allPairs = allMetadataString.split("UnspecifiedTag");
+		// Add space at front to prevent needing to:
+		//  - Skip the first element
+		//  - Add a special check for the last element
+		String[] allPairs = allMetadataString.split(" UnspecifiedTag");
 
 		// Form of result: {name: "TAG_NAME_HERE"}=TAG_VALUE_HERE,
 
 		int i;
 		// Skip the first result, since it's just a bracket.
-		for(i = 1; i < allPairs.length; i++)
+		for(i = 0; i < allPairs.length; i++)
 		{
 			String currPair = allPairs[i];
-			// Assume that no tag is going to have a key or value of "}= because that would be weird
+			// Assume that no tag is going to have a key or value of "}=
 			String currKey = currPair.substring(currPair.indexOf('"')+1, currPair.indexOf("\"}="));
-			// TODO: Find way to make this prettier
-			String currValue;
-			if(i == allPairs.length-1)
-				currValue = currPair.substring(currPair.indexOf("\"}=")+3, currPair.lastIndexOf('}'));
-			else
-				currValue = currPair.substring(currPair.indexOf("\"}=")+3, currPair.lastIndexOf(','));
+			String currValue = currPair.substring(currPair.indexOf("\"}=")+3, currPair.length()-1);
+			if(currValue.compareTo("") == 0)
+				currValue = "Unspecified";
 			retval.put(currKey, currValue);
 		}
 
