@@ -206,9 +206,8 @@ public class MetadataManager
 		Tag allMeta = CustomTags.ALL_METADATA_STRING;
 		String allData = this.exifTool.getImageMeta(imageFile).toString();
 
-		// Create a modifiable copy of what exifTool returned, and add a string containing all the metadata to it.
-		// TODO: Better choice than Hashtable?
-		Map<Tag, String> retval = new Hashtable<>();
+		// Create a modifiable copy of what exifTool returned, and add a string containing all the metadata to it
+		Map<Tag, String> retval = new HashMap<>();
 		retval.putAll(unmodifiableMap);
 		retval.put(allMeta, allData);
 
