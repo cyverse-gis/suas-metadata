@@ -75,15 +75,14 @@ public class MetadataManager
 	 */
 	public enum CustomTags implements Tag
 	{
+		ALL_METADATA_STRING("AllMetadataString", Type.STRING),
 		PITCH("Pitch", Type.DOUBLE),
 		ROLL("Roll", Type.DOUBLE),
 		YAW("Yaw", Type.DOUBLE),
 		SPEED_X("SpeedX", Type.DOUBLE),
 		SPEED_Y("SpeedY", Type.DOUBLE),
 		SPEED_Z("SpeedZ", Type.DOUBLE),
-		CAMERA_MODEL_NAME("Model", Type.STRING),
-		ALL_METADATA_STRING("AllMetadataString", Type.STRING);
-
+		CAMERA_MODEL_NAME("Model", Type.STRING);
 
 		/**
 		 * Used to get the name of the tag (e.g. "Orientation", "ISO", etc.).
@@ -189,7 +188,7 @@ public class MetadataManager
 	 * Function used to read a file's metadata
 	 *
 	 * @param imageFile The file to read
-	 * @return The image's metadata as a map
+	 * @return The image's metadata as a modifiable map
 	 * @throws IOException If the image cannot be read, throw an exception
 	 */
 	public Map<Tag, String> readImageMetadata(File imageFile) throws IOException
@@ -197,14 +196,14 @@ public class MetadataManager
 		// This is a list of our standard tags
 		List<Tag> tags = new ArrayList<>(Arrays.asList(StandardTag.values()));
 		// Add our custom tags
-		tags.addAll(Arrays.asList(CustomTags.values()));
+		List<Tag> custTags = Arrays.asList(CustomTags.values());
 		// Ask exiftool to get our image's metadata
 		// The map returned by this call is unmodifiable. Dunno why.
 		Map<Tag, String> unmodifiableMap = this.exifTool.getImageMeta(imageFile, tags);
 
 		// Add a special tag to retval which contains all metadata found in the image.
 		Tag allMeta = CustomTags.ALL_METADATA_STRING;
-		String allData = this.exifTool.getImageMeta(imageFile).toString();
+		String allData = readAllMetadata(imageFile).toString();
 
 		// Create a modifiable copy of what exifTool returned, and add a string containing all the metadata to it
 		Map<Tag, String> retval = new HashMap<>();
@@ -213,7 +212,44 @@ public class MetadataManager
 
 		return retval;
 	}
-	// Don't create a separate function for getting all the metadata, since there's no place it could be used effectively.
+
+	/**
+	 * A helper function for readImageMetadata.
+	 * Reads all possible metadata in the given file.
+	 * Of note, it also finds all fields that ExifTool found in binary, and replaces them.
+	 * The rationale behind this is that a user on Cyverse wouldn't have the context to understand the message,
+	 *   which mentions passing an argument of "-b" to ExifTool.
+	 *
+	 * @param imageFile The file being read
+	 * @return All the image's metadata as a modifiable map, with explanation for binary fields
+	 * @throws IOException
+	 */
+	private Map<Tag, String> readAllMetadata(File imageFile) throws IOException
+	{
+		// Read all the metadata, like normal.
+		Map<Tag, String> allMeta = this.exifTool.getImageMeta(imageFile);
+		// Make a modifiable copy of all the metadata
+		Map<Tag, String> retval = new HashMap<>();
+		retval.putAll(allMeta);
+
+		List<Tag> binaryTags = new ArrayList<Tag>();
+		Set<Tag> tags = retval.keySet();
+		// Iterate through the tags and find the ones with binary message
+		for(Tag t : tags) {
+			if(retval.get(t).contains("use -b option to extract"))
+				binaryTags.add(t);
+		}
+
+		// If we found tags with binary values, replace ExifTool's message
+		if(!binaryTags.isEmpty()) {
+			for(Tag t : binaryTags) {
+				String bits = retval.get(t).substring(13, retval.get(t).indexOf(" bytes,"));
+				retval.put(t, "[" + bits + " bit binary Value]");
+			}
+		}
+
+		return retval;
+	}
 
 	/**
 	 * @return True if exiftool is found, or false otherwise
