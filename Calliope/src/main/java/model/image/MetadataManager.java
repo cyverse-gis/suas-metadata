@@ -216,8 +216,9 @@ public class MetadataManager
 	/**
 	 * A helper function for readImageMetadata.
 	 * Reads all possible metadata in the given file.
-	 * Of note, it also finds all fields that ExifTool found in binary, and replaces them.
-	 * The rationale behind this is that a user on Cyverse wouldn't have the context to understand the message,
+	 * Of note, it also finds all fields that ExifTool found in binary, and replaces ExifTool's message with
+	 *   a different one which still mentions how many bits the binary value had.
+	 * The rationale behind this is that a Calliope user wouldn't have the context to understand the message,
 	 *   which mentions passing an argument of "-b" to ExifTool.
 	 *
 	 * @param imageFile The file being read
