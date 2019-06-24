@@ -245,7 +245,7 @@ public class MetadataManager
 		if(!binaryTags.isEmpty()) {
 			for(Tag t : binaryTags) {
 				String bits = retval.get(t).substring(13, retval.get(t).indexOf(" bytes,"));
-				retval.put(t, "[" + bits + " bit binary Value]");
+				retval.put(t, "[" + bits + " bit binary value]");
 			}
 		}
 
