@@ -6,7 +6,6 @@ import controller.mapView.MapCircleController;
 import controller.mapView.MapLayers;
 import fxmapcontrol.*;
 import javafx.animation.*;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -17,7 +16,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventType;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
@@ -38,7 +37,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
-import javafx.util.Pair;
 import javafx.util.StringConverter;
 import library.AlignedMapNode;
 import library.DragResizer;
@@ -78,8 +76,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -220,23 +217,23 @@ public class CalliopeMapController
 	private static final Image HIGHLIGHTED_ARROW = new Image("/images/analysisWindow/arrowDividerSelected.png");
 
 	// A list of current pins on the map displaying circles with an image amount inside
-	private List<MapNode> currentCircles = new ArrayList<>();
+	private final List<MapNode> currentCircles = new ArrayList<>();
 	// A parallel list of controllers to that list of pins
-	private List<MapCircleController> currentCircleControllers = new ArrayList<>();
+	private final List<MapCircleController> currentCircleControllers = new ArrayList<>();
 	// The zoom threshold where we start to render polygons instead of pins
 	private static final Double PIN_TO_POLY_THRESHOLD = 10D;
 
 	// Flag telling us if the query box is currently expanded or contracted
 	private Boolean expandedQuery = false;
 	// The currently 'in-use' query used to filter showing images on the map
-	private ObjectProperty<QueryBuilder> currentQuery = new SimpleObjectProperty<>(QueryBuilders.matchAllQuery());
+	private final ObjectProperty<QueryBuilder> currentQuery = new SimpleObjectProperty<>(QueryBuilders.matchAllQuery());
 
 	// Two transitions used to fade the query tab in and out
 	private Transition fadeQueryIn;
 	private Transition fadeQueryOut;
 
 	// The currently selected circle
-	private ObjectProperty<MapCircleController> selectedCircle = new SimpleObjectProperty<>();
+	private final ObjectProperty<MapCircleController> selectedCircle = new SimpleObjectProperty<>();
 
 	// Mapping of site codes to map objects
 	private Map<String, MapPolygon> codesToPoly;
@@ -343,7 +340,7 @@ public class CalliopeMapController
 					Location topLeft = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
 					Location bottomRight = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
-					Long time = System.currentTimeMillis();
+					long time = System.currentTimeMillis();
 					List<String> temp = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
 							MathUtil.clamp(topLeft.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(topLeft.getLongitude(), -180.0, 180.0),
@@ -434,7 +431,7 @@ public class CalliopeMapController
 			if (currentCircles.size() == geoBuckets.size())
 			{
 				// Iterate over all pins on the map, we're going to update all of their positions and labels
-				for (Integer i = 0; i < currentCircles.size(); i++)
+				for (int i = 0; i < currentCircles.size(); i++)
 				{
 					// Grab the bucket for that pin
 					GeoBucket geoBucket = geoBuckets.get(i);
@@ -760,10 +757,10 @@ public class CalliopeMapController
 		});
 
 		CalliopeData.getInstance().getSiteManager().getRetrievalDone().addListener((observable, oldValue, newValue) -> {
-			if (newValue.booleanValue()) {
-				Task cacheCodes = new Task() {
+			if (newValue) {
+				Task<Boolean> cacheCodes = new Task<Boolean>() {
 					@Override
-					protected Object call() {
+					protected Boolean call() {
 						codesToPoly = new HashMap<>();
 						codesToPin = new HashMap<>();
 						this.updateMessage("Caching Map Sites");
@@ -802,7 +799,7 @@ public class CalliopeMapController
 								mapPolygon.setCache(true);
 								mapPolygon.setCacheHint(CacheHint.SPEED);
 								// Pass events through to the map so you can drag and drop through the polygon
-								mapPolygon.addEventHandler(MouseEvent.ANY, event -> javafx.event.Event.fireEvent(map, event));
+								mapPolygon.addEventHandler(MouseEvent.ANY, event -> Event.fireEvent(map, event));
 
 								// CREATE PIN
 
@@ -842,7 +839,7 @@ public class CalliopeMapController
 							}
 						}
 						this.updateProgress(1.0, 1.0);
-						return null;
+						return true;
 					}
 				};
 				CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(cacheCodes, true);
