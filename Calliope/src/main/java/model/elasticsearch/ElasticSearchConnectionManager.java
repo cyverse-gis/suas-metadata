@@ -556,8 +556,8 @@ public class ElasticSearchConnectionManager
 				.types(INDEX_CALLIOPE_SITES_TYPE)
 				.scroll(scroll)
 				.source(new SearchSourceBuilder()
-						// Fetch results 5000 at a time, and use a query that matches everything
-						.size(5000)
+						// Fetch results 1000 at a time, and use a query that matches everything
+						.size(1000)
 						.fetchSource(true)
 						.query(QueryBuilders.matchAllQuery()));
 
@@ -644,7 +644,7 @@ public class ElasticSearchConnectionManager
 					}
 				}
 
-				// Now that we've processed this wave of results, get the next 10 results
+				// Now that we've processed this wave of results, get the next 1000 results
 				SearchScrollRequest scrollRequest = new SearchScrollRequest();
 				// Setup the scroll request
 				scrollRequest
@@ -1464,8 +1464,8 @@ public class ElasticSearchConnectionManager
 					.types(INDEX_CALLIOPE_SITES_TYPE)
 					.scroll(scroll)
 					.source(new SearchSourceBuilder()
-							// Fetch results 5000 at a time, and use a query that matches everything
-							.size(5000)
+							// Fetch results 1000 at a time, and use a query that matches everything
+							.size(1000)
 							.fetchSource(new FetchSourceContext(true, new String[] { "code" }, null))
 							// We use a geo-intersection query that tests if our viewport intersects the site's boundary
 							.query(QueryBuilders.geoIntersectionQuery("boundary", new EnvelopeBuilder(new Coordinate(topLeftLong, topLeftLat), new Coordinate(bottomRightLong, bottomRightLat)))));
@@ -1474,11 +1474,11 @@ public class ElasticSearchConnectionManager
 			// Grab the search results
             Long time = System.currentTimeMillis();
 			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
-			System.out.println("ES Time: " + (System.currentTimeMillis() - time));
 			// Store the scroll id that was returned because we specified a scroll in the search request
 			String scrollID = searchResponse.getScrollId();
 			// Get a list of sites (hits)
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
+			System.out.println("ES Time: " + (System.currentTimeMillis() - time));
 
 			// Iterate while there are more collections to be read
 			while (searchHits != null && searchHits.length > 0)
