@@ -80,10 +80,13 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
 public class ElasticSearchConnectionManager
 {
 	// The scheme used to connect to the elastic search index
-	private static final String ELASTIC_SEARCH_SCHEME = "http";
+	private static final String ELASTIC_SEARCH_SCHEME = "https";
 
 	// The name of the user's index
 	private static final String INDEX_CALLIOPE_USERS = "users";
@@ -132,6 +135,14 @@ public class ElasticSearchConnectionManager
 	// Create a new elastic search schema manager
 	private ElasticSearchSchemaManager elasticSearchSchemaManager;
 
+	// A simple class that allows Calliope/Java to accept any hostname that presents a valid certificate
+	// More or less copied from https://stackoverflow.com/a/7443373
+	private class TrustAllHostNameVerifier implements HostnameVerifier {
+		public boolean verify(String hostname, SSLSession session) {
+			return true;
+		}
+	}
+
 	/**
 	 * Given a username and password, this method logs a cyverse user in
 	 *
@@ -171,7 +182,7 @@ public class ElasticSearchConnectionManager
 			// Establish a connection to the elastic search server
 			this.elasticSearchClient = new RestHighLevelClient(RestClient
 					.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
-					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)).setMaxRetryTimeoutMillis(120000)
+					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setSSLHostnameVerifier(new TrustAllHostNameVerifier()).setDefaultCredentialsProvider(credentialsProvider)).setMaxRetryTimeoutMillis(120000)
 					.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(120000).setConnectTimeout(120000)));
 
 			// Test to see if the ElasticSearch index is up or not
