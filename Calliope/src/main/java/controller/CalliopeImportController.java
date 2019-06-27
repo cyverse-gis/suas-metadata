@@ -4,9 +4,7 @@ import controller.importView.SiteDetectorController;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
@@ -26,6 +24,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -70,7 +70,11 @@ public class CalliopeImportController
 	@FXML
 	public ImageView imagePreview;
 
-	// The stack pane containing the image preview
+	// The media view to be contained inside the image view pane
+	@FXML
+	public MediaView mediaPreview;
+
+	// The stack pane containing the image and media previews
 	@FXML
 	public StackPane imagePane;
 
@@ -177,8 +181,10 @@ public class CalliopeImportController
 	/// FXML bound fields end
 	///
 
+	// Whether or not an image is being displayed (as opposed to other media)
+	private BooleanProperty imageDisp = new SimpleBooleanProperty(true);
 	// Fields to hold the currently selected image entry and image directory
-	private ObjectProperty<ImageEntry> currentlySelectedImage = new SimpleObjectProperty<>(null);
+	private ObjectProperty<DataContainer> currentlySelectedMedia = new SimpleObjectProperty<>(null);
 	private ObjectProperty<DataDirectory> currentlySelectedDirectory = new SimpleObjectProperty<>(null);
 	// Use fade transitions to fade the species list in and out
 	private FadeTransition fadeLocationIn;
@@ -279,11 +285,15 @@ public class CalliopeImportController
 		// Clear the preview pane if there is a preview'd image
 		selectedImage.addListener((observable, oldValue, newValue) -> this.speciesPreviewImage.setValue(null));
 		// Update the currently selected image and directory
-		currentlySelectedImage.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageEntry) ? (ImageEntry) imageContainer : null));
+		currentlySelectedMedia.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageEntry || imageContainer instanceof VideoEntry) ? imageContainer : null));
 		currentlySelectedDirectory.bind(selectedImage.map(imageContainer -> (imageContainer instanceof DataDirectory) ? (DataDirectory) imageContainer : null));
 
 		// Hide the delete button when nothing is selected
 		this.btnDelete.disableProperty().bind(this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1));
+
+		// Bind the mediaview and imageview visibility
+		imagePreview.visibleProperty().bind(imageDisp);
+		mediaPreview.visibleProperty().bind(imageDisp.not());
 
 		// Create bindings in the GUI
 
@@ -322,51 +332,47 @@ public class CalliopeImportController
 		};
 
 		// Hide the reset button when we do not have an image selected
-		this.btnResetImage.disableProperty().bind(currentlySelectedImage.isNull());
+		this.btnResetImage.disableProperty().bind(currentlySelectedMedia.isNull());
 
 		///
 		/// The next properties are bound image fields. If no image is selected the text fields are disabled. We use bi-directional bindings so that
 		/// if we change the text field the model updates, and if the model is updated internally the text fields update.
 		///
-
-		MonadicBinding<Boolean> metadataEnabled = EasyBind.monadic(this.currentlySelectedImage).selectProperty(ImageEntry::metadataEditableProperty).map(x -> !x).orElse(true);
+		
+		MonadicBinding<Boolean> metadataEnabled = EasyBind.monadic(this.currentlySelectedMedia).selectProperty(DataContainer::metadataEditableProperty).map(x -> !x).orElse(true);
 
 		this.txtDateTaken.disableProperty().bind(metadataEnabled);
-		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::dateTakenProperty)));
+		this.txtDateTaken.localDateTimeProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::dateTakenProperty)));
 		this.txtLatitude.disableProperty().bind(metadataEnabled);
-		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::positionTakenProperty).selectProperty(Position::latitudeProperty)), numStrconverter);
+		this.txtLatitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::positionTakenProperty).selectProperty(Position::latitudeProperty)), numStrconverter);
 		this.txtLongitude.disableProperty().bind(metadataEnabled);
-		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::positionTakenProperty).selectProperty(Position::longitudeProperty)), numStrconverter);
+		this.txtLongitude.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::positionTakenProperty).selectProperty(Position::longitudeProperty)), numStrconverter);
 		this.txtElevation.disableProperty().bind(metadataEnabled);
-		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::positionTakenProperty).selectProperty(Position::elevationProperty)), numStrconverter);
+		this.txtElevation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::positionTakenProperty).selectProperty(Position::elevationProperty)), numStrconverter);
 		this.txtDroneBrand.disableProperty().bind(metadataEnabled);
-		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::droneMakerProperty)));
+		this.txtDroneBrand.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::droneMakerProperty)));
 		this.txtCameraModel.disableProperty().bind(metadataEnabled);
-		this.txtCameraModel.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::cameraModelProperty)));
+		this.txtCameraModel.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::cameraModelProperty)));
 		this.txtXSpeed.disableProperty().bind(metadataEnabled);
-		this.txtXSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::xProperty)), numStrconverter);
+		this.txtXSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::speedProperty).selectProperty(Vector3::xProperty)), numStrconverter);
 		this.txtYSpeed.disableProperty().bind(metadataEnabled);
-		this.txtYSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::yProperty)), numStrconverter);
+		this.txtYSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::speedProperty).selectProperty(Vector3::yProperty)), numStrconverter);
 		this.txtZSpeed.disableProperty().bind(metadataEnabled);
-		this.txtZSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::speedProperty).selectProperty(Vector3::zProperty)), numStrconverter);
+		this.txtZSpeed.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::speedProperty).selectProperty(Vector3::zProperty)), numStrconverter);
 		this.txtXRotation.disableProperty().bind(metadataEnabled);
-		this.txtXRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::xProperty)), numStrconverter);
+		this.txtXRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::rotationProperty).selectProperty(Vector3::xProperty)), numStrconverter);
 		this.txtYRotation.disableProperty().bind(metadataEnabled);
-		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::yProperty)), numStrconverter);
+		this.txtYRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::rotationProperty).selectProperty(Vector3::yProperty)), numStrconverter);
 		this.txtZRotation.disableProperty().bind(metadataEnabled);
-		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::rotationProperty).selectProperty(Vector3::zProperty)), numStrconverter);
+		this.txtZRotation.textProperty().bindBidirectional(cache(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::rotationProperty).selectProperty(Vector3::zProperty)), numStrconverter);
 		// Service used to retrieve the currently selected image pixel data
-		ErrorService<Image> imageRetrievalService = new ErrorService<Image>()
-		{
+		ErrorService<Image> imageRetrievalService = new ErrorService<Image>() {
 			@Override
-			protected Task<Image> createTask()
-			{
-				ImageEntry value = currentlySelectedImage.getValue();
-				return new ErrorTask<Image>()
-				{
+			protected Task<Image> createTask() {
+				ImageEntry value = (ImageEntry) currentlySelectedMedia.getValue();
+				return new ErrorTask<Image>() {
 					@Override
-					protected Image call()
-					{
+					protected Image call() {
 						// Passing in null returns null
 						if (value == null)
 							return null;
@@ -382,18 +388,49 @@ public class CalliopeImportController
 			this.imagePreview.setImage(imageRetrievalService.getValue());
 			this.pidImageLoading.setVisible(false);
 		});
+		ErrorService<MediaPlayer> videoRetrievalService = new ErrorService<MediaPlayer>() {
+			@Override
+			protected Task<MediaPlayer> createTask() {
+				VideoEntry value = (VideoEntry) currentlySelectedMedia.getValue();
+				return new ErrorTask<MediaPlayer>() {
+					@Override
+					protected MediaPlayer call() {
+						// Passing in null returns null
+						if (value == null)
+							return null;
+						// Perform the hard computation
+						return new MediaPlayer(value.buildIntoMedia());
+					}
+				};
+			}
+		};
+		// When the service finishes we update the displayed image and hide the loading gif
+		videoRetrievalService.setOnSucceeded(event ->
+		{
+			this.mediaPreview.setMediaPlayer(videoRetrievalService.getValue());
+			this.pidImageLoading.setVisible(false);
+		});
 		// When we select a new image we retrieve the pixel data to display on screen
-		this.currentlySelectedImage.addListener((observable, oldValue, newValue) ->
+		this.currentlySelectedMedia.addListener((observable, oldValue, newValue) ->
 		{
 			this.pidImageLoading.setVisible(true);
-			imageRetrievalService.restart();
+			if (newValue instanceof ImageEntry) {
+				imageDisp.setValue(true);
+				if (mediaPreview.getMediaPlayer() != null) {
+					mediaPreview.getMediaPlayer().stop();
+				}
+				imageRetrievalService.restart();
+			} else if (newValue instanceof VideoEntry) {
+				imageDisp.setValue(false);
+				videoRetrievalService.restart();
+			}
 		});
 		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the site name to the selected image's location
-		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedImage).selectProperty(ImageEntry::siteTakenProperty).selectProperty(Site::nameProperty));
+		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::siteTakenProperty).selectProperty(Site::nameProperty));
 		// Hide the location panel when no location is selected
-		this.hbxLocation.visibleProperty().bind(currentlySelectedImage.isNotNull().or(currentlySelectedDirectory.isNotNull()));
+		this.hbxLocation.visibleProperty().bind(currentlySelectedMedia.isNotNull().or(currentlySelectedDirectory.isNotNull()));
 		// Hide the progress bar when no tasks remain
 		this.sbrTaskProgress.visibleProperty().bind(CalliopeData.getInstance().getExecutor().getQueuedExecutor().taskRunningProperty());
 		// Bind the progress bar's text property to tasks remaining
@@ -423,7 +460,7 @@ public class CalliopeImportController
 						.not());
 
 		// When we select a new image, reset the image viewport to center and zoomed out.
-		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> this.resetImageView(null));
+		this.currentlySelectedMedia.addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 
 		// Setup the neon site detector stage
 
@@ -454,7 +491,7 @@ public class CalliopeImportController
 		// Setup the metadata property sheet
 
 		// When we click a new image then load new metadata
-		this.currentlySelectedImage.addListener((observable, oldValue, newValue) -> { if (newValue != null) this.pstMetadata.getItems().setAll(newValue.getRawMetadata()); });
+		this.currentlySelectedMedia.addListener((observable, oldValue, newValue) -> { if (newValue != null) this.pstMetadata.getItems().setAll(newValue.getRawMetadata()); });
 		// Create a default factory
 		DefaultPropertyEditorFactory defaultFactory = new DefaultPropertyEditorFactory();
 		// Ensure that our editors are non-editable since metadata isn't editable
@@ -664,7 +701,7 @@ public class CalliopeImportController
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
-		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedMedia.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			dragEvent.acceptTransferModes(TransferMode.COPY);
 		dragEvent.consume();
 	}
@@ -678,7 +715,7 @@ public class CalliopeImportController
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
-		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedMedia.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			this.fadeAddPanelOut.play();
 		dragEvent.consume();
 	}
@@ -692,7 +729,7 @@ public class CalliopeImportController
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
 		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
-		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
+		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedMedia.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			this.fadeAddPanelIn.play();
 		dragEvent.consume();
 	}
@@ -717,9 +754,9 @@ public class CalliopeImportController
 			// Add the site to the image
 			if (toAdd.isPresent())
 				// Check if we have a selected image or directory to update!
-				if (currentlySelectedImage.getValue() != null)
+				if (currentlySelectedMedia.getValue() != null)
 				{
-					currentlySelectedImage.getValue().setSiteTaken(toAdd.get());
+					currentlySelectedMedia.getValue().setSiteTaken(toAdd.get());
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;
@@ -799,24 +836,25 @@ public class CalliopeImportController
 	{
 		List<ImageEntry> images = null;
 
-		// If we have an image selected then we wrap that image in a list for processing
-		if (this.currentlySelectedImage.getValue() != null)
-			images = Collections.singletonList(this.currentlySelectedImage.getValue());
-		// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
-		else if (this.currentlySelectedDirectory.getValue() != null)
-			images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
+		if (this.currentlySelectedMedia.getValue() instanceof ImageEntry) {
+			ImageEntry ie = (ImageEntry) currentlySelectedMedia.getValue();
+			// If we have an image selected then we wrap that image in a list for processing
+			if (this.currentlySelectedMedia.getValue() != null)
+				images = Collections.singletonList(ie);
+				// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
+			else if (this.currentlySelectedDirectory.getValue() != null)
+				images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
 
-		// If we got any images at all, process them
-		if (images != null && !images.isEmpty())
-		{
-			// Pull the sub-images in the directory
-			this.siteDetectorController.updateItems(images);
-			// Make sure that this stage belongs to the main stage
-			if (this.siteDetectorStage.getOwner() == null)
-				this.siteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
-			this.siteDetectorStage.showAndWait();
+			// If we got any images at all, process them
+			if (images != null && !images.isEmpty()) {
+				// Pull the sub-images in the directory
+				this.siteDetectorController.updateItems(images);
+				// Make sure that this stage belongs to the main stage
+				if (this.siteDetectorStage.getOwner() == null)
+					this.siteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
+				this.siteDetectorStage.showAndWait();
+			}
 		}
-
 		mouseEvent.consume();
 	}
 
@@ -838,6 +876,18 @@ public class CalliopeImportController
 	public void onRightArrowClicked(ActionEvent actionEvent)
 	{
 		this.imageTree.getSelectionModel().selectNext();
+	}
+
+	@FXML
+	private void onMediaClicked(MouseEvent event) {
+		switch (mediaPreview.getMediaPlayer().statusProperty().getValue()) {
+			case PLAYING:
+				mediaPreview.getMediaPlayer().pause();
+				break;
+			case PAUSED: case READY:
+				mediaPreview.getMediaPlayer().play();
+				break;
+		}
 	}
 
 	///

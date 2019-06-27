@@ -11,16 +11,17 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import model.constant.CalliopeDataFormats;
-import model.image.ImageContainer;
-import model.image.ImageDirectory;
+import model.image.DataContainer;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 
 import java.util.Objects;
 
 /**
  * Class used as the controller for an upload entry in the treeview
  */
-public class UploadTreeCellController extends TreeCell<ImageContainer>
+public class UploadTreeCellController extends TreeCell<DataContainer>
 {
 	///
 	/// FXML Bound Fields start
@@ -78,12 +79,12 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 	 * @param empty If the item is null and the cell should be empty
 	 */
 	@Override
-	protected void updateItem(ImageContainer item, boolean empty)
+	protected void updateItem(DataContainer item, boolean empty)
 	{
 		// Remove the previous listener if there was one
-		if (this.getItem() instanceof ImageDirectory)
+		if (this.getItem() instanceof DataDirectory)
 		{
-			((ImageDirectory) this.getItem()).uploadProgressProperty().removeListener(expandedListener);
+			((DataDirectory) this.getItem()).uploadProgressProperty().removeListener(expandedListener);
 			this.disableProperty().unbind();
 			this.setDisable(false);
 		}
@@ -108,14 +109,16 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 			this.lblText.setText(item.toString());
 
 			// If the item is a directory that is being uploaded, disable it
-			if (item instanceof ImageDirectory)
+			if (item instanceof DataDirectory)
 			{
-				ImageDirectory imageDirectory = (ImageDirectory) item;
-				this.disableProperty().bind(imageDirectory.uploadProgressProperty().isNotEqualTo(-1));
-				imageDirectory.uploadProgressProperty().addListener(expandedListener);
+				DataDirectory dataDirectory = (DataDirectory) item;
+				this.disableProperty().bind(dataDirectory.uploadProgressProperty().isNotEqualTo(-1));
+				dataDirectory.uploadProgressProperty().addListener(expandedListener);
 			}
 			else if (item instanceof ImageEntry)
 				((ImageEntry) item).buildAndStoreIcon();
+			else if (item instanceof VideoEntry)
+				((VideoEntry) item).buildAndStoreIcon();
 
 			// Update the graphic
 			this.setGraphic(mainPane);
@@ -130,13 +133,13 @@ public class UploadTreeCellController extends TreeCell<ImageContainer>
 	public void cellDragDetected(MouseEvent mouseEvent)
 	{
 		// Grab the selected image directory, make sure it's not null
-		ImageContainer selected = this.getItem();
+		DataContainer selected = this.getItem();
 		if (selected != null)
 		{
 			// Can only drag & drop if we have a directory selected
-			if (selected instanceof ImageDirectory)
+			if (selected instanceof DataDirectory)
 			{
-				ImageDirectory selectedDirectory = (ImageDirectory) selected;
+				DataDirectory selectedDirectory = (DataDirectory) selected;
 
 				// Make sure we're not uploading
 				if (selectedDirectory.getUploadProgress() == -1)

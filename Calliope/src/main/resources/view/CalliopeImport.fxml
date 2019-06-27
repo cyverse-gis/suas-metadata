@@ -11,6 +11,7 @@
 <?import org.controlsfx.control.PropertySheet?>
 <?import org.controlsfx.control.StatusBar?>
 <?import java.net.URL?>
+<?import javafx.scene.media.MediaView?>
 <SplitPane fx:id="mainPane" fx:controller="controller.CalliopeImportController" dividerPositions="0.2, 0.8" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
     <stylesheets>
         <URL value="@CalliopeImport.css" />
@@ -66,6 +67,11 @@
                                 <ImageView fx:id="imagePreview" onMouseClicked="#onImageClicked" onMouseDragged="#onImageDragged" onMousePressed="#onImagePressed" onScroll="#onImageScroll" preserveRatio="true" styleClass="imageView" />
                             </imageView>
                         </ImageViewPane>
+                        <Pane fx:id="mediaViewPane">
+                            <children>
+                                <MediaView fx:id="mediaPreview" onMouseClicked="#onMediaClicked" fitHeight="${mediaViewPane.height}" fitWidth="${mediaViewPane.width}" layoutX="1.0" />
+                            </children>
+                        </Pane>
                         <HBox onMouseEntered="#onMouseEnteredLocation" onMouseExited="#onMouseExitedLocation" onMouseClicked="#mouseClickedLocation" styleClass="siteBackground" pickOnBounds="false" fx:id="hbxLocation" minHeight="80" maxHeight="80" maxWidth="-Infinity" alignment="CENTER_RIGHT" StackPane.alignment="TOP_RIGHT">
                             <StackPane.margin>
                                 <Insets right="5" top="5"/>

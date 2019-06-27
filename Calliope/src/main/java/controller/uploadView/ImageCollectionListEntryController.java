@@ -20,7 +20,7 @@ import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.cyverse.Permission;
 import model.dataSources.IDataSource;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.action.Action;
@@ -218,11 +218,11 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		{
 			Integer imageDirectoryHash = (int) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
 			// Filter our list of images by directory that has the right file path
-			Optional<ImageDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree()
+			Optional<DataDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree()
 					.flattened()
-					.filter(imageContainer -> imageContainer instanceof ImageDirectory &&
+					.filter(imageContainer -> imageContainer instanceof DataDirectory &&
 							Objects.hash(imageContainer) == imageDirectoryHash)
-					.map(imageContainer -> (ImageDirectory) imageContainer)
+					.map(imageContainer -> (DataDirectory) imageContainer)
 					.findFirst();
 
 			// If we found the correct image directory to upload to, prompt the user

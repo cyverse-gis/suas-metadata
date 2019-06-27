@@ -14,6 +14,7 @@ import model.CalliopeData;
 import model.image.DataContainer;
 import model.image.DataDirectory;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.site.Site;
 
 import java.util.Optional;
@@ -125,6 +126,8 @@ public class ImageTreeCellController extends TreeCell<DataContainer>
 			}
 			else if (item instanceof ImageEntry)
 				((ImageEntry) item).buildAndStoreIcon();
+			else if (item instanceof VideoEntry)
+				((VideoEntry) item).buildAndStoreIcon();
 
 			// Show the UI
 			this.setGraphic(mainPane);
