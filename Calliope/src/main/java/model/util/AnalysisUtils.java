@@ -14,6 +14,7 @@ import java.io.File;
 public class AnalysisUtils
 {
 	private static final String[] ACCEPTED_EXTENSIONS = { "jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO" };
+	private static final String[] MEDIA_EXTENSIONS = { "mp4", "MP4" };
 
 	/**
 	 * Test if a file is an image
@@ -27,6 +28,11 @@ public class AnalysisUtils
 		return fileIsImage(FilenameUtils.getExtension(file.getName()));
 	}
 
+	public static boolean fileIsMedia(File file)
+	{
+		return fileIsMedia(FilenameUtils.getExtension(file.getName()));
+	}
+
 	/**
 	 * Test if a file is an image
 	 *
@@ -37,6 +43,11 @@ public class AnalysisUtils
 	private static boolean fileIsImage(String fileExtension)
 	{
 		return StringUtils.endsWithAny(fileExtension, ACCEPTED_EXTENSIONS);
+	}
+
+	private static boolean fileIsMedia(String fileExtension)
+	{
+		return StringUtils.endsWithAny(fileExtension, MEDIA_EXTENSIONS);
 	}
 
 	/**

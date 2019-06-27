@@ -1,7 +1,7 @@
 package model.dataSources.cyverseDataStore;
 
 import javafx.scene.image.Image;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import org.irods.jargon.core.pub.io.IRODSFile;
 
@@ -10,7 +10,7 @@ import java.io.File;
 /**
  * Class representing a CyVerse DataStore directory ready to be indexed
  */
-public class CyVerseDSImageDirectory extends ImageDirectory
+public class CyVerseDSDataDirectory extends DataDirectory
 {
 	// The default cloud directory image to display
 	private static final Image DEFAULT_CLOUD_DIR_IMAGE = new Image(ImageEntry.class.getResource("/images/importWindow/cloudDirectoryIcon.png").toString());
@@ -20,7 +20,7 @@ public class CyVerseDSImageDirectory extends ImageDirectory
 	 *
 	 * @param directory The file that represents the directoryProperty
 	 */
-	public CyVerseDSImageDirectory(File directory)
+	public CyVerseDSDataDirectory(File directory)
 	{
 		super(directory);
 		this.treeIconProperty().setValue(DEFAULT_CLOUD_DIR_IMAGE);

@@ -9,7 +9,7 @@ import javafx.stage.Window;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
 import model.dataSources.localPC.LocalPCDataSource;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.threading.ErrorTask;
 
@@ -38,7 +38,7 @@ public class LocalPCDirectoryDataSource extends LocalPCDataSource
 	 * @return A task that when executed pulls the image directory from the data source or null if the data source could not be retrieved
 	 */
 	@Override
-	public Task<ImageDirectory> makeImportTask(Window importWindow)
+	public Task<DataDirectory> makeImportTask(Window importWindow)
 	{
 		// If our Exiftool was not loaded successfully we can't import images, so throw an error here
 		if (!CalliopeData.getInstance().getMetadataManager().isExifToolFound())
@@ -57,16 +57,16 @@ public class LocalPCDirectoryDataSource extends LocalPCDataSource
 		// If the file chosen is a file and a directory process it
 		if (file != null && file.isDirectory())
 		{
-			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
+			Task<DataDirectory> importTask = new ErrorTask<DataDirectory>()
 			{
 				@Override
-				protected ImageDirectory call()
+				protected DataDirectory call()
 				{
 					this.updateProgress(0.05, 1.0);
 					this.updateMessage("Loading directory...");
 
 					// Convert the file to a recursive image directory data structure
-					ImageDirectory directory = DirectoryManager.loadDirectory(file);
+					DataDirectory directory = DirectoryManager.loadDirectory(file);
 					directory.setDataSource(LocalPCDirectoryDataSource.this);
 
 					this.updateProgress(0.1, 1.0);

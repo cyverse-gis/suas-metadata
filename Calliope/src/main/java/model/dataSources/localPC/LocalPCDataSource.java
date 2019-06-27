@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 import model.CalliopeData;
 import model.cyverse.ImageCollection;
 import model.dataSources.IDataSource;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.threading.ErrorTask;
 import org.irods.jargon.core.transfer.TransferStatus;
@@ -50,7 +50,7 @@ public abstract class LocalPCDataSource implements IDataSource
 	 * @return A task that when executed saves the image directory to the data source and indexes its images into ES
 	 */
 	@Override
-	public Task<Void> makeIndexTask(ImageCollection imageCollection, ImageDirectory directoryToIndex)
+	public Task<Void> makeIndexTask(ImageCollection imageCollection, DataDirectory directoryToIndex)
 	{
 		// Make sure we've got a valid directory
 		boolean validDirectory = true;

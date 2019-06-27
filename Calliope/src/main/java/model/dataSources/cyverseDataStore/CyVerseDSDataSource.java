@@ -10,7 +10,7 @@ import model.cyverse.ImageCollection;
 import model.dataSources.DirectoryManager;
 import model.dataSources.IDataSource;
 import model.dataSources.UploadedEntry;
-import model.image.ImageDirectory;
+import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.threading.ErrorTask;
 
@@ -39,7 +39,7 @@ public class CyVerseDSDataSource implements IDataSource
 	 * @return A task that when executed pulls the image directory from the data source or null if the data source could not be retrieved
 	 */
 	@Override
-	public Task<ImageDirectory> makeImportTask(Window importWindow)
+	public Task<DataDirectory> makeImportTask(Window importWindow)
 	{
 		// Make sure popups are enabled
 		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
@@ -58,15 +58,15 @@ public class CyVerseDSDataSource implements IDataSource
 				// If we got a result, store it into a string
 				String pathToFiles = result.get();
 				// Now that we have a result, we move to a different thread to perform the directory reading
-				ErrorTask<ImageDirectory> indexExistingTask = new ErrorTask<ImageDirectory>()
+				ErrorTask<DataDirectory> indexExistingTask = new ErrorTask<DataDirectory>()
 				{
 					@Override
-					protected ImageDirectory call()
+					protected DataDirectory call()
 					{
 						// Update the message used by the task to display progress
 						this.updateMessage("Searching for image files in directory...");
 						// Ask our CyVerse connection manager to read the directory
-						CyVerseDSImageDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
+						CyVerseDSDataDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
 						// Will be null if the file does not exist
 						if (imageDirectory != null)
 						{
@@ -116,7 +116,7 @@ public class CyVerseDSDataSource implements IDataSource
 	 * @return A task that when executed saves the image directory to the data source and indexes its images into ES
 	 */
 	@Override
-	public Task<Void> makeIndexTask(ImageCollection imageCollection, ImageDirectory directoryToIndex)
+	public Task<Void> makeIndexTask(ImageCollection imageCollection, DataDirectory directoryToIndex)
 	{
 		// Make sure we've got a valid directory
 		boolean validDirectory = true;
