@@ -5,6 +5,7 @@ import model.CalliopeData;
 import model.image.DataContainer;
 import model.image.DataDirectory;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.util.AnalysisUtils;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -60,7 +61,7 @@ public class DirectoryManager
 	public static void initImages(DataDirectory dataDirectory, DoubleProperty progressProperty)
 	{
 		// List of images to init
-		List<ImageEntry> imageEntries = dataDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+		List<DataContainer> imageEntries = dataDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry || imageContainer instanceof VideoEntry).collect(Collectors.toList());
 		// The total number of images in the list
 		Integer imageCount = imageEntries.size();
 		for (Integer i = 0; i < imageCount; i++)
@@ -69,7 +70,11 @@ public class DirectoryManager
 			if (i % 20 == 0)
 				progressProperty.setValue(i.doubleValue() / imageCount.doubleValue());
 			// Read the metadata into each image
-			imageEntries.get(i).readFileMetadataFromImage();
+			if (imageEntries.get(i) instanceof ImageEntry) {
+				((ImageEntry)imageEntries.get(i)).readFileMetadataFromImage();
+			} else {
+				((VideoEntry)imageEntries.get(i)).readFileMetadataFromVideo();
+			}
 		}
 	}
 
@@ -83,8 +88,9 @@ public class DirectoryManager
 	{
 		// Map our input to a list of images only
 		List<File> validImages = files.stream().filter(AnalysisUtils::fileIsImage).collect(Collectors.toList());
+		List<File> validMedia = files.stream().filter(AnalysisUtils::fileIsMedia).collect(Collectors.toList());
 		// Make sure we have at least one image file
-		if (!validImages.isEmpty())
+		if (!(validImages.isEmpty() && validMedia.isEmpty()))
 		{
 			// All files are in the same directory, so grab the first file's parent directory
 			DataDirectory dataDirectory = new DataDirectory(files.get(0).getParentFile());
@@ -94,6 +100,13 @@ public class DirectoryManager
 				// Load the image file and metadata and add it to the directory
 				ImageEntry imageEntry = new ImageEntry(validImage);
 				dataDirectory.addChild(imageEntry);
+			}
+			// Iterate over the images
+			for (File validVideo : validMedia)
+			{
+				// Load the image file and metadata and add it to the directory
+				VideoEntry videoEntry = new VideoEntry(validVideo);
+				dataDirectory.addChild(videoEntry);
 			}
 			// Return the directory
 			return dataDirectory;
