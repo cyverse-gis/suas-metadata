@@ -38,6 +38,8 @@ public class LayeredMap extends Map
 		// will be automatically added to the map's children list in sorted order. Store a useless reference to the subscription otherwise it will be
 		// garbage collected early
 		this.subscriptionCache = EasyBind.listBind(this.getChildren(), new SortedList<>(this.sortedNodes, Comparator.comparing(node -> zOrder.getOrDefault(node, -1))));
+		// Set zoom limits
+		this.setMinZoomLevel(3.0D);
 	}
 
 	/**
