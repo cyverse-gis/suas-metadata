@@ -87,8 +87,11 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 			};
 			importTask.setOnSucceeded(event ->
 			{
-				// Add the directory to the image tree
-				CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
+				// Ensure that the directory we created was a valid directory.
+				// TODO: Would this fit better elsewhere? ie, can we make importTask fail?
+				if(importTask.getValue().isValid())
+					// Add the directory to the image tree
+					CalliopeData.getInstance().getImageTree().addChild(importTask.getValue());
 			});
 
 			return importTask;
