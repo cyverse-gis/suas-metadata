@@ -180,6 +180,7 @@ public class ElasticSearchConnectionManager
 			*/
 
 			// Establish a connection to the elastic search server
+			// TODO: Should we trust all hostnames? I did it here to make sure I could connect to my test server
 			this.elasticSearchClient = new RestHighLevelClient(RestClient
 					.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
 					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setSSLHostnameVerifier(new TrustAllHostNameVerifier()).setDefaultCredentialsProvider(credentialsProvider)).setMaxRetryTimeoutMillis(120000)
@@ -455,7 +456,7 @@ public class ElasticSearchConnectionManager
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
 			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
-			// If the user is not in the db... create an index entry for him
+			// If the user is not in the db... create an index entry for them
 			if (!getResponse.isExists())
 			{
 				// Create an index request which we use to put data into the elastic search index
