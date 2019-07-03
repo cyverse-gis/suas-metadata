@@ -5,8 +5,10 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.scene.image.Image;
+import javafx.scene.media.Media;
 import model.CalliopeData;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.threading.ErrorTask;
 import org.irods.jargon.core.pub.io.IRODSFile;
 
@@ -18,7 +20,7 @@ import java.util.Map;
 /**
  * Class representing a CyVerse datastore image entry
  */
-public class CyVerseDSImageEntry extends ImageEntry
+public class CyVerseDSVideoEntry extends VideoEntry
 {
 	// The icon to use for all downloaded untagged images
 	private static final Image DEFAULT_CLOUD_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageCloudIcon.png").toString());
@@ -35,7 +37,7 @@ public class CyVerseDSImageEntry extends ImageEntry
 	 *
 	 * @param file The file (must be an image file)
 	 */
-	public CyVerseDSImageEntry(File file)
+	public CyVerseDSVideoEntry(File file)
 	{
 		super(file);
 		// The metadata is editable if it has been retrieved
@@ -49,16 +51,16 @@ public class CyVerseDSImageEntry extends ImageEntry
 	 * @return A buffered image representing this CyVerse datastore entry
 	 */
 	@Override
-	protected BufferedImage retrieveRawImage()
+	public Media buildIntoMedia()
 	{
-		return CalliopeData.getInstance().getCyConnectionManager().readIRODSImage(this.getFile().getAbsolutePath());
+		return CalliopeData.getInstance().getCyConnectionManager().readIRODSVideo(this.getFile().getAbsolutePath());
 	}
 
 	/**
 	 * Reading this file's metadata just causes it to pull the metadata from the cloud
 	 */
 	@Override
-	public void readFileMetadataFromImage()
+	public void readFileMetadataFromVideo()
 	{
 		this.pullMetadataFromCyVerse();
 	}
@@ -82,7 +84,7 @@ public class CyVerseDSImageEntry extends ImageEntry
 			protected Map<Tag, String> call() throws IOException
 			{
 				// Convert the iRODS file to a local image file
-				File localFile = CalliopeData.getInstance().getCyConnectionManager().remoteToLocalImageFile((IRODSFile) CyVerseDSImageEntry.this.getFile());
+				File localFile = CalliopeData.getInstance().getCyConnectionManager().remoteToLocalImageFile((IRODSFile) CyVerseDSVideoEntry.this.getFile());
 				// Read this image's metadata
 				Map<Tag, String> metadata = CalliopeData.getInstance().getMetadataManager().readImageMetadata(localFile);
 				// Delete our local file now that we've read the metadata

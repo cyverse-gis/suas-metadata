@@ -7,10 +7,7 @@ import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.dataSources.UploadedEntry;
-import model.image.DataDirectory;
-import model.image.ImageEntry;
-import model.image.Position;
-import model.image.Vector3;
+import model.image.*;
 import model.settings.SensitiveConfigurationManager;
 import model.settings.SettingsData;
 import model.site.Boundary;
@@ -1140,10 +1137,11 @@ public class ElasticSearchConnectionManager
 	 * @param absolutePathCreator A function that accepts an image file as input and returns the absolute path (on the storage medium) of the image file as output
 	 */
 	@SuppressWarnings("unchecked")
-	public void indexImages(DataDirectory directory, UploadedEntry uploadEntry, String collectionID, Function<ImageEntry, String> absolutePathCreator)
+	public void indexImages(DataDirectory directory, UploadedEntry uploadEntry, String collectionID, Function<DataContainer, String> absolutePathCreator)
 	{
 		// List of images to be uploaded
 		List<ImageEntry> imageEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+		List<VideoEntry> videoEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).map(imageContainer -> (VideoEntry) imageContainer).collect(Collectors.toList());
 
 		try
 		{
@@ -1155,6 +1153,18 @@ public class ElasticSearchConnectionManager
 			{
 				// Our image to JSON map will return 2 items, one is the ID of the document and one is the JSON request
 				XContentBuilder json = this.elasticSearchSchemaManager.imageToJSON(imageEntry, collectionID, absolutePathCreator.apply(imageEntry));
+				IndexRequest request = new IndexRequest()
+						.index(INDEX_CALLIOPE_METADATA)
+						.type(INDEX_CALLIOPE_METADATA_TYPE)
+						.source(json);
+				bulkRequest.add(request);
+			}
+
+			// Convert the videos to a map format ready to be converted to JSON
+			for (VideoEntry videoEntry : videoEntries)
+			{
+				// Our image to JSON map will return 2 items, one is the ID of the document and one is the JSON request
+				XContentBuilder json = this.elasticSearchSchemaManager.videoToJSON(videoEntry, collectionID, absolutePathCreator.apply(videoEntry));
 				IndexRequest request = new IndexRequest()
 						.index(INDEX_CALLIOPE_METADATA)
 						.type(INDEX_CALLIOPE_METADATA_TYPE)
