@@ -5,6 +5,7 @@ import model.CalliopeData;
 import model.constant.CalliopeMetadataFields;
 import model.cyverse.ImageCollection;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.settings.SettingsData;
 import model.site.Site;
 import model.util.LocUtils;
@@ -372,6 +373,55 @@ public class ElasticSearchSchemaManager
 		.endObject();
 	}
 
+	/**
+	 * Utility function used to convert a video entry to its JSON representation
+	 *
+	 * @param imageEntry The image to convert to its JSON representation
+	 * @param collectionID The ID of the collection that the image belongs to
+	 * @param fileAbsolutePath The absolute path of the file on CyVerse
+	 * @return A map of key->value pairs used later in creating JSON
+	 */
+	XContentBuilder videoToJSON(VideoEntry videoEntry, String collectionID, String fileAbsolutePath) throws IOException
+	{
+		// On windows paths have \ as a path separator vs unix /. Make sure that we always use /
+		String fixedAbsolutePath = fileAbsolutePath.replace('\\', '/');
+
+		// We return the JSON representing the image metadata
+		return XContentFactory.jsonBuilder()
+				.startObject()
+				.field("storagePath", fixedAbsolutePath)
+				.field("collectionID", collectionID)
+				.startObject("imageMetadata")
+				.field("dateTaken", videoEntry.getDateTaken().atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT))
+				.field("yearTaken", videoEntry.getDateTaken().getYear())
+				.field("monthTaken", videoEntry.getDateTaken().getMonthValue())
+				.field("hourTaken", videoEntry.getDateTaken().getHour())
+				.field("dayOfYearTaken", videoEntry.getDateTaken().getDayOfYear())
+				.field("dayOfWeekTaken", videoEntry.getDateTaken().getDayOfWeek().getValue())
+				.field("siteCode", videoEntry.getSiteTaken() != null ? videoEntry.getSiteTaken().getCode() : null)
+				.field("position", videoEntry.getPositionTaken().getLatitude() + ", " + videoEntry.getPositionTaken().getLongitude())
+				.field("elevation", videoEntry.getPositionTaken().getElevation())
+				.field("droneMaker", videoEntry.getDroneMaker())
+				.field("cameraModel", videoEntry.getCameraModel())
+				.startObject("speed")
+				.field("x", videoEntry.getSpeed().getX())
+				.field("y", videoEntry.getSpeed().getY())
+				.field("z", videoEntry.getSpeed().getZ())
+				.endObject()
+				.startObject("rotation")
+				.field("roll", videoEntry.getRotation().getX())
+				.field("pitch", videoEntry.getRotation().getY())
+				.field("yaw", videoEntry.getRotation().getZ())
+				.endObject()
+				.field("altitude", videoEntry.getAltitude())
+				.field("fileType", videoEntry.getFileType())
+				.field("focalLength", videoEntry.getFocalLength())
+				.field("width", videoEntry.getWidth())
+				.field("height", videoEntry.getHeight())
+				.endObject()
+				.endObject();
+	}
+	
 	/**
 	 * Utility function used to convert an image entry to its JSON representation
 	 *

@@ -13,6 +13,8 @@ public class UploadedEntry
 	private LocalDateTime uploadDate;
 	// The number of images in this upload
 	private Integer imageCount;
+	// The number of videos in this upload
+	private Integer videoCount;
 	// A path to the upload
 	private String uploadPath;
 	// The storage method for the upload
@@ -28,11 +30,12 @@ public class UploadedEntry
 	 * @param uploadPath The path to the file
 	 * @param storageMethod How the image is stored on the system
 	 */
-	public UploadedEntry(String uploadUser, LocalDateTime uploadDate, Integer imageCount, String uploadPath, String storageMethod)
+	public UploadedEntry(String uploadUser, LocalDateTime uploadDate, Integer imageCount, Integer videoCount, String uploadPath, String storageMethod)
 	{
 		this.uploadUser = uploadUser;
 		this.uploadDate = uploadDate;
 		this.imageCount = imageCount;
+		this.videoCount = videoCount;
 		this.uploadPath = uploadPath;
 		this.storageMethod = storageMethod;
 	}
@@ -54,6 +57,11 @@ public class UploadedEntry
 	public Integer getImageCount()
 	{
 		return imageCount;
+	}
+
+	public Integer getVideoCount()
+	{
+		return videoCount;
 	}
 
 	public String getUploadPath()

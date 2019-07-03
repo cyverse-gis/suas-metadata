@@ -3,6 +3,7 @@ package model.cyverse;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.scene.media.Media;
 import model.CalliopeData;
 import model.dataSources.DirectoryManager;
 import model.dataSources.UploadedEntry;
@@ -10,6 +11,7 @@ import model.dataSources.cyverseDataStore.CyVerseDSDataDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
 import model.image.DataDirectory;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.util.AnalysisUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -358,10 +360,12 @@ public class CyVerseConnectionManager
 
 					// Create the JSON file representing the upload
 					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
+					Integer videoCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).count());
 					UploadedEntry uploadEntry = new UploadedEntry(
 							CalliopeData.getInstance().getUsername(),
 							LocalDateTime.now(),
 							imageCount,
+							videoCount,
 							uploadDirName,
 							"CyVerse Data Store");
 
@@ -387,7 +391,7 @@ public class CyVerseConnectionManager
 					}
 
 					// Finally we actually index the image metadata using elasticsearch
-					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToWrite, uploadEntry, collection.getID().toString(), imageEntry -> uploadDirName + "/" + localDirName + StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), directoryToWrite.getFile().getAbsolutePath()));
+					CalliopeData.getInstance().getEsConnectionManager().indexImages(directoryToWrite, uploadEntry, collection.getID().toString(), container -> uploadDirName + "/" + localDirName + StringUtils.substringAfter(container.getFile().getAbsolutePath(), directoryToWrite.getFile().getAbsolutePath()));
 
 					// Let rules do the un-tar processing!
 				}
@@ -588,6 +592,40 @@ public class CyVerseConnectionManager
 				return image;
 			}
 			catch (JargonException | IOException ignored)
+			{
+				// Ignore loading errors, just display a blank image then
+			}
+			finally
+			{
+				// Close the session
+				this.sessionManager.closeSession();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Reads the image from an iRODS absolute path into local memory
+	 *
+	 * @param irodsFileAbsolutePath The iRODS path to read from
+	 * @return The image to return
+	 */
+	public Media readIRODSVideo(String irodsFileAbsolutePath)
+	{
+		// Open the session as usual
+		if (this.sessionManager.openSession())
+		{
+			try
+			{
+				IRODSFileFactory fileFactory = this.sessionManager.getCurrentAO().getIRODSFileFactory(this.authenticatedAccount);
+				IRODSFile irodsFile = fileFactory.instanceIRODSFile(irodsFileAbsolutePath);
+				File file = this.remoteToLocalImageFile(irodsFile);
+				// Read the stream as an image file
+				Media media = new Media(file.getPath());
+				file.delete();
+				return media;
+			}
+			catch (JargonException ignored)
 			{
 				// Ignore loading errors, just display a blank image then
 			}

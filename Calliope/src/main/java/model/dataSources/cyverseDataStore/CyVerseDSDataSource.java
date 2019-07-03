@@ -12,6 +12,7 @@ import model.dataSources.IDataSource;
 import model.dataSources.UploadedEntry;
 import model.image.DataDirectory;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.threading.ErrorTask;
 
 import java.time.LocalDateTime;
@@ -129,6 +130,14 @@ public class CyVerseDSDataSource implements IDataSource
 				break;
 			}
 
+		for (CyVerseDSVideoEntry videoEntry : directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSVideoEntry).map(imageContainer -> (CyVerseDSVideoEntry) imageContainer).collect(Collectors.toList()))
+			// All images must a) be downloaded and b) have a valid location taken
+			if (!videoEntry.wasMetadataRetrieved() || videoEntry.getPositionTaken() == null)
+			{
+				validDirectory = false;
+				break;
+			}
+
 		// If we have a valid directory, perform the upload
 		if (validDirectory)
 		{
@@ -151,6 +160,7 @@ public class CyVerseDSDataSource implements IDataSource
 							CalliopeData.getInstance().getUsername(),
 							LocalDateTime.now(),
 							Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count()),
+							Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).count()),
 							directoryToIndex.getFile().getAbsolutePath(),
 							CyVerseDSDataSource.this.getName());
 					// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress
