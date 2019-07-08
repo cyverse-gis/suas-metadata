@@ -52,7 +52,7 @@
                             <Insets bottom="20" left="5" right="5" top="20" />
                         </padding>
                         <children>
-                            <ComboBox fx:id="cbxImport" prefWidth="150" styleClass="importCbx" promptText="Import Images"/>
+                            <ComboBox fx:id="cbxImport" prefWidth="200" styleClass="importCbx" promptText="Import Images/Videos"/>
                         </children>
                     </FlowPane>
                 </Tab>
