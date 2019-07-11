@@ -13,6 +13,7 @@ import model.cyverse.CyVerseConnectionManager;
 import model.cyverse.ImageCollection;
 import model.dataSources.IDataSource;
 import model.dataSources.cyverseDataStore.CyVerseDSDataSource;
+import model.dataSources.localPC.compressed.LocalPCCompressedDataSource;
 import model.dataSources.localPC.directory.LocalPCDirectoryDataSource;
 import model.dataSources.localPC.image.LocalPCImageDataSource;
 import model.elasticsearch.ElasticSearchConnectionManager;
@@ -200,6 +201,7 @@ public class CalliopeData
 		this.dataSources.add(new CyVerseDSDataSource());
 		this.dataSources.add(new LocalPCImageDataSource());
 		this.dataSources.add(new LocalPCDirectoryDataSource());
+		this.dataSources.add(new LocalPCCompressedDataSource());
 	}
 
 	/**

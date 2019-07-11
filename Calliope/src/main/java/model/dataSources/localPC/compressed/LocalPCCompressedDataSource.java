@@ -20,7 +20,7 @@ import java.util.List;
 
 
 /**
- * TODO: Comment
+ * Data source used for reading compressed files off of the local PC
  */
 public class LocalPCCompressedDataSource extends LocalPCDataSource
 {
@@ -29,16 +29,16 @@ public class LocalPCCompressedDataSource extends LocalPCDataSource
      */
     public LocalPCCompressedDataSource()
     {
-        super("Local PC Compressed File", "Select compressed archives (.zip, .tar.gz) of files to import", new Image(ImageEntry.class.getResource("/images/importWindow/add.png").toString()));
+        super("Local PC Compressed", "Select compressed archives (.zip, .tar.gz) of files to import", new Image(ImageEntry.class.getResource("/images/importWindow/importImageIcon.png").toString()));
     }
 
     /**
      * Accepts a windows as a parameter to allow for UI thread locking popups.
-     * This method returns a task which when executed must return an image directory or null if the directory could not be
+     * This method returns a task which when executed must return a file directory or null if the directory could not be
      * retrieved for any reason.
      *
      * @param importWindow The window calling this method, may be locked by this method by popups if necessary
-     * @return A task that when executed pulls the image directory from the data source or null if the data source could not be retrieved
+     * @return A task that when executed pulls the file directory from the data source or null if the data source could not be retrieved
      */
     @Override
     public Task<ImageDirectory> makeImportTask(Window importWindow)
@@ -50,14 +50,14 @@ public class LocalPCCompressedDataSource extends LocalPCDataSource
             return null;
         }
 
-        // Create a file chooser to let the user choose which images to import
+        // Create a file chooser to let the user choose which files to import
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Image(s)");
-        // Set the directory to be in documents
+        fileChooser.setTitle("Select Compressed File(s)");
+        // Set the directory to be in the user's default directory
         fileChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
         // Show the dialog
         List<File> files = fileChooser.showOpenMultipleDialog(importWindow);
-        // If the file chosen is a file and a directory process it
+        // If the file chosen is a file and not empty process it
         if (files != null && !files.isEmpty())
         {
             Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
@@ -68,14 +68,15 @@ public class LocalPCCompressedDataSource extends LocalPCDataSource
                     this.updateProgress(0.05, 1.0);
                     this.updateMessage("Loading files...");
 
-                    // Convert the files to a directory
-                    ImageDirectory directory = DirectoryManager.loadFiles(files);
+                    // Convert the compressed files to a directory
+                    // This is where non-compressed files are removed
+                    ImageDirectory directory = DirectoryManager.loadCompressed(files);
                     directory.setDataSource(LocalPCCompressedDataSource.this);
 
                     this.updateProgress(0.1, 1.0);
                     this.updateMessage("Removing empty directories...");
 
-                    // Remove any directories that are empty and contain no images
+                    // Remove any directories that are empty and contain no files
                     DirectoryManager.removeEmptyDirectories(directory);
 
                     // Update progress based on init progress

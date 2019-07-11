@@ -127,6 +127,35 @@ public class DirectoryManager
 	}
 
 	/**
+	 * Reads a set of files and returns them in a usable format
+	 * Note that non-compressed files are culled out in this method
+	 *
+	 * @param files
+	 *            The files to make into a directory. We assume all files are in the same directory
+	 */
+	public static ImageDirectory loadCompressed(List<File> files)
+	{
+		// Map our input to a list of images only
+		List<File> validImages = files.stream().filter(AnalysisUtils::fileIsCompressed).collect(Collectors.toList());
+		// Make sure we have at least one image file
+		if (!validImages.isEmpty())
+		{
+			// All files are in the same directory, so grab the first file's parent directory
+			ImageDirectory imageDirectory = new ImageDirectory(files.get(0).getParentFile());
+			// Iterate over the images
+			for (File validImage : validImages)
+			{
+				// Load the image file and metadata and add it to the directory
+				ImageEntry imageEntry = new ImageEntry(validImage);
+				imageDirectory.addChild(imageEntry);
+			}
+			// Return the directory
+			return imageDirectory;
+		}
+		return new ImageDirectory(null);
+	}
+
+	/**
 	 * Recursively create the directory structure
 	 * 
 	 * @param current

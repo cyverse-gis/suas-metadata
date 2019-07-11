@@ -14,6 +14,7 @@ import java.io.File;
 public class AnalysisUtils
 {
 	private static final String[] ACCEPTED_EXTENSIONS = { "jpg", "JPG", "jpeg", "JPEG", "tiff", "TIFF", "tif", "TIF", "psd", "PSD", "png", "PNG", "bmp", "BMP", "gif", "GIF", "ico", "ICO" };
+	private static final String[] ACCEPTED_COMPRESSIONS = { "zip", "ZIP", "gz", "GZ", "tar", "TAR"};
 
 	/**
 	 * Test if a file is an image
@@ -37,6 +38,19 @@ public class AnalysisUtils
 	private static boolean fileIsImage(String fileExtension)
 	{
 		return StringUtils.endsWithAny(fileExtension, ACCEPTED_EXTENSIONS);
+	}
+
+	/**
+	 * Test if a file is compressed by extracting its extension and testing that.
+	 *
+	 * @param file
+	 *            The file to test
+	 * @return True if the file is compressed, false if not
+	 */
+	public static boolean fileIsCompressed(File file)
+	{
+		String toTest = FilenameUtils.getExtension(file.getName());
+		return StringUtils.endsWithAny(toTest, ACCEPTED_COMPRESSIONS);
 	}
 
 	/**
