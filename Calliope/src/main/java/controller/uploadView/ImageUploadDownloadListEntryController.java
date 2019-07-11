@@ -75,7 +75,7 @@ public class ImageUploadDownloadListEntryController extends ListCell<UploadedEnt
 		{
 			// Update the labels
 			this.lblUsername.setText(uploadedEntry.getUploadUser());
-			this.lblCount.setText(uploadedEntry.getImageCount() + " images uploaded");
+			this.lblCount.setText(uploadedEntry.getImageCount() + " images uploaded\n" + uploadedEntry.getVideoCount() + " videos uploaded");
 			this.lblDate.setText(CalliopeData.getInstance().getSettings().formatDateTime(this.getItem().getUploadDate(), " at "));
 			// Set the graphic to display
 			this.setGraphic(mainPane);
