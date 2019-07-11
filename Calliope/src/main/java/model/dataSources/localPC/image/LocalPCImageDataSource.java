@@ -55,7 +55,7 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 		fileChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
 		// Show the dialog
 		List<File> files = fileChooser.showOpenMultipleDialog(importWindow);
-		// If the file chosen is a file and a directory process it
+		// If the file chosen is a file and not empty process it
 		if (files != null && !files.isEmpty())
 		{
 			Task<ImageDirectory> importTask = new ErrorTask<ImageDirectory>()
@@ -87,7 +87,7 @@ public class LocalPCImageDataSource extends LocalPCDataSource
 			};
 			importTask.setOnSucceeded(event ->
 			{
-				// Ensure that the directory we created was a valid directory.
+				// Ensure that the directory we created was a valid directory with an image in it.
 				// TODO: Would this fit better elsewhere? ie, can we make importTask fail?
 				if(importTask.getValue().isValid())
 					// Add the directory to the image tree
