@@ -247,12 +247,32 @@ public class ImageDirectory extends ImageContainer
 	}
 
 	/**
-	 * @return The string representing this directoryProperty
+	 * @return The string representing this directoryProperty, plus the number of files contained within it
 	 */
 	@Override
 	public String toString()
 	{
-		return this.getFile().getName();
+		return this.getFile().getName() + " (" + this.getSize() + " files)";
+	}
+
+	/**
+	 * Recursively determines the size of the
+	 *
+	 * @return the number of files within this directory
+	 */
+	public int getSize()
+	{
+		int size = this.children.size();
+
+		for(ImageContainer currChild : this.children)
+		{
+			if(currChild instanceof ImageDirectory) {
+				ImageDirectory currDir = (ImageDirectory) currChild;
+				size = size - 1 + currDir.getSize();
+			}
+		}
+
+		return size;
 	}
 
 	public boolean isValid()
