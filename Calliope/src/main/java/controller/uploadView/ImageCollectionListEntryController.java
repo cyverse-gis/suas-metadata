@@ -22,6 +22,7 @@ import model.cyverse.Permission;
 import model.dataSources.IDataSource;
 import model.image.DataDirectory;
 import model.image.ImageEntry;
+import model.image.VideoEntry;
 import model.util.FXMLLoaderUtils;
 import org.controlsfx.control.action.Action;
 
@@ -228,7 +229,7 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 			// If we found the correct image directory to upload to, prompt the user
 			imageDirectoryOpt.ifPresent(imageDirectory ->
 				// Ask the user if they want to upload these images
-				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images to the collection " + this.getItem().getName() + "?",
+				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images/" + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).count() + " videos to the collection " + this.getItem().getName() + "?",
 					// If "Yes" is pressed, perform the action
 					new Action("Yes", actionEvent ->
 					{
