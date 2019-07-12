@@ -216,8 +216,6 @@ public class DirectoryManager
 				for (Integer entryIndex = tarIndex * imagesPerTar; entryIndex < (tarIndex + 1) * imagesPerTar && entryIndex < entries.size(); entryIndex++)
 				{
 					DataContainer entry = entries.get(entryIndex);
-					System.out.println(entry != null);
-					System.out.println(entry.getFile() != null);
 					// Create an archive entry for the image
 					String tarPath = StringUtils.substringAfter(entry.getFile().getAbsolutePath(), topDirectory).replace('\\', '/');
 					ArchiveEntry archiveEntry = tarOut.createArchiveEntry(entry.getFile(), tarPath);

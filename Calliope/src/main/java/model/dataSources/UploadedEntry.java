@@ -27,6 +27,7 @@ public class UploadedEntry
 	 * @param uploadUser The user that uploaded the images
 	 * @param uploadDate The date the upload happened on
 	 * @param imageCount The number of images in the upload
+	 * @param videoCount The number of videos in the upload
 	 * @param uploadPath The path to the file
 	 * @param storageMethod How the image is stored on the system
 	 */

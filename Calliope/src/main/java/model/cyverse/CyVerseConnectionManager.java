@@ -9,6 +9,7 @@ import model.dataSources.DirectoryManager;
 import model.dataSources.UploadedEntry;
 import model.dataSources.cyverseDataStore.CyVerseDSDataDirectory;
 import model.dataSources.cyverseDataStore.CyVerseDSImageEntry;
+import model.dataSources.cyverseDataStore.CyVerseDSVideoEntry;
 import model.image.DataDirectory;
 import model.image.ImageEntry;
 import model.image.VideoEntry;
@@ -548,16 +549,7 @@ public class CyVerseConnectionManager
 			// Iterate over all sub-files
 			for (IRODSFileImpl file : subFiles)
 			{
-				// If the file is not a directory add it as a new image entry
-				if (!file.isDirectory())
-				{
-					if (AnalysisUtils.fileIsImage(file))
-					{
-						ImageEntry imageEntry = new CyVerseDSImageEntry(file);
-						currentDirectory.addChild(imageEntry);
-					}
-				}
-				else
+				if (file.isDirectory())
 				{
 					// Grab the sub-directory
 					CyVerseDSDataDirectory subDirectory = new CyVerseDSDataDirectory(file);
@@ -565,6 +557,16 @@ public class CyVerseConnectionManager
 					currentDirectory.addChild(subDirectory);
 					// Recursively read the sub-directory
 					this.createDirectoryAndImageTree(subDirectory);
+				}
+				else if (AnalysisUtils.fileIsImage(file))
+				{
+					ImageEntry imageEntry = new CyVerseDSImageEntry(file);
+					currentDirectory.addChild(imageEntry);
+				}
+				else if (AnalysisUtils.fileIsMedia(file))
+				{
+					VideoEntry videoEntry = new CyVerseDSVideoEntry(file);
+					currentDirectory.addChild(videoEntry);
 				}
 			}
 		}

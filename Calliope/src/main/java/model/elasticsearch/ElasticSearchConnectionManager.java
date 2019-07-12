@@ -1190,6 +1190,7 @@ public class ElasticSearchConnectionManager
 			args.put("upload", new HashMap<String, Object>()
 			{{
 				put("imageCount", uploadEntry.getImageCount());
+				put("videoCount", uploadEntry.getVideoCount());
 				put("uploadDate", uploadEntry.getUploadDate().atZone(ZoneId.systemDefault()).format(CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT));
 				put("uploadUser", uploadEntry.getUploadUser());
 				put("uploadPath", uploadEntry.getUploadPath());
