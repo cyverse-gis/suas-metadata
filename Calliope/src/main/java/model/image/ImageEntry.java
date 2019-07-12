@@ -36,9 +36,6 @@ public class ImageEntry extends DataContainer
 {
 	private static final DateTimeFormatter DATE_FORMAT_FOR_DISK = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 
-
-<<<<<<< HEAD
-=======
 	// A property to wrap the currently selected image property. Must not be static!
 	private transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
 	// The actual file 
@@ -74,7 +71,6 @@ public class ImageEntry extends DataContainer
 
 	// If the image entry's metadata is currently ready to be edited
 	protected transient final SimpleBooleanProperty metadataEditable = new SimpleBooleanProperty(true);
->>>>>>> 24194288620db44bf4f56c91c073cf0c5f553220
 
 	// Flag that tells us if we've pulled the icon or not
 	private transient final AtomicBoolean gotIcon = new AtomicBoolean(false);
@@ -262,8 +258,6 @@ public class ImageEntry extends DataContainer
 		return this.imageFile.getValue();
 	}
 
-<<<<<<< HEAD
-=======
 	public ObjectProperty<File> fileProperty()
 	{
 		return this.imageFile;
@@ -451,7 +445,6 @@ public class ImageEntry extends DataContainer
 		return this.fileType;
 	}
 
->>>>>>> 24194288620db44bf4f56c91c073cf0c5f553220
 	@Override
 	public void setSiteTaken(Site siteTaken)
 	{

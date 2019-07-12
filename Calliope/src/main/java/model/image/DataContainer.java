@@ -19,7 +19,7 @@ import java.util.List;
 public abstract class DataContainer implements HierarchyData<DataContainer>
 {
 	// The icon to use for all images at the moment
-	private static final Image DEFAULT_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
+	protected static final Image DEFAULT_IMAGE_ICON = new Image(ImageEntry.class.getResource("/images/importWindow/imageIcon.png").toString());
 
 	// A property to wrap the currently selected image property. Must not be static!
 	protected transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
