@@ -122,19 +122,25 @@ public class DirectoryManager
 	 */
 	public static DataDirectory loadDirectory(File imageOrLocation)
 	{
-		DataDirectory toReturn;
-		if (!imageOrLocation.isDirectory())
-		{
-			// If it's not a directory, then just add the image
-			toReturn = new DataDirectory(imageOrLocation.getParentFile());
-			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
-			toReturn.addChild(imageEntry);
-		}
-		else
+		// If it is not a valid file or directory, returns null
+		DataDirectory toReturn = null;
+		if (imageOrLocation.isDirectory())
 		{
 			// If it is a directory, recursively create it
 			toReturn = new DataDirectory(imageOrLocation);
 			DirectoryManager.createDirectoryAndImageTree(toReturn);
+		}
+		else if (AnalysisUtils.fileIsImage(imageOrLocation)) {
+			// If it's not a directory, test if it's an image
+			toReturn = new DataDirectory(imageOrLocation.getParentFile());
+			ImageEntry imageEntry = new ImageEntry(imageOrLocation);
+			toReturn.addChild(imageEntry);
+		}
+		else if (AnalysisUtils.fileIsMedia(imageOrLocation)) {
+			// If it's not a directory or an image, test if it's a video
+			toReturn = new DataDirectory(imageOrLocation.getParentFile());
+			VideoEntry videoEntry = new VideoEntry(imageOrLocation);
+			toReturn.addChild(videoEntry);
 		}
 		return toReturn;
 	}
@@ -160,6 +166,12 @@ public class DirectoryManager
 					ImageEntry imageEntry = new ImageEntry(file);
 					current.addChild(imageEntry);
 				}
+				// Add all video files to the directory
+				else if (AnalysisUtils.fileIsMedia(file))
+				{
+					VideoEntry videoEntry = new VideoEntry(file);
+					current.addChild(videoEntry);
+				}
 				// Add all subdirectories to the directory
 				else if (file.isDirectory())
 				{
@@ -182,12 +194,12 @@ public class DirectoryManager
 		maxImagesPerTar = maxImagesPerTar - 1;
 		try
 		{
-			// List of images to be uploaded
-			List<ImageEntry> imageEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
+			// List of files to be uploaded
+			List<DataContainer> entries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry || imageContainer instanceof VideoEntry).collect(Collectors.toList());
 
-			// Take the number of images / maximum number of images per tar to get the number of tar files we need
-			Integer numberOfTars = (int) Math.ceil((double) imageEntries.size() / (double) maxImagesPerTar);
-			Integer imagesPerTar = (int) Math.ceil((double) imageEntries.size() / (double) numberOfTars);
+			// Take the number of images and videos / maximum number of files per tar to get the number of tar files we need
+			Integer numberOfTars = (int) Math.ceil((double) entries.size() / (double) maxImagesPerTar);
+			Integer imagesPerTar = (int) Math.ceil((double) entries.size() / (double) numberOfTars);
 			// Create an array of tars
 			File[] tars = new File[numberOfTars];
 
@@ -201,16 +213,18 @@ public class DirectoryManager
 				// Create a TAR output stream to write to
 				TarArchiveOutputStream tarOut = new TarArchiveOutputStream(new FileOutputStream(tempTar));
 
-				for (Integer imageIndex = tarIndex * imagesPerTar; imageIndex < (tarIndex + 1) * imagesPerTar && imageIndex < imageEntries.size(); imageIndex++)
+				for (Integer entryIndex = tarIndex * imagesPerTar; entryIndex < (tarIndex + 1) * imagesPerTar && entryIndex < entries.size(); entryIndex++)
 				{
-					ImageEntry imageEntry = imageEntries.get(imageIndex);
+					DataContainer entry = entries.get(entryIndex);
+					System.out.println(entry != null);
+					System.out.println(entry.getFile() != null);
 					// Create an archive entry for the image
-					String tarPath = StringUtils.substringAfter(imageEntry.getFile().getAbsolutePath(), topDirectory).replace('\\', '/');
-					ArchiveEntry archiveEntry = tarOut.createArchiveEntry(imageEntry.getFile(), tarPath);
+					String tarPath = StringUtils.substringAfter(entry.getFile().getAbsolutePath(), topDirectory).replace('\\', '/');
+					ArchiveEntry archiveEntry = tarOut.createArchiveEntry(entry.getFile(), tarPath);
 					// Put the archive entry into the TAR file
 					tarOut.putArchiveEntry(archiveEntry);
 					// Write all the bytes in the file into the TAR file
-					tarOut.write(Files.readAllBytes(imageEntry.getFile().toPath()));
+					tarOut.write(Files.readAllBytes(entry.getFile().toPath()));
 					// Finish writing the TAR entry
 					tarOut.closeArchiveEntry();
 				}
