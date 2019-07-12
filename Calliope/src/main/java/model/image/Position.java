@@ -2,6 +2,7 @@ package model.image;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import org.elasticsearch.common.geo.GeoPoint;
 
 /**
  * A class representing a location (latitude, longitude, and elevation)
@@ -14,6 +15,8 @@ public class Position
 	private final DoubleProperty latitude = new SimpleDoubleProperty();
 	private final DoubleProperty longitude = new SimpleDoubleProperty();
 	private final DoubleProperty elevation = new SimpleDoubleProperty();
+
+	private final double INVALID_ELEVATION = -20000;
 
 	/**
 	 * Position constructor
@@ -39,7 +42,17 @@ public class Position
 	{
 		this.latitude.setValue(-1000);
 		this.longitude.setValue(-1000);
-		this.elevation.setValue(-20000);
+		this.elevation.setValue(INVALID_ELEVATION);
+	}
+
+	/**
+	 * Special constructor for creating a Position out of a geoPoint
+	 */
+	public Position(GeoPoint gp)
+	{
+		this.latitude.setValue(gp.getLat());
+		this.longitude.setValue(gp.getLon());
+		this.elevation.setValue(INVALID_ELEVATION);
 	}
 
 	/**
@@ -53,9 +66,9 @@ public class Position
 	public Boolean lngValid() { return this.longitude.getValue() <= 180.0 && this.longitude.getValue() >= -180; }
 
 	/**
-	 * @return True if elevation is not the default -20000 value
+	 * @return True if elevation is not the default INVALID_ELEVATION (-20000, as of writing) value
 	 */
-	public Boolean elevationValid() { return this.elevation.getValue() != -20000; }
+	public Boolean elevationValid() { return this.elevation.getValue() != INVALID_ELEVATION; }
 
 	/**
 	 * @return True if the name, latitude, longitude, and elevation are valid

@@ -680,7 +680,7 @@ public class CalliopeImportController
 	public void imagePaneDragEntered(DragEvent dragEvent)
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
-		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
+		// If we started dragging at the site view and the dragboard has a string we play the fade-in animation and consume the event
 		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			this.fadeAddPanelOut.play();
 		dragEvent.consume();
@@ -694,7 +694,7 @@ public class CalliopeImportController
 	public void imagePaneDragExited(DragEvent dragEvent)
 	{
 		Dragboard dragboard = dragEvent.getDragboard();
-		// If we started dragging at the site view and the dragboard has a string we play the fade animation and consume the event
+		// If we started dragging at the site view and the dragboard has a string we play the fade-out animation and consume the event
 		if (dragboard.hasContent(CalliopeDataFormats.SITE_CODE_FORMAT) && (this.currentlySelectedImage.getValue() != null || this.currentlySelectedDirectory.getValue() != null))
 			this.fadeAddPanelIn.play();
 		dragEvent.consume();
@@ -717,19 +717,25 @@ public class CalliopeImportController
 			String siteCode = (String) dragboard.getContent(CalliopeDataFormats.SITE_CODE_FORMAT);
 			// Grab the site with the given ID
 			Optional<Site> toAdd = CalliopeData.getInstance().getSiteManager().getSites().stream().filter(site -> site.getCode().equals(siteCode)).findFirst();
-			// Add the site to the image
+			// Check to make sure we found something valid
 			if (toAdd.isPresent())
 				// Check if we have a selected image or directory to update!
 				if (currentlySelectedImage.getValue() != null)
 				{
+					// Add the site to the image
 					currentlySelectedImage.getValue().setSiteTaken(toAdd.get());
+					// Update the lat/long if they were invalid
+					currentlySelectedImage.getValue().setPositionFromSite(new Position(toAdd.get().getCenter()));
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;
 				}
 				else if (currentlySelectedDirectory.getValue() != null)
 				{
+					// Add the site to the image
 					currentlySelectedDirectory.getValue().setSiteTaken(toAdd.get());
+					// Update the lat/long if they were invalid
+					currentlySelectedDirectory.getValue().setPositionFromSite(new Position(toAdd.get().getCenter()));
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;

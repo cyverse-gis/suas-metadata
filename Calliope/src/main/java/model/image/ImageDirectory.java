@@ -216,6 +216,23 @@ public class ImageDirectory extends ImageContainer
 	}
 
 	/**
+	 * Setting the position taken on a directory sets the position on all children recursively
+	 *
+	 * @param pos The position to set to
+	 */
+	@Override
+	public void setPositionFromSite(Position pos)
+	{
+		this.getChildren().forEach(child ->
+		{
+			// If our child is a currently uploading image directory we don't want to modify it, so ignore it
+			if (child instanceof ImageDirectory && ((ImageDirectory) child).getUploadProgress() != -1)
+				return;
+			child.setPositionFromSite(pos);
+		});
+	}
+
+	/**
 	 * Setter for data source, also sets the data source for all child directories
 	 *
 	 * @param dataSource The data source of this directory

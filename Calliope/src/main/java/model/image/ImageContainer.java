@@ -18,6 +18,9 @@ public abstract class ImageContainer implements HierarchyData<ImageContainer>
 	// Sets the site taken of the given image container
 	public abstract void setSiteTaken(Site site);
 
+	// Sets the latitude/longitude of the given image container
+	public abstract void setPositionFromSite(Position pos);
+
 	/**
 	 * To string just prints out the file name by default
 	 * @return The file name

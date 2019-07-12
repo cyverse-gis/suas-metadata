@@ -478,4 +478,23 @@ public class ImageEntry extends ImageContainer
 	{
 		return this.metadataEditable;
 	}
+
+	@Override
+
+	/**
+	 * TODO: COMMENT
+	 */
+	public void setPositionFromSite(Position pos)
+	{
+		// Check to see if the image's lat/long are both invalid.
+		// If not, replace them with the site's latitude/longitude
+		// TODO: Do we want to replace both individually?
+		//   It would be weird to have a valid lat but not a valid long, but I suppose it could happen...
+		if(!this.getPositionTaken().latValid() && !this.getPositionTaken().lngValid())
+		{
+			// Set the elevation to the current one, since that may not be invalid
+			pos.setElevation(this.getPositionTaken().getElevation());
+			this.setPositionTaken(pos);
+		}
+	}
 }

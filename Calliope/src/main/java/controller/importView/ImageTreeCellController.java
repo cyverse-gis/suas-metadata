@@ -14,6 +14,7 @@ import model.CalliopeData;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
+import model.image.Position;
 import model.site.Site;
 
 import java.util.Optional;
@@ -132,9 +133,9 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	}
 
 	/**
-	 * If our mouse hovers over the image pane and we're dragging, we accept the transfer
+	 * If the mouse hovers over this cell and is dragged, accept the transfer
 	 *
-	 * @param dragEvent The event that means we are dragging over the image pane
+	 * @param dragEvent An event that indicates the user is dragging over the cell
 	 */
 	public void cellDragOver(DragEvent dragEvent)
 	{
@@ -146,9 +147,9 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	}
 
 	/**
-	 * When the drag from the species or location list enters the image
+	 * When a drag from the sites list enters this cell
 	 *
-	 * @param dragEvent The event that means we are dragging over the image pane
+	 * @param dragEvent An event that indicates the user has begun dragging over the cell
 	 */
 	public void cellDragEntered(DragEvent dragEvent)
 	{
@@ -161,9 +162,9 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 	}
 
 	/**
-	 * When the drag from the species or location list exits the image
+	 * When the drag from the sites list exits this cell
 	 *
-	 * @param dragEvent The event that means we are dragging away from the image pane
+	 * @param dragEvent An event that indicates the user is dragging away from the cell
 	 */
 	public void cellDragExited(DragEvent dragEvent)
 	{
@@ -195,6 +196,7 @@ public class ImageTreeCellController extends TreeCell<ImageContainer>
 			if (toAdd.isPresent())
 			{
 				this.getItem().setSiteTaken(toAdd.get());
+				this.getItem().setPositionFromSite(new Position(toAdd.get().getCenter()));
 				success = true;
 			}
 		}
