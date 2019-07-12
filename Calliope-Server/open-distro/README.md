@@ -1,2 +1,1 @@
-TODO: Write
-Add docker-container stuff related to open-distro here
+These files are used to initial the docker container for Open-Distro
