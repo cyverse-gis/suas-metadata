@@ -502,6 +502,9 @@ public class CalliopeImportController
 			// If it returns a text field, make sure we can't edit it
 			if (toReturn.getEditor() instanceof TextField)
 				((TextField) toReturn.getEditor()).setEditable(false);
+			// If this is the all-metadata tag, make it look distinct
+			if (item.getName().compareTo("AllMetadata") == 0)
+				((TextField) toReturn.getEditor()).setMinHeight(50);
 			return toReturn;
 		});
 

@@ -75,8 +75,8 @@ public class DataDirectory extends DataContainer
 		{
 			if (!directory.isDirectory())
 				throw new RuntimeException("The specified file is not a directory!");
-			this.directoryProperty.setValue(directory);
 		}
+		this.directoryProperty.setValue(directory);
 	}
 
 	/**
@@ -253,5 +253,10 @@ public class DataDirectory extends DataContainer
 	public String toString()
 	{
 		return this.getFile().getName();
+	}
+
+	public boolean isValid()
+	{
+		return this.directoryProperty.getValue() != null;
 	}
 }

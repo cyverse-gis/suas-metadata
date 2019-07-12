@@ -37,6 +37,44 @@ public class ImageEntry extends DataContainer
 	private static final DateTimeFormatter DATE_FORMAT_FOR_DISK = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 
 
+<<<<<<< HEAD
+=======
+	// A property to wrap the currently selected image property. Must not be static!
+	private transient final ObjectProperty<Image> icon = new SimpleObjectProperty<>(DEFAULT_IMAGE_ICON);
+	// The actual file 
+	private final ObjectProperty<File> imageFile = new SimpleObjectProperty<File>();
+	// The date that the image was taken
+	private final ObjectProperty<LocalDateTime> dateTaken = new SimpleObjectProperty<>();
+	// The NEON site closest to the image
+	private final ObjectProperty<Site> siteTaken = new SimpleObjectProperty<>(null);
+	// The lat/long/elevation of this image
+	private final ObjectProperty<Position> positionTaken = new SimpleObjectProperty<>(null);
+	// The name of the drone maker company
+	private final StringProperty droneMaker = new SimpleStringProperty(null);
+	// The name of the drone camera model
+	private final StringProperty cameraModel = new SimpleStringProperty(null);
+	// The speed the drone was traveling when the image was taken
+	private final ObjectProperty<Vector3> speed = new SimpleObjectProperty<>(new Vector3());
+	// The rotation the drone had when the image was taken
+	private final ObjectProperty<Vector3> rotation = new SimpleObjectProperty<>(new Vector3());
+	// The altitude the image was taken at above the ground
+	private final DoubleProperty altitude = new SimpleDoubleProperty(-1);
+	// The type of the image file
+	private final StringProperty fileType = new SimpleStringProperty(null);
+	// The focal length that the image was taken with
+	private final DoubleProperty focalLength = new SimpleDoubleProperty(-1);
+	// The width and height of the image
+	private final DoubleProperty width = new SimpleDoubleProperty(-1);
+	private final DoubleProperty height = new SimpleDoubleProperty(-1);
+	// All metadata that exiftool was able to read
+	private final StringProperty allMetadata = new SimpleStringProperty(null);
+
+	// The raw metadata entries without any modifications
+	private transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
+
+	// If the image entry's metadata is currently ready to be edited
+	protected transient final SimpleBooleanProperty metadataEditable = new SimpleBooleanProperty(true);
+>>>>>>> 24194288620db44bf4f56c91c073cf0c5f553220
 
 	// Flag that tells us if we've pulled the icon or not
 	private transient final AtomicBoolean gotIcon = new AtomicBoolean(false);
@@ -119,6 +157,9 @@ public class ImageEntry extends DataContainer
 		this.focalLength.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.FOCAL_LENGTH, "0")));
 		this.width.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_WIDTH, "0")));
 		this.height.setValue(Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.IMAGE_HEIGHT, "0")));
+
+		// Store all the metadata as one string
+		this.allMetadata.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.ALL_METADATA, UNSPECIFIED));
 	}
 
 	/**
@@ -221,6 +262,196 @@ public class ImageEntry extends DataContainer
 		return this.imageFile.getValue();
 	}
 
+<<<<<<< HEAD
+=======
+	public ObjectProperty<File> fileProperty()
+	{
+		return this.imageFile;
+	}
+
+	public void setDateTaken(LocalDateTime date)
+	{
+		this.dateTaken.setValue(date);
+	}
+
+	public LocalDateTime getDateTaken()
+	{
+		return dateTaken.getValue();
+	}
+
+	public ObjectProperty<LocalDateTime> dateTakenProperty()
+	{
+		return dateTaken;
+	}
+
+	public void setPositionTaken(Position positionTaken)
+	{
+		this.positionTaken.setValue(positionTaken);
+	}
+
+	public Position getPositionTaken()
+	{
+		return positionTaken.getValue();
+	}
+
+	public ObjectProperty<Position> positionTakenProperty()
+	{
+		return positionTaken;
+	}
+
+	public void setDroneMaker(String droneMaker)
+	{
+		this.droneMaker.setValue(droneMaker);
+	}
+
+	public String getDroneMaker()
+	{
+		return droneMaker.getValue();
+	}
+
+	public StringProperty droneMakerProperty()
+	{
+		return this.droneMaker;
+	}
+
+	public void setCameraModel(String cameraModel)
+	{
+		this.cameraModel.setValue(cameraModel);
+	}
+
+	public String getCameraModel()
+	{
+		return cameraModel.getValue();
+	}
+
+	public StringProperty cameraModelProperty()
+	{
+		return this.cameraModel;
+	}
+
+	public void setSpeed(Vector3 speed)
+	{
+		this.speed.setValue(speed);
+	}
+
+	public Vector3 getSpeed()
+	{
+		return speed.getValue();
+	}
+
+	public ObjectProperty<Vector3> speedProperty()
+	{
+		return this.speed;
+	}
+
+	public void setRotation(Vector3 rotation)
+	{
+		this.rotation.setValue(rotation);
+	}
+
+	public Vector3 getRotation()
+	{
+		return rotation.getValue();
+	}
+
+	public ObjectProperty<Vector3> rotationProperty()
+	{
+		return rotation;
+	}
+
+	public void setAltitude(Double altitude)
+	{
+		this.altitude.setValue(altitude);
+	}
+
+	public double getAltitude()
+	{
+		return this.altitude.getValue();
+	}
+
+	public DoubleProperty altitudeProperty()
+	{
+		return this.altitude;
+	}
+
+	public void setFileType(String fileType)
+	{
+		this.fileType.setValue(fileType);
+	}
+
+	public String getFileType()
+	{
+		return this.fileType.getValue();
+	}
+
+	public StringProperty fileTypeProperty()
+	{
+		return this.fileType;
+	}
+
+	public void setFocalLength(Double focalLength)
+	{
+		this.focalLength.setValue(focalLength);
+	}
+
+	public double getFocalLength()
+	{
+		return this.focalLength.getValue();
+	}
+
+	public DoubleProperty focalLengthProperty()
+	{
+		return this.focalLength;
+	}
+
+	public void setWidth(Double width)
+	{
+		this.width.setValue(width);
+	}
+
+	public double getWidth()
+	{
+		return this.width.getValue();
+	}
+
+	public DoubleProperty widthProperty()
+	{
+		return this.width;
+	}
+
+	public void setHeight(Double height)
+	{
+		this.height.setValue(height);
+	}
+
+	public double getHeight()
+	{
+		return this.height.getValue();
+	}
+
+	public DoubleProperty heightProperty()
+	{
+		return this.height;
+	}
+
+	// TODO: Is this needed? I can't think of an instance where we would want to set the metadata read to something else...
+
+	public void setAllMetadata(String allMeta)
+	{
+		this.allMetadata.setValue(allMeta);
+	}
+
+	public String getAllMetadata()
+	{
+		return this.allMetadata.getValue();
+	}
+
+	public StringProperty allMetadataProperty()
+	{
+		return this.fileType;
+	}
+
+>>>>>>> 24194288620db44bf4f56c91c073cf0c5f553220
 	@Override
 	public void setSiteTaken(Site siteTaken)
 	{
