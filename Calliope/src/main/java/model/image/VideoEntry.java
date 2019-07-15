@@ -1,5 +1,6 @@
 package model.image;
 
+import com.sun.awt.AWTUtilities;
 import com.thebuzzmedia.exiftool.Tag;
 import com.thebuzzmedia.exiftool.core.StandardTag;
 import javafx.application.Platform;
@@ -21,6 +22,10 @@ import model.site.Site;
 import model.threading.ErrorTask;
 import model.util.CustomPropertyItem;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.jcodec.api.FrameGrab;
+import org.jcodec.api.JCodecException;
+import org.jcodec.common.model.Picture;
+import org.jcodec.scale.AWTUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -155,26 +160,25 @@ public class VideoEntry extends DataContainer
 			@Override
 			protected Image call()
 			{
-				// Use ffmpeg here to get an icon?
-				// Nope! Try to use MediaView's snapshot instead
-				Media temp = VideoEntry.this.buildIntoMedia();
-				WritableImage icon = new WritableImage(32, 32);
-				MediaPlayer mp = new MediaPlayer(temp);
-				MediaView mv = new MediaView(mp);
-				mp.play();
-				Platform.runLater(() -> {
-							mv.snapshot(result -> {
-								Image image = result.getImage();
-								if (image == null) {
-									return null;
-								}
-								PixelWriter writer = icon.getPixelWriter();
-								writer.setPixels(0, 0, temp.getWidth(), temp.getHeight(), image.getPixelReader(), 0, 0);
-								return null;
-							}, null, null);
-						});
-				mp.stop();
-				return icon;
+				// Use jcodec to grab the first frame
+                final int frame = 1;
+				Picture pic = null;
+				try {
+					pic = FrameGrab.getFrameFromFile(VideoEntry.this.getFile(), frame);
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (JCodecException e) {
+					e.printStackTrace();
+				}
+				BufferedImage icon = AWTUtil.toBufferedImage(pic);
+				WritableImage wr = new WritableImage(icon.getWidth(), icon.getHeight());
+				PixelWriter pw = wr.getPixelWriter();
+				for (int x = 0; x < icon.getWidth(); x++) {
+					for (int y = 0; y < icon.getHeight(); y++) {
+						pw.setArgb(x, y, icon.getRGB(x, y));
+					}
+				}
+				return wr;
 			}
 		};
 		// Once this finishes, set the icon
