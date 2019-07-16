@@ -62,16 +62,26 @@
             <items>
                 <StackPane fx:id="imagePane" onDragDropped="#imagePaneDragDropped" onDragEntered="#imagePaneDragEntered" onDragExited="#imagePaneDragExited" onDragOver="#imagePaneDragOver" onMouseEntered="#imagePaneMouseEntered" onMouseExited="#imagePaneMouseExited">
                     <children>
+                        <Pane fx:id="mediaViewPane">
+                            <children>
+                                <MediaView fx:id="mediaPreview" fitHeight="${mediaViewPane.height}" fitWidth="${mediaViewPane.width}" layoutX="1.0" />
+                            </children>
+                        </Pane>
+                        <AnchorPane fx:id="mediaControlPane"  onMouseClicked="#onMediaClicked">
+                            <children>
+                                <ImageView fx:id="playIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5">
+                                    <Image url="@../images/importWindow/play.png"/>
+                                </ImageView>
+                                <ImageView fx:id="pauseIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5">
+                                    <Image url="@../images/importWindow/pause.png"/>
+                                </ImageView>
+                            </children>
+                        </AnchorPane>
                         <ImageViewPane fx:id="imagePreviewPane" styleClass="imageViewBackground">
                             <imageView>
                                 <ImageView fx:id="imagePreview" onMouseClicked="#onImageClicked" onMouseDragged="#onImageDragged" onMousePressed="#onImagePressed" onScroll="#onImageScroll" preserveRatio="true" styleClass="imageView" />
                             </imageView>
                         </ImageViewPane>
-                        <Pane fx:id="mediaViewPane">
-                            <children>
-                                <MediaView fx:id="mediaPreview" onMouseClicked="#onMediaClicked" fitHeight="${mediaViewPane.height}" fitWidth="${mediaViewPane.width}" layoutX="1.0" />
-                            </children>
-                        </Pane>
                         <HBox onMouseEntered="#onMouseEnteredLocation" onMouseExited="#onMouseExitedLocation" onMouseClicked="#mouseClickedLocation" styleClass="siteBackground" pickOnBounds="false" fx:id="hbxLocation" minHeight="80" maxHeight="80" maxWidth="-Infinity" alignment="CENTER_RIGHT" StackPane.alignment="TOP_RIGHT">
                             <StackPane.margin>
                                 <Insets right="5" top="5"/>

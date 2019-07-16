@@ -170,6 +170,7 @@ public class VideoEntry extends DataContainer
 				} catch (JCodecException e) {
 					e.printStackTrace();
 				}
+				// Convert Picture > BufferedImage > WritableImage
 				BufferedImage icon = AWTUtil.toBufferedImage(pic);
 				WritableImage wr = new WritableImage(icon.getWidth(), icon.getHeight());
 				PixelWriter pw = wr.getPixelWriter();

@@ -20,10 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.stage.Modality;
@@ -74,6 +71,12 @@ public class CalliopeImportController
 	@FXML
 	public MediaView mediaPreview;
 
+	@FXML
+	public Pane mediaViewPane;
+
+	@FXML
+	public AnchorPane mediaControlPane;
+
 	// The stack pane containing the image and media previews
 	@FXML
 	public StackPane imagePane;
@@ -115,6 +118,12 @@ public class CalliopeImportController
 	// The main pane holding everything
 	@FXML
 	public SplitPane mainPane;
+
+	// Media Control Icons
+	@FXML
+	public ImageView playIcon;
+	@FXML
+	public ImageView pauseIcon;
 
 	// Top right label containing location name
 	@FXML
@@ -292,8 +301,9 @@ public class CalliopeImportController
 		this.btnDelete.disableProperty().bind(this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1));
 
 		// Bind the mediaview and imageview visibility
-		imagePreview.visibleProperty().bind(imageDisp);
-		mediaPreview.visibleProperty().bind(imageDisp.not());
+		imagePreviewPane.visibleProperty().bind(imageDisp);
+		mediaViewPane.visibleProperty().bind(imageDisp.not());
+		mediaControlPane.visibleProperty().bind(imageDisp.not());
 
 		// Create bindings in the GUI
 
@@ -421,6 +431,8 @@ public class CalliopeImportController
 				}
 				imageRetrievalService.restart();
 			} else if (newValue instanceof VideoEntry) {
+				playIcon.setVisible(true);
+				pauseIcon.setVisible(false);
 				imageDisp.setValue(false);
 				videoRetrievalService.restart();
 			}
@@ -885,9 +897,13 @@ public class CalliopeImportController
 	private void onMediaClicked(MouseEvent event) {
 		switch (mediaPreview.getMediaPlayer().statusProperty().getValue()) {
 			case PLAYING:
+				playIcon.setVisible(true);
+				pauseIcon.setVisible(false);
 				mediaPreview.getMediaPlayer().pause();
 				break;
 			case PAUSED: case READY:
+				playIcon.setVisible(false);
+				pauseIcon.setVisible(true);
 				mediaPreview.getMediaPlayer().play();
 				break;
 		}
