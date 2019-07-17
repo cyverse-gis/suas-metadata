@@ -16,7 +16,9 @@ public class Position
 	private final DoubleProperty longitude = new SimpleDoubleProperty();
 	private final DoubleProperty elevation = new SimpleDoubleProperty();
 
-	private final double INVALID_ELEVATION = -20000;
+	private final static double INVALID_LATITUDE = -1000;
+	private final static double INVALID_LONGITUDE = -1000;
+	private final static double INVALID_ELEVATION = -20000;
 
 	/**
 	 * Position constructor
@@ -40,8 +42,8 @@ public class Position
 	 */
 	public Position()
 	{
-		this.latitude.setValue(-1000);
-		this.longitude.setValue(-1000);
+		this.latitude.setValue(INVALID_LATITUDE);
+		this.longitude.setValue(INVALID_LONGITUDE);
 		this.elevation.setValue(INVALID_ELEVATION);
 	}
 
@@ -173,4 +175,8 @@ public class Position
 	{
 		return "\nLatitude: " + this.getLatitude() + "\nLongitude: " + this.getLongitude() + "\nElevation: " + this.getElevation();
 	}
+
+	public static Double getInvalidLat() { return INVALID_LATITUDE; }
+	public static Double getInvalidLon() { return INVALID_LONGITUDE; }
+	public static Double getInvalidEle() { return INVALID_ELEVATION; }
 }
