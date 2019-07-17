@@ -129,10 +129,11 @@ public class ImageEntry extends ImageContainer
 		// Starting with date taken, convert the raw date taken as a string into an object
 		this.dateTaken.setValue(LocalDateTime.parse(imageMetadataMap.getOrDefault(StandardTag.DATE_TIME_ORIGINAL, LocalDateTime.now().format(DATE_FORMAT_FOR_DISK)), DATE_FORMAT_FOR_DISK));
 		// Next convert the lat/long/altitude into a location object
+		// Set the default values to invalid latitude/longitude/elevations
 		this.positionTaken.setValue(new Position(
-				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, "0")),
-				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, "0")),
-				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, "0"))));
+				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LATITUDE, Position.getInvalidLat().toString())),
+				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_LONGITUDE, Position.getInvalidLon().toString())),
+				Double.parseDouble(imageMetadataMap.getOrDefault(StandardTag.GPS_ALTITUDE, Position.getInvalidEle().toString()))));
 		// Then store the maker and model fields separately
 		this.droneMaker.setValue(imageMetadataMap.getOrDefault(StandardTag.MAKE, UNSPECIFIED));
 		this.cameraModel.setValue(imageMetadataMap.getOrDefault(MetadataManager.CustomTags.CAMERA_MODEL_NAME, UNSPECIFIED));
@@ -243,6 +244,26 @@ public class ImageEntry extends ImageContainer
 		iconBuilder.setOnSucceeded(event -> this.icon.setValue(iconBuilder.getValue()));
 		// Execute the
 		CalliopeData.getInstance().getExecutor().getBackgroundExecutor().addTask(iconBuilder);
+	}
+
+	/**
+	 * Given a position, set the ImageEntry's position if the entry does not currently have a valid position.
+	 *
+	 * @pos The position from which to set. Does not necessary contain a valid elevation.
+	 */
+	@Override
+	public void setPositionFromSite(Position pos)
+	{
+		// Check to see if the image's lat/long are both invalid.
+		// If not, replace them with the site's latitude/longitude.a
+		// TODO: Do we want to replace both individually?
+		//   It would be weird to have a valid lat but not a valid long, but I suppose it could happen...
+		if(!this.getPositionTaken().latValid() && !this.getPositionTaken().lngValid())
+		{
+			// Set the elevation to the current one, since that may not be invalid
+			pos.setElevation(this.getPositionTaken().getElevation());
+			this.setPositionTaken(pos);
+		}
 	}
 
 	///
@@ -477,24 +498,5 @@ public class ImageEntry extends ImageContainer
 	public BooleanProperty metadataEditableProperty()
 	{
 		return this.metadataEditable;
-	}
-
-	@Override
-
-	/**
-	 * TODO: COMMENT
-	 */
-	public void setPositionFromSite(Position pos)
-	{
-		// Check to see if the image's lat/long are both invalid.
-		// If not, replace them with the site's latitude/longitude
-		// TODO: Do we want to replace both individually?
-		//   It would be weird to have a valid lat but not a valid long, but I suppose it could happen...
-		if(!this.getPositionTaken().latValid() && !this.getPositionTaken().lngValid())
-		{
-			// Set the elevation to the current one, since that may not be invalid
-			pos.setElevation(this.getPositionTaken().getElevation());
-			this.setPositionTaken(pos);
-		}
 	}
 }
