@@ -67,26 +67,26 @@ public class CyVerseDSDataSource implements IDataSource
 						// Update the message used by the task to display progress
 						this.updateMessage("Searching for image files in directory...");
 						// Ask our CyVerse connection manager to read the directory
-						CyVerseDSDataDirectory imageDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
+						CyVerseDSDataDirectory dataDirectory = CalliopeData.getInstance().getCyConnectionManager().prepareExistingImagesForIndexing(pathToFiles);
 						// Will be null if the file does not exist
-						if (imageDirectory != null)
+						if (dataDirectory != null)
 						{
 							// Remove any empty directories
-							DirectoryManager.removeEmptyDirectories(imageDirectory);
+							DirectoryManager.removeEmptyDirectories(dataDirectory);
 							// Update progress based on init progress
 							this.updateMessage("Reading image metadata...");
 							DoubleProperty progressProperty = new SimpleDoubleProperty();
 							progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
-							DirectoryManager.initImages(imageDirectory, progressProperty);
+							DirectoryManager.initImages(dataDirectory, progressProperty);
 							// Go over each image entry and queue its download
-							imageDirectory.flattened().filter(dataContainer -> dataContainer instanceof CyVerseDSImageEntry).forEach(dataContainer ->
+							dataDirectory.flattened().filter(dataContainer -> dataContainer instanceof CyVerseDSImageEntry).forEach(dataContainer ->
 							{
 								CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) dataContainer;
 								cyVerseDSImageEntry.pullMetadataFromCyVerse();
 							});
-							imageDirectory.setDataSource(CyVerseDSDataSource.this);
+							dataDirectory.setDataSource(CyVerseDSDataSource.this);
 						}
-						return imageDirectory;
+						return dataDirectory;
 					}
 				};
 				indexExistingTask.setOnSucceeded(event ->

@@ -512,11 +512,11 @@ public class CyVerseConnectionManager
 				if (topLevelDirectory.exists() && topLevelDirectory.canRead() && topLevelDirectory.isDirectory())
 				{
 					// Create a new CyVerse datastore image directory representing the image
-					CyVerseDSDataDirectory imageDirectory = new CyVerseDSDataDirectory(topLevelDirectory);
+					CyVerseDSDataDirectory dataDirectory = new CyVerseDSDataDirectory(topLevelDirectory);
 					// Download the image directory for editing using a recursive call
-					this.createDirectoryAndImageTree(imageDirectory);
+					this.createDirectoryAndImageTree(dataDirectory);
 					// Return the directory
-					return imageDirectory;
+					return dataDirectory;
 				}
 			}
 			catch (JargonException e)

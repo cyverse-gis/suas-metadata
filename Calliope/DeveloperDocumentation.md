@@ -60,7 +60,8 @@ private void addDefaultDataSources()
 
 ##### Data Container (/image/DataContainer.java)
 
-This interface is implemented by `ImageEntry.java` and `ImageDirectory.java`. Both these classes are used in the tree of files on the right side on the import tab. `ImageEntry`ies are the programmatic form of an image file, while `ImageDirectory`ies are the programmatic form of a directory. ImageDirectories contain a list of sub-directories and files while ImageEntries contain image metadata and an icon. This interface may be extended for custom image and directory implementations for use in new data sources. See [Data Sources](#data-sources-datasourcesidatasourcejava) for info on how to add new data sources.
+This interface is implemented by `ImageEntry.java` and `DataDirectory.java`. Both these classes are used in the tree of files on the right side on the import tab. `ImageEntry`ies are the programmatic form of an image file, while `DataDirectory`ies are the programmatic form of a directory. DataDirectories contain a list of sub-directories and files while ImageEntries contain image metadata and an icon. This interface may be extended for custom image and directory implementations for use in new data sources. See [Data Sources](#data-sources-datasourcesidatasourcejava) for info on how to add new data sources.
+TODO: Add futher documentation as more extensions of DataContainer are added
 
 ##### Settings Data (/settings/SettingsData.java)
 

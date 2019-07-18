@@ -217,26 +217,26 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 		// If our dragboard has a string we have data which we need
 		if (dragboard.hasContent(IMAGE_DIRECTORY_FILE_FORMAT))
 		{
-			Integer imageDirectoryHash = (int) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
+			Integer dataDirectoryHash = (int) dragboard.getContent(IMAGE_DIRECTORY_FILE_FORMAT);
 			// Filter our list of images by directory that has the right file path
-			Optional<DataDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree()
+			Optional<DataDirectory> dataDirectoryOpt = CalliopeData.getInstance().getImageTree()
 					.flattened()
 					.filter(dataContainer -> dataContainer instanceof DataDirectory &&
-							Objects.hash(dataContainer) == imageDirectoryHash)
+							Objects.hash(dataContainer) == dataDirectoryHash)
 					.map(dataContainer -> (DataDirectory) dataContainer)
 					.findFirst();
 
 			// If we found the correct image directory to upload to, prompt the user
-			imageDirectoryOpt.ifPresent(imageDirectory ->
+			dataDirectoryOpt.ifPresent(dataDirectory ->
 				// Ask the user if they want to upload these images
-				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + imageDirectory.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).count() + " images/" + imageDirectory.flattened().filter(dataContainer -> dataContainer instanceof VideoEntry).count() + " videos to the collection " + this.getItem().getName() + "?",
+				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + dataDirectory.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).count() + " images/" +  dataDirectory.flattened().filter(dataContainer -> dataContainer instanceof VideoEntry).count() + " videos to the collection " + this.getItem().getName() + "?",
 					// If "Yes" is pressed, perform the action
 					new Action("Yes", actionEvent ->
 					{
 						// Grab the source of the data
-						IDataSource dataSource = imageDirectory.getDataSource();
+						IDataSource dataSource = dataDirectory.getDataSource();
 						// Make an index task for this directory
-						Task<Void> indexTask = dataSource.makeIndexTask(ImageCollectionListEntryController.this.getItem(), imageDirectory);
+						Task<Void> indexTask = dataSource.makeIndexTask(ImageCollectionListEntryController.this.getItem(), dataDirectory);
 						// Execute this index task
 						if (indexTask != null)
 							CalliopeData.getInstance().getExecutor().getImmediateExecutor().addTask(indexTask, true);
