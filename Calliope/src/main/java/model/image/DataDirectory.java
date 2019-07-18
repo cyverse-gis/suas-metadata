@@ -264,10 +264,10 @@ public class DataDirectory extends DataContainer
 	{
 		int size = this.children.size();
 
-		for(ImageContainer currChild : this.children)
+		for(DataContainer currChild : this.children)
 		{
-			if(currChild instanceof ImageDirectory) {
-				ImageDirectory currDir = (ImageDirectory) currChild;
+			if(currChild instanceof DataDirectory) {
+				DataDirectory currDir = (DataDirectory) currChild;
 				size = size - 1 + currDir.getSize();
 			}
 		}

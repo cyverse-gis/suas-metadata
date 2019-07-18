@@ -111,7 +111,7 @@ public class DirectoryManager
 			// Return the directory
 			return dataDirectory;
 		}
-		return new ImageDirectory(null);
+		return new DataDirectory(null);
 	}
 
 	/**
