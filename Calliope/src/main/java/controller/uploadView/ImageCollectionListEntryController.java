@@ -221,15 +221,15 @@ public class ImageCollectionListEntryController extends ListCell<ImageCollection
 			// Filter our list of images by directory that has the right file path
 			Optional<DataDirectory> imageDirectoryOpt = CalliopeData.getInstance().getImageTree()
 					.flattened()
-					.filter(imageContainer -> imageContainer instanceof DataDirectory &&
-							Objects.hash(imageContainer) == imageDirectoryHash)
-					.map(imageContainer -> (DataDirectory) imageContainer)
+					.filter(dataContainer -> dataContainer instanceof DataDirectory &&
+							Objects.hash(dataContainer) == imageDirectoryHash)
+					.map(dataContainer -> (DataDirectory) dataContainer)
 					.findFirst();
 
 			// If we found the correct image directory to upload to, prompt the user
 			imageDirectoryOpt.ifPresent(imageDirectory ->
 				// Ask the user if they want to upload these images
-				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count() + " images/" + imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).count() + " videos to the collection " + this.getItem().getName() + "?",
+				CalliopeData.getInstance().getErrorDisplay().notify("Are you sure you want to upload/index these " + imageDirectory.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).count() + " images/" + imageDirectory.flattened().filter(dataContainer -> dataContainer instanceof VideoEntry).count() + " videos to the collection " + this.getItem().getName() + "?",
 					// If "Yes" is pressed, perform the action
 					new Action("Yes", actionEvent ->
 					{

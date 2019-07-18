@@ -360,8 +360,8 @@ public class CyVerseConnectionManager
 						messageCallback.setValue("Creating TAR file out of the directory before uploading...");
 
 					// Create the JSON file representing the upload
-					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count());
-					Integer videoCount = Math.toIntExact(directoryToWrite.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).count());
+					Integer imageCount = Math.toIntExact(directoryToWrite.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).count());
+					Integer videoCount = Math.toIntExact(directoryToWrite.flattened().filter(dataContainer -> dataContainer instanceof VideoEntry).count());
 					UploadedEntry uploadEntry = new UploadedEntry(
 							CalliopeData.getInstance().getUsername(),
 							LocalDateTime.now(),

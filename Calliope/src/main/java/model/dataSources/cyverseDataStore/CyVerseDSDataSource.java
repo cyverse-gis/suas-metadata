@@ -79,9 +79,9 @@ public class CyVerseDSDataSource implements IDataSource
 							progressProperty.addListener((observable, oldValue, newValue) -> this.updateProgress(newValue.doubleValue(), 1.0));
 							DirectoryManager.initImages(imageDirectory, progressProperty);
 							// Go over each image entry and queue its download
-							imageDirectory.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).forEach(imageContainer ->
+							imageDirectory.flattened().filter(dataContainer -> dataContainer instanceof CyVerseDSImageEntry).forEach(dataContainer ->
 							{
-								CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) imageContainer;
+								CyVerseDSImageEntry cyVerseDSImageEntry = (CyVerseDSImageEntry) dataContainer;
 								cyVerseDSImageEntry.pullMetadataFromCyVerse();
 							});
 							imageDirectory.setDataSource(CyVerseDSDataSource.this);
@@ -122,7 +122,7 @@ public class CyVerseDSDataSource implements IDataSource
 		// Make sure we've got a valid directory
 		boolean validDirectory = true;
 		// Each image must have a location tagged
-		for (CyVerseDSImageEntry imageEntry : directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSImageEntry).map(imageContainer -> (CyVerseDSImageEntry) imageContainer).collect(Collectors.toList()))
+		for (CyVerseDSImageEntry imageEntry : directoryToIndex.flattened().filter(dataContainer -> dataContainer instanceof CyVerseDSImageEntry).map(dataContainer -> (CyVerseDSImageEntry) dataContainer).collect(Collectors.toList()))
 			// All images must a) be downloaded and b) have a valid location taken
 			if (!imageEntry.wasMetadataRetrieved() || imageEntry.getPositionTaken() == null)
 			{
@@ -130,7 +130,7 @@ public class CyVerseDSDataSource implements IDataSource
 				break;
 			}
 
-		for (CyVerseDSVideoEntry videoEntry : directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof CyVerseDSVideoEntry).map(imageContainer -> (CyVerseDSVideoEntry) imageContainer).collect(Collectors.toList()))
+		for (CyVerseDSVideoEntry videoEntry : directoryToIndex.flattened().filter(dataContainer -> dataContainer instanceof CyVerseDSVideoEntry).map(dataContainer -> (CyVerseDSVideoEntry) dataContainer).collect(Collectors.toList()))
 			// All images must a) be downloaded and b) have a valid location taken
 			if (!videoEntry.wasMetadataRetrieved() || videoEntry.getPositionTaken() == null)
 			{
@@ -159,8 +159,8 @@ public class CyVerseDSDataSource implements IDataSource
 					UploadedEntry uploadedEntry = new UploadedEntry(
 							CalliopeData.getInstance().getUsername(),
 							LocalDateTime.now(),
-							Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).count()),
-							Math.toIntExact(directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).count()),
+							Math.toIntExact(directoryToIndex.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).count()),
+							Math.toIntExact(directoryToIndex.flattened().filter(dataContainer -> dataContainer instanceof VideoEntry).count()),
 							directoryToIndex.getFile().getAbsolutePath(),
 							CyVerseDSDataSource.this.getName());
 					// Upload images to CyVerse, we give it a transfer status callback so that we can show the progress

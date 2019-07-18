@@ -46,7 +46,7 @@ This class contains all method definitions for connecting to CyVerse using Jargo
 
 This class contains all method definitions for connecting to the ElasticSearch index. It lets users authenticate their account, index images, and perform metadata queries. Any logic that interfaces with ElasticSearch should be found in this file or at least in the `/elasticsearch/` package.
 
-##### Data Sources (/dataSources/IDataSource.java)
+##### Data Sources (/dataSources/DataSource.java)
 
 This interface defines a set of methods used for interacting with different data sources. This should be implemented if adding support for more data sources such as Amazon S3 or Google Drive. To add a data source add the following line to `CalliopeData.java`
 ```java
@@ -58,7 +58,7 @@ private void addDefaultDataSources()
 }
 ```
 
-##### Image Container (/image/ImageContainer.java)
+##### Data Container (/image/DataContainer.java)
 
 This interface is implemented by `ImageEntry.java` and `ImageDirectory.java`. Both these classes are used in the tree of files on the right side on the import tab. `ImageEntry`ies are the programmatic form of an image file, while `ImageDirectory`ies are the programmatic form of a directory. ImageDirectories contain a list of sub-directories and files while ImageEntries contain image metadata and an icon. This interface may be extended for custom image and directory implementations for use in new data sources. See [Data Sources](#data-sources-datasourcesidatasourcejava) for info on how to add new data sources.
 

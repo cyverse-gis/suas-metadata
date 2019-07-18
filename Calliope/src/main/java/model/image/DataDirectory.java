@@ -26,11 +26,11 @@ public class DataDirectory extends DataContainer
 	// The icon that is currently selected to be displayed
 	private final ObjectProperty<Image> selectedImage = new SimpleObjectProperty<>(DEFAULT_DIR_IMAGE);
 	// List of sub-files and directories
-	private final ObservableList<DataContainer> children = FXCollections.observableArrayList(imageContainer ->
+	private final ObservableList<DataContainer> children = FXCollections.observableArrayList(dataContainer ->
 	{
-		if (imageContainer instanceof ImageEntry)
+		if (dataContainer instanceof ImageEntry)
 		{
-			ImageEntry image = (ImageEntry) imageContainer;
+			ImageEntry image = (ImageEntry) dataContainer;
 			return new Observable[]
 			{
 				image.dateTakenProperty(),
@@ -43,9 +43,9 @@ public class DataDirectory extends DataContainer
 				image.rotationProperty()
 			};
 		}
-		else if (imageContainer instanceof DataDirectory)
+		else if (dataContainer instanceof DataDirectory)
 		{
-			DataDirectory directory = (DataDirectory) imageContainer;
+			DataDirectory directory = (DataDirectory) dataContainer;
 			return new Observable[]
 			{
 				directory.getFileProperty(),

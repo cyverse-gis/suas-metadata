@@ -1140,8 +1140,8 @@ public class ElasticSearchConnectionManager
 	public void indexImages(DataDirectory directory, UploadedEntry uploadEntry, String collectionID, Function<DataContainer, String> absolutePathCreator)
 	{
 		// List of images to be uploaded
-		List<ImageEntry> imageEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList());
-		List<VideoEntry> videoEntries = directory.flattened().filter(imageContainer -> imageContainer instanceof VideoEntry).map(imageContainer -> (VideoEntry) imageContainer).collect(Collectors.toList());
+		List<ImageEntry> imageEntries = directory.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).map(dataContainer -> (ImageEntry) dataContainer).collect(Collectors.toList());
+		List<VideoEntry> videoEntries = directory.flattened().filter(dataContainer -> dataContainer instanceof VideoEntry).map(dataContainer -> (VideoEntry) dataContainer).collect(Collectors.toList());
 
 		try
 		{

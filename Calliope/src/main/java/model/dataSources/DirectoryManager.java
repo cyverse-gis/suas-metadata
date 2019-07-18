@@ -61,7 +61,7 @@ public class DirectoryManager
 	public static void initImages(DataDirectory dataDirectory, DoubleProperty progressProperty)
 	{
 		// List of images to init
-		List<DataContainer> imageEntries = dataDirectory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry || imageContainer instanceof VideoEntry).collect(Collectors.toList());
+		List<DataContainer> imageEntries = dataDirectory.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry || dataContainer instanceof VideoEntry).collect(Collectors.toList());
 		// The total number of images in the list
 		Integer imageCount = imageEntries.size();
 		for (Integer i = 0; i < imageCount; i++)
@@ -195,7 +195,7 @@ public class DirectoryManager
 		try
 		{
 			// List of files to be uploaded
-			List<DataContainer> entries = directory.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry || imageContainer instanceof VideoEntry).collect(Collectors.toList());
+			List<DataContainer> entries = directory.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry || dataContainer instanceof VideoEntry).collect(Collectors.toList());
 
 			// Take the number of images and videos / maximum number of files per tar to get the number of tar files we need
 			Integer numberOfTars = (int) Math.ceil((double) entries.size() / (double) maxImagesPerTar);

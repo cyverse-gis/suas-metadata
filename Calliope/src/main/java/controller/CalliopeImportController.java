@@ -285,8 +285,8 @@ public class CalliopeImportController
 		// Clear the preview pane if there is a preview'd image
 		selectedImage.addListener((observable, oldValue, newValue) -> this.speciesPreviewImage.setValue(null));
 		// Update the currently selected image and directory
-		currentlySelectedMedia.bind(selectedImage.map(imageContainer -> (imageContainer instanceof ImageEntry || imageContainer instanceof VideoEntry) ? imageContainer : null));
-		currentlySelectedDirectory.bind(selectedImage.map(imageContainer -> (imageContainer instanceof DataDirectory) ? (DataDirectory) imageContainer : null));
+		currentlySelectedMedia.bind(selectedImage.map(dataContainer -> (dataContainer instanceof ImageEntry || dataContainer instanceof VideoEntry) ? dataContainer : null));
+		currentlySelectedDirectory.bind(selectedImage.map(dataContainer -> (dataContainer instanceof DataDirectory) ? (DataDirectory) dataContainer : null));
 
 		// Hide the delete button when nothing is selected
 		this.btnDelete.disableProperty().bind(this.imageTree.getSelectionModel().selectedIndexProperty().isEqualTo(-1));
@@ -846,7 +846,7 @@ public class CalliopeImportController
 				images = Collections.singletonList(ie);
 				// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
 			else if (this.currentlySelectedDirectory.getValue() != null)
-				images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
+				images = this.currentlySelectedDirectory.getValue().flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).map(dataContainer -> (ImageEntry) dataContainer).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
 
 			// If we got any images at all, process them
 			if (images != null && !images.isEmpty()) {

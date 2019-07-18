@@ -152,7 +152,7 @@ public class CalliopeUploadController
 		// Set the fake invisible root
 		this.imageTree.setRoot(ROOT);
 		// Set the items of the tree to be the children of the fake invisible root
-		this.imageTree.setItems(CalliopeData.getInstance().getImageTree().getChildren().filtered(imageContainer -> !(imageContainer instanceof ImageEntry)));
+		this.imageTree.setItems(CalliopeData.getInstance().getImageTree().getChildren().filtered(dataContainer -> !(dataContainer instanceof ImageEntry)));
 		// Setup the image tree cells so that when they get drag & dropped the species & locations can be tagged
 		this.imageTree.setCellFactory(x -> FXMLLoaderUtils.loadFXML("uploadView/UploadTreeCell.fxml").getController());
 

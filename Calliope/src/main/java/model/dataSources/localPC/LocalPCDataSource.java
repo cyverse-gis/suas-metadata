@@ -55,7 +55,7 @@ public abstract class LocalPCDataSource implements IDataSource
 		// Make sure we've got a valid directory
 		boolean validDirectory = true;
 		// Each image must have a location tagged
-		for (ImageEntry imageEntry : directoryToIndex.flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).collect(Collectors.toList()))
+		for (ImageEntry imageEntry : directoryToIndex.flattened().filter(dataContainer -> dataContainer instanceof ImageEntry).map(dataContainer -> (ImageEntry) dataContainer).collect(Collectors.toList()))
 			if (imageEntry.getPositionTaken() == null)
 			{
 				validDirectory = false;
