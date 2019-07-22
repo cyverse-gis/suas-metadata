@@ -119,11 +119,13 @@ public class CalliopeImportController
 	@FXML
 	public SplitPane mainPane;
 
-	// Media Control Icons
+	// Media Controls
 	@FXML
 	public ImageView playIcon;
 	@FXML
 	public ImageView pauseIcon;
+	@FXML
+	public Slider videoSeek;
 
 	// Top right label containing location name
 	@FXML
@@ -419,6 +421,13 @@ public class CalliopeImportController
 		{
 			this.mediaPreview.setMediaPlayer(videoRetrievalService.getValue());
 			this.pidImageLoading.setVisible(false);
+
+			videoSeek.setMin(0);
+			videoRetrievalService.getValue().currentTimeProperty().addListener(ov -> {
+				videoSeek.setMax(mediaPreview.getMediaPlayer().getTotalDuration().toSeconds());
+				System.out.println(mediaPreview.getMediaPlayer().getCurrentTime().toSeconds());
+				videoSeek.setValue(mediaPreview.getMediaPlayer().getCurrentTime().toSeconds());
+			});
 		});
 		// When we select a new image we retrieve the pixel data to display on screen
 		this.currentlySelectedMedia.addListener((observable, oldValue, newValue) ->
