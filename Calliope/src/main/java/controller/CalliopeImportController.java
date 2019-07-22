@@ -425,7 +425,6 @@ public class CalliopeImportController
 			videoSeek.setMin(0);
 			videoRetrievalService.getValue().currentTimeProperty().addListener(ov -> {
 				videoSeek.setMax(mediaPreview.getMediaPlayer().getTotalDuration().toSeconds());
-				System.out.println(mediaPreview.getMediaPlayer().getCurrentTime().toSeconds());
 				videoSeek.setValue(mediaPreview.getMediaPlayer().getCurrentTime().toSeconds());
 			});
 		});
