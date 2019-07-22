@@ -1483,13 +1483,13 @@ public class ElasticSearchConnectionManager
 
 
 			// Grab the search results
-            Long time = System.currentTimeMillis();
+            //Long time = System.currentTimeMillis();
 			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
 			// Store the scroll id that was returned because we specified a scroll in the search request
 			String scrollID = searchResponse.getScrollId();
 			// Get a list of sites (hits)
 			SearchHit[] searchHits = searchResponse.getHits().getHits();
-			System.out.println("ES Time: " + (System.currentTimeMillis() - time));
+			//System.out.println("ES Time: " + (System.currentTimeMillis() - time));
 
 			// Iterate while there are more collections to be read
 			while (searchHits != null && searchHits.length > 0)

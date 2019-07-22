@@ -347,7 +347,7 @@ public class CalliopeMapController
 							MathUtil.clamp(bottomRight.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(bottomRight.getLongitude(), -180.0, 180.0));
 					// This is the important line. We call ES to grab all site codes within our viewport
-					System.out.println(System.currentTimeMillis() - time);
+					//System.out.println(System.currentTimeMillis() - time);
 					return temp;
 				}
 			};
