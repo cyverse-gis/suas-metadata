@@ -2,12 +2,19 @@ package model.dataSources;
 
 import javafx.beans.property.DoubleProperty;
 import model.CalliopeData;
+import model.dataSources.localPC.compressed.DecompressionUtils;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.util.AnalysisUtils;
+import model.util.AnalysisUtils.CompressionTypes;
 import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -135,24 +142,58 @@ public class DirectoryManager
 	 */
 	public static ImageDirectory loadCompressed(List<File> files)
 	{
-		// Map our input to a list of images only
-		List<File> validImages = files.stream().filter(AnalysisUtils::fileIsCompressed).collect(Collectors.toList());
-		// Make sure we have at least one image file
-		if (!validImages.isEmpty())
+		// Map our input to a list of compressed files only
+		List<File> validCompressed = files.stream().filter(DecompressionUtils::fileIsCompressed).collect(Collectors.toList());
+		// Make sure we have at least one compressed file
+		if (!validCompressed.isEmpty())
 		{
 			// All files are in the same directory, so grab the first file's parent directory
 			ImageDirectory imageDirectory = new ImageDirectory(files.get(0).getParentFile());
 			// Iterate over the images
-			for (File validImage : validImages)
+			for (File validCompress : validCompressed)
 			{
-				// Load the image file and metadata and add it to the directory
-				ImageEntry imageEntry = new ImageEntry(validImage);
-				imageDirectory.addChild(imageEntry);
+				// Decompress the file and add all its images to a directory
+				ImageDirectory decompressed = decompressFile(validCompress);
+				imageDirectory.addChild(decompressed);
 			}
 			// Return the directory
 			return imageDirectory;
 		}
 		return new ImageDirectory(null);
+	}
+
+	/**
+	 * Reads a set of files and returns them in a usable format
+	 * Note that non-compressed files are culled out in this method
+	 *
+	 * @param file
+	 *            A compressed file that will be decompressed. An error is thrown if this file is not compressed.
+	 */
+	public static ImageDirectory decompressFile(File file)
+	{
+		CompressionTypes currType = CompressionTypes.getType(file.getName());
+		if(currType == null)
+			return new ImageDirectory(null);
+		else
+		{
+			// TODO: May have to write a class that wraps compressed input streams if we allow things like tars, etc.
+			ArchiveInputStream inputStream = currType.getInputStream(file);
+
+			//
+			// TODO: Bite the bullet and just make a class for extracting/decompressing/reading compressed files
+			//
+
+			try
+			{
+				ArchiveEntry currEntry = inputStream.getNextEntry();
+			}
+			catch(IOException ioe)
+			{
+				ioe.printStackTrace();
+			}
+
+			return null;
+		}
 	}
 
 	/**

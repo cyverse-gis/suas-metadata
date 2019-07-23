@@ -21,6 +21,8 @@ import java.util.List;
 
 /**
  * Data source used for reading compressed files off of the local PC
+ *
+ * @author Jackson but I copied most of it from David's Image and Directory classes
  */
 public class LocalPCCompressedDataSource extends LocalPCDataSource
 {
@@ -66,10 +68,10 @@ public class LocalPCCompressedDataSource extends LocalPCDataSource
                 protected ImageDirectory call()
                 {
                     this.updateProgress(0.05, 1.0);
-                    this.updateMessage("Loading files...");
+                    this.updateMessage("Decompressing files...");
 
                     // Convert the compressed files to a directory
-                    // This is where non-compressed files are removed
+                    // This is where non-compressed files are removed and where extraction occurs
                     ImageDirectory directory = DirectoryManager.loadCompressed(files);
                     directory.setDataSource(LocalPCCompressedDataSource.this);
 
