@@ -423,10 +423,10 @@ public class CalliopeImportController
 			this.pidImageLoading.setVisible(false);
 
 			videoSeek.setMin(0);
-			videoRetrievalService.getValue().currentTimeProperty().addListener(ov -> {
+			videoRetrievalService.getValue().setOnReady(() -> {
 				videoSeek.setMax(mediaPreview.getMediaPlayer().getTotalDuration().toSeconds());
-				videoSeek.setValue(mediaPreview.getMediaPlayer().getCurrentTime().toSeconds());
 			});
+			videoSeek.valueProperty().bind(EasyBind.map(videoRetrievalService.getValue().currentTimeProperty(), duration -> duration.toSeconds()));
 		});
 		// When we select a new image we retrieve the pixel data to display on screen
 		this.currentlySelectedMedia.addListener((observable, oldValue, newValue) ->
