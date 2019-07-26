@@ -2,19 +2,14 @@ package model.dataSources;
 
 import javafx.beans.property.DoubleProperty;
 import model.CalliopeData;
-import model.dataSources.localPC.compressed.DecompressionUtils;
+import model.util.DecompressionUtils;
+import model.util.DecompressionUtils.CompressionTypes;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
 import model.util.AnalysisUtils;
-import model.util.AnalysisUtils.CompressionTypes;
 import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -153,47 +148,13 @@ public class DirectoryManager
 			for (File validCompress : validCompressed)
 			{
 				// Decompress the file and add all its images to a directory
-				ImageDirectory decompressed = decompressFile(validCompress);
+				ImageDirectory decompressed = DecompressionUtils.decompressFile(validCompress);
 				imageDirectory.addChild(decompressed);
 			}
 			// Return the directory
 			return imageDirectory;
 		}
 		return new ImageDirectory(null);
-	}
-
-	/**
-	 * Reads a set of files and returns them in a usable format
-	 * Note that non-compressed files are culled out in this method
-	 *
-	 * @param file
-	 *            A compressed file that will be decompressed. An error is thrown if this file is not compressed.
-	 */
-	public static ImageDirectory decompressFile(File file)
-	{
-		CompressionTypes currType = CompressionTypes.getType(file.getName());
-		if(currType == null)
-			return new ImageDirectory(null);
-		else
-		{
-			// TODO: May have to write a class that wraps compressed input streams if we allow things like tars, etc.
-			ArchiveInputStream inputStream = currType.getInputStream(file);
-
-			//
-			// TODO: Bite the bullet and just make a class for extracting/decompressing/reading compressed files
-			//
-
-			try
-			{
-				ArchiveEntry currEntry = inputStream.getNextEntry();
-			}
-			catch(IOException ioe)
-			{
-				ioe.printStackTrace();
-			}
-
-			return null;
-		}
 	}
 
 	/**

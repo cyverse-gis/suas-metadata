@@ -55,6 +55,32 @@ public class TempDirectoryManager
 	}
 
 	/**
+	 * TODO: Comment better
+	 *
+	 * NOTE: Since these files will be nested away in a directory, we assume there will be no overlap in naming.
+	 *   Thus, no random strings are added to their filenames.
+	 *
+	 * @param fileName The name of the file to create
+	 * @return A reference to the temporary file we created
+	 */
+	public File createTempFileInDir(String fileName, String mainDir)
+	{
+		File fullDir = FileUtils.getFile(this.calliopeTempDir, mainDir);
+		System.err.printf("Testing fullDir[%s]\n", fullDir);
+		if(!fullDir.isDirectory() && !fullDir.mkdir()) {
+			File mainFile = FileUtils.getFile(mainDir);
+			createTempFileInDir("", mainFile.getParent());
+		}
+
+		// TODO: Comment
+		File tempFile = FileUtils.getFile(fullDir, FilenameUtils.getName(fileName));
+
+		// Delete the file when we exit
+		tempFile.deleteOnExit();
+		return tempFile;
+	}
+
+	/**
 	 * Attempts to force delete the temporary directory
 	 */
 	public void shutdown()
