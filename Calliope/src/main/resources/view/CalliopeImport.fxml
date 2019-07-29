@@ -75,6 +75,7 @@
                                 <ImageView fx:id="pauseIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5">
                                     <Image url="@../images/importWindow/pause.png"/>
                                 </ImageView>
+                                <Slider fx:id="videoSeek" AnchorPane.leftAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.rightAnchor="0"/>
                             </children>
                         </AnchorPane>
                         <ImageViewPane fx:id="imagePreviewPane" styleClass="imageViewBackground">
