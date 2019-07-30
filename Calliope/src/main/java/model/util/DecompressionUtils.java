@@ -2,6 +2,7 @@ package model.util;
 
 
 import model.CalliopeData;
+import model.dataSources.DirectoryManager;
 import model.image.ImageContainer;
 import model.image.ImageDirectory;
 import model.image.ImageEntry;
@@ -17,7 +18,7 @@ import java.io.*;
 import java.nio.file.Files;
 
 /**
- * TODO: Comment
+ *
  *
  *
  * @author Jackson Lindsay
@@ -46,9 +47,6 @@ public class DecompressionUtils
             return null;
         }
 
-        // Create the ImageDirectory that will be returned, which will contain all the files as children
-        ImageDirectory retval = new ImageDirectory(comTempDir);
-
         try
         {
             // For the compressed file: Determine its file type, make an input stream for it,
@@ -69,35 +67,33 @@ public class DecompressionUtils
 
                 if(entry.isDirectory())
                 {
-                    if (!tempFile.isDirectory() && !tempFile.mkdir())
+                    if (!tempFile.isDirectory())
                         System.err.printf("TODO: Error message 1\n");
-                    else {
-                        ImageDirectory id = new ImageDirectory(tempFile);
-                        retval.addChild(id);
-                    }
                 }
                 else
                 {
                     File tempParent = tempFile.getParentFile();
-                    if (!tempParent.isDirectory() && !tempParent.mkdir())
+                    if (!tempParent.isDirectory())
                         System.err.printf("TODO: Error message 2\n");
 
                     OutputStream out = Files.newOutputStream(tempFile.toPath());
                     IOUtils.copy(ais, out);
-
-                    ImageEntry ie = new ImageEntry(tempFile);
-                    retval.addChild(ie);
                 }
             }
         }
         catch(FileNotFoundException fnfe) { fnfe.printStackTrace(); }
         catch(IOException ioe) { ioe.printStackTrace(); }
 
+        // Now that we've recreated the directory structure in the temp folder, import it via DirectoryManager
+        ImageDirectory retval = DirectoryManager.loadDirectory(comTempDir);
+
         return retval;
     }
 
 
-    // TODO: COMMENT
+    /**
+     * An enum for denoting the different types of compressed files that Calliope can extract.
+     */
     public enum CompressionTypes
     {
         ZIP("zip"),
@@ -120,7 +116,9 @@ public class DecompressionUtils
 
         public String getExt() { return ext; }
 
-        // TODO: COMMENT
+        /**
+         * @return An array containing all compressed extensions that are supported by Calliope
+         */
         protected static String[] getSupportedExtensions()
         {
             String[] retval = new String[CompressionTypes.values().length * 2];
@@ -137,7 +135,7 @@ public class DecompressionUtils
     }
 
     /**
-     * Test if a file is compressed by extracting its extension and testing that.
+     * Test if a file is compressed by testing its extension
      *
      * @param file
      *            The file to test
@@ -148,11 +146,16 @@ public class DecompressionUtils
         return StringUtils.endsWithAny(toTest, CompressionTypes.getSupportedExtensions());
     }
 
-    // TODO: COMMENT
+    /**
+     * Given a filename as input, determines if the file is compressed in a way Calliope can work with
+     *
+     * @param input The filename to test
+     * @return The corresponding CompressionType of the file, or null if file matches no type.
+     */
     public static CompressionTypes getType(String input)
     {
         for (CompressionTypes currType : CompressionTypes.values()) {
-            if (input.endsWith(currType.getExt()))
+            if (FilenameUtils.getExtension(input).compareTo(currType.getExt()) == 0)
                 return currType;
         }
         return null;

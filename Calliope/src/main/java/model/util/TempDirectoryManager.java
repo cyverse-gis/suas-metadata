@@ -55,12 +55,15 @@ public class TempDirectoryManager
 	}
 
 	/**
-	 * TODO: Comment better
+	 * Given a filename to create and a directory
 	 *
 	 * NOTE: Since these files will be nested away in a directory, we assume there will be no overlap in naming.
 	 *   Thus, no random strings are added to their filenames.
 	 *
 	 * @param fileName The name of the file to create
+	 *                 dsa
+	 * @param mainDir
+	 *                 dsa
 	 * @return A reference to the temporary file we created
 	 */
 	public File createTempFileInDir(String fileName, String mainDir)
