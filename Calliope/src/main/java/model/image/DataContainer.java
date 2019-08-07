@@ -49,6 +49,9 @@ public abstract class DataContainer implements HierarchyData<DataContainer>
 	protected final DoubleProperty width = new SimpleDoubleProperty(-1);
 	protected final DoubleProperty height = new SimpleDoubleProperty(-1);
 
+	// All metadata that exiftool was able to read
+	protected final StringProperty allMetadata = new SimpleStringProperty(null);
+
 	// The raw metadata entries without any modifications
 	protected transient final List<MetadataCustomItem> rawMetadata = new ArrayList<>();
 
