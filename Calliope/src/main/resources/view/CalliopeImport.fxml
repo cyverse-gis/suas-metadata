@@ -69,13 +69,13 @@
                         </Pane>
                         <AnchorPane fx:id="mediaControlPane"  onMouseClicked="#onMediaClicked">
                             <children>
-                                <ImageView fx:id="playIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5">
+                                <ImageView fx:id="playIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="0" AnchorPane.bottomAnchor="0">
                                     <Image url="@../images/importWindow/play.png"/>
                                 </ImageView>
-                                <ImageView fx:id="pauseIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5">
+                                <ImageView fx:id="pauseIcon" fitWidth="25" fitHeight="25" AnchorPane.leftAnchor="0" AnchorPane.bottomAnchor="0">
                                     <Image url="@../images/importWindow/pause.png"/>
                                 </ImageView>
-                                <Slider fx:id="videoSeek" AnchorPane.leftAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.rightAnchor="0"/>
+                                <Slider fx:id="videoSeek" AnchorPane.leftAnchor="30" AnchorPane.bottomAnchor="0" AnchorPane.rightAnchor="0"/>
                             </children>
                         </AnchorPane>
                         <ImageViewPane fx:id="imagePreviewPane" styleClass="imageViewBackground">
