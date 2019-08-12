@@ -8,6 +8,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import model.CalliopeData;
+import model.image.DataContainer;
 import model.image.ImageEntry;
 import model.site.Site;
 import model.threading.ErrorTask;
@@ -48,7 +49,7 @@ public class SiteDetectorController
 	///
 
 	// The list of entries this site detector should use
-	private List<ImageEntry> imageEntries = Collections.emptyList();
+	private List<DataContainer> imageEntries = Collections.emptyList();
 
 	/**
 	 * Initializes this site detector form
@@ -59,19 +60,19 @@ public class SiteDetectorController
 		// We disable the detect sites button if we have the distance radio button selected and the text is an invalid double
 		this.btnDetectSites.disableProperty().bind(this.rbnByBoundary.selectedProperty().not().and(Bindings.createBooleanBinding(() -> !NumberUtils.isNumber(this.txtDistance.getText()), this.txtDistance.textProperty())));
 		// Hide the boundary box if the boundary radio button is not selected
-		this.hbxBoundary.disableProperty().bind(this.rbnByBoundary.selectedProperty().not());
+		//this.hbxBoundary.disableProperty().bind(this.rbnByBoundary.selectedProperty().not());
 		// Hide the distance box if the distance radio button is not selected
-		this.hbxDistance.disableProperty().bind(this.rbnByDistance.selectedProperty().not());
+		//this.hbxDistance.disableProperty().bind(this.rbnByDistance.selectedProperty().not());
 	}
 
 	/**
 	 * Called to initialize our neon site detector with data
 	 *
-	 * @param imageEntries The images to process
+	 * @param entries The images/videos to process
 	 */
-	public void updateItems(List<ImageEntry> imageEntries)
+	public void updateItems(List<DataContainer> entries)
 	{
-		this.imageEntries = imageEntries;
+		this.imageEntries = entries;
 		// Clear our text field because we have new data and the old distance value might no longer be valid
 		this.txtDistance.clear();
 	}
@@ -122,7 +123,7 @@ public class SiteDetectorController
 						if (i % 20 == 0)
 							this.updateProgress(i, imageEntries.size());
 						// Grab the image
-						ImageEntry toProcess = imageEntries.get(i);
+						DataContainer toProcess = imageEntries.get(i);
 						// Find the closest site to the image
 						Site closest = CalliopeData.getInstance().getSiteManager().closestSiteTo(rawSites, toProcess.getPositionTaken().getLatitude(), toProcess.getPositionTaken().getLongitude());
 						// Compute the distance to that site

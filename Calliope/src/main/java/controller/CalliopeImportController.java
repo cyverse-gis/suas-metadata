@@ -442,6 +442,15 @@ public class CalliopeImportController
 		this.currentlySelectedMedia.addListener((observable, oldValue, newValue) ->
 		{
 			this.pidImageLoading.setVisible(true);
+			if (newValue == null) {
+                this.pidImageLoading.setVisible(false);
+			    imageDisp.setValue(false);
+			    mediaPreview.setVisible(false);
+                videoSeek.setVisible(false);
+                playIcon.setVisible(false);
+                pauseIcon.setVisible(false);
+			    return;
+            }
 			if (newValue instanceof ImageEntry) {
 				imageDisp.setValue(true);
 				if (mediaPreview.getMediaPlayer() != null) {
@@ -449,6 +458,8 @@ public class CalliopeImportController
 				}
 				imageRetrievalService.restart();
 			} else if (newValue instanceof VideoEntry) {
+			    mediaPreview.setVisible(true);
+			    videoSeek.setVisible(true);
 				playIcon.setVisible(true);
 				pauseIcon.setVisible(false);
 				imageDisp.setValue(false);
@@ -867,29 +878,26 @@ public class CalliopeImportController
 	 */
 	public void mouseClickedLocation(MouseEvent mouseEvent)
 	{
-		List<ImageEntry> images = null;
+		List<DataContainer> images = null;
 
-		if (this.currentlySelectedMedia.getValue() instanceof ImageEntry) {
-			ImageEntry ie = (ImageEntry) currentlySelectedMedia.getValue();
-			// If we have an image selected then we wrap that image in a list for processing
-			if (this.currentlySelectedMedia.getValue() != null)
-				images = Collections.singletonList(ie);
-				// If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
-			else if (this.currentlySelectedDirectory.getValue() != null)
-				images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> imageContainer instanceof ImageEntry).map(imageContainer -> (ImageEntry) imageContainer).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
+        // If we have an image selected then we wrap that image in a list for processing
+        if (this.currentlySelectedMedia.getValue() != null)
+            images = Collections.singletonList(currentlySelectedMedia.getValue());
+            // If an image is not selected, test if a directory is selected. If so grab the list of images in the directory
+        else if (this.currentlySelectedDirectory.getValue() != null)
+            images = this.currentlySelectedDirectory.getValue().flattened().filter(imageContainer -> !(imageContainer instanceof DataDirectory)).filter(imageEntry -> imageEntry.getPositionTaken() != null).collect(Collectors.toList());
 
-			// If we got any images at all, process them
-			if (images != null && !images.isEmpty()) {
-				// Pull the sub-images in the directory
-				this.siteDetectorController.updateItems(images);
-				// Make sure that this stage belongs to the main stage
-				if (this.siteDetectorStage.getOwner() == null)
-					this.siteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
-				this.siteDetectorStage.showAndWait();
-			}
-		}
-		mouseEvent.consume();
-	}
+        // If we got any images at all, process them
+        if (images != null && !images.isEmpty()) {
+            // Pull the sub-images in the directory
+            this.siteDetectorController.updateItems(images);
+            // Make sure that this stage belongs to the main stage
+            if (this.siteDetectorStage.getOwner() == null)
+                this.siteDetectorStage.initOwner(this.imageTree.getScene().getWindow());
+            this.siteDetectorStage.showAndWait();
+        }
+        mouseEvent.consume();
+    }
 
 	/**
 	 * When we click the left arrow we want to advance the picture to the next untagged image

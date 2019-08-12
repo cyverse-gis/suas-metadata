@@ -1225,7 +1225,7 @@ public class ElasticSearchConnectionManager
 	 * @return A list of site codes as a parallel array to the original image list with null if no site is at the location
 	 */
 	@SuppressWarnings("unchecked")
-	public String[] detectSites(List<ImageEntry> imageEntries)
+	public String[] detectSites(List<DataContainer> imageEntries)
 	{
 		// A parallel array to return
 		String[] toReturn = new String[imageEntries.size()];
@@ -1233,7 +1233,7 @@ public class ElasticSearchConnectionManager
 		// Create a multi search (one per image)
 		MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
 		// Search once per image
-		for (ImageEntry imageEntry : imageEntries)
+		for (DataContainer imageEntry : imageEntries)
 		{
 			// Grab the image to search for
 			// Create a search request
