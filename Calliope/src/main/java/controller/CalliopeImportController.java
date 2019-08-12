@@ -502,7 +502,7 @@ public class CalliopeImportController
 		// Create the stage that will have the neon site detector
 		this.siteDetectorStage = new Stage();
 		// Set the title
-		this.siteDetectorStage.setTitle("Neon Site Detector");
+		this.siteDetectorStage.setTitle("Site Detector");
 		// Set the modality and initialize the owner to be this current window
 		this.siteDetectorStage.initModality(Modality.WINDOW_MODAL);
 		// Make sure the window is the right size and can't be resized
