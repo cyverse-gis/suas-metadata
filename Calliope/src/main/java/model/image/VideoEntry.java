@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -198,6 +199,6 @@ public class VideoEntry extends DataContainer
 	@Override
 	public void setSiteTaken(Site siteTaken)
 	{
-		this.siteTaken.setValue(siteTaken);
+		this.siteTaken.add(siteTaken);
 	}
 }

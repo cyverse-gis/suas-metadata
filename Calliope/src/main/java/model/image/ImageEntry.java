@@ -250,6 +250,6 @@ public class ImageEntry extends DataContainer
 	@Override
 	public void setSiteTaken(Site siteTaken)
 	{
-		this.siteTaken.setValue(siteTaken);
+		this.siteTaken.add(siteTaken);
 	}
 }

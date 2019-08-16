@@ -15,6 +15,7 @@ import model.threading.ErrorTask;
 import model.util.AnalysisUtils;
 import org.apache.commons.lang.math.NumberUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -140,7 +141,7 @@ public class SiteDetectorController
 			{
 				// When we finish set each image's site to the site we detected. Nulls are OK
 				for (Integer i = 0; i < imageEntries.size(); i++)
-					imageEntries.get(i).setSiteTaken(detectTask.getValue()[i]);
+					imageEntries.get(i).getSiteTaken().add(detectTask.getValue()[i]);
 			});
 
 			// Execute the task
@@ -188,7 +189,7 @@ public class SiteDetectorController
 			{
 				// When we finish set each image's site to the site we detected. Nulls are OK
 				for (Integer i = 0; i < imageEntries.size(); i++)
-					imageEntries.get(i).setSiteTaken(detectTask.getValue()[i]);
+					imageEntries.get(i).getSiteTaken().add(detectTask.getValue()[i]);
 			});
 
 
@@ -207,7 +208,7 @@ public class SiteDetectorController
 	 */
 	public void clearSites(ActionEvent actionEvent)
 	{
-		imageEntries.forEach(imageEntry -> imageEntry.setSiteTaken(null));
+		imageEntries.forEach(imageEntry -> imageEntry.getSiteTaken().clear());
 		this.rbnByBoundary.getScene().getWindow().hide();
 		actionEvent.consume();
 	}

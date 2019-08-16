@@ -211,7 +211,8 @@ public class DataDirectory extends DataContainer
 			// If our child is a currently uploading image directory we don't want to modify it, so ignore it
 			if (child instanceof DataDirectory && ((DataDirectory) child).getUploadProgress() != -1)
 				return;
-			child.setSiteTaken(site);
+			if (child.getSiteTaken().stream().noneMatch(s -> s.getName() == site.getName()))
+				child.getSiteTaken().add(site);
 		});
 	}
 

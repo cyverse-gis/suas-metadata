@@ -469,7 +469,8 @@ public class CalliopeImportController
 		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the site name to the selected image's location
-		this.lblSite.textProperty().bind(EasyBind.monadic(currentlySelectedMedia).selectProperty(DataContainer::siteTakenProperty).selectProperty(Site::nameProperty));
+		this.lblSite.textProperty().bind(EasyBind.monadic(this.currentlySelectedMedia).map(dataContainer -> dataContainer.getSiteTaken().stream().map(site -> site.getName()).collect(Collectors.joining(", "))));
+		//this.lblSite.textProperty().bind(EasyBind.map(this.currentlySelectedMedia.getValue().siteTakenProperty(), site -> site.));
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(currentlySelectedMedia.isNotNull().or(currentlySelectedDirectory.isNotNull()));
 		// Hide the progress bar when no tasks remain
@@ -800,7 +801,8 @@ public class CalliopeImportController
 				// Check if we have a selected image or directory to update!
 				if (currentlySelectedMedia.getValue() != null)
 				{
-					currentlySelectedMedia.getValue().setSiteTaken(toAdd.get());
+					if (currentlySelectedMedia.getValue().getSiteTaken().stream().noneMatch(site -> site.getName() == toAdd.get().getName()))
+						currentlySelectedMedia.getValue().getSiteTaken().add(toAdd.get());
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;

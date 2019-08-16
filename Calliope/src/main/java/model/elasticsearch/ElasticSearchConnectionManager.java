@@ -1665,9 +1665,10 @@ public class ElasticSearchConnectionManager
 											imageEntry.setHeight(NumberUtils.toDouble(sourceAsMap.get("height").toString(), Double.NaN));
 										else
 											imageEntry.setHeight(Double.NaN);
-										if (sourceAsMap.get("siteCode") != null)
-											imageEntry.setSiteTaken(CalliopeData.getInstance().getSiteManager().getSiteByCode(metadataMap.get("siteCode").toString()));
-										else
+										if (sourceAsMap.get("siteCode") != null) {
+											for (String code : ((List<String>)metadataMap.get("siteCode")))
+												imageEntry.getSiteTaken().add(CalliopeData.getInstance().getSiteManager().getSiteByCode(code));
+										} else
 											imageEntry.setSiteTaken(null);
 										if (speedMap.get("x") != null && speedMap.get("y") != null && speedMap.get("z") != null)
 											imageEntry.setSpeed(new Vector3(

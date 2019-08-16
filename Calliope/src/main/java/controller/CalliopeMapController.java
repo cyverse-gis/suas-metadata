@@ -179,8 +179,8 @@ public class CalliopeMapController
 	public TableColumn<QueryImageEntry, Double> clmLatitude;
 	@FXML
 	public TableColumn<QueryImageEntry, Double> clmLongitude;
-	@FXML
-	public TableColumn<QueryImageEntry, Site> clmSite;
+	//@FXML
+	//public TableColumn<QueryImageEntry, Site> clmSite;
 	@FXML
 	public TableColumn<QueryImageEntry, Vector3> clmSpeed;
 	@FXML
@@ -604,7 +604,7 @@ public class CalliopeMapController
 		this.clmHeight.setCellValueFactory(param -> param.getValue().heightProperty().asObject());
 		this.clmLatitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().positionTakenProperty()).selectProperty(x -> x.latitudeProperty().asObject()));
 		this.clmLongitude.setCellValueFactory(param -> EasyBind.monadic(param.getValue().positionTakenProperty()).selectProperty(x -> x.longitudeProperty().asObject()));
-		this.clmSite.setCellValueFactory(param -> param.getValue().siteTakenProperty());
+		//this.clmSite.setCellValueFactory(param -> param.getValue().siteTakenProperty());
 		this.clmSpeed.setCellValueFactory(param -> param.getValue().speedProperty());
 		this.clmRotation.setCellValueFactory(param -> param.getValue().rotationProperty());
 
@@ -622,7 +622,7 @@ public class CalliopeMapController
 		this.ccbxColumns.getItems().add(this.clmHeight);
 		this.ccbxColumns.getItems().add(this.clmLatitude);
 		this.ccbxColumns.getItems().add(this.clmLongitude);
-		this.ccbxColumns.getItems().add(this.clmSite);
+		//this.ccbxColumns.getItems().add(this.clmSite);
 		this.ccbxColumns.getItems().add(this.clmSpeed);
 		this.ccbxColumns.getItems().add(this.clmRotation);
 

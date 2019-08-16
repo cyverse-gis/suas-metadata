@@ -2,7 +2,9 @@ package model.image;
 
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableArray;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableListBase;
 import javafx.scene.image.Image;
 import library.HierarchyData;
 import model.settings.MetadataCustomItem;
@@ -28,7 +30,7 @@ public abstract class DataContainer implements HierarchyData<DataContainer>
 	// The date that the image was taken
 	protected final ObjectProperty<LocalDateTime> dateTaken = new SimpleObjectProperty<>();
 	// The NEON site closest to the image
-	protected final ObjectProperty<Site> siteTaken = new SimpleObjectProperty<>(null);
+	protected final ObservableList<Site> siteTaken = FXCollections.observableArrayList(new ArrayList<>());
 	// The lat/long/elevation of this image
 	protected final ObjectProperty<Position> positionTaken = new SimpleObjectProperty<>(null);
 	// The name of the drone maker company
@@ -256,12 +258,12 @@ public abstract class DataContainer implements HierarchyData<DataContainer>
 		return this.height;
 	}
 
-	public Site getSiteTaken()
+	public List<Site> getSiteTaken()
 	{
-		return siteTaken.getValue();
+		return siteTaken;
 	}
 
-	public ObjectProperty<Site> siteTakenProperty()
+	public ObservableList<Site> siteTakenProperty()
 	{
 		return siteTaken;
 	}

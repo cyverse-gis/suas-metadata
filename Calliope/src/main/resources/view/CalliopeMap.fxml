@@ -85,7 +85,7 @@
                                     <TableColumn fx:id="clmHeight" editable="false" text="Image Height"/>
                                     <TableColumn fx:id="clmLatitude" editable="false" text="Latitude"/>
                                     <TableColumn fx:id="clmLongitude" editable="false" text="Longitude"/>
-                                    <TableColumn fx:id="clmSite" editable="false" text="Site"/>
+                                    <!--<TableColumn fx:id="clmSite" editable="false" text="Site"/>-->
                                     <TableColumn fx:id="clmSpeed" editable="false" text="Speed Vector"/>
                                     <TableColumn fx:id="clmRotation" editable="false" text="Rotation Vector"/>
                                 </columns>

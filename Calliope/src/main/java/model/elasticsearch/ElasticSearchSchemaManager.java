@@ -376,7 +376,7 @@ public class ElasticSearchSchemaManager
 	/**
 	 * Utility function used to convert a video entry to its JSON representation
 	 *
-	 * @param imageEntry The image to convert to its JSON representation
+	 * @param videoEntry The video to convert to its JSON representation
 	 * @param collectionID The ID of the collection that the image belongs to
 	 * @param fileAbsolutePath The absolute path of the file on CyVerse
 	 * @return A map of key->value pairs used later in creating JSON
@@ -386,8 +386,8 @@ public class ElasticSearchSchemaManager
 		// On windows paths have \ as a path separator vs unix /. Make sure that we always use /
 		String fixedAbsolutePath = fileAbsolutePath.replace('\\', '/');
 
-		// We return the JSON representing the image metadata
-		return XContentFactory.jsonBuilder()
+		// Build the JSON representing the video metadata
+		XContentBuilder builder = XContentFactory.jsonBuilder()
 				.startObject()
 				.field("storagePath", fixedAbsolutePath)
 				.field("collectionID", collectionID)
@@ -398,7 +398,11 @@ public class ElasticSearchSchemaManager
 				.field("hourTaken", videoEntry.getDateTaken().getHour())
 				.field("dayOfYearTaken", videoEntry.getDateTaken().getDayOfYear())
 				.field("dayOfWeekTaken", videoEntry.getDateTaken().getDayOfWeek().getValue())
-				.field("siteCode", videoEntry.getSiteTaken() != null ? videoEntry.getSiteTaken().getCode() : null)
+				.startArray("siteCode");
+		for(Site site : videoEntry.getSiteTaken()) {
+			builder.field(site.getCode());
+		}
+				builder.endArray()
 				.field("position", videoEntry.getPositionTaken().getLatitude() + ", " + videoEntry.getPositionTaken().getLongitude())
 				.field("elevation", videoEntry.getPositionTaken().getElevation())
 				.field("droneMaker", videoEntry.getDroneMaker())
@@ -420,6 +424,9 @@ public class ElasticSearchSchemaManager
 				.field("height", videoEntry.getHeight())
 				.endObject()
 				.endObject();
+
+		// We return the JSON
+		return builder;
 	}
 	
 	/**
@@ -435,8 +442,8 @@ public class ElasticSearchSchemaManager
 		// On windows paths have \ as a path separator vs unix /. Make sure that we always use /
 		String fixedAbsolutePath = fileAbsolutePath.replace('\\', '/');
 
-		// We return the JSON representing the image metadata
-		return XContentFactory.jsonBuilder()
+		// Build the JSON
+		XContentBuilder builder = XContentFactory.jsonBuilder()
 		.startObject()
 			.field("storagePath", fixedAbsolutePath)
 			.field("collectionID", collectionID)
@@ -447,7 +454,11 @@ public class ElasticSearchSchemaManager
 				.field("hourTaken", imageEntry.getDateTaken().getHour())
 				.field("dayOfYearTaken", imageEntry.getDateTaken().getDayOfYear())
 				.field("dayOfWeekTaken", imageEntry.getDateTaken().getDayOfWeek().getValue())
-				.field("siteCode", imageEntry.getSiteTaken() != null ? imageEntry.getSiteTaken().getCode() : null)
+				.startArray("siteCode");
+		for(Site site : imageEntry.getSiteTaken()) {
+			builder.value(site.getCode());
+		}
+		builder.endArray()
 				.field("position", imageEntry.getPositionTaken().getLatitude() + ", " + imageEntry.getPositionTaken().getLongitude())
 				.field("elevation", imageEntry.getPositionTaken().getElevation())
 				.field("droneMaker", imageEntry.getDroneMaker())
@@ -469,6 +480,8 @@ public class ElasticSearchSchemaManager
 				.field("height", imageEntry.getHeight())
 			.endObject()
 		.endObject();
+
+		return builder;
 	}
 
 	/**
