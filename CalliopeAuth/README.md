@@ -1,3 +1,4 @@
+As of 2019 this part of Calliope is depreciated in lieu of [Calliope-Server](../Calliope-Server)
 # Calliope Auth
 
 Calliope Auth is a backend program developed to assist an ElasticSearch index in the process of authenticating users through CyVerse. 
