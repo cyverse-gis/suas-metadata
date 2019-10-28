@@ -4,13 +4,7 @@ Calliope is a program developed by [CyVerse](https://www.cyverse.org/) for the U
 
 ## Installation
 
-There are two different ways to run Calliope, either by building it from source using the contents of this Git repo, or running a pre-built `jar` file, located in the `/Calliope/prebuild` directory.
-
-Running a pre-built `jar` file is the easiest option, but building from source allows for additional customization and tweaking. 
-
-Both options are described below.
-
-### Prebuilt
+There are two different ways to run Calliope, either by building it from source using the contents of this Git repo, or by downloading a [pre-built image here](https://data.cyverse.org/dav/iplant/home/tswetnam/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar)
 
 #### Dependencies
 
@@ -24,11 +18,13 @@ Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJ
 
 ExifTool must be accessible in your system $PATH environment variable. Calliope will run without ExifTool so you can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
-### Running a Pre-Built `jar`
+### Running the Pre-Built `jar`
 
-Download the [Calliope for Java 8](./prebuilt/Calliope-1.0-SNAPSHOT-Java-8.jar) or [Calliope for Java 9/10](./prebuilt/Calliope-1.0-SNAPSHOT-Java-9-10.jar). It is highly recommended to use the Java 8 version if possible. 
+Download the [Calliope for Java 8](https://data.cyverse.org/dav/iplant/home/tswetnam/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar). It is highly recommended to use the Java 8 version if possible. 
 
-Run the Calliope by double clicking on the file or using the command: `java -jar Calliope-XX-SNAPSHOT-Java-XX.jar`
+```
+java -jar Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
 
 ### Build from Source 
 
