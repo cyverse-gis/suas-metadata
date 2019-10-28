@@ -4,7 +4,7 @@ Calliope is a program developed by [CyVerse](https://www.cyverse.org/) for the U
 
 ## Installation
 
-There are two different ways to run Calliope, either by building it from source using the contents of this Git repo, or by downloading a [pre-built image here](https://data.cyverse.org/dav/iplant/home/tswetnam/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar)
+There are different ways to run Calliope, either by building it from source using the contents of this Git repo, or by downloading a [pre-built image here](https://data.cyverse.org/dav/iplant/home/tswetnam/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar), or running with [Docker]()
 
 #### Dependencies
 
