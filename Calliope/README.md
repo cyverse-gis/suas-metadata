@@ -8,17 +8,17 @@ There are different ways to run Calliope, either by building it from source usin
 
 #### Dependencies
 
-To run Calliope there are two prerequisite dependencies that you will need to install first on your laptop or desktop.
+To run Calliope there are several prerequisite dependencies that you will need to install:
 
-**[Java 8/9/10](http://www.oracle.com/technetwork/java/javase/downloads/)**
+**[Java 8 & JavaFX](http://www.oracle.com/technetwork/java/javase/downloads/)**
 
-Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJFX.
+  Note: If you are using OpenJDK instead of Oracle's JDK, you will also need OpenJFX.
 
 **[ExifTool](https://www.sno.phy.queensu.ca/~phil/exiftool/)**
 
 ExifTool must be accessible in your system $PATH environment variable. Calliope will run without ExifTool so you can check if you have successfully installed ExifTool by launching Calliope and going to the settings tab. If the text at the bottom reads `ExifTool Installation Status: Found` you are good to go. If the text at the bottom reads `ExifTool Installation Status: Not Found` follow the instructions at the bottom of the settings tab to install ExifTool on your system. If you attempt to import images without having ExifTool installed you will be prompted to install ExifTool first.
 
-### Running the Pre-Built `jar`
+### Running the prebuilt `jar`
 
 Download the [Calliope for Java 8](https://data.cyverse.org/dav/iplant/home/tswetnam/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar). It is highly recommended to use the Java 8 version if possible. 
 
