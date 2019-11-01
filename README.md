@@ -20,15 +20,19 @@ A Java and Python implementation of a program that could run on CentOS7 along si
 
 If you would like to contribute to this project and learn about the code base in detail, see [Developer Documentation](./DeveloperDocumentation.md)
 
-### Photoscan-scripts
-
 ### Credits
 
 This program is currently being developed by [CyVerse](https://github.com/DavidM1A2/). It is heavily based on previous code from [Sanimal](https://github.com/DavidM1A2/Sanimal). 
 
-- Software Developer - [David Slovikosky](https://github.com/DavidM1A2/)
-- Project Supervisor - [Tyson Swetnam](https://github.com/tyson-swetnam)
-- Funding Sources: University of Arizona School of Natural Resources and the Environment ([SNRE](https://snre.arizona.edu/)), & [USDA Agricultural Research Service Southwest Watershed Research Center](https://www.ars.usda.gov/pacific-west-area/tucson-az/southwest-watershed-research-center/)
+- Software Developers 
+  - Creator: [David Slovikosky](https://github.com/DavidM1A2/), 
+  - Past Dev: [Pooja Narayan](https://github.com/poojalnarayan), 
+  - Current Dev(s): [Caleb Prigge](https://github.com/priggec), [Jackson Lindsay](https://github.com/jlhonors)
+  - Project Supervisor: [Tyson L. Swetnam](https://github.com/tyson-swetnam)
+- Funding Sources 
+  - The University of Arizona [School of Natural Resources and the Environment](https://snre.arizona.edu/) 
+  - [USDA Agricultural Research Service Southwest Watershed Research Center](https://www.ars.usda.gov/pacific-west-area/tucson-az/southwest-watershed-research-center/) 
+  - National Science Foundation via [CyVerse](https://cyverse.org)
 
 **This material is based upon work supported by the U.S. Department of Agriculture, Agricultural Research Service, under Agreement no. 58-2022-5-13.**
 
