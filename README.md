@@ -1,6 +1,8 @@
+[![DOI](https://zenodo.org/badge/132954148.svg)](https://zenodo.org/badge/latestdoi/132954148) [![license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://opensource.org/licenses/GPL-3.0) 
+
 # suas-metadata
 
-This repository maintains the software used for the Project Calliope sUAS (small unmanned aerial system) data upload/download program [Powered by Cyverse](https://www.cyverse.org/powered-by-cyverse). 
+This repository maintains software used for the **Project Calliope** an sUAS-based imagery/video/lidar upload|download program written in Java and [Powered by CyVerse](https://www.cyverse.org/powered-by-cyverse). 
 
 ## Contents
 
