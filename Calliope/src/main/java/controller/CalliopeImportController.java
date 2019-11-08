@@ -185,7 +185,7 @@ public class CalliopeImportController
 
 	// A list of possible import options when adding data to the program
 	@FXML
-	public ComboBox<IDataSource> cbxImport;
+	public ListView<IDataSource> importListView;
 
 
 	///
@@ -553,25 +553,12 @@ public class CalliopeImportController
 		// Setup the import combo-box
 
 		// Set our cell factory to be our custom cell
-		this.cbxImport.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImportableFormatEntry.fxml").getController());
-		// Make sure that new cells use the 'getName' function to get the combo-box value instead of 'toString()'
-		this.cbxImport.setConverter(new StringConverter<IDataSource>()
-		{
-			@Override
-			public String toString(IDataSource dataSource)
-			{
-				return dataSource.getName();
-			}
-			@Override
-			public IDataSource fromString(String dataSourceName)
-			{
-				return CalliopeData.getInstance().getDataSources().stream().filter(dataSource -> dataSource.getName().equals(dataSourceName)).findFirst().orElse(null);
-			}
-		});
+		this.importListView.setCellFactory(x -> FXMLLoaderUtils.loadFXML("importView/ImportableFormatEntry.fxml").getController());
+
 		// Set the items to be the enum possible values
-		this.cbxImport.setItems(CalliopeData.getInstance().getDataSources());
+		this.importListView.setItems(CalliopeData.getInstance().getDataSources());
 		// When we select a new item in the list cell, execute the task and don't forget to disable the button while it's running
-		EasyBind.subscribe(this.cbxImport.getSelectionModel().selectedItemProperty(), newValue ->
+		EasyBind.subscribe(this.importListView.getSelectionModel().selectedItemProperty(), newValue ->
 		{
 			// If we got a valid new value
 			if (newValue != null)
@@ -582,7 +569,7 @@ public class CalliopeImportController
 				if (importTask != null)
 				{
 					// Hide the import button for now
-					this.cbxImport.setDisable(true);
+					this.importListView.setDisable(true);
 					// Grab the original on succeeded handler
 					EventHandler<WorkerStateEvent> onSucceeded = importTask.getOnSucceeded();
 					// Update our on succeeded handler to re-enable the import button
@@ -591,8 +578,8 @@ public class CalliopeImportController
 						onSucceeded.handle(event);
 						// Also clear the selection since we're using this combo-box as more of an item list than anything
 						// Because we're in a listener we can't actually modify the combobox in here, so use Platform.runLater to put it into a queue
-						Platform.runLater(() -> this.cbxImport.getSelectionModel().clearSelection());
-						this.cbxImport.setDisable(false);
+						Platform.runLater(() -> this.importListView.getSelectionModel().clearSelection());
+						this.importListView.setDisable(false);
 					});
 					// Execute the task
 					CalliopeData.getInstance().getExecutor().getQueuedExecutor().addTask(importTask);
@@ -600,7 +587,7 @@ public class CalliopeImportController
 				else
 				{
 					// Because we're in a listener we can't actually modify the combobox in here, so use Platform.runLater to put it into a queue
-					Platform.runLater(() -> this.cbxImport.getSelectionModel().clearSelection());
+					Platform.runLater(() -> this.importListView.getSelectionModel().clearSelection());
 				}
 			}
 		});

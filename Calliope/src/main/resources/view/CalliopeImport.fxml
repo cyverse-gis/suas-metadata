@@ -47,14 +47,7 @@
                     <PropertySheet fx:id="pstMetadata"/>
                 </Tab>
                 <Tab closable="false" text="Import">
-                    <FlowPane alignment="TOP_CENTER" hgap="5" vgap="10">
-                        <padding>
-                            <Insets bottom="20" left="5" right="5" top="20" />
-                        </padding>
-                        <children>
-                            <ComboBox fx:id="cbxImport" prefWidth="200" styleClass="importCbx" promptText="Import Images/Videos"/>
-                        </children>
-                    </FlowPane>
+                    <ListView fx:id="importListView" styleClass="importCbx"/>
                 </Tab>
             </tabs>
         </TabPane>
