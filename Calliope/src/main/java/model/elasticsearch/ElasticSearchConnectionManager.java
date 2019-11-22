@@ -1568,6 +1568,7 @@ public class ElasticSearchConnectionManager
 			// Perform the get
 			try
 			{
+				// May want multiGetAsync instead
 				MultiGetResponse multiGetItemResponse = this.elasticSearchClient.multiGet(multiGetRequest);
 				// Iterate over all results
 				for (MultiGetItemResponse itemResponse : multiGetItemResponse.getResponses())
@@ -1625,19 +1626,19 @@ public class ElasticSearchConnectionManager
 										else
 											imageEntry.setIrodsAbsolutePath(UNSPECIFIED);
 										imageEntry.setImageCollection(CalliopeData.getInstance().getCollectionList().stream().filter(collection -> collection.getID().toString().equals(collectionID)).findFirst().orElse(null));
-										if (sourceAsMap.get("altitude") != null)
-											imageEntry.setAltitude(NumberUtils.toDouble(sourceAsMap.get("altitude").toString(), Double.NaN));
+										if (metadataMap.get("altitude") != null)
+											imageEntry.setAltitude(NumberUtils.toDouble(metadataMap.get("altitude").toString(), Double.NaN));
 										else
 											imageEntry.setAltitude(Double.NaN);
-										if (sourceAsMap.get("cameraModel") != null)
+										if (metadataMap.get("cameraModel") != null)
 											imageEntry.setCameraModel(metadataMap.get("cameraModel").toString());
 										else
 											imageEntry.setCameraModel(UNSPECIFIED);
-										if (sourceAsMap.get("dateTaken") != null)
+										if (metadataMap.get("dateTaken") != null)
 											imageEntry.setDateTaken(ZonedDateTime.parse(metadataMap.get("dateTaken").toString(), CalliopeMetadataFields.INDEX_DATE_TIME_FORMAT).toLocalDateTime());
 										else
 											imageEntry.setDateTaken(LocalDateTime.MIN);
-										if (sourceAsMap.get("droneMaker") != null)
+										if (metadataMap.get("droneMaker") != null)
 											imageEntry.setDroneMaker(metadataMap.get("droneMaker").toString());
 										else
 											imageEntry.setDroneMaker(UNSPECIFIED);
@@ -1649,23 +1650,23 @@ public class ElasticSearchConnectionManager
 										}
 										else
 											imageEntry.setPositionTaken(new Position());
-										if (sourceAsMap.get("fileType") != null)
-											imageEntry.setFileType(sourceAsMap.get("fileType").toString());
+										if (metadataMap.get("fileType") != null)
+											imageEntry.setFileType(metadataMap.get("fileType").toString());
 										else
 											imageEntry.setFileType(UNSPECIFIED);
-										if (sourceAsMap.get("focalLength") != null)
-											imageEntry.setFocalLength(NumberUtils.toDouble(sourceAsMap.get("focalLength").toString(), Double.NaN));
+										if (metadataMap.get("focalLength") != null)
+											imageEntry.setFocalLength(NumberUtils.toDouble(metadataMap.get("focalLength").toString(), Double.NaN));
 										else
 											imageEntry.setFocalLength(Double.NaN);
-										if (sourceAsMap.get("width") != null)
-											imageEntry.setWidth(NumberUtils.toDouble(sourceAsMap.get("width").toString(), Double.NaN));
+										if (metadataMap.get("width") != null)
+											imageEntry.setWidth(NumberUtils.toDouble(metadataMap.get("width").toString(), Double.NaN));
 										else
 											imageEntry.setWidth(Double.NaN);
-										if (sourceAsMap.get("height") != null)
-											imageEntry.setHeight(NumberUtils.toDouble(sourceAsMap.get("height").toString(), Double.NaN));
+										if (metadataMap.get("height") != null)
+											imageEntry.setHeight(NumberUtils.toDouble(metadataMap.get("height").toString(), Double.NaN));
 										else
 											imageEntry.setHeight(Double.NaN);
-										if (sourceAsMap.get("siteCode") != null) {
+										if (metadataMap.get("siteCode") != null) {
 											for (String code : ((List<String>)metadataMap.get("siteCode")))
 												imageEntry.getSiteTaken().add(CalliopeData.getInstance().getSiteManager().getSiteByCode(code));
 										} else
@@ -1675,7 +1676,7 @@ public class ElasticSearchConnectionManager
 													NumberUtils.toDouble(speedMap.get("x").toString(), Double.NaN),
 													NumberUtils.toDouble(speedMap.get("y").toString(), Double.NaN),
 													NumberUtils.toDouble(speedMap.get("z").toString(), Double.NaN)));
-										if (rotationMap.get("roll") != null && rotationMap.get("speed") != null && rotationMap.get("yaw") != null)
+										if (rotationMap.get("roll") != null && rotationMap.get("pitch") != null && rotationMap.get("yaw") != null)
 											imageEntry.setRotation(new Vector3(
 													NumberUtils.toDouble(rotationMap.get("roll").toString(), Double.NaN),
 													NumberUtils.toDouble(rotationMap.get("pitch").toString(), Double.NaN),
