@@ -192,6 +192,9 @@ public class CalliopeMapController
 	// Disable the download query button if the query is invalid
 	@FXML
 	public Button btnDownloadQuery;
+	// Disable the download select button if no images are currently selected
+	@FXML
+	public Button btnDownloadSelect;
 
 	// The map scale label
 	@FXML
@@ -939,6 +942,50 @@ public class CalliopeMapController
 				queryCondition.appendConditionToQuery(query);
 
 		this.currentQuery.setValue(query.build());
+
+		actionEvent.consume();
+	}
+
+	/**
+	 * Clicked to download the currently selected images as a tar file
+	 *
+	 * @param actionEvent consumed
+	 */
+	public void downloadSelect(ActionEvent actionEvent)
+	{
+		// Make sure that popups are enabled
+		if (!CalliopeData.getInstance().getSettings().getDisablePopups())
+		{
+			// Create a directory chooser to pick which directory to download to
+			DirectoryChooser directoryChooser = new DirectoryChooser();
+			// Set the title of the window
+			directoryChooser.setTitle("Pick a directory to download to");
+			// Set the initial directory to just be documents folder
+			directoryChooser.setInitialDirectory(FileSystemView.getFileSystemView().getDefaultDirectory());
+			// Grab the directory to save to
+			File dirToSaveTo = directoryChooser.showDialog(this.map.getScene().getWindow());
+
+			// Make sure we got a directory to save to
+			if (dirToSaveTo != null)
+			{
+				// Make sure the directory is a directory, exists, and can be written to
+				if (dirToSaveTo.exists() && dirToSaveTo.isDirectory() && dirToSaveTo.canWrite())
+				{
+					// private final ObjectProperty<QueryBuilder> currentQuery = new SimpleObjectProperty<>(QueryBuilders.matchAllQuery());
+					System.out.printf("Folder exists! Put writing code here...\n");
+				}
+				else
+				{
+					// If the directory is invalid, show an error
+					CalliopeData.getInstance().getErrorDisplay().notify("The directory chosen must exist and be writable!");
+				}
+			}
+		}
+		else
+		{
+			// If popups are disabled show an error
+			CalliopeData.getInstance().getErrorDisplay().notify("Popups must be enabled to download a query!");
+		}
 
 		actionEvent.consume();
 	}
