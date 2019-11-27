@@ -100,7 +100,7 @@
                         </VBox>
                     </content>
                 </TitledPane>
-                <Button fx:id="btnDownloadSelect" onAction="#downloadSelect" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Currently Selected Images to Hard Disk" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" maxWidth="Infinity">
+                <Button fx:id="btnDownloadSelect" onAction="#downloadSelect" GridPane.halignment="CENTER" GridPane.valignment="CENTER" text="Download Selected Images to Disk [TODO]" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" maxWidth="Infinity">
                     <graphic>
                         <ImageView>
                             <Image url="@../images/mapWindow/downloadIcon16.png"/>
