@@ -175,6 +175,10 @@ public class CalliopeData
 	 */
 	private void setupAutoSettingsSync()
 	{
+		// Don't try to sync if the user hasn't logged in yet
+		if(this.usernameProperty.getValue() == "")
+			return;
+
 		ReRunnableService reRunnableService = new ReRunnableService<>(() ->
 			new ErrorTask<Void>()
 			{
