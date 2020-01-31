@@ -13,7 +13,7 @@ import model.image.ImageEntry;
 import model.site.Site;
 import model.threading.ErrorTask;
 import model.util.AnalysisUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

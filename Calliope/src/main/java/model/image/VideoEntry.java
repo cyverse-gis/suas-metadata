@@ -13,7 +13,7 @@ import model.settings.MetadataCustomItem;
 import model.site.Site;
 import model.threading.ErrorTask;
 import model.util.CustomPropertyItem;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
 import org.jcodec.common.model.Picture;

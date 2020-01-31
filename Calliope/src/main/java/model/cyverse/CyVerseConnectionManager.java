@@ -16,10 +16,10 @@ import model.image.VideoEntry;
 import model.util.AnalysisUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.irods.jargon.core.connection.AuthScheme;
 import org.irods.jargon.core.connection.IRODSAccount;
 import org.irods.jargon.core.connection.IRODSSession;
@@ -433,7 +433,8 @@ public class CyVerseConnectionManager
 				absoluteLocalFilePath = absoluteLocalFilePath.replace(".", RandomStringUtils.randomAlphabetic(1) + ".");
 				localFile = new File(absoluteLocalFilePath);
 			}
-			String webPathToDownload = StringEscapeUtils.escapeHtml(DAVRODS_URL + absoluteIRODSImagePath).replace(" ", "%20");
+			// TODO: Would this benefit from being escapeHtml4?
+			String webPathToDownload = StringEscapeUtils.escapeHtml3(DAVRODS_URL + absoluteIRODSImagePath).replace(" ", "%20");
 			try
 			{
 				FileUtils.copyURLToFile(new URL(webPathToDownload), localFile, 30000, 30000);

@@ -57,7 +57,7 @@ import model.threading.ErrorTask;
 import model.threading.ReRunnableService;
 import model.transitions.HeightTransition;
 import model.util.FXMLLoaderUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.*;
 import org.elasticsearch.index.query.QueryBuilder;
