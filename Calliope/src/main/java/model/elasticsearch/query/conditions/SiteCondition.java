@@ -8,7 +8,7 @@ import model.CalliopeData;
 import model.elasticsearch.query.ElasticSearchQuery;
 import model.elasticsearch.query.QueryCondition;
 import model.site.Site;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;

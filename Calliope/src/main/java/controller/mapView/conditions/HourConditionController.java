@@ -8,7 +8,7 @@ import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.util.StringConverter;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.HourCondition;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 /**
  * Class used as a controller for the "Hour filter" UI component

@@ -8,7 +8,7 @@ import model.elasticsearch.query.NumericComparisonOperator;
 import model.elasticsearch.query.QueryCondition;
 import model.elasticsearch.query.conditions.ElevationCondition;
 import model.settings.SettingsData;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 import org.fxmisc.easybind.EasyBind;

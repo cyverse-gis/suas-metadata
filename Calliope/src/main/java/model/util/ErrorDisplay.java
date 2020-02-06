@@ -13,7 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 import model.settings.SettingsData;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
 

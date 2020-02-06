@@ -5,8 +5,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import model.site.Site;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 
 /**
  * Simple class for displaying site information as a pop-over
