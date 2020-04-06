@@ -11,5 +11,5 @@ docker pull amazon/opendistro-for-elasticsearch:1.6.0
 We are launching our containers using a `docker-compose` file
 
 ```
-docker compose up
+docker-compose up
 ```
