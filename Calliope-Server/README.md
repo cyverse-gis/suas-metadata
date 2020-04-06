@@ -2,6 +2,10 @@
 
 Step 1: Launch a new Ubuntu 18.04 instance on OpenStack
 
+Step 2: Create `~/.ssh/authorized_keys` and import your public ssh key
+
+# Provisioning with Docker and iCommands
+
 Right now, we're using a 4-core, 32GB RAM, 60 GB root size. We have a 500GB external volume attached. 
 
 Update and Upgrade
@@ -12,15 +16,31 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
 
 Add dependencies
 ```
-sudo apt-get install -y less vim htop libpq-dev lsb wget gnupg apt-transport-https curl \
-    && sudo apt-get clean \
-    && sudo rm -rf /usr/lib/apt/lists/*
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg gnupg-agent \
+     htop less libpq-dev lsb software-properties-common vim wget
+sudo apt-get clean
+sudo rm -rf /usr/lib/apt/lists/*
 ```
 
 Install iCommands 
 ```
-sudo wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - \
-    && echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" > /etc/apt/sources.list.d/renci-irods.list \
-    && sudo apt-get update \
-    && sudo apt-get install -y irods-icommands
+sudo wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - 
+sudo echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" > /etc/apt/sources.list.d/renci-irods.list
+sudo apt-get update 
+sudo apt-get install -y irods-icommands
+```
+
+Install Docker
+```
+sudo apt-get update
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt update 
+sudo apt install docker-ce
+```
+
+Import this repository
+
+```
+git clone https://github.com/cyverse-gis/suas-metadata
 ```
