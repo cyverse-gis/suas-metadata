@@ -28,7 +28,7 @@ sudo rm -rf /usr/lib/apt/lists/*
 
 ```
 sudo wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - 
-sudo echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" > /etc/apt/sources.list.d/renci-irods.list
+sudo echo "deb [arch=amd64] https://packages.irods.org/apt/ xenial main" > /etc/apt/sources.list.d/renci-irods.list
 sudo apt-get update 
 sudo apt-get install -y irods-icommands
 ```
