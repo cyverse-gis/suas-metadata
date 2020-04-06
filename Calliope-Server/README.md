@@ -39,8 +39,19 @@ sudo apt update
 sudo apt install docker-ce
 ```
 
+Add user to the Docker group
+
+```
+sudo groupadd docker
+sudo usermod -aG docker <username>
+```
+
 Import this repository
 
 ```
+cd
+mkdir github
+cd github
 git clone https://github.com/cyverse-gis/suas-metadata
+cd suas-metadata/Calliope-Server
 ```
