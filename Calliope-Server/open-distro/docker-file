@@ -1,4 +1,0 @@
-FROM amazon/opendistro-for-elasticsearch:0.7.1
-
-# Install my preferred text editor
-RUN yum -y install nano
