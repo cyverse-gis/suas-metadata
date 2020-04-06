@@ -4,6 +4,7 @@ These files are used to initial the [Docker container](https://hub.docker.com/r/
 
 ```
 docker pull amazon/opendistro-for-elasticsearch:1.6.0
+docker pull amazon/opendistro-for-elasticsearch-kibana:1.6.0
 ```
 
 [Setting up with Docker](https://opendistro.github.io/for-elasticsearch-docs/docs/install/docker/)
