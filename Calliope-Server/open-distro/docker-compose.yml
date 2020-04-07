@@ -1,17 +1,17 @@
 # based on https://opendistro.github.io/for-elasticsearch-docs/docs/install/docker-security/
 version: '3'
 services:
-  odfe-node1:
-    image: tswetnam/opendistro-for-elasticsearch:1.6.0-secured
-    container_name: odfe-node1
+  aeolus-node1:
+    image: amazon/opendistro-for-elasticsearch:1.6.0
+    container_name: aeolus-node1
     environment:
-      - cluster.name=odfe-cluster
-      - node.name=odfe-node1
-      - discovery.seed_hosts=odfe-node1,odfe-node2
-      - cluster.initial_master_nodes=odfe-node1,odfe-node2
+      - cluster.name=aeolus-cluster
+      - node.name=aeolus-node1
+      - discovery.seed_hosts=aeolus-node1
+      - cluster.initial_master_nodes=aeolus-node1
       - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
-      - network.host=0.0.0.0 # required if not using the demo Security configuration
+      - "ES_JAVA_OPTS=-Xms16384m -Xmx16384m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      #- network.host=0.0.0.0 # required if not using the demo Security configuration
     ulimits:
       memlock:
         soft: -1
@@ -20,7 +20,7 @@ services:
         soft: 65536 # maximum number of open files for the Elasticsearch user, set to at least 65536 on modern systems
         hard: 65536
     volumes:
-      - odfe-data1:/usr/share/elasticsearch/data
+      - aeolus-data1:/usr/share/elasticsearch/data
       - ./root-ca.pem:/usr/share/elasticsearch/config/root-ca.pem
       - ./node.pem:/usr/share/elasticsearch/config/node.pem
       - ./node-key.pem:/usr/share/elasticsearch/config/node-key.pem
@@ -36,5 +36,26 @@ services:
       - 9200:9200
       - 9600:9600 # required for Performance Analyzer
     networks:
-      - odfe-net
-    restart: "always"
+      - aeolus-net
+    restart: "always" # set to restart after a reboot
+kibana:
+    image: amazon/opendistro-for-elasticsearch-kibana:1.6.0
+    container_name: aeolus-kibana
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    environment:
+      ELASTICSEARCH_URL: https://aeolus-node1:9200
+      ELASTICSEARCH_HOSTS: https://aeolus-node1:9200
+    volumes:
+      - ./custom-kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      - aeolus-net
+    restart: "always" # set to restart after a reboot
+volumes:
+  aeolus-data1:
+  aeolus-data2:
+
+networks:
+  aeolus-net:
