@@ -1,13 +1,6 @@
 FROM amazon/opendistro-for-elasticsearch:1.6.0
 
-# Install elasticsearch plugins
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch opendistro_security
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch opendistro_alerting
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch opendistro_sql 
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch opendistro_performance_analyzer 
-RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch opendistro_index_management
-
-# Copy configuration yaml and certificate pem for Security Plugin
+# Copy configuration yaml and certificate pems for the Security Plugin
 COPY --chown=elasticsearch:elasticsearch elasticsearch.yml /usr/share/elasticsearch/config/
 COPY --chown=elasticsearch:elasticsearch my-key-file.pem /usr/share/elasticsearch/config/
 COPY --chown=elasticsearch:elasticsearch my-certificate-chain.pem /usr/share/elasticsearch/config/
