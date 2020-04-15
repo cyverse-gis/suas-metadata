@@ -185,7 +185,7 @@
         <dependency>
             <groupId>com.github.ClemensFischer</groupId>
             <artifactId>FX-Map-Control</artifactId>
-            <version>-SNAPSHOT</version>
+            <version>-814fed34f2-1</version>
         </dependency>
         <!-- Allows for shapefile processing -->
         <dependency>

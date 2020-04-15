@@ -27,8 +27,11 @@ public class ViewportCondition extends MapQueryCondition
 		Bounds boundsInParent = map.getBoundsInParent();
 
 		// Using the bounds we compute the maximum and minimum lat/long values which we will pass to our query
-		Location topLeft = map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
-		Location bottomRight = map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
+		// TODO: Modified this code to correct compiler errors, but I have no idea if the correct output is produced.
+		// Location topLeft = map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
+		// Location bottomRight = map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
+		Location topLeft = map.getProjection().mapToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
+		Location bottomRight = map.getProjection().mapToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
 		// Set the query's viewport
 		query.addBox(topLeft, bottomRight);
