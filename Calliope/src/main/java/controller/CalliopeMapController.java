@@ -340,11 +340,10 @@ public class CalliopeMapController
 				protected List<String> call()
 				{
 					// Using the bounds we compute the maximum and minimum lat/long values which we will pass to elasticsearch later
-// TODO: Modified these lines just to get the program to compile, but I don't know if the result is correct.
 					// Location topLeft = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
 					// Location bottomRight = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
-					Location topLeft = CalliopeMapController.this.map.getProjection().mapToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
-					Location bottomRight = CalliopeMapController.this.map.getProjection().mapToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
+					Location topLeft = CalliopeMapController.this.map.viewToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
+                    Location bottomRight = CalliopeMapController.this.map.viewToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
 					long time = System.currentTimeMillis();
 					List<String> temp = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
@@ -397,11 +396,10 @@ public class CalliopeMapController
 				protected List<GeoBucket> call()
 				{
 					// Using the bounds we compute the maximum and minimum lat/long values which we will pass to elasticsearch later
-					// TODO: See preceeding TODO
 					// Location topLeft = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
 					// Location bottomRight = CalliopeMapController.this.map.getProjection().viewportPointToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
-					Location topLeft = CalliopeMapController.this.map.getProjection().mapToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
-					Location bottomRight = CalliopeMapController.this.map.getProjection().mapToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
+					Location topLeft = CalliopeMapController.this.map.viewToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
+					Location bottomRight = CalliopeMapController.this.map.viewToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
 					// This is the important line. We call ES to perform an aggregation of all uploaded images given bounds and a zoom level.
 					// This call will return a list of buckets including number of images per bucket and centroids for each bucket
@@ -729,9 +727,9 @@ public class CalliopeMapController
 			// The maximum size in pixels of the scale in the bottom left
 			final double MAX_SIZE = 300;
 			// Pixels per meter to start with here
-			// TODO: See preceeding TODO
+			// TODO: Modified these lines just to get the program to compile, but I don't know if the result is correct.
 			// double pixelsPerPowerOf10 = this.map.getProjection().getMapScale(this.map.getCenter()).getY();
-			double pixelsPerPowerOf10 = this.map.getProjection().getRelativeScale(this.map.getCenter()).getY();
+            double pixelsPerPowerOf10 = this.map.getProjection().getRelativeScale(this.map.getCenter()).getY();
 			// Iterate up to 25 times (or 10^25)
 			for (int currentPowerOf10 = 0; currentPowerOf10 < 25; currentPowerOf10++)
 			{
@@ -1152,9 +1150,8 @@ public class CalliopeMapController
 			double mouseX = dragEvent.getX();
 			double mouseY = dragEvent.getY();
 			// Compute the latitude and longitude of the mouse x/y position
-			// TODO: See preceeding TODO
 			// Location location = this.map.getProjection().viewportPointToLocation(new Point2D(mouseX, mouseY));
-			Location location = this.map.getProjection().mapToLocation(new Point2D(mouseX, mouseY));
+			Location location = this.map.viewToLocation(new Point2D(mouseX, mouseY));
 			// Store the latitude and longitude into the dragboard content
 			newContent.put(CalliopeDataFormats.POLYGON_LATITUDE_FORMAT, location.getLatitude());
 			newContent.put(CalliopeDataFormats.POLYGON_LONGITUDE_FORMAT, location.getLongitude());
