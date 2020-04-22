@@ -186,6 +186,11 @@
             <version>1.2.1</version>
         </dependency>
         <!-- Allows for a map control -->
+        <!--
+        Future Calliope developers: If this dependency produces impassable errors, see if there exists a release
+          version of FX-Map-Control. Change the version to that, and then fix whatever errors come from switching
+          to that version. Hopefully maven will work for you then. If not, start praying.
+        -->
         <dependency>
             <groupId>com.github.ClemensFischer</groupId>
             <artifactId>FX-Map-Control</artifactId>
