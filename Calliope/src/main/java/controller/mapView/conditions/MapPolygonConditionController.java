@@ -172,10 +172,15 @@ public class MapPolygonConditionController implements IConditionController
 					ObservableList<Location> locations = polygon.getLocations();
 					// Clear the list of locations and add the 4 corners of the box
 					locations.clear();
-					locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX, this.startY)));
-					locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX + (currentX - this.startX), this.startY)));
-					locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX + (currentX - this.startX), this.startY + (currentY - this.startY))));
-					locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX, this.startY + (currentY - this.startY))));
+					// TODO: Modified this code to correct compiler errors, but I have no idea if the correct output is produced.
+					// locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX, this.startY)));
+					// locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX + (currentX - this.startX), this.startY)));
+					// locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX + (currentX - this.startX), this.startY + (currentY - this.startY))));
+					// locations.add(mapProjection.viewportPointToLocation(new Point2D(this.startX, this.startY + (currentY - this.startY))));
+					locations.add(mapProjection.mapToLocation(new Point2D(this.startX, this.startY)));
+					locations.add(mapProjection.mapToLocation(new Point2D(this.startX + (currentX - this.startX), this.startY)));
+					locations.add(mapProjection.mapToLocation(new Point2D(this.startX + (currentX - this.startX), this.startY + (currentY - this.startY))));
+					locations.add(mapProjection.mapToLocation(new Point2D(this.startX, this.startY + (currentY - this.startY))));
 				}
 			};
 			// When releasing the mouse we stop the drawing box flag and hide the masker pane

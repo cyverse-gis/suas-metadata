@@ -38,6 +38,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -59,11 +60,13 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.ParsedSingleBucketAggregation;
 import org.elasticsearch.search.aggregations.bucket.filter.FilterAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoGridAggregationBuilder;
-import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGrid;
+//import org.elasticsearch.search.aggregations.bucket.geogrid.GeoHashGrid;
+import org.elasticsearch.search.aggregations.bucket.geogrid.GeoGrid;
 import org.elasticsearch.search.aggregations.bucket.geogrid.ParsedGeoHashGrid;
 import org.elasticsearch.search.aggregations.bucket.terms.IncludeExclude;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
-import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
+//import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
+import org.elasticsearch.search.aggregations.metrics.ParsedAvg;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.locationtech.jts.geom.Coordinate;
@@ -77,10 +80,13 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
 public class ElasticSearchConnectionManager
 {
 	// The scheme used to connect to the elastic search index
-	private static final String ELASTIC_SEARCH_SCHEME = "http";
+	private static final String ELASTIC_SEARCH_SCHEME = "https";
 
 	// The name of the user's index
 	private static final String INDEX_CALLIOPE_USERS = "users";
@@ -132,6 +138,16 @@ public class ElasticSearchConnectionManager
 	// Property that changes when ES is up and running
 	private SimpleBooleanProperty active = new SimpleBooleanProperty(false);
 
+	// A simple class that allows Calliope/Java to accept any hostname that presents a valid certificate
+	// More or less copied from https://stackoverflow.com/a/7443373
+	private class TrustAllHostNameVerifier implements HostnameVerifier {
+		public boolean verify(String hostname, SSLSession session) {
+			return true;
+		}
+	}
+
+	public static RequestOptions DefaultRequestOptions = RequestOptions.DEFAULT;
+
 	/**
 	 * Given a username and password, this method logs a cyverse user in
 	 *
@@ -169,15 +185,16 @@ public class ElasticSearchConnectionManager
 			*/
 
 			// Establish a connection to the elastic search server
+			// TODO: Should we trust all hostnames? I did it here to make sure I could connect to my test server
 			this.elasticSearchClient = new RestHighLevelClient(RestClient
 					.builder(new HttpHost(configurationManager.getElasticSearchHost(), configurationManager.getElasticSearchPort(), ELASTIC_SEARCH_SCHEME))
-					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)).setMaxRetryTimeoutMillis(120000)
+					.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setSSLHostnameVerifier(new TrustAllHostNameVerifier()).setDefaultCredentialsProvider(credentialsProvider))
 					.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(120000).setConnectTimeout(120000)));
 
 			// Test to see if the ElasticSearch index is up or not
 			try
 			{
-				if (this.elasticSearchClient.ping())
+				if (this.elasticSearchClient.ping(DefaultRequestOptions))
 				{
 					active.setValue(true);
 					this.elasticSearchSchemaManager = new ElasticSearchSchemaManager();
@@ -307,7 +324,7 @@ public class ElasticSearchConnectionManager
 				// Create an index request, use our schema manager to ensure the proper fields are inserted
 				IndexRequest indexRequest = new IndexRequest()
 						.index(INDEX_CALLIOPE_SITES)
-						.type(INDEX_CALLIOPE_SITES_TYPE)
+						//.type(INDEX_CALLIOPE_SITES_TYPE)
 						.source(xContentBuilder);
 				bulkRequest.add(indexRequest);
 				siteCount++;
@@ -317,7 +334,7 @@ public class ElasticSearchConnectionManager
 					bulkRequest.timeout(TimeValue.timeValueMinutes(15));
 
 					// Store the response of the bulk insert
-					bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+					bulkResponse = this.elasticSearchClient.bulk(bulkRequest, RequestOptions.DEFAULT.toBuilder().build());
 					// Make sure it was OK, if not, print an error
 					if (bulkResponse.status() != RestStatus.OK)
 						CalliopeData.getInstance().getErrorDisplay().notify("Error executing bulk site insert! Status = " + bulkResponse.status());
@@ -370,7 +387,7 @@ public class ElasticSearchConnectionManager
 		{
 			// Create a delete request to remove the Calliope Users index and execute it
 			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(index);
-			this.elasticSearchClient.indices().delete(deleteIndexRequest);
+			this.elasticSearchClient.indices().delete(deleteIndexRequest, DefaultRequestOptions);
 		}
 		catch (IOException e)
 		{
@@ -407,7 +424,7 @@ public class ElasticSearchConnectionManager
 					.local(false);
 
 			// Boolean if it exists
-			Boolean exists = this.elasticSearchClient.indices().exists(getIndexRequest);
+			Boolean exists = this.elasticSearchClient.indices().exists(getIndexRequest, DefaultRequestOptions);
 
 			// Delete the original index if it exists and we want to delete the original
 			if (deleteOriginalIfPresent && exists)
@@ -423,9 +440,11 @@ public class ElasticSearchConnectionManager
 						.put("index.number_of_shards", shardCount)
 						.put("index.number_of_replicas", replicaCount));
 				// Add the type mapping which defines our schema
-				createIndexRequest.mapping(type, mapping);
+                // TODO: Made a change based on this answer https://stackoverflow.com/a/60081903
+				// createIndexRequest.mapping(type, mapping);
+                createIndexRequest.source(mapping);
 				// Execute the index request
-				this.elasticSearchClient.indices().create(createIndexRequest);
+				this.elasticSearchClient.indices().create(createIndexRequest, DefaultRequestOptions);
 			}
 		}
 		catch (IOException e)
@@ -455,8 +474,8 @@ public class ElasticSearchConnectionManager
 					// Ignore source to speed up the fetch
 					.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE);
 			// Perform the GET request
-			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
-			// If the user is not in the db... create an index entry for him
+			GetResponse getResponse = this.elasticSearchClient.get(getRequest, DefaultRequestOptions);
+			// If the user is not in the db... create an index entry for them
 			if (!getResponse.isExists())
 			{
 				// Create an index request which we use to put data into the elastic search index
@@ -469,7 +488,7 @@ public class ElasticSearchConnectionManager
 						// The source will be a new
 						.source(this.elasticSearchSchemaManager.makeCreateUser(username));
 				// Perform the index request
-				this.elasticSearchClient.index(indexRequest);
+				this.elasticSearchClient.index(indexRequest, DefaultRequestOptions);
 			}
 		}
 		catch (IOException e)
@@ -500,7 +519,7 @@ public class ElasticSearchConnectionManager
 					.id(username)
 					.fetchSourceContext(new FetchSourceContext(true));
 			// Store the response
-			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
+			GetResponse getResponse = this.elasticSearchClient.get(getRequest, DefaultRequestOptions);
 			// If we got a good response, grab it
 			if (getResponse.isExists() && !getResponse.isSourceEmpty())
 			{
@@ -561,7 +580,7 @@ public class ElasticSearchConnectionManager
 		try
 		{
 			// Grab the search results
-			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 			// Store the scroll id that was returned because we specified a scroll in the search request
 			String scrollID = searchResponse.getScrollId();
 			// Get a list of sites (hits)
@@ -648,7 +667,7 @@ public class ElasticSearchConnectionManager
 						.scrollId(scrollID)
 						.scroll(scroll);
 				// Perform the scroll, yielding another set of results
-				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest, DefaultRequestOptions);
 				// Store the hits and the new scroll id
 				scrollID = searchResponse.getScrollId();
 				searchHits = searchResponse.getHits().getHits();
@@ -660,7 +679,7 @@ public class ElasticSearchConnectionManager
 			// Finish off the scroll request
 			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
 			clearScrollRequest.addScrollId(scrollID);
-			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest, DefaultRequestOptions);
 			// If clearing the scroll request fails, show an error
 			if (!clearScrollResponse.isSucceeded())
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading sites");
@@ -835,7 +854,7 @@ public class ElasticSearchConnectionManager
 		try
 		{
 			// Grab the search results
-			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 			// Store the scroll id that was returned because we specified a scroll in the search request
 			String scrollID = searchResponse.getScrollId();
 			// Get a list of collections (hits)
@@ -861,7 +880,7 @@ public class ElasticSearchConnectionManager
 						.scrollId(scrollID)
 						.scroll(scroll);
 				// Perform the scroll, yielding another set of results
-				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest, DefaultRequestOptions);
 				// Store the hits and the new scroll id
 				scrollID = searchResponse.getScrollId();
 				searchHits = searchResponse.getHits().getHits();
@@ -870,7 +889,7 @@ public class ElasticSearchConnectionManager
 			// Finish off the scroll request
 			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
 			clearScrollRequest.addScrollId(scrollID);
-			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest, DefaultRequestOptions);
 			// If clearing the scroll request fails, show an error
 			if (!clearScrollResponse.isSucceeded())
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading collections");
@@ -903,7 +922,7 @@ public class ElasticSearchConnectionManager
 					.doc(this.elasticSearchSchemaManager.makeSettingsUpdate(settingsData));
 
 			// Perform the update and test the response
-			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest);
+			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest, DefaultRequestOptions);
 
 			// If the response is OK, continue, if not print an error
 			if (updateResponse.status() != RestStatus.OK)
@@ -946,7 +965,7 @@ public class ElasticSearchConnectionManager
 					.upsert(indexRequest);
 
 			// Perform the update and test the response
-			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest);
+			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest, DefaultRequestOptions);
 
 			// If the response is OK, continue, if not print an error
 			if (updateResponse.status() != RestStatus.OK && updateResponse.status() != RestStatus.CREATED)
@@ -987,7 +1006,7 @@ public class ElasticSearchConnectionManager
 			try
 			{
 				// Grab the search results
-				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 				// Store the scroll id that was returned because we specified a scroll in the search request
 				String scrollID = searchResponse.getScrollId();
 				// Get a list of metadata fields (hits)
@@ -1009,7 +1028,7 @@ public class ElasticSearchConnectionManager
 						DeleteRequest documentDeleteRequest = new DeleteRequest();
 						documentDeleteRequest
 								.index(INDEX_CALLIOPE_METADATA)
-								.type(INDEX_CALLIOPE_METADATA_TYPE)
+								//.type(INDEX_CALLIOPE_METADATA_TYPE)
 								.id(id);
 
 						// Add the delete request
@@ -1017,7 +1036,7 @@ public class ElasticSearchConnectionManager
 					}
 
 					// Perform the bulk delete
-					BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+					BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest, DefaultRequestOptions);
 					if (bulkResponse.hasFailures())
 						CalliopeData.getInstance().getErrorDisplay().printError("Error performing bulk delete, status is " + bulkResponse.status().toString());
 
@@ -1028,7 +1047,7 @@ public class ElasticSearchConnectionManager
 							.scrollId(scrollID)
 							.scroll(scroll);
 					// Perform the scroll, yielding another set of results
-					searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+					searchResponse = this.elasticSearchClient.searchScroll(scrollRequest, DefaultRequestOptions);
 					// Store the hits and the new scroll id
 					scrollID = searchResponse.getScrollId();
 					searchHits = searchResponse.getHits().getHits();
@@ -1037,7 +1056,7 @@ public class ElasticSearchConnectionManager
 				// Finish off the scroll request
 				ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
 				clearScrollRequest.addScrollId(scrollID);
-				ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+				ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest, DefaultRequestOptions);
 				// If clearing the scroll request fails, show an error
 				if (!clearScrollResponse.isSucceeded())
 					CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading metadata");
@@ -1056,7 +1075,7 @@ public class ElasticSearchConnectionManager
 					.id(imageCollection.getID().toString());
 
 			// Delete the collection
-			DeleteResponse deleteResponse = this.elasticSearchClient.delete(deleteRequest);
+			DeleteResponse deleteResponse = this.elasticSearchClient.delete(deleteRequest, DefaultRequestOptions);
 			// Print an error if the delete fails
 			if (deleteResponse.status() != RestStatus.OK)
 				CalliopeData.getInstance().getErrorDisplay().notify("Error deleting collection '" + imageCollection.getName() + "', status was " + deleteResponse.status());
@@ -1112,7 +1131,7 @@ public class ElasticSearchConnectionManager
 					// Only fetch the uploads part of the document
 					.fetchSourceContext(new FetchSourceContext(true, new String[] { "uploads" }, new String[] { "name", "organization", "contactInfo", "description", "id", "permissions" }));
 			// Perform the GET request
-			GetResponse getResponse = this.elasticSearchClient.get(getRequest);
+			GetResponse getResponse = this.elasticSearchClient.get(getRequest, DefaultRequestOptions);
 			// It should exist...
 			if (getResponse.isExists() && !getResponse.isSourceEmpty())
 			{
@@ -1173,7 +1192,7 @@ public class ElasticSearchConnectionManager
 			}
 
 			// Execute the bulk insert
-			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest);
+			BulkResponse bulkResponse = this.elasticSearchClient.bulk(bulkRequest, DefaultRequestOptions);
 
 			// Check if everything went OK, if not return an error
 			if (bulkResponse.status() != RestStatus.OK)
@@ -1206,7 +1225,7 @@ public class ElasticSearchConnectionManager
 				 */
 				.script(new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "ctx._source.uploads.add(params.upload)", args));
 			// Execute the update, and save the result
-			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest);
+			UpdateResponse updateResponse = this.elasticSearchClient.update(updateRequest, DefaultRequestOptions);
 			// If the response was not OK, print an error
 			if (updateResponse.status() != RestStatus.OK)
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not update the Collection's index with a new upload!");
@@ -1264,7 +1283,7 @@ public class ElasticSearchConnectionManager
 		try
 		{
 			// Execute the search
-			MultiSearchResponse multiSearchResponse = this.elasticSearchClient.multiSearch(multiSearchRequest);
+			MultiSearchResponse multiSearchResponse = this.elasticSearchClient.multiSearch(multiSearchRequest, DefaultRequestOptions);
 			// Grab all responses
 			MultiSearchResponse.Item[] responses = multiSearchResponse.getResponses();
 			// We should get one response per image
@@ -1380,7 +1399,7 @@ public class ElasticSearchConnectionManager
 			try
 			{
 				// Grab the search results
-				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 				// Grab the aggregations from those search results
 				List<Aggregation> aggregationHits = searchResponse.getAggregations().asList();
 				// Go over the aggregations (there should be just one)
@@ -1400,7 +1419,7 @@ public class ElasticSearchConnectionManager
 								// Grab the hash grid
 								ParsedGeoHashGrid geoHashGrid = (ParsedGeoHashGrid) subAggregation;
 								// Iterate over all buckets inside of the hash grid
-								for (GeoHashGrid.Bucket bucket : geoHashGrid.getBuckets())
+								for (GeoGrid.Bucket bucket : geoHashGrid.getBuckets())
 								{
 									// The bucket will include 3 pieces of info, latitude, longitude, and the number of documents in the bucket
 									Long documentsInBucket = bucket.getDocCount();
@@ -1484,7 +1503,7 @@ public class ElasticSearchConnectionManager
 
 			// Grab the search results
             //Long time = System.currentTimeMillis();
-			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 			// Store the scroll id that was returned because we specified a scroll in the search request
 			String scrollID = searchResponse.getScrollId();
 			// Get a list of sites (hits)
@@ -1516,7 +1535,7 @@ public class ElasticSearchConnectionManager
 						.scrollId(scrollID)
 						.scroll(scroll);
 				// Perform the scroll, yielding another set of results
-				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest);
+				searchResponse = this.elasticSearchClient.searchScroll(scrollRequest, DefaultRequestOptions);
 				// Store the hits and the new scroll id
 				scrollID = searchResponse.getScrollId();
 				searchHits = searchResponse.getHits().getHits();
@@ -1525,7 +1544,7 @@ public class ElasticSearchConnectionManager
 			// Finish off the scroll request
 			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
 			clearScrollRequest.addScrollId(scrollID);
-			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest);
+			ClearScrollResponse clearScrollResponse = this.elasticSearchClient.clearScroll(clearScrollRequest, DefaultRequestOptions);
 			// If clearing the scroll request fails, show an error
 			if (!clearScrollResponse.isSucceeded())
 				CalliopeData.getInstance().getErrorDisplay().notify("Could not clear the scroll when reading sites");
@@ -1569,7 +1588,7 @@ public class ElasticSearchConnectionManager
 			try
 			{
 				// May want multiGetAsync instead
-				MultiGetResponse multiGetItemResponse = this.elasticSearchClient.multiGet(multiGetRequest);
+				MultiGetResponse multiGetItemResponse = this.elasticSearchClient.multiGet(multiGetRequest, DefaultRequestOptions);
 				// Iterate over all results
 				for (MultiGetItemResponse itemResponse : multiGetItemResponse.getResponses())
 				{
@@ -1722,9 +1741,9 @@ public class ElasticSearchConnectionManager
 						.query(currentQuery));
 
 			// Perform the count search
-			SearchResponse countSearchResponse = this.elasticSearchClient.search(countSearchRequest);
+			SearchResponse countSearchResponse = this.elasticSearchClient.search(countSearchRequest, DefaultRequestOptions);
 			// Store the number of hits
-			Long totalHits = countSearchResponse.getHits().totalHits;
+			Long totalHits = countSearchResponse.getHits().getTotalHits().value;
 			// Every aggregation we fire off will have a max of 1000 results
 			final int MAX_AGGS_PER_SEARCH = 1000;
 			// Compute how many queries we need to perform to get all results
@@ -1745,7 +1764,7 @@ public class ElasticSearchConnectionManager
 						.aggregation(AggregationBuilders.terms("paths").field("storagePath").includeExclude(new IncludeExclude(partitionNumber, partitionsRequired)).size(MAX_AGGS_PER_SEARCH)));
 
 				// Grab the search results
-				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+				SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 				// Get a list of paths (hits)
 				Aggregations aggregations = searchResponse.getAggregations();
 
@@ -1795,7 +1814,7 @@ public class ElasticSearchConnectionManager
 		try
 		{
 			// Perform the search
-			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest);
+			SearchResponse searchResponse = this.elasticSearchClient.search(searchRequest, DefaultRequestOptions);
 			// Return the aggregations
 			Aggregations aggregations = searchResponse.getAggregations();
 			// Get the file types aggregation

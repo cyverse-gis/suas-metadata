@@ -32,7 +32,9 @@ public class HandleController
 		// We need the map projection to go from screen coordinates to lat/long coordinates
 		MapProjection mapProjection = map.getProjection();
 		// Convert screen to lat/long coordinates and set the location
-		this.location.setValue(mapProjection.viewportPointToLocation(new Point2D(currentX, currentY)));
+		// TODO: Modified this code to correct compiler errors, but I have no idea if the correct output is produced.
+		// this.location.setValue(mapProjection.viewportPointToLocation(new Point2D(currentX, currentY)));
+		this.location.setValue(mapProjection.mapToLocation(new Point2D(currentX, currentY)));
 		mouseEvent.consume();
 	}
 
