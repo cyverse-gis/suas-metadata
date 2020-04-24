@@ -36,7 +36,10 @@ public class NeonData
 	// Base URL for the NEON api
 	private static final String NEON_API_URL = "https://data.neonscience.org/api/v0";
 	// A hard coded link to the NEON KMZ file containing all locations + boundaries
-	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-v16_1.kmz";
+	// updated link -- somebody introduced a space :-<
+	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON_Project_%20Locations_v16_1.kmz";
+	//old link w/o space in it
+//	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON-Project-Locations-v16_1.kmz";
 
 	/**
 	 * Parses a KML document into a list of sites
