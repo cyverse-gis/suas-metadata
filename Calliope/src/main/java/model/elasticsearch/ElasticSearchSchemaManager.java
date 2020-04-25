@@ -39,7 +39,7 @@ public class ElasticSearchSchemaManager
 		return XContentFactory.jsonBuilder()
 		.startObject()
             .startObject("mappings")
-				.startObject("_doc")
+				//.startObject("_doc")
 				.startObject("properties")
 					.startObject("username")
 						.field("type", "keyword")
@@ -68,7 +68,7 @@ public class ElasticSearchSchemaManager
 						.endObject()
 					.endObject()
 				.endObject()
-				.endObject()
+				//.endObject()
             .endObject()
 		.endObject();
 
@@ -120,7 +120,7 @@ public class ElasticSearchSchemaManager
 		return XContentFactory.jsonBuilder()
 		.startObject()
 			.startObject("mappings")
-				.startObject("_doc")
+				//.startObject("_doc")
 				.startObject("properties")
 					.startObject("storagePath")
 						.field("type", "keyword")
@@ -211,7 +211,7 @@ public class ElasticSearchSchemaManager
 						.endObject()
 					.endObject()
 				.endObject()
-				.endObject()
+				//.endObject()
 			.endObject()
 		.endObject();
 
@@ -327,7 +327,7 @@ public class ElasticSearchSchemaManager
 		return XContentFactory.jsonBuilder()
 		.startObject()
             .startObject("mappings")
-				.startObject("_doc")
+				//.startObject("_doc")
 				.startObject("properties")
 					.startObject("name")
 						.field("type", "keyword")
@@ -383,7 +383,7 @@ public class ElasticSearchSchemaManager
 						.endObject()
 					.endObject()
 				.endObject()
-				.endObject()
+				//.endObject()
 			.endObject()
 		.endObject();
 
@@ -463,7 +463,7 @@ public class ElasticSearchSchemaManager
 		return XContentFactory.jsonBuilder()
 		.startObject()
 			.startObject("mappings")
-				.startObject("_doc")
+				//.startObject("_doc")
 				.startObject("properties")
 					.startObject("name")
 						.field("type", "keyword")
@@ -480,7 +480,7 @@ public class ElasticSearchSchemaManager
 					.startObject("details")
 						.field("type", "keyword")
 					.endObject()
-				.endObject()
+				//.endObject()
 				.endObject()
 			.endObject()
 		.endObject();

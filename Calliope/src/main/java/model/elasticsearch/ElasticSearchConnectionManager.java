@@ -25,7 +25,10 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+// TODO: Modify other imports based on this?
+//        https://discuss.elastic.co/t/elastic-7-x-createindexrequest-deprecated/182029/4
+//import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -468,7 +471,7 @@ public class ElasticSearchConnectionManager
 			GetRequest getRequest = new GetRequest();
 			getRequest
 					.index(INDEX_CALLIOPE_USERS)
-					.type(INDEX_CALLIOPE_USERS_TYPE)
+					//.type(INDEX_CALLIOPE_USERS_TYPE)
 					// Make sure the ID corresponds to our username
 					.id(username)
 					// Ignore source to speed up the fetch
@@ -482,7 +485,7 @@ public class ElasticSearchConnectionManager
 				IndexRequest indexRequest = new IndexRequest();
 				indexRequest
 						.index(INDEX_CALLIOPE_USERS)
-						.type(INDEX_CALLIOPE_USERS_TYPE)
+						//.type(INDEX_CALLIOPE_USERS_TYPE)
 						// Make sure the ID is our username
 						.id(username)
 						// The source will be a new
@@ -515,7 +518,7 @@ public class ElasticSearchConnectionManager
 			// Setup our get request, make sure to specify the user we want to query for and the source fields we want to return
 			getRequest
 					.index(INDEX_CALLIOPE_USERS)
-					.type(INDEX_CALLIOPE_USERS_TYPE)
+					//.type(INDEX_CALLIOPE_USERS_TYPE)
 					.id(username)
 					.fetchSourceContext(new FetchSourceContext(true));
 			// Store the response
@@ -569,7 +572,7 @@ public class ElasticSearchConnectionManager
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest
 				.indices(INDEX_CALLIOPE_SITES)
-				.types(INDEX_CALLIOPE_SITES_TYPE)
+				//.types(INDEX_CALLIOPE_SITES_TYPE)
 				.scroll(scroll)
 				.source(new SearchSourceBuilder()
 						// Fetch results 1000 at a time, and use a query that matches everything
@@ -843,7 +846,7 @@ public class ElasticSearchConnectionManager
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest
 				.indices(INDEX_CALLIOPE_COLLECTIONS)
-				.types(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+				//.types(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 				.scroll(scroll)
 				.source(new SearchSourceBuilder()
 					// Fetch results 10 at a time, and use a query that matches everything
@@ -917,7 +920,7 @@ public class ElasticSearchConnectionManager
 			// Initialize the update request with data
 			updateRequest
 					.index(INDEX_CALLIOPE_USERS)
-					.type(INDEX_CALLIOPE_USERS_TYPE)
+					//.type(INDEX_CALLIOPE_USERS_TYPE)
 					.id(CalliopeData.getInstance().getUsername())
 					.doc(this.elasticSearchSchemaManager.makeSettingsUpdate(settingsData));
 
@@ -949,7 +952,7 @@ public class ElasticSearchConnectionManager
 			IndexRequest indexRequest = new IndexRequest();
 			indexRequest
 					.index(INDEX_CALLIOPE_COLLECTIONS)
-					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+					//.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					.id(imageCollection.getID().toString())
 					.source(this.elasticSearchSchemaManager.makeCreateCollection(imageCollection));
 
@@ -958,7 +961,7 @@ public class ElasticSearchConnectionManager
 			// Initialize the update request with data
 			updateRequest
 					.index(INDEX_CALLIOPE_COLLECTIONS)
-					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+					//.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					.id(imageCollection.getID().toString())
 					.doc(this.elasticSearchSchemaManager.makeCollectionUpdate(imageCollection))
 					// Upsert means "if the collection does not exist, call this request"
@@ -995,7 +998,7 @@ public class ElasticSearchConnectionManager
 			SearchRequest searchRequest = new SearchRequest();
 			searchRequest
 					.indices(INDEX_CALLIOPE_METADATA)
-					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					//.types(INDEX_CALLIOPE_METADATA_TYPE)
 					.scroll(scroll)
 					.source(new SearchSourceBuilder()
 							// Fetch results 500 at a time, and use a query that matches collection ID
@@ -1071,7 +1074,7 @@ public class ElasticSearchConnectionManager
 			DeleteRequest deleteRequest = new DeleteRequest();
 			deleteRequest
 					.index(INDEX_CALLIOPE_COLLECTIONS)
-					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+					//.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					.id(imageCollection.getID().toString());
 
 			// Delete the collection
@@ -1125,7 +1128,7 @@ public class ElasticSearchConnectionManager
 			GetRequest getRequest = new GetRequest();
 			getRequest
 					.index(INDEX_CALLIOPE_COLLECTIONS)
-					.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+					//.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 					// Make sure the ID corresponds to the imageCollection ID
 					.id(collectionID)
 					// Only fetch the uploads part of the document
@@ -1174,7 +1177,7 @@ public class ElasticSearchConnectionManager
 				XContentBuilder json = this.elasticSearchSchemaManager.imageToJSON(imageEntry, collectionID, absolutePathCreator.apply(imageEntry));
 				IndexRequest request = new IndexRequest()
 						.index(INDEX_CALLIOPE_METADATA)
-						.type(INDEX_CALLIOPE_METADATA_TYPE)
+						//.type(INDEX_CALLIOPE_METADATA_TYPE)
 						.source(json);
 				bulkRequest.add(request);
 			}
@@ -1186,7 +1189,7 @@ public class ElasticSearchConnectionManager
 				XContentBuilder json = this.elasticSearchSchemaManager.videoToJSON(videoEntry, collectionID, absolutePathCreator.apply(videoEntry));
 				IndexRequest request = new IndexRequest()
 						.index(INDEX_CALLIOPE_METADATA)
-						.type(INDEX_CALLIOPE_METADATA_TYPE)
+						//.type(INDEX_CALLIOPE_METADATA_TYPE)
 						.source(json);
 				bulkRequest.add(request);
 			}
@@ -1217,7 +1220,7 @@ public class ElasticSearchConnectionManager
 			}});
 			updateRequest
 				.index(INDEX_CALLIOPE_COLLECTIONS)
-				.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
+				//.type(INDEX_CALLIOPE_COLLECTIONS_TYPE)
 				.id(collectionID)
 				// We use a script because we're updating nested fields. The script written out looks like:
 				/*
@@ -1262,7 +1265,7 @@ public class ElasticSearchConnectionManager
 				// Initialize the search request
 				searchRequest
 						.indices(INDEX_CALLIOPE_SITES)
-						.types(INDEX_CALLIOPE_SITES_TYPE)
+						//.types(INDEX_CALLIOPE_SITES_TYPE)
 						.source(new SearchSourceBuilder()
 								// We only care about site code
 								.fetchSource(new String[]{"code"}, new String[]{"boundary", "details", "name", "site.siteDescription", "type"})
@@ -1385,7 +1388,7 @@ public class ElasticSearchConnectionManager
 			SearchRequest searchRequest = new SearchRequest();
 			searchRequest
 				.indices(INDEX_CALLIOPE_METADATA)
-				.types(INDEX_CALLIOPE_METADATA_TYPE)
+				//.types(INDEX_CALLIOPE_METADATA_TYPE)
 				.source(new SearchSourceBuilder()
 					// Fetch no results, we're only interested into aggregation portion of the query
 					.size(0)
@@ -1491,7 +1494,7 @@ public class ElasticSearchConnectionManager
 			SearchRequest searchRequest = new SearchRequest();
 			searchRequest
 					.indices(INDEX_CALLIOPE_SITES)
-					.types(INDEX_CALLIOPE_SITES_TYPE)
+					//.types(INDEX_CALLIOPE_SITES_TYPE)
 					.scroll(scroll)
 					.source(new SearchSourceBuilder()
 							// Fetch results 1000 at a time, and use a query that matches everything
@@ -1582,7 +1585,8 @@ public class ElasticSearchConnectionManager
 					null);
 			// Iterate over all document IDs and add one get request for each one
 			geoBucket.getKnownDocumentIDs().forEach(documentID ->
-					multiGetRequest.add(new MultiGetRequest.Item(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, documentID).fetchSourceContext(fieldsWeWant)));
+					//multiGetRequest.add(new MultiGetRequest.Item(INDEX_CALLIOPE_METADATA, INDEX_CALLIOPE_METADATA_TYPE, documentID).fetchSourceContext(fieldsWeWant)));
+					multiGetRequest.add(new MultiGetRequest.Item(INDEX_CALLIOPE_METADATA, documentID).fetchSourceContext(fieldsWeWant)));
 
 			// Perform the get
 			try
@@ -1734,7 +1738,7 @@ public class ElasticSearchConnectionManager
 			SearchRequest countSearchRequest = new SearchRequest();
 			countSearchRequest
 					.indices(INDEX_CALLIOPE_METADATA)
-					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					//.types(INDEX_CALLIOPE_METADATA_TYPE)
 					.source(new SearchSourceBuilder()
 						// Use size==0 to count the number of documents matching the query
 						.size(0)
@@ -1756,7 +1760,7 @@ public class ElasticSearchConnectionManager
 				SearchRequest searchRequest = new SearchRequest();
 				searchRequest
 					.indices(INDEX_CALLIOPE_METADATA)
-					.types(INDEX_CALLIOPE_METADATA_TYPE)
+					//.types(INDEX_CALLIOPE_METADATA_TYPE)
 					.source(new SearchSourceBuilder()
 						.fetchSource(false)
 						.query(currentQuery)
@@ -1799,7 +1803,7 @@ public class ElasticSearchConnectionManager
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest
 			.indices(INDEX_CALLIOPE_METADATA)
-			.types(INDEX_CALLIOPE_METADATA_TYPE)
+			//.types(INDEX_CALLIOPE_METADATA_TYPE)
 			.source(new SearchSourceBuilder()
 					// Fetch no results, we're only interested into aggregation portion of the query
 					.size(0)
