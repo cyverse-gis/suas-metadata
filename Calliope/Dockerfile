@@ -1,38 +1,24 @@
-FROM ubuntu:latest
+FROM ubuntu:16.04
 
-MAINTAINER David Sloviksoky <dslovikosky@email.arizona.edu>
+MAINTAINER Tyson Swetnam <tswetnam@cyverse.org>
 
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN apt-get autoremove -y
+USER root
 
-RUN apt-get install openjdk-8-jdk -y
-RUN apt-get install openjfx -y
+RUN apt-get update -y && apt-get upgrade -y
 
-RUN apt-get install git -y
+RUN apt-get install -y openjdk-8-jdk openjfx git maven wget make
 
-RUN apt-get install maven -y
+WORKDIR /opt/
 
-RUN apt-get install wget -y
+RUN cd /opt && wget https://exiftool.org/Image-ExifTool-12.00.tar.gz \
+    && gzip -dc Image-ExifTool-12.00.tar.gz | tar -xf - \
+    && cd /opt/Image-ExifTool-12.00 \
+    && perl Makefile.PL \
+    && make install 
 
-RUN apt-get install make -y
-
-WORKDIR /
-
-RUN wget https://www.sno.phy.queensu.ca/~phil/exiftool/Image-ExifTool-11.10.tar.gz
-RUN gzip -dc Image-ExifTool-11.10.tar.gz | tar -xf -
-WORKDIR /Image-ExifTool-11.10
-RUN perl Makefile.PL
-RUN make install
-
-WORKDIR /
-
-WORKDIR /
 ADD https://api.github.com/repos/cyverse-gis/suas-metadata/git/refs/heads/master version.json
-RUN git clone https://github.com/cyverse-gis/suas-metadata
+RUN cd /opt && git clone https://github.com/cyverse-gis/suas-metadata \
+    && cd /opt/suas-metadata/Calliope \
+    && mvn -U compile package
 
-WORKDIR /suas-metadata/Calliope
-
-RUN mvn compile package
-
-ENTRYPOINT ["java", "-jar", "/suas-metadata/Calliope/target/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar"]
+ENTRYPOINT ["java", "-jar", "/opt/suas-metadata/Calliope/target/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar"]
