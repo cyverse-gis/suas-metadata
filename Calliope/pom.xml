@@ -200,7 +200,7 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-shapefile</artifactId>
-            <version>19.3</version>
+            <version>23.1</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.github.mreutegg/laszip4j -->
         <dependency>
