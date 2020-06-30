@@ -59,6 +59,34 @@ rm node.csr
 
 We are launching our OpenDistro ElasticSearch and Kibana containers using `docker-compose` 
 
+For testing use:
+
 ```
 docker-compose up
+```
+
+To launch Docker in a detached container for production:
+
+```
+docker-compose up -d
+```
+
+## Restarting the Security Configuration
+
+The certificate .pem keys will expire periodically. When they do we need to regenerate them following the steps above.
+
+In our private VM, we have a `custom-elasticsearch.yml` that has the previous `.pem` distinguished names. You can view them by:
+
+```
+openssl x509 -subject -nameopt RFC2253 -noout -in node.pem
+```
+
+Try to reuse the same distinguished names in the newly generated root and node `.pem` files
+
+We're using private CyVerse `.pem` files not hosted online. These files are in the VM and should not be modified.
+
+When you [restart the securityadmin.sh](https://opendistro.github.io/for-elasticsearch-docs/docs/security-configuration/generate-certificates/#run-securityadminsh), use the following command:
+
+```
+./securityadmin.sh -cd ../securityconfig/ -icl -nhnv -cacert ../../../config/root-ca-cyverse.pem -cert ../../../config/cyverse.org.pem -key ../../../config/cyverse.key.pem
 ```
