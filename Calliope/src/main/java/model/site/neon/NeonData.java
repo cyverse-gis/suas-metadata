@@ -37,9 +37,9 @@ public class NeonData
 	private static final String NEON_API_URL = "https://data.neonscience.org/api/v0";
 	// A hard coded link to the NEON KMZ file containing all locations + boundaries
 	// updated link -- somebody introduced a space :-<
-        private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON%20Field%20Sites%20KMZ%20v17.kmz";	
-//	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON_Project_%20Locations_v16_1.kmz";
-//	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/";
+	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON%20Field%20Sites%20KMZ%20v17.kmz";
+	//	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/NEON_Project_%20Locations_v16_1.kmz";
+	//	private static final String NEON_KMZ_LINK = "https://www.neonscience.org/sites/default/files/";
 
 	/**
 	 * Parses a KML document into a list of sites
@@ -61,7 +61,7 @@ public class NeonData
 		{
 			// The top level directory contains a single directory which should have NEON project locations. Check that here
 			Feature lvl0Feature = kml.getFeature();
-			if (lvl0Feature.getName().equals("NEON Project Locations (v16)") && lvl0Feature instanceof Folder)
+			if (lvl0Feature.getName().equals("NEON Project Locations (v17)") && lvl0Feature instanceof Folder)
 			{
 				// Cast the feature into a folder since we tested above
 				Folder topFolder = (Folder) lvl0Feature;
