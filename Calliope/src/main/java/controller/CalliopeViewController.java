@@ -232,6 +232,7 @@ public class CalliopeViewController
 		// Only login if we're not logged in
 		if (!CalliopeData.getInstance().loggedInProperty().getValue())
 		{
+			tabPane.getTabs().get(3).setDisable(true); // disable map tab until sites are loaded
 			this.loggingIn.setValue(true);
 
 			// Show the loading icon graphic
@@ -316,6 +317,7 @@ public class CalliopeViewController
 						Platform.runLater(() -> CalliopeData.getInstance().getCollectionList().addAll(imageCollections));
 
 						this.updateProgress(6, NUM_STEPS);
+						tabPane.getTabs().get(3).setDisable(false);	// enable map tab once sites are loaded
 					}
 
 					return loginSuccessful;
