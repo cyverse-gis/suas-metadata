@@ -345,14 +345,14 @@ public class CalliopeMapController
 					Location topLeft = CalliopeMapController.this.map.viewToLocation(new Point2D(boundsInParent.getMinX(), boundsInParent.getMinY()));
                     Location bottomRight = CalliopeMapController.this.map.viewToLocation(new Point2D(boundsInParent.getMaxX(), boundsInParent.getMaxY()));
 
-					long time = System.currentTimeMillis();
+					CalliopeMapController.this.map.setDisable(true);	// Disable map movement while loading site boundaries
+					// This is the important line. We call ES to grab all site codes within our viewport
 					List<String> temp = CalliopeData.getInstance().getEsConnectionManager().grabSiteCodesWithin(
 							MathUtil.clamp(topLeft.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(topLeft.getLongitude(), -180.0, 180.0),
 							MathUtil.clamp(bottomRight.getLatitude(), -90.0, 90.0),
 							MathUtil.clamp(bottomRight.getLongitude(), -180.0, 180.0));
-					// This is the important line. We call ES to grab all site codes within our viewport
-					//System.out.println(System.currentTimeMillis() - time);
+					CalliopeMapController.this.map.setDisable(false);
 					return temp;
 				}
 			};
