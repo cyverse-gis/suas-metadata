@@ -26,6 +26,45 @@ Download the [Calliope for Java 8](https://data.cyverse.org/dav/iplant/home/tswe
 java -jar Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
+### Running Calliope on Debian Distros
+
+These step-by-step instructions should get Calliope up and running on most, if not all debian distibutions.
+
+1. Install Required Packages
+
+Run the following command in the terminal.
+```
+apt install exiftool openjdk-8-jre openjfx=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2
+```
+
+2. Set the Java Version
+
+Run the following command and make sure the OpenJFX 8 installation is selected.
+```
+update-alternatives --config java
+```
+
+3. Retrieve Calliope JAR
+
+Run the following command to download the Calliope JAR to the current directory.
+```
+wget https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.5-SNAPSHOT-jar-with-dependencies.jar
+```
+
+4. Run Calliope
+
+Run the following command to run Calliope.
+```
+java -jar Calliope-1.5-SNAPSHOT-jar-with-dependencies.jar
+```
+Alternatively, double-clicking the JAR should open Calliope as well.
+
+If you encounter issues, try
+```
+chmod +x Calliope-1.5-SNAPSHOT-jar-with-dependencies.jar
+```
+Then try to run the JAR again.
+
 ### Build from Source 
 
 #### Dependencies
