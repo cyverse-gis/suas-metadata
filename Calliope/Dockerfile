@@ -6,15 +6,9 @@ USER root
 
 RUN apt-get update -y && apt-get upgrade -y
 
-RUN apt-get install -y openjdk-8-jdk openjfx git maven wget make
+RUN apt-get install -y exiftool openjdk-8-jre openjfx=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 git maven wget make
 
 WORKDIR /opt/
-
-RUN cd /opt && wget https://exiftool.org/Image-ExifTool-12.01.tar.gz \
-    && gzip -dc Image-ExifTool-12.01.tar.gz | tar -xf - \
-    && cd /opt/Image-ExifTool-12.01 \
-    && perl Makefile.PL \
-    && make install 
 
 RUN cd /opt && wget https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.5-SNAPSHOT-jar-with-dependencies.jar 
 
