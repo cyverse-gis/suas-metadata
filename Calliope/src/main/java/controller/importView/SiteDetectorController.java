@@ -139,9 +139,14 @@ public class SiteDetectorController
 
 			detectTask.setOnSucceeded(event ->
 			{
-				// When we finish set each image's site to the site we detected. Nulls are OK
-				for (Integer i = 0; i < imageEntries.size(); i++)
-					imageEntries.get(i).getSiteTaken().add(detectTask.getValue()[i]);
+				// When we finish set each image's site to the site we detected.
+				for (Integer i = 0; i < imageEntries.size(); i++) {
+					Site value = detectTask.getValue()[i];
+					List<Site> siteList = imageEntries.get(i).getSiteTaken();
+					if (value != null && !siteList.contains(value)) {
+						siteList.add(value);
+					}
+				}
 			});
 
 			// Execute the task
@@ -152,33 +157,33 @@ public class SiteDetectorController
 		// If we are searching by boundary, we need ES to help us
 		else if (this.rbnByBoundary.isSelected())
 		{
-			ErrorTask<Site[]> detectTask = new ErrorTask<Site[]>()
+			ErrorTask<List<List<Site>>> detectTask = new ErrorTask<List<List<Site>>>()
 			{
 				@Override
-				protected Site[] call()
+				protected List<List<Site>> call()
 				{
 					this.updateMessage("Detecting sites for images...");
 					// Create an array of results to return
-					Site[] toReturn = new Site[imageEntries.size()];
+					List<List<Site>> toReturn = new ArrayList<>();
 
 					// Grab the global site list
 					List<Site> sites = CalliopeData.getInstance().getSiteManager().getSites();
 					// Ask ES to give us a parallel array of site codes to our image entries
-					String[] siteCodes = CalliopeData.getInstance().getEsConnectionManager().detectSites(imageEntries);
+					List<List<String>> siteCodes = CalliopeData.getInstance().getEsConnectionManager().detectSites(imageEntries);
 					// For each parallel entry, process it
-					for (Integer i = 0; i < siteCodes.length; i++)
+					for (List<String> codes : siteCodes)
 					{
-						// Grab the site code
-						String siteCode = siteCodes[i];
-						// If the site code is null, set the value to return as null, if not, process the code
-						if (siteCode != null)
-						{
-							// Grab the site associated with the site code
-							Optional<Site> correctSite = sites.stream().filter(site -> site.getCode().equals(siteCode)).findFirst();
-							// If we got a site, store it
-							if (correctSite.isPresent())
-								toReturn[i] = correctSite.get();
+						List<Site> temp = new ArrayList<>();
+						for (String code : codes) {
+							// If the site code is null, set the value to return as null, if not, process the code
+							if (code != null) {
+								// Grab the site associated with the site code
+								Optional<Site> correctSite = sites.stream().filter(site -> site.getCode().equals(code)).findFirst();
+								// If we got a site, store it
+								correctSite.ifPresent(temp::add);
+							}
 						}
+						toReturn.add(temp);
 					}
 
 					return toReturn;
@@ -187,9 +192,16 @@ public class SiteDetectorController
 
 			detectTask.setOnSucceeded(event ->
 			{
-				// When we finish set each image's site to the site we detected. Nulls are OK
-				for (Integer i = 0; i < imageEntries.size(); i++)
-					imageEntries.get(i).getSiteTaken().add(detectTask.getValue()[i]);
+				List<List<Site>> siteCodes = detectTask.getValue();
+				// When we finish set each image's site to the site we detected.
+				for (Integer i = 0; i < imageEntries.size(); i++) {
+					List<Site> sitesToAdd = siteCodes.get(i);
+					List<Site> siteList = imageEntries.get(i).getSiteTaken();
+					sitesToAdd.forEach((site) -> {	// No site should be null here
+						if (!siteList.contains(site))
+							siteList.add(site);
+					});
+				}
 			});
 
 

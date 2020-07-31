@@ -5,6 +5,9 @@ import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
@@ -469,8 +472,9 @@ public class CalliopeImportController
 		// When we click a new image reset the image view
 		this.imagePreview.imageProperty().addListener((observable, oldValue, newValue) -> this.resetImageView(null));
 		// Bind the site name to the selected image's location
-		this.lblSite.textProperty().bind(EasyBind.monadic(this.currentlySelectedMedia).map(dataContainer -> dataContainer.getSiteTaken().stream().map(site -> site.getName()).collect(Collectors.joining(", "))));
+		//this.lblSite.textProperty().bind(EasyBind.monadic(this.currentlySelectedMedia).selectProperty(DataContainer::siteTakenProperty).map(dataContainer -> dataContainer.getSiteTaken().stream().map(Site::getName).collect(Collectors.joining(", "))));
 		//this.lblSite.textProperty().bind(EasyBind.map(this.currentlySelectedMedia.getValue().siteTakenProperty(), site -> site.));
+		this.lblSite.textProperty().bind(EasyBind.monadic(this.currentlySelectedMedia).selectProperty(DataContainer::siteTakenProperty).flatMap(l -> EasyBind.combine(derivedBinding(l), stream -> stream.collect(Collectors.joining(", ")))));
 		// Hide the location panel when no location is selected
 		this.hbxLocation.visibleProperty().bind(currentlySelectedMedia.isNotNull().or(currentlySelectedDirectory.isNotNull()));
 		// Hide the progress bar when no tasks remain
@@ -652,6 +656,19 @@ public class CalliopeImportController
 	}
 
 	/**
+	 * Helper function grabbed from here:
+	 * https://stackoverflow.com/questions/45483472/binding-to-a-observablevalueobservablelist-instead-of-an-observablelist-with-e
+	 *
+	 * @param l List of Sites
+	 * @return List of Observable Site Names
+	 */
+	private ObservableList<ObservableValue<String>> derivedBinding(ObservableList<Site> l) {
+		return l.stream()
+				.map(Site::nameProperty)
+				.collect(Collectors.toCollection(FXCollections::observableArrayList));
+	}
+
+	/**
 	 * This is purely used so that the action listeners are not garbage collected early
 	 *
 	 * @param reference The reference to cache
@@ -788,8 +805,8 @@ public class CalliopeImportController
 				// Check if we have a selected image or directory to update!
 				if (currentlySelectedMedia.getValue() != null)
 				{
-					if (currentlySelectedMedia.getValue().getSiteTaken().stream().noneMatch(site -> site.getName() == toAdd.get().getName()))
-						currentlySelectedMedia.getValue().getSiteTaken().add(toAdd.get());
+					if (currentlySelectedMedia.getValue().getSiteTaken().stream().noneMatch(site -> site.getName().equals(toAdd.get().getName())))
+						toAdd.ifPresent(site -> currentlySelectedMedia.getValue().getSiteTaken().add(site));
 					// We request focus after a drag and drop so that arrow keys will continue to move the selected image down or up
 					this.imageTree.requestFocus();
 					success = true;

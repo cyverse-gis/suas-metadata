@@ -1244,13 +1244,13 @@ public class ElasticSearchConnectionManager
 	 * Given a list of images this function returns a parallel array of site codes of sites that each image belongs to
 	 *
 	 * @param imageEntries The list of images to detect sites in
-	 * @return A list of site codes as a parallel array to the original image list with null if no site is at the location
+	 * @return A list of site code lists as a parallel array to the original image list with an empty list if no site is at the location
 	 */
 	@SuppressWarnings("unchecked")
-	public String[] detectSites(List<DataContainer> imageEntries)
+	public List<List<String>> detectSites(List<DataContainer> imageEntries)
 	{
 		// A parallel array to return
-		String[] toReturn = new String[imageEntries.size()];
+		List<List<String>> toReturn = new ArrayList<>();
 
 		// Create a multi search (one per image)
 		MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
@@ -1269,8 +1269,8 @@ public class ElasticSearchConnectionManager
 						.source(new SearchSourceBuilder()
 								// We only care about site code
 								.fetchSource(new String[]{"code"}, new String[]{"boundary", "details", "name", "site.siteDescription", "type"})
-								// We only care about a single result
-								.size(1)
+								// We want to find up to 10 possible overlapping sites
+								.size(10)
 								// We want to search where the polygon intersects our image's location (as a point)
 								.query(QueryBuilders.geoIntersectionQuery("boundary", new PointBuilder().coordinate(imageEntry.getPositionTaken().getLongitude(), imageEntry.getPositionTaken().getLatitude()))));
 				// Store the search request
@@ -1295,33 +1295,35 @@ public class ElasticSearchConnectionManager
 				// Iterate over all responses
 				for (int i = 0; i < responses.length; i++)
 				{
+					// Create new list of sites for each image
+					List<String> temp = new ArrayList<>();
+
 					// Grab the response, and pull the hits
 					MultiSearchResponse.Item response = responses[i];
 					SearchHit[] hits = response.getResponse().getHits().getHits();
-					// If we got 1 hit, we have the right site. If we do not have a hit, return null for this image
-					if (hits.length == 1)
-					{
-						// Grab the raw hit map
-						Map<String, Object> siteMap = hits[0].getSourceAsMap();
 
-						// Make sure our site field has a site code field
-						if (siteMap.containsKey("code"))
-						{
-							// Grab the site code field
-							Object siteCodeObj = siteMap.get("code");
-							// Make sure the site code field is a string
-							if (siteCodeObj instanceof String)
-							{
-								// Store the site code field
-								toReturn[i] = (String) siteCodeObj;
+					// If we got any number of hits, we have the right site(s). If we do not have a hit, return an empty list for this image
+					if (hits.length > 0)
+					{
+						// Grab the raw hit maps
+						List<Map<String, Object>> siteMaps = Arrays.stream(hits).map(SearchHit::getSourceAsMap).collect(Collectors.toList());
+
+						for (Map<String, Object> siteMap : siteMaps) {
+							// Make sure our site field has a site code field
+							if (siteMap.containsKey("code")) {
+								// Grab the site code field
+								Object siteCodeObj = siteMap.get("code");
+								// Make sure the site code field is a string
+								if (siteCodeObj instanceof String) {
+									// Store the site code field
+									temp.add((String) siteCodeObj);
+								}
 							}
 						}
 					}
-					else
-					{
-						// No results = no site
-						toReturn[i] = null;
-					}
+
+					// Return the list of sites
+					toReturn.add(temp);
 				}
 			}
 			else

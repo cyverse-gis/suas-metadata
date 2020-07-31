@@ -30,7 +30,7 @@ public abstract class DataContainer implements HierarchyData<DataContainer>
 	// The date that the image was taken
 	protected final ObjectProperty<LocalDateTime> dateTaken = new SimpleObjectProperty<>();
 	// The NEON site closest to the image
-	protected final ObservableList<Site> siteTaken = FXCollections.observableArrayList(new ArrayList<>());
+	protected final ListProperty<Site> siteTaken = new SimpleListProperty<>(FXCollections.observableArrayList(new ArrayList<>()));
 	// The lat/long/elevation of this image
 	protected final ObjectProperty<Position> positionTaken = new SimpleObjectProperty<>(null);
 	// The name of the drone maker company
@@ -260,10 +260,10 @@ public abstract class DataContainer implements HierarchyData<DataContainer>
 
 	public List<Site> getSiteTaken()
 	{
-		return siteTaken;
+		return siteTaken.get();
 	}
 
-	public ObservableList<Site> siteTakenProperty()
+	public ListProperty<Site> siteTakenProperty()
 	{
 		return siteTaken;
 	}

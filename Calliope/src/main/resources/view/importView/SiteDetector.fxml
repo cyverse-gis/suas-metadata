@@ -46,7 +46,7 @@
                 </HBox>
                 <HBox fx:id="hbxBoundary" BorderPane.alignment="CENTER" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1" spacing="5">
                     <children>
-                        <Label text="Detect if image was taken inside of a site based on the site's boundary."/>
+                        <Label text="Detect if image was taken inside of a site based on the site's boundary. (Multi-Site Enabled)"/>
                     </children>
                 </HBox>
             </children>
