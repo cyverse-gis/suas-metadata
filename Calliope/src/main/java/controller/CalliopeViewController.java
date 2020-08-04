@@ -33,6 +33,7 @@ import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
+import org.elasticsearch.common.settings.SecureString;
 
 import java.awt.*;
 import java.io.IOException;
@@ -242,7 +243,7 @@ public class CalliopeViewController
 			CyVerseConnectionManager cyConnectionManager = CalliopeData.getInstance().getCyConnectionManager();
 			// Grab the username and password
 			String username = this.txtUsername.getText();
-			String password = this.txtPassword.getText();
+			SecureString password =  new SecureString(this.txtPassword.getText());
 			// Thread off logging in...
 			ErrorTask<Boolean> loginAttempt = new ErrorTask<Boolean>()
 			{
@@ -254,9 +255,9 @@ public class CalliopeViewController
 					// First login
 					this.updateMessage("Logging in...");
 					this.updateProgress(1, NUM_STEPS);
-					Boolean loginSuccessful = cyConnectionManager.login(username, password);
+					Boolean loginSuccessful = cyConnectionManager.login(username, password.toString());
 					if (loginSuccessful)
-						loginSuccessful = esConnectionManager.login(username, password);
+						loginSuccessful = esConnectionManager.login(username, password.toString());
 
 					if (loginSuccessful)
 					{
@@ -266,7 +267,7 @@ public class CalliopeViewController
 							@Override
 							protected PasswordAuthentication getPasswordAuthentication()
 							{
-								return new PasswordAuthentication(username, password.toCharArray());
+								return new PasswordAuthentication(username, password.getChars());
 							}
 						});
 
