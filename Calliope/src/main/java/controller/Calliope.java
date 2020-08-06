@@ -45,7 +45,7 @@ public class Calliope extends Application
     @Override
     public void start(Stage primaryStage)
     {
-        Application.setUserAgentStylesheet(STYLESHEET_MODENA);
+        //Application.setUserAgentStylesheet(STYLESHEET_MODENA);
 
         // Load the FXML document
         FXMLLoader loader = FXMLLoaderUtils.loadFXML("CalliopeView.fxml");
