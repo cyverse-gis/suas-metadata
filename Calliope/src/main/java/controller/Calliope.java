@@ -15,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
@@ -52,7 +53,7 @@ public class Calliope extends Application
         // Create the scene
         Parent root = loader.getRoot();
         assert root instanceof Pane : "ERROR: Base layer of CalliopeView must be a Pane for scaling purposes.";
-        Scene scene = new Scene(new Group(root));
+        Scene scene = new Scene(new StackPane(root));
 
         // Put the scene on the stage
         primaryStage.setScene(scene);

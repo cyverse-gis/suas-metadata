@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.*?>
 <?import library.ImageViewPane?>
 <?import java.net.URL?>
-<AnchorPane fx:id="mainPane" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeHomeController">
+<AnchorPane fx:id="mainPane" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeHomeController">
     <stylesheets>
         <URL value="@CalliopeHome.css" />
     </stylesheets>

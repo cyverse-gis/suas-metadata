@@ -20,27 +20,6 @@
                 <!-- <version>2.3.2</version> -->
                 <configuration>
                     <release>11</release>
-                    <executable>C:\Program Files\Java\jdk-11.0.1\bin\java</executable>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.0</version>
-                <configuration>
-                    <argLine>
-                        --illegal-access=permit
-                    </argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.0</version>
-                <configuration>
-                    <argLine>
-                        --illegal-access=permit
-                    </argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -70,7 +49,9 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.4</version>
                 <configuration>
+                    <release>11</release>
                     <mainClass>controller.Calliope</mainClass>
+                    <executable>C:\Program Files\Java\jdk-11.0.1\bin\java.exe</executable>
                 </configuration>
             </plugin>
         </plugins>
@@ -81,25 +62,31 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>11</version>
+            <version>11.0.2</version>
         </dependency>
         <!-- FXML -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>11</version>
+            <version>11.0.2</version>
         </dependency>
         <!-- For SwingFXUtils -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
-            <version>11</version>
+            <version>11.0.2</version>
         </dependency>
         <!-- For Media, MediaPlayer -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
-            <version>11</version>
+            <version>11.0.2</version>
+        </dependency>
+        <!-- For controlsfx -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>11.0.2</version>
         </dependency>
         <!-- JFXtras to get a time picker -->
         <dependency>
@@ -132,7 +119,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
-            <version>4.2</version>
+            <version>RELEASE</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
@@ -144,7 +131,7 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>1.9.4</version>
+            <version>RELEASE</version>
         </dependency>
         <!-- https://github.com/google/gson -->
         <dependency>
@@ -168,21 +155,48 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.19</version>
+            <version>RELEASE</version>
         </dependency>
         <!-- elasticsearch -->
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <!-- <version>6.5.4</version> -->
+            <!-- Updated from 6.5.4 -->
+            <version>7.8.1</version>
+        </dependency>
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
             <!-- <version>6.5.4</version> -->
             <!-- Updated from 6.5.4 -->
-            <version>7.6.1</version>
+            <version>7.8.1</version>
         </dependency>
         <!-- log4j2 for elasticsearch -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.13.2</version>
+            <version>RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>RELEASE</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
         <dependency>
@@ -200,7 +214,7 @@
         <dependency>
             <groupId>com.github.mjeanroy</groupId>
             <artifactId>exiftool-lib</artifactId>
-            <version>2.5.0</version>
+            <version>RELEASE</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.github.jai-imageio/jai-imageio-core -->
         <dependency>
@@ -212,12 +226,12 @@
         <dependency>
             <groupId>org.locationtech.spatial4j</groupId>
             <artifactId>spatial4j</artifactId>
-            <version>0.7</version>
+            <version>RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>
             <artifactId>jts-core</artifactId>
-            <version>1.15.0</version>
+            <version>RELEASE</version>
             <exclusions>
                 <exclusion>
                     <groupId>xerces</groupId>
@@ -225,56 +239,44 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Removes annoying logging messages! -->
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpasyncclient -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.23</version>
-        </dependency>
-        <!-- Removes annoying logging messages! -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.1</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+            <version>4.1.4</version>
         </dependency>
         <!-- Allows for a map control -->
         <!--
         Future Calliope developers: If this dependency produces impassable errors, see if there exists a release
           version of FX-Map-Control. Change the version to that, and then fix whatever errors come from switching
-          to that version. Hopefully maven will work for you then. If not, start praying.
+          to that version. Hopefully maven will work for you then. If not, start praying. -->
         <dependency>
             <groupId>com.github.ClemensFischer</groupId>
             <artifactId>FX-Map-Control</artifactId>
-            <version>-SNAPSHOT</version>
-        </dependency>
-        -->
-        <dependency>
-            <groupId>fischer.clemens</groupId>
-            <artifactId>FxMap</artifactId>
             <version>-SNAPSHOT</version>
         </dependency>
         <!-- Allows for shapefile processing -->
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-shapefile</artifactId>
-            <version>23.1</version>
+            <version>RELEASE</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.github.mreutegg/laszip4j -->
         <dependency>
             <groupId>com.github.mreutegg</groupId>
             <artifactId>laszip4j</artifactId>
-            <version>0.5</version>
+            <version>RELEASE</version>
         </dependency>
         <!-- For obtaining video thumbnails -->
         <dependency>
             <groupId>org.jcodec</groupId>
             <artifactId>jcodec</artifactId>
-            <version>0.2.3</version>
+            <version>RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.jcodec</groupId>
             <artifactId>jcodec-javase</artifactId>
-            <version>0.2.3</version>
+            <version>RELEASE</version>
         </dependency>
     </dependencies>
 

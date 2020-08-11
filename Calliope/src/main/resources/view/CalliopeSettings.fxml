@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.controlsfx.control.PropertySheet?>
 <?import java.net.URL?>
-<VBox prefHeight="700.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeSettingsController">
+<VBox prefHeight="700.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CalliopeSettingsController">
     <stylesheets>
         <URL value="@CalliopeSettings.css"/>
     </stylesheets>
