@@ -4,7 +4,7 @@ Calliope is a program developed by [CyVerse](https://www.cyverse.org/) for the U
 
 ## Installation
 
-There are different ways to run Calliope, either by building it from source using the contents of this Git repo, or by downloading a [pre-built image here](https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar), or running with [Docker]()
+There are different ways to run Calliope, either by building it from source using the contents of this Git repo, or by downloading a [pre-built image here](https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.6-SNAPSHOT-jar-with-dependencies.jar), or running with [Docker]()
 
 #### Dependencies
 
@@ -20,10 +20,10 @@ ExifTool must be accessible in your system $PATH environment variable. Calliope 
 
 ### Running the prebuilt `jar`
 
-Download the [Calliope for Java 8](https://data.cyverse.org/dav/iplant/home/tswetnam/calliope/Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar). It is highly recommended to use the Java 8 version if possible. 
+Download the [Calliope for Java 8](https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.6-SNAPSHOT-jar-with-dependencies.jar). It is highly recommended to use the Java 8 version if possible. 
 
 ```
-java -jar Calliope-1.0-SNAPSHOT-jar-with-dependencies.jar
+java -jar Calliope-1.6-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Running Calliope on Debian Distros
@@ -48,14 +48,14 @@ update-alternatives --config java
 
 Run the following command to download the Calliope JAR to the current directory.
 ```
-wget https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.5-SNAPSHOT-jar-with-dependencies.jar
+wget https://data.cyverse.org/dav-anon/iplant/home/shared/aes/calliope/Calliope-1.6-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 4. Run Calliope
 
 Run the following command to run Calliope.
 ```
-java -jar Calliope-1.5-SNAPSHOT-jar-with-dependencies.jar
+java -jar Calliope-1.6-SNAPSHOT-jar-with-dependencies.jar
 ```
 Alternatively, double-clicking the JAR should open Calliope as well.
 
