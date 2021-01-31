@@ -73,6 +73,19 @@ docker-compose up -d
 
 ## Restarting the Security Configuration
 
+Shell into the running `aeolus-master` node
+
+```
+docker exec -it <containerid> /bin/bash
+```
+
+You will be in the `/elasticsearch` directory
+
+```
+cd plugins/opendistro_security/tools/
+chmod +x securityadmin.sh
+```
+
 The certificate .pem keys will expire periodically. When they do we need to regenerate them following the steps above.
 
 In our private VM, we have a `custom-elasticsearch.yml` that has the previous `.pem` distinguished names. You can view them by:
